@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const container_1 = require("@infrastructure/di/container");
+const routes_constants_1 = require("@shared/constants/routes.constants");
+const validateZod_middleware_1 = require("@presentation/express/middlewares/validateZod.middleware");
+const login_college_admin_request_dto_1 = require("@application/dtos/college-admin/request/login.college-admin.request.dto");
+const router = (0, express_1.Router)();
+router.post(routes_constants_1.ROUTES.AUTH.COLLEGE_ADMIN_LOGIN, (0, validateZod_middleware_1.validateZod)(login_college_admin_request_dto_1.loginCollegeAdminRequestSchema), container_1.container.collegeAdminAuthController.login);
+exports.default = router;

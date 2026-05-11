@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const student_auth_controller_1 = require("@presentation/http/controllers/auth/student/student.auth.controller");
+const auth_factory_1 = require("@infrastructure/di/auth.factory");
+const routes_constants_1 = require("@shared/constants/routes.constants");
+const login_student_request_dto_1 = require("@application/dtos/student/Request/login.student.request.dto");
+const validateDto_1 = require("@presentation/express/middlewares/validateDto");
+const router = (0, express_1.Router)();
+const studentAuthController = new student_auth_controller_1.StudentAuthController((0, auth_factory_1.makeLoginStudentUseCase)());
+router.post(routes_constants_1.ROUTES.AUTH.STUDENT_LOGIN, (0, validateDto_1.validateDto)(login_student_request_dto_1.StudentLoginRequestDto), studentAuthController.login);
+exports.default = router;

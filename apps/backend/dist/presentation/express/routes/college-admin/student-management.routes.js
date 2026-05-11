@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const bulk_upload_students_request_dto_1 = require("@application/dtos/college/bulk-upload-students.request.dto");
+const create_student_request_dto_1 = require("@application/dtos/college/create-student.request.dto");
+const role_enum_1 = require("@domain/enums/role.enum");
+const container_1 = require("@infrastructure/di/container");
+const validate_dto_middleware_1 = require("@presentation/express/middlewares/validate-dto.middleware");
+const route_constants_1 = require("@shared/constants/route.constants");
+const router = (0, express_1.Router)();
+router.use(container_1.container.authMiddleware.requireAuth);
+router.use(container_1.container.authMiddleware.requireRoles([role_enum_1.Role.COLLEGE_ADMIN]));
+router.post(`${route_constants_1.API_ROUTES.COLLEGE_ADMIN.BASE}${route_constants_1.API_ROUTES.COLLEGE_ADMIN.STUDENTS}`, (0, validate_dto_middleware_1.validateDto)(create_student_request_dto_1.CreateStudentRequestDto), container_1.container.studentManagementController.createStudent);
+router.post(`${route_constants_1.API_ROUTES.COLLEGE_ADMIN.BASE}${route_constants_1.API_ROUTES.COLLEGE_ADMIN.STUDENT_BULK_UPLOAD}`, (0, validate_dto_middleware_1.validateDto)(bulk_upload_students_request_dto_1.BulkUploadStudentsRequestDto), container_1.container.studentManagementController.bulkUpload);
+exports.default = router;

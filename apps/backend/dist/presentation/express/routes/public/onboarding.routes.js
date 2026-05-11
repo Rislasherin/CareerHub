@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const college_signup_request_dto_1 = require("@application/dtos/auth/request/college-signup.request.dto");
+const company_signup_request_dto_1 = require("@application/dtos/auth/request/company-signup.request.dto");
+const container_1 = require("@infrastructure/di/container");
+const validate_dto_middleware_1 = require("@presentation/express/middlewares/validate-dto.middleware");
+const route_constants_1 = require("@shared/constants/route.constants");
+const router = (0, express_1.Router)();
+router.post(`${route_constants_1.API_ROUTES.COLLEGE.BASE}${route_constants_1.API_ROUTES.COLLEGE.SIGNUP}`, (0, validate_dto_middleware_1.validateDto)(college_signup_request_dto_1.CollegeSignupRequestDto), container_1.container.onboardingController.collegeSignup);
+router.post(`${route_constants_1.API_ROUTES.COMPANY.BASE}${route_constants_1.API_ROUTES.COMPANY.SIGNUP}`, (0, validate_dto_middleware_1.validateDto)(company_signup_request_dto_1.CompanySignupRequestDto), container_1.container.onboardingController.companySignup);
+exports.default = router;

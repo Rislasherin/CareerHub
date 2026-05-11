@@ -1,0 +1,37 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ErrorMessage = void 0;
+var ErrorMessage;
+(function (ErrorMessage) {
+    ErrorMessage["STUDENT_BLOCKED"] = "Your account has been blocked, contact your placement cell.";
+    ErrorMessage["STUDENT_NOT_FOUND"] = "Student not found.";
+    ErrorMessage["INVALID_CREDENTIALS"] = "Invalid email or password.";
+    ErrorMessage["TOKEN_EXPIRED"] = "Session expired. Please login again.";
+    ErrorMessage["OTP_SEND"] = "OTP send to your email.";
+    ErrorMessage["OTP_INVALID"] = "Invalid OTP.";
+    ErrorMessage["OTP_EXPIRED"] = "OTP has expired.";
+    ErrorMessage["OTP_MAX_ATTEMPTS"] = "Maximum OTP attempts reached. Please tru again.";
+    ErrorMessage["RESET_TOKEN_INVALID"] = "Invalid or expired reset token";
+    //college
+    ErrorMessage["COLLEGE_ADMIN_NOT_FOUND"] = "College admin not found";
+    ErrorMessage["COLLEGE_ADMIN_BLOCKED"] = "Your account has been blocked";
+    ErrorMessage["ORGANIZATION_NOT_FOUND"] = "Organization not found";
+    ErrorMessage["EMAIL_ALREADY_EXISTS"] = "Email already registered";
+    ErrorMessage["ONBOARDING_INCOMPLETE"] = "Please complete onboarding first";
+    ErrorMessage["INVALID_ONBOARDING_STEP"] = "Invalid onboarding step";
+    ErrorMessage["RESET_LINK"] = "Password reset link has been sent to your email.";
+    ErrorMessage["ACCOUNT_NOT_FOUND"] = "Account not found";
+    ErrorMessage["ACCOUNT_BLOCKED"] = "Your account has been deactivated";
+    ErrorMessage["RESET_LINK_SENT"] = "If this email exists, a reset link has been sent";
+    ErrorMessage["RESET_LINK_EXPIRED"] = "Reset link is invalid or has expired";
+    ErrorMessage["PASSWORD_UPDATED"] = "Password updated successfully";
+    ErrorMessage["HR_NOT_FOUND"] = "HR user not found";
+    ErrorMessage["HR_BLOCKED"] = "Your account has been blocked";
+    ErrorMessage["COMPANY_NOT_FOUND"] = "Company not found";
+    ErrorMessage["HR_EMAIL_EXISTS"] = "Email already registered";
+    ErrorMessage["INTERVIEWER_NOT_FOUND"] = "Interviewer not found";
+    ErrorMessage["INTERVIEWER_BLOCKED"] = "Your account has been blocked";
+    ErrorMessage["INTERVIEWER_EMAIL_EXISTS"] = "Interviewer email already registered";
+    ErrorMessage["INTERVIEWER_ALREADY_EXISTS"] = "Interviewer already exists";
+    ErrorMessage["INTERVIEWER_INVALID"] = "Invalid interviewer data";
+})(ErrorMessage || (exports.ErrorMessage = ErrorMessage = {}));

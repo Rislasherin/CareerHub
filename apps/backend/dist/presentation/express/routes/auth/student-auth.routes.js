@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const login_request_dto_1 = require("@application/dtos/auth/request/login.request.dto");
+const student_set_password_request_dto_1 = require("@application/dtos/auth/request/student-set-password.request.dto");
+const role_enum_1 = require("@domain/enums/role.enum");
+const container_1 = require("@infrastructure/di/container");
+const validate_dto_middleware_1 = require("@presentation/express/middlewares/validate-dto.middleware");
+const route_constants_1 = require("@shared/constants/route.constants");
+const shared_auth_helpers_1 = require("@presentation/express/routes/auth/shared-auth.helpers");
+const router = (0, express_1.Router)();
+router.post(route_constants_1.API_ROUTES.AUTH.STUDENT_LOGIN, (0, shared_auth_helpers_1.assignRole)(role_enum_1.Role.STUDENT), (0, validate_dto_middleware_1.validateDto)(login_request_dto_1.LoginRequestDto), container_1.container.studentAuthController.login);
+router.post(route_constants_1.API_ROUTES.AUTH.STUDENT_SET_PASSWORD, container_1.container.authMiddleware.requireAuth, container_1.container.authMiddleware.requireRoles([role_enum_1.Role.STUDENT]), (0, validate_dto_middleware_1.validateDto)(student_set_password_request_dto_1.StudentSetPasswordRequestDto), container_1.container.studentAuthController.setPassword);
+exports.default = router;

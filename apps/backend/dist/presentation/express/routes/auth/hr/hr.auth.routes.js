@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const container_1 = require("@infrastructure/di/container");
+const routes_constants_1 = require("@shared/constants/routes.constants");
+const validateZod_middleware_1 = require("@presentation/express/middlewares/validateZod.middleware");
+const login_hr_request_dto_1 = require("@application/dtos/hr/request/login.hr.request.dto");
+const router = (0, express_1.Router)();
+router.post(routes_constants_1.ROUTES.AUTH.HR_LOGIN, (0, validateZod_middleware_1.validateZod)(login_hr_request_dto_1.loginHrRequestSchema), container_1.container.hrAuthController.login);
+exports.default = router;

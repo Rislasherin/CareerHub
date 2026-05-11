@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const create_interviewer_request_dto_1 = require("@application/dtos/hr/create-interviewer.request.dto");
+const role_enum_1 = require("@domain/enums/role.enum");
+const container_1 = require("@infrastructure/di/container");
+const validate_dto_middleware_1 = require("@presentation/express/middlewares/validate-dto.middleware");
+const route_constants_1 = require("@shared/constants/route.constants");
+const router = (0, express_1.Router)();
+router.use(container_1.container.authMiddleware.requireAuth);
+router.use(container_1.container.authMiddleware.requireRoles([role_enum_1.Role.HR]));
+router.post(`${route_constants_1.API_ROUTES.HR.BASE}${route_constants_1.API_ROUTES.HR.INTERVIEWERS}`, (0, validate_dto_middleware_1.validateDto)(create_interviewer_request_dto_1.CreateInterviewerRequestDto), container_1.container.interviewerManagementController.createInterviewer);
+exports.default = router;

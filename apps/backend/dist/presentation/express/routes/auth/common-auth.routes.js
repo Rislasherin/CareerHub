@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const forgot_password_request_dto_1 = require("@application/dtos/auth/request/forgot-password.request.dto");
+const reset_password_request_dto_1 = require("@application/dtos/auth/request/reset-password.request.dto");
+const container_1 = require("@infrastructure/di/container");
+const validate_dto_middleware_1 = require("@presentation/express/middlewares/validate-dto.middleware");
+const route_constants_1 = require("@shared/constants/route.constants");
+const router = (0, express_1.Router)();
+router.post(route_constants_1.API_ROUTES.AUTH.FORGOT_PASSWORD, (0, validate_dto_middleware_1.validateDto)(forgot_password_request_dto_1.ForgotPasswordRequestDto), container_1.container.commonAuthController.forgotPassword);
+router.post(route_constants_1.API_ROUTES.AUTH.RESET_PASSWORD, (0, validate_dto_middleware_1.validateDto)(reset_password_request_dto_1.ResetPasswordRequestDto), container_1.container.commonAuthController.resetPassword);
+router.post(route_constants_1.API_ROUTES.AUTH.REFRESH, container_1.container.commonAuthController.refresh);
+router.post(route_constants_1.API_ROUTES.AUTH.LOGOUT, container_1.container.authMiddleware.requireAuth, container_1.container.commonAuthController.logout);
+exports.default = router;
