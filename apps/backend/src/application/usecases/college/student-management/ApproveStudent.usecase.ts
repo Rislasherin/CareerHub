@@ -17,8 +17,8 @@ export class ApproveStudentUseCase implements IApproveStudentUseCase {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.INTERNAL_ERROR);
     }
 
-    if (student.status !== UserStatus.PENDING) {
-      throw new AppError("Student is not in pending status", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
+    if (student.status !== UserStatus.PENDING_VERIFICATION) {
+      throw new AppError("Student has not completed verification setup", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }
 
     await this._studentRepository.updateStatus(studentId, UserStatus.ACTIVE);

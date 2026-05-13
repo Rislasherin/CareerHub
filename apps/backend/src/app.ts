@@ -17,6 +17,11 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({ success: true, message: "Server is healthy" });
 });
 
+// EMERGENCY TEST ROUTE
+app.patch("/api/test-patch", (req, res) => {
+  res.json({ success: true, message: "Backend is picking up changes!" });
+});
+
 app.use("/api", routes);
 
 app.use((_req: Request, res: Response) => {

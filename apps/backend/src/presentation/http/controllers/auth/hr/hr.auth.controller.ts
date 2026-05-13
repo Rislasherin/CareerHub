@@ -7,14 +7,38 @@ import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
+import { VerifyCompanyOtpUseCase } from "@application/usecases/auth/hr/implementations/VerifyCompanyOtp.usecase";
+
+import { LoginHRUseCase } from "@application/usecases/auth/hr/implementations/LoginHR.usecase";
+
 export class HRAuthController {
   constructor(
     private readonly registerUseCase: IRegisterCompanyUseCase,
-    private readonly onboardingUseCase: IUpdateCompanyOnboardingUseCase
+    private readonly onboardingUseCase: IUpdateCompanyOnboardingUseCase,
+    private readonly verifyOtpUseCase: VerifyCompanyOtpUseCase,
+    private readonly loginUseCase: LoginHRUseCase
   ) {}
+
+  login = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.loginUseCase.execute(req.body);
+
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 60 * 1000,
+    });
+
+    sendSuccess(res, result, "Login successful");
+  });
 
   register = asyncHandler(async (req: Request, res: Response) => {
     const result = await this.registerUseCase.execute(req.body);
+    sendSuccess(res, result, "OTP sent successfully", 201);
+  });
+
+  verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.verifyOtpUseCase.execute(req.body);
 
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
@@ -29,8 +53,8 @@ export class HRAuthController {
         hrUser: result.hrUser,
         company: result.company,
       },
-      "Company registration (Step 1) successful",
-      201
+      "OTP verification successful",
+      200
     );
   });
 

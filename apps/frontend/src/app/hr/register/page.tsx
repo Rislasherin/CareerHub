@@ -7,30 +7,77 @@ import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { registerHR } from '@/services/auth/auth.service';
+import { registerHR, verifyHROtp } from '@/services/auth/auth.service';
 import { toast } from 'sonner';
+import { useAppDispatch } from '@/redux/hooks';
+import { setAuth } from '@/redux/slices/authSlice';
+import { setHRDetails } from '@/redux/slices/hrSlice';
+import { hrRegisterSchema } from '@/utils/validation';
+import { z } from 'zod';
+import { OtpInput } from '@/components/shared/OtpInput';
 
 export default function HRRegistrationPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    companyName: ''
+    jobTitle: ''
   });
+  
+  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setErrors({});
+    
+    // Validate
+    try {
+      // For registration, we might need a slightly different schema if the UI fields don't match 1:1, 
+      // but let's assume they match or adjust.
+      hrRegisterSchema.parse(formData); 
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          if (issue.path[0]) fieldErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(fieldErrors);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await registerHR(formData);
+      
+      if (result.requiresOtp) {
+        setRegisteredEmail(result.email || formData.email);
+        setShowOtp(true);
+        toast.success(result.message || 'OTP sent to your email.');
+      }
+    } catch {
+      // Handled by interceptor
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { user } = await registerHR(formData);
-      login(user);
-      toast.success('Company registered! Complete your profile.');
-      router.push('/hr/onboarding');
+      const { user } = await verifyHROtp({ email: registeredEmail, otp });
+      dispatch(setAuth({ role: 'hr' }));
+      dispatch(setHRDetails(user));
+      toast.success('Company verified successfully!');
+      router.push('/hr/onboarding'); 
     } catch {
       // Handled by interceptor
     } finally {
@@ -50,14 +97,19 @@ export default function HRRegistrationPage() {
 
       <GlassCard className="max-w-[550px] w-full p-10">
         <div className="text-center mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-6 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-sm">
             <Building2 size={28} />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Create Company Account</h1>
-          <p className="text-slate-500 text-sm font-medium">Start hiring top talent for your organization.</p>
+          <h1 className="text-3xl font-black text-slate-900 mb-2">
+            {showOtp ? 'Verify Your Email' : 'Create Company Account'}
+          </h1>
+          <p className="text-slate-500 text-sm font-medium">
+            {showOtp ? `We've sent a 6-digit code to ${registeredEmail}` : 'Start hiring top talent for your organization.'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {!showOtp ? (
+          <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-4">
             <Input 
               label="First Name" 
@@ -65,6 +117,7 @@ export default function HRRegistrationPage() {
               placeholder="John" 
               value={formData.firstName} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'firstName')} 
+              error={errors.firstName}
               required 
             />
             <Input 
@@ -73,6 +126,7 @@ export default function HRRegistrationPage() {
               placeholder="Doe" 
               value={formData.lastName} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'lastName')} 
+              error={errors.lastName}
               required 
             />
           </div>
@@ -83,6 +137,7 @@ export default function HRRegistrationPage() {
             placeholder="hr@company.com" 
             value={formData.email} 
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'email')} 
+            error={errors.email}
             required 
           />
           <Input 
@@ -92,30 +147,51 @@ export default function HRRegistrationPage() {
             placeholder="Create a strong password" 
             value={formData.password} 
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')} 
+            error={errors.password}
             required 
           />
           <Input 
-            label="Company Name" 
+            label="Job Title" 
             icon={<Building2 size={18} />} 
-            placeholder="e.g. Acme Corp" 
-            value={formData.companyName} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'companyName')} 
+            placeholder="e.g. HR Manager" 
+            value={formData.jobTitle} 
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'jobTitle')} 
+            error={errors.jobTitle}
             required 
           />
           <Button 
             type="submit" 
-            roleType="hr" 
             fullWidth 
             isLoading={isLoading} 
-            className="mt-4 bg-purple-600 hover:bg-purple-700"
+            className="mt-4 bg-indigo-600 hover:bg-indigo-700 font-bold"
           >
-            Continue to Setup <ArrowRight size={18} />
+            Create Account <ArrowRight size={18} className="ml-2" />
           </Button>
         </form>
+        ) : (
+          <form onSubmit={handleOtpSubmit} className="flex flex-col gap-8">
+            <OtpInput 
+              value={otp}
+              onChange={setOtp}
+              onResend={() => handleSubmit()}
+              isLoading={isLoading}
+            />
+            <Button 
+              type="submit" 
+              fullWidth 
+              isLoading={isLoading} 
+              className="bg-indigo-600 hover:bg-indigo-700 font-bold h-14 rounded-2xl"
+            >
+              Verify & Continue
+            </Button>
+          </form>
+        )}
 
-        <p className="text-center mt-10 text-sm font-medium text-slate-400">
-          Already have an account? <Link href="/login" className="text-purple-600 font-bold hover:text-purple-700 transition-colors">Sign in</Link>
-        </p>
+        {!showOtp && (
+          <p className="text-center mt-10 text-sm font-medium text-slate-400">
+            Already have an account? <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors">Sign in</Link>
+          </p>
+        )}
       </GlassCard>
     </div>
   );

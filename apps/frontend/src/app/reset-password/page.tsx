@@ -7,28 +7,60 @@ import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
+import { resetPassword } from '@/services/auth/auth.service';
+import { toast } from 'sonner';
 import Link from 'next/link';
+import { resetPasswordSchema } from '@/utils/validation';
+import { z } from 'zod';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      setErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
+    
+    try {
+      resetPasswordSchema.parse({ password });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          if (issue.path[0]) fieldErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(fieldErrors);
+        return;
+      }
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (!token) {
+      toast.error('Invalid reset link');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await resetPassword({ token, password });
       setIsSuccess(true);
-      setIsLoading(false);
       setTimeout(() => router.push('/login'), 2000);
-    }, 1500);
+    } catch (err) {
+      // Interceptor handles toast error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,7 +78,7 @@ export default function ResetPasswordPage() {
               <h1 className="text-3xl font-black text-slate-900 mb-2">Reset Password</h1>
               <p className="text-slate-500 font-medium mb-8">Enter your new password below to secure your account.</p>
 
-              <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+              <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
                 <Input 
                   label="New Password" 
                   type="password"
@@ -54,6 +86,7 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  error={errors.password}
                   required
                 />
                 <Input 
@@ -63,6 +96,7 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                  error={errors.confirmPassword}
                   required
                 />
 

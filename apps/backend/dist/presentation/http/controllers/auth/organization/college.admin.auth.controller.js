@@ -1,0 +1,39 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CollegeAdminAuthController = void 0;
+const asyncHandler_util_1 = require("@shared/utils/asyncHandler.util");
+const response_util_1 = require("@shared/utils/response.util");
+class CollegeAdminAuthController {
+    constructor(_registerUseCase, _verifyOtpUseCase, _loginUseCase) {
+        this._registerUseCase = _registerUseCase;
+        this._verifyOtpUseCase = _verifyOtpUseCase;
+        this._loginUseCase = _loginUseCase;
+        this.login = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
+            const result = await this._loginUseCase.execute(req.body);
+            res.cookie("accessToken", result.accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 30 * 60 * 1000,
+            });
+            (0, response_util_1.sendSuccess)(res, result, "Login successful");
+        });
+        this.register = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
+            const result = await this._registerUseCase.execute(req.body);
+            (0, response_util_1.sendSuccess)(res, result, "OTP sent successfully", 201);
+        });
+        this.verifyOtp = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
+            const result = await this._verifyOtpUseCase.execute(req.body);
+            res.cookie("accessToken", result.accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 30 * 60 * 1000,
+            });
+            (0, response_util_1.sendSuccess)(res, {
+                collegeAdmin: result.collegeAdmin,
+            }, "OTP verification successful", 200);
+        });
+    }
+}
+exports.CollegeAdminAuthController = CollegeAdminAuthController;

@@ -22,20 +22,4 @@ export class RegisterCollegeRequestDto {
   @IsString()
   @MinLength(8)
   password!: string;
-
-  @Expose()
-  @IsString()
-  organizationName!: string;
-
-  @Expose()
-  @IsString()
-  city!: string;
-
-  @Expose()
-  @IsString()
-  state!: string;
-
-  @Expose()
-  @IsString()
-  studentCountRange!: string;
 }

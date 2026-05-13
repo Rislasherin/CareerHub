@@ -4,125 +4,122 @@ import React from 'react';
 import Link from 'next/link';
 import { User, Briefcase, GraduationCap, Building2, ArrowRight, ChevronLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { GlassCard } from '@/components/shared/GlassCard';
 
 const registerRoutes = [
   { 
-    id: 'college', 
-    label: 'College / Institution', 
-    description: 'Register your university to manage student placements.',
-    href: '/college/register', 
-    icon: Building2, 
-    color: '#10b981' 
+    id: 'student', 
+    label: 'Student', 
+    title: 'Candidate',
+    description: 'Connect with premium employers and track your career growth.',
+    href: '/student/register', 
+    icon: GraduationCap, 
+    lightColor: 'bg-indigo-50 text-indigo-600'
   },
   { 
     id: 'hr', 
-    label: 'Company / HR', 
-    description: 'Create a company profile and start hiring talent.',
+    label: 'Company', 
+    title: 'Employer / HR',
+    description: 'Post jobs, manage interviews, and hire top talent from verified colleges.',
     href: '/hr/register', 
     icon: Briefcase, 
-    color: '#8b5cf6' 
+    lightColor: 'bg-indigo-50 text-indigo-600'
   },
   { 
-    id: 'student', 
-    label: 'Student', 
-    description: 'Access your institution-provided account.',
-    href: '/student/register', 
-    icon: GraduationCap, 
-    color: '#0ea5e9' 
+    id: 'college', 
+    label: 'Institution', 
+    title: 'College / University',
+    description: 'Register your campus to streamline placements and verify students.',
+    href: '/college/register', 
+    icon: Building2, 
+    lightColor: 'bg-indigo-50 text-indigo-600'
   },
   { 
     id: 'interviewer', 
     label: 'Interviewer', 
-    description: 'Join your company\'s hiring team.',
+    title: 'Reviewer',
+    description: 'Join a hiring team to conduct interviews and evaluate candidates.',
     href: '/interviewer/register', 
     icon: User, 
-    color: '#334155' 
+    lightColor: 'bg-indigo-50 text-indigo-600'
   },
 ];
 
 export default function RegisterSelectionPage() {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50">
-      {/* Left Panel */}
-      <div className="hidden lg:flex flex-1 flex-col p-16 bg-gradient-to-br from-emerald-50 to-indigo-50 relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(16,185,129,0.1),transparent_50%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,0.1),transparent_50%)]" />
-        </div>
-
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3 text-2xl font-extrabold text-slate-900">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white text-lg">CH</div>
-            <span>CareerHub</span>
-          </Link>
-        </div>
-
-        <div className="relative z-10 my-auto max-w-lg">
-          <h1 className="text-6xl font-black leading-[1.1] text-slate-900 mb-8 tracking-tight">
-            Join the <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-indigo-600">Talent Ecosystem</span>
-          </h1>
-          <p className="text-xl text-slate-500 leading-relaxed">
-            Choose your role to get started with the most advanced placement platform. Connect with opportunities that matter.
-          </p>
-        </div>
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100 flex flex-col">
+      {/* Background elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.06),transparent_50%),radial-gradient(circle_at_80%_70%,rgba(139,92,246,0.04),transparent_50%)]" />
       </div>
 
-      {/* Right Panel */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
-        <div className="absolute top-8 left-8">
-          <Link href="/" className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors">
-            <ChevronLeft size={16} /> Back to home
-          </Link>
-        </div>
-        
-        <GlassCard className="w-full max-w-md p-10 border-none shadow-none bg-transparent">
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-black text-slate-900 mb-2">Get Started</h2>
-            <p className="text-slate-500 font-medium">Select the account type you want to create</p>
+      {/* Navigation */}
+      <nav className="relative z-10 flex justify-between items-center py-8 px-[10%] border-b border-slate-50 bg-white/50 backdrop-blur-md sticky top-0">
+        <Link href="/" className="flex items-center gap-3 text-2xl font-black group">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center text-white text-lg">CH</div>
+          <span className="tracking-tighter">CareerHub</span>
+        </Link>
+        <Link href="/login" className="text-sm font-black text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">
+          Sign In
+        </Link>
+      </nav>
+
+      <main className="relative z-10 flex-1 py-20 px-[10%] flex items-center">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="mb-20 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-5xl lg:text-7xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
+                Get Started with <span className="text-indigo-600">CareerHub</span>
+              </h1>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
+                Select your role to create your account and join the placement ecosystem.
+              </p>
+            </motion.div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {registerRoutes.map((route, index) => (
               <motion.div
                 key={route.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Link href={route.href} className="block group no-underline">
-                  <div 
-                    className="flex items-center justify-between p-5 rounded-2xl border border-slate-100 bg-slate-50/50 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-slate-200/50 hover:bg-white"
-                    style={{ borderColor: 'transparent' }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = route.color}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                        style={{ backgroundColor: `${route.color}15`, color: route.color }}
-                      >
-                        <route.icon size={24} />
-                      </div>
-                      <div>
-                        <span className="text-sm font-extrabold text-slate-900 block">{route.label}</span>
-                        <span className="text-[11px] font-medium text-slate-400">{route.description}</span>
-                      </div>
+                <Link href={route.href} className="block h-full group outline-none">
+                  <div className="h-full p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:bg-white hover:border-indigo-200 hover:shadow-[0_20px_50px_-15px_rgba(99,102,241,0.15)] transition-all duration-500 group-hover:-translate-y-2 flex flex-col">
+                    <div className={`w-16 h-16 rounded-2xl ${route.lightColor} flex items-center justify-center mb-10 shadow-sm border border-indigo-100/30 group-hover:scale-110 transition-transform duration-500`}>
+                      <route.icon size={32} strokeWidth={2.5} />
                     </div>
-                    <ArrowRight size={18} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
+                    
+                    <div className="flex-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 block">{route.label}</span>
+                      <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-indigo-600 transition-colors tracking-tight">{route.title}</h3>
+                      <p className="text-slate-500 text-sm font-medium leading-relaxed mb-10">{route.description}</p>
+                    </div>
+
+                    <div className="mt-auto flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-widest">
+                      Continue <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
+                    </div>
                   </div>
                 </Link>
               </motion.div>
             ))}
           </div>
-          
-          <div className="mt-10 text-center">
-            <p className="text-sm font-medium text-slate-400">
-              Already have an account? <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors">Log in</Link>
-            </p>
-          </div>
-        </GlassCard>
-      </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 py-12 px-[10%] border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/30">
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">© 2026 CareerHub Inc.</p>
+        <div className="flex gap-10">
+          <a href="#" className="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">Privacy</a>
+          <a href="#" className="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">Terms</a>
+          <a href="#" className="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">Support</a>
+        </div>
+      </footer>
     </div>
   );
 }

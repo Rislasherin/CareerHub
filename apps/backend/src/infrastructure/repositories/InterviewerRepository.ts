@@ -21,12 +21,12 @@ export class InterviewerRepository
   }
 
   async findByEmail(email: string): Promise<Interviewer | null> {
-    const doc = await this.model.findOne({ email });
+    const doc = await this.model.findOne({ email, isDeleted: { $ne: true } });
     return doc ? this.toEntity(doc as InterviewerDocument) : null;
   }
 
   async findByCompanyId(companyId: string): Promise<Interviewer[]> {
-    const docs = await this.model.find({ companyId });
+    const docs = await this.model.find({ companyId, isDeleted: { $ne: true } });
     return docs.map((doc) => this.toEntity(doc as InterviewerDocument));
   }
 
@@ -34,6 +34,7 @@ export class InterviewerRepository
     const skip = (page - 1) * limit;
     const filter = {
       companyId,
+      isDeleted: { $ne: true },
       $or: [
         { firstName: { $regex: query, $options: "i" } },
         { lastName: { $regex: query, $options: "i" } },
@@ -50,17 +51,12 @@ export class InterviewerRepository
       interviewers: docs.map((doc) => this.toEntity(doc as InterviewerDocument)),
       total,
     };
-  }
-
-  async update(entity: Interviewer): Promise<Interviewer> {
-    const props = this.toPersistence(entity);
-    const updated = await this.model.findByIdAndUpdate(entity.id, props, { new: true });
-    return this.toEntity(updated as InterviewerDocument);
   }
 
   async searchAllInterviewers(query: string, page: number, limit: number): Promise<{ interviewers: Interviewer[], total: number }> {
     const skip = (page - 1) * limit;
     const filter = {
+      isDeleted: { $ne: true },
       $or: [
         { firstName: { $regex: query, $options: "i" } },
         { lastName: { $regex: query, $options: "i" } },
@@ -77,5 +73,15 @@ export class InterviewerRepository
       interviewers: docs.map((doc) => this.toEntity(doc as InterviewerDocument)),
       total,
     };
+  }
+
+  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+    const update: any = { status };
+    if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
+      update.blockedBy = blockedBy;
+    } else if (status?.toUpperCase() !== 'BLOCKED') {
+      update.blockedBy = null;
+    }
+    await this.model.updateOne({ _id: id }, { $set: update });
   }
 }

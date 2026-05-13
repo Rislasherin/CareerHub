@@ -1,63 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- Brand Colors --- */
-  --color-brand-primary: #0f172a;
-  --color-brand-secondary: #334155;
+  /* --- Brand Colors (Standardized on Landing Page Indigo) --- */
+  --color-brand-primary: #4f46e5;
+  --color-brand-secondary: #6366f1;
   
-  /* --- Role Specific Colors --- */
-  --color-student-primary: #0ea5e9;
-  --color-student-secondary: #14b8a6;
+  /* --- Role Specific Colors (Removed Blue per user request) --- */
+  --color-student-primary: #6366f1;
+  --color-student-secondary: #818cf8;
   
-  --color-company-primary: #8b5cf6;
+  --color-company-primary: #4f46e5;
   --color-company-secondary: #6366f1;
   
-  --color-organizer-primary: #10b981;
-  --color-organizer-secondary: #0d9488;
+  --color-organizer-primary: #4f46e5;
+  --color-organizer-secondary: #6366f1;
   
   /* --- Neutrals --- */
-  --color-bg-main: #f8fafc;
+  --color-bg-main: #ffffff;
   --color-bg-sidebar: #0f172a;
-  --color-text-main: #1e293b;
+  --color-text-main: #0f172a;
   --color-text-muted: #64748b;
   
   /* --- UI Elements --- */
-  --color-border: #e2e8f0;
+  --color-border: #f1f5f9;
   --color-ring: #6366f1;
-  
-  /* --- Spacing --- */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  
-  /* --- Border Radius --- */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
+}
+
+@utility border-border {
+  border-color: var(--color-border);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
-    outline-color: color-mix(in srgb, var(--color-ring) 50%, transparent);
   }
   
   body {
-    @apply bg-bg-main text-text-main antialiased min-h-screen;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    @apply bg-white text-text-main antialiased min-h-screen font-sans;
   }
   
   a {
     @apply no-underline text-inherit;
-  }
-  
-  button {
-    @apply cursor-pointer;
-    border: none;
-    background: none;
-    font: inherit;
   }
 }
 
@@ -67,10 +50,18 @@
   }
   
   .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] rounded-2xl;
+    @apply bg-white border border-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.05)] rounded-[2.5rem];
   }
   
   .transition-standard {
-    @apply transition-all duration-200 ease-in-out;
+    @apply transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)];
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

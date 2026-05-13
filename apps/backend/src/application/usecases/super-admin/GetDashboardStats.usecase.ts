@@ -17,19 +17,17 @@ export class GetDashboardStatsUseCase implements IGetDashboardStatsUseCase {
 
   async execute() {
     const [orgCount, studentCount, companyCount, interviewerCount] = await Promise.all([
-      // Assuming count is available in model or add count to repository
-      // For now I'll use a simple count check if available or just 0
-      (this._orgRepository as any).model.countDocuments(),
-      (this._studentRepository as any).model.countDocuments(),
-      (this._companyRepository as any).model.countDocuments(),
-      (this._interviewerRepository as any).model.countDocuments(),
+      this._orgRepository.count({}),
+      this._studentRepository.count({}),
+      this._companyRepository.count({}),
+      this._interviewerRepository.count({}),
     ]);
 
     return {
-      totalOrganizations: orgCount,
-      totalStudents: studentCount,
-      totalCompanies: companyCount,
-      totalInterviewers: interviewerCount,
+      organizations: orgCount,
+      students: studentCount,
+      companies: companyCount,
+      interviewers: interviewerCount,
     };
   }
 }

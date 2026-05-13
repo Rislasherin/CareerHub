@@ -1,20 +1,29 @@
+import { UserStatus } from "../enums/user.status.enum";
+
 export interface CompanyProps {
   id?: string;
   name: string;
-  sector?: string;
+  industry?: string;
+  sector?: string; // mapping for compatibility
+  website?: string;
+  headquarters?: string;
+  location?: string; // mapping for compatibility
+  description?: string;
   size?: string;
-  location?: string;
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  contactJobTitle?: string;
+  logoUrl?: string;
+  preferredColleges?: string[];
   onboardingStep: number;
-  status: "active" | "inactive";
+  status: UserStatus;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export class Company {
-  constructor(private readonly props: CompanyProps) {}
+  constructor(private props: CompanyProps) {}
 
   static create(props: CompanyProps): Company {
     return new Company(props);
@@ -56,8 +65,12 @@ export class Company {
     return this.props.onboardingStep;
   }
 
-  get status(): "active" | "inactive" {
+  get status(): UserStatus {
     return this.props.status;
+  }
+  
+  set status(value: UserStatus) {
+    this.props.status = value;
   }
 
   toJSON(): CompanyProps {

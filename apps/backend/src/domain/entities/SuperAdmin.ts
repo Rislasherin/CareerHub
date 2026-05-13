@@ -14,41 +14,41 @@ export interface SuperAdminProps {
 }
 
 export class SuperAdmin {
-  constructor(private readonly props: SuperAdminProps) {}
+  constructor(private readonly _props: SuperAdminProps) {}
 
   static create(props: SuperAdminProps): SuperAdmin {
     return new SuperAdmin(props);
   }
 
   get id(): string | undefined {
-    return this.props.id;
+    return this._props.id;
   }
 
   get firstName(): string {
-    return this.props.firstName;
+    return this._props.firstName;
   }
 
   get lastName(): string {
-    return this.props.lastName;
+    return this._props.lastName;
   }
 
   get email(): string {
-    return this.props.email;
+    return this._props.email;
   }
 
   get password(): string {
-    return this.props.password;
+    return this._props.password;
   }
 
   get role(): Role {
-    return this.props.role;
+    return this._props.role;
   }
 
   get status(): UserStatus {
-    return this.props.status;
+    return this._props.status;
   }
 
   toJSON(): SuperAdminProps {
-    return { ...this.props };
+    return { ...this._props };
   }
 }

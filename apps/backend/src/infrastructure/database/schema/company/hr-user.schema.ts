@@ -39,6 +39,7 @@ export const HRUserSchema = new Schema(
       type: String,
       required: true,
     },
+    blockedBy: { type: String, required: false },
   },
   {
     timestamps: true,

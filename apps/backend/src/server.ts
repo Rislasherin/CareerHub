@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import app from "./app";
 import { connectDB } from "@infrastructure/database/mongoose/connect";
 import { env } from "@infrastructure/config/env.validator";

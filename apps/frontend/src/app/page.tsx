@@ -212,9 +212,11 @@ export default function LandingPage() {
       </footer>
       <div className="bg-slate-950 py-10 px-[10%] flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/5">
         <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">© 2026 CareerHub Inc. All rights reserved.</p>
-        <div className="flex gap-8 text-slate-400">
-          <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
-        </div>
+          <div className="flex gap-8 text-slate-400">
+            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+          </div>
       </div>
     </div>
   );

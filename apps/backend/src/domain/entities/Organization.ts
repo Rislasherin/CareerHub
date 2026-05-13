@@ -4,44 +4,63 @@ export interface OrganizationProps {
   id?: string;
   name: string;
   city: string;
-  state: string;
-  studentCountRange: string;
+  state?: string;
   status: UserStatus;
+  studentCountRange?: string;
+  shortName?: string;
+  yearEstablished?: string;
+  address?: string;
+  naacGrade?: string;
+  placementCellName?: string;
+  placementContactEmail?: string;
+  placementContactPhone?: string;
+  activeBranches?: string[];
+  currentAcademicYear?: string;
+  activePlacementBatch?: string;
+  plan?: string;
+  logoUrl?: string;
+  onboardingStep?: number;
+  website?: string;
+  description?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export class Organization {
-  constructor(private readonly props: OrganizationProps) {}
+  constructor(private _props: OrganizationProps) {}
 
   static create(props: OrganizationProps): Organization {
     return new Organization(props);
   }
 
   get id(): string | undefined {
-    return this.props.id;
+    return this._props.id;
   }
   get name(): string {
-    return this.props.name;
+    return this._props.name;
   }
 
   get city(): string {
-    return this.props.city;
+    return this._props.city;
   }
 
   get state(): string {
-    return this.props.state;
+    return this._props.state;
   }
 
-  get studentCountRange(): string {
-    return this.props.studentCountRange;
+  get studentCountRange(): string | undefined {
+    return this._props.studentCountRange;
   }
 
   get status(): UserStatus {
-    return this.props.status;
+    return this._props.status;
+  }
+
+  set status(value: UserStatus) {
+    this._props.status = value;
   }
 
   toJSON():OrganizationProps {
-     return {...this.props};
+     return {...this._props};
   }
 }

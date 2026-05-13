@@ -7,7 +7,8 @@ import {
     studentRepository, 
     companyRepository, 
     interviewerRepository, 
-    superAdminRepository 
+    superAdminRepository,
+    collegeAdminRepository
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
@@ -23,11 +24,11 @@ export const makeGetDashboardStatsUseCase = () => {
 };
 
 export const makeGetOrganizationsUseCase = () => {
-  return new GetOrganizationsUseCase(orgRepository);
+  return new GetOrganizationsUseCase(orgRepository, studentRepository, collegeAdminRepository);
 };
 
 export const makeGetStudentsUseCase = () => {
-  return new GetStudentsUseCase(studentRepository);
+  return new GetStudentsUseCase(studentRepository, orgRepository);
 };
 
 export const makeGetCompaniesUseCase = () => {
@@ -38,12 +39,37 @@ export const makeGetInterviewersUseCase = () => {
   return new GetInterviewersUseCase(interviewerRepository);
 };
 
+import { LoginSuperAdminUseCase } from "@application/usecases/auth/superadmin/implementations/LoginSuperAdmin.usecase";
+import { SuperAdminAuthController } from "@presentation/http/controllers/auth/superadmin/superadmin.auth.controller";
+import { bcryptService, jwtService } from "@infrastructure/di/infra.container";
+
+export const makeLoginSuperAdminUseCase = () => {
+  return new LoginSuperAdminUseCase(superAdminRepository, jwtService, bcryptService);
+};
+
+export const makeSuperAdminAuthController = () => {
+  return new SuperAdminAuthController(makeLoginSuperAdminUseCase());
+};
+
+import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/UpdateUserStatus.usecase";
+import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
+
+export const makeUpdateUserStatusUseCase = () => {
+  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository);
+};
+
+export const makeDeleteUserUseCase = () => {
+  return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository);
+};
+
 export const makeSuperAdminController = () => {
   return new SuperAdminController(
     makeGetDashboardStatsUseCase(),
     makeGetOrganizationsUseCase(),
     makeGetStudentsUseCase(),
     makeGetCompaniesUseCase(),
-    makeGetInterviewersUseCase()
+    makeGetInterviewersUseCase(),
+    makeUpdateUserStatusUseCase(),
+    makeDeleteUserUseCase()
   );
 };

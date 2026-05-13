@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const college_admin_auth_factory_1 = require("@infrastructure/di/college-admin-auth.factory");
+const validateDto_1 = require("@presentation/express/middlewares/validateDto");
+const register_collage_request_dto_1 = require("@application/dtos/auth/collage/Request/register.collage.request.dto");
+const VerifyCollegeOtpRequest_dto_1 = require("@application/dtos/auth/collage/Request/VerifyCollegeOtpRequest.dto");
+const validateSchema_1 = require("@presentation/express/middlewares/validateSchema");
+const validation_1 = require("@shared/validation");
+const router = (0, express_1.Router)();
+const collegeAdminAuthController = (0, college_admin_auth_factory_1.makeCollegeAdminAuthController)();
+router.post("/login", (0, validateSchema_1.validateSchema)(validation_1.loginSchema), collegeAdminAuthController.login);
+router.post("/register", (0, validateDto_1.validateDto)(register_collage_request_dto_1.RegisterCollegeRequestDto), collegeAdminAuthController.register);
+router.post("/verify-otp", (0, validateDto_1.validateDto)(VerifyCollegeOtpRequest_dto_1.VerifyCollegeOtpRequestDto), collegeAdminAuthController.verifyOtp);
+exports.default = router;

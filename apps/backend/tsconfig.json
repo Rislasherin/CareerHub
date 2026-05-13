@@ -29,5 +29,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false
-  }
+  },
+  "exclude": ["node_modules", "dist", "scratch", ".gemini"]
 }

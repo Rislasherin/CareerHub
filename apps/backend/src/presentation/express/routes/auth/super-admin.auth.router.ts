@@ -1,10 +1,11 @@
 import { Router } from "express";
+import { makeSuperAdminAuthController } from "@infrastructure/di/super-admin.factory";
+import { validateSchema } from "@presentation/express/middlewares/validateSchema";
+import { loginSchema } from "@shared/validation";
 
 const router = Router();
+const superAdminAuthController = makeSuperAdminAuthController();
 
-// TODO: Implement Super Admin Auth Routes
-router.post("/login", (req, res) => {
-  res.status(501).json({ message: "Not Implemented" });
-});
+router.post("/login", validateSchema(loginSchema), superAdminAuthController.login);
 
 export default router;

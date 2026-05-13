@@ -9,13 +9,19 @@ export const toStudentEntity = (doc: StudentDocument): Student => {
     firstName: doc.firstName,
     lastName: doc.lastName,
     email: doc.email,
-    password: doc.password,
+    password: doc.password || '',
     status: doc.status as UserStatus,
     collegeId: doc.collegeId,
-    proofUrl: doc.proofUrl,
+    proofUrl: doc.proofUrl || undefined,
     isFirstLogin: doc.isFirstLogin,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
+    rollNumber: doc.rollNumber || undefined,
+    department: doc.department || undefined,
+    phoneNumber: doc.phoneNumber || undefined,
+    invitationToken: doc.invitationToken || undefined,
+    invitationExpiresAt: doc.invitationExpiresAt || undefined,
+    rejectReason: doc.rejectReason || undefined,
+    createdAt: doc.createdAt || undefined,
+    updatedAt: doc.updatedAt || undefined,
   });
 };
 
@@ -30,5 +36,11 @@ export const toStudentPersistence = (entity: Student) => {
     collegeId: props.collegeId,
     proofUrl: props.proofUrl,
     isFirstLogin: props.isFirstLogin,
+    rollNumber: props.rollNumber,
+    department: props.department,
+    phoneNumber: props.phoneNumber,
+    invitationToken: props.invitationToken,
+    invitationExpiresAt: props.invitationExpiresAt,
+    rejectReason: props.rejectReason,
   };
 };

@@ -11,7 +11,7 @@ const error_middleware_1 = require("@presentation/express/middlewares/error.midd
 const routes_1 = __importDefault(require("@presentation/express/routes"));
 const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
-app.use((0, cors_1.default)({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use((0, cors_1.default)({ origin: process.env.CLIENT_URL || "http://localhost:3000", credentials: true }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());

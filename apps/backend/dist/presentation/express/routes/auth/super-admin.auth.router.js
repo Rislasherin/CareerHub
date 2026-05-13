@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const super_admin_factory_1 = require("@infrastructure/di/super-admin.factory");
+const validateSchema_1 = require("@presentation/express/middlewares/validateSchema");
+const validation_1 = require("@shared/validation");
+const router = (0, express_1.Router)();
+const superAdminAuthController = (0, super_admin_factory_1.makeSuperAdminAuthController)();
+router.post("/login", (0, validateSchema_1.validateSchema)(validation_1.loginSchema), superAdminAuthController.login);
+exports.default = router;

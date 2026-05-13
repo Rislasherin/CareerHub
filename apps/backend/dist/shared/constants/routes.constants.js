@@ -4,6 +4,10 @@ exports.ROUTES = void 0;
 exports.ROUTES = {
     AUTH: {
         BASE: "/auth",
-        STUDENT_LOGIN: "/student/login",
+        STUDENT: "/student",
+        HR: "/hr",
+        INTERVIEWER: "/interviewer",
+        COLLEGE_ADMIN: "/college-admin",
+        SUPER_ADMIN: "/super-admin",
     },
 };

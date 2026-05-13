@@ -1,51 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationRepository = void 0;
-const organization_entity_1 = require("@domain/entities/organization.entity");
-const organization_model_1 = require("@infrastructure/database/models/organization.model");
-class OrganizationRepository {
-    async create(organization) {
-        const created = await organization_model_1.OrganizationModel.create({
-            name: organization.getName(),
-            shortName: organization.getShortName(),
-            collegeType: organization.getCollegeType(),
-            city: organization.getCity(),
-            state: organization.getState(),
-            website: organization.getWebsite(),
-            placementCellName: organization.getPlacementCellName(),
-            activeBatch: organization.getActiveBatch(),
-            naacGrade: organization.getNaacGrade(),
-        });
-        return organization_entity_1.OrganizationEntity.create({
-            id: created._id.toString(),
-            name: created.name,
-            shortName: created.shortName,
-            collegeType: created.collegeType,
-            city: created.city,
-            state: created.state,
-            website: created.website ?? undefined,
-            placementCellName: created.placementCellName ?? undefined,
-            activeBatch: created.activeBatch ?? undefined,
-            naacGrade: created.naacGrade ?? undefined,
-        });
+const BaseRepository_1 = require("./BaseRepository");
+const organization_mapper_1 = require("@infrastructure/mappers/organization.mapper");
+const organization_model_1 = require("@infrastructure/database/models/organizer/organization.model");
+class OrganizationRepository extends BaseRepository_1.BaseRepository {
+    constructor() {
+        super(organization_model_1.OrganizationModel);
+    }
+    toEntity(doc) {
+        return (0, organization_mapper_1.toOrganizationEntity)(doc);
+    }
+    toPersistence(entity) {
+        return (0, organization_mapper_1.toOrganizationPersistence)(entity);
     }
     async findByName(name) {
-        const document = await organization_model_1.OrganizationModel.findOne({ name }).exec();
-        if (!document) {
-            return null;
-        }
-        return organization_entity_1.OrganizationEntity.create({
-            id: document._id.toString(),
-            name: document.name,
-            shortName: document.shortName,
-            collegeType: document.collegeType,
-            city: document.city,
-            state: document.state,
-            website: document.website ?? undefined,
-            placementCellName: document.placementCellName ?? undefined,
-            activeBatch: document.activeBatch ?? undefined,
-            naacGrade: document.naacGrade ?? undefined,
-        });
+        const doc = await this.model.findOne({ name });
+        return doc ? this.toEntity(doc) : null;
+    }
+    async searchOrganizations(query, page, limit) {
+        const skip = (page - 1) * limit;
+        const filter = {
+            name: { $regex: query, $options: "i" }
+        };
+        const [docs, total] = await Promise.all([
+            this.model.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
+            this.model.countDocuments(filter),
+        ]);
+        return {
+            organizations: docs.map((doc) => this.toEntity(doc)),
+            total,
+        };
+    }
+    async updateStatus(id, status) {
+        await this.model.findByIdAndUpdate(id, { status });
     }
 }
 exports.OrganizationRepository = OrganizationRepository;

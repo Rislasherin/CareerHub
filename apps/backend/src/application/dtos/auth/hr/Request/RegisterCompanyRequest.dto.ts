@@ -24,5 +24,5 @@ export class RegisterCompanyRequestDto {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  companyName!: string;
+  jobTitle!: string;
 }

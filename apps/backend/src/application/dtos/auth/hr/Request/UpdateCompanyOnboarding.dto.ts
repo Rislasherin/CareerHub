@@ -1,28 +1,49 @@
 import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsArray } from "class-validator";
 
 export class UpdateCompanyOnboardingDto {
+  // Step 1 fields
+  @Expose()
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  website?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  industry?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  headquarters?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   // Step 2 fields
   @Expose()
   @IsString()
   @IsOptional()
-  sector?: string;
-
-  @Expose()
-  @IsString()
-  @IsOptional()
   size?: string;
-
-  @Expose()
-  @IsString()
-  @IsOptional()
-  location?: string;
 
   // Step 3 fields
   @Expose()
   @IsString()
   @IsOptional()
   contactName?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  jobTitle?: string;
 
   @Expose()
   @IsEmail()
@@ -35,8 +56,16 @@ export class UpdateCompanyOnboardingDto {
   contactPhone?: string;
 
   @Expose()
+  @IsArray()
+  @IsOptional()
+  preferredColleges?: string[];
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  logoUrl?: string;
+
+  @Expose()
   @IsNotEmpty()
   step!: number;
 }
-
-import { IsEmail } from "class-validator";

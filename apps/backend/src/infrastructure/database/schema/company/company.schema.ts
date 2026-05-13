@@ -38,9 +38,11 @@ export const CompanySchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+      enum: ["ACTIVE", "INACTIVE", "PENDING", "BLOCKED"],
+      default: "PENDING",
     },
+    blockedBy: { type: String, required: false },
+    isDeleted: { type: Boolean, default: false, index: true },
   },
   {
     timestamps: true,

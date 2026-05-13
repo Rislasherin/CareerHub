@@ -14,4 +14,8 @@ router.get("/students", superAdminController.getStudents);
 router.get("/companies", superAdminController.getCompanies);
 router.get("/interviewers", superAdminController.getInterviewers);
 
+// Management actions
+router.patch("/management/:role/:id/status", superAdminController.updateStatus);
+router.delete("/management/:role/:id", superAdminController.deleteUser);
+
 export default router;

@@ -20,7 +20,7 @@ export interface CollegeAdminProps {
 }
 
 export class CollegeAdmin {
-  constructor(private readonly props: CollegeAdminProps) {}
+  constructor(private props: CollegeAdminProps) {}
 
   static create(props: CollegeAdminProps): CollegeAdmin {
     return new CollegeAdmin(props);
@@ -56,6 +56,10 @@ export class CollegeAdmin {
 
   get status(): UserStatus {
     return this.props.status;
+  }
+
+  set status(value: UserStatus) {
+    this.props.status = value;
   }
 
   toJSON(): CollegeAdminProps {

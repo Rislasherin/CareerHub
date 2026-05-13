@@ -1,122 +1,147 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
-import { Zap, Briefcase, Calendar, Star, TrendingUp, ChevronRight } from 'lucide-react';
+import { 
+  Zap, 
+  Briefcase, 
+  Calendar, 
+  Star, 
+  TrendingUp, 
+  ChevronRight,
+  ArrowUpRight,
+  Search,
+  Bell,
+  CheckCircle2,
+  ShieldCheck,
+  UserCircle
+} from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const stats = [
-  { label: 'Applied Jobs', value: '12', icon: Briefcase, color: '#0ea5e9' },
-  { label: 'Interviews', value: '3', icon: Calendar, color: '#8b5cf6' },
-  { label: 'Skill Score', value: '85%', icon: Star, color: '#f59e0b' },
-  { label: 'Profile Views', value: '124', icon: TrendingUp, color: '#10b981' },
-];
-
-const jobs = [
-  { id: 1, title: 'Frontend Developer', company: 'Google', salary: '₹18 - 24 LPA', type: 'Full-time', match: 98 },
-  { id: 2, title: 'Product Designer', company: 'Figma', salary: '₹12 - 16 LPA', type: 'Remote', match: 92 },
-  { id: 3, title: 'Software Engineer', company: 'Microsoft', salary: '₹22 - 30 LPA', type: 'Full-time', match: 85 },
-];
+import Link from 'next/link';
+import { useAppSelector } from '@/redux/hooks';
 
 export default function StudentDashboard() {
+  const router = useRouter();
+  const user = useAppSelector((state) => state.student.details);
+
+  useEffect(() => {
+    if (user) {
+      if (user.status === 'PENDING_VERIFICATION') {
+        router.push('/student/waitlist');
+      } else if (user.status === 'REJECTED' || (user.status === 'PENDING_INVITE' && !user.proofUrl)) {
+        router.push('/student/verify');
+      }
+    }
+  }, [user, router]);
+
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-8">
-        {/* --- Welcome Banner --- */}
-        <section className="flex flex-col md:flex-row items-center justify-between gap-6 p-10 rounded-[2rem] bg-gradient-to-r from-student-primary to-indigo-600 text-white shadow-xl shadow-student-primary/20">
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl font-black mb-2 tracking-tight">Hello, John Doe! 👋</h1>
-            <p className="text-indigo-100 font-medium opacity-90">You have 3 interviews scheduled for this week. Good luck!</p>
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-10">
+        
+        {/* --- Header --- */}
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">My Dashboard</h1>
+            <p className="text-slate-500 font-medium">Welcome back, {user?.firstName || 'Student'}! Your profile is active and verified.</p>
           </div>
-          <Button className="bg-white text-student-primary hover:bg-indigo-50 border-none shadow-lg">Complete Profile</Button>
+          <div className="flex items-center gap-4">
+            <button className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all relative">
+              <Bell size={20} />
+              <span className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white" />
+            </button>
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+               <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName}`} alt="avatar" />
+               </div>
+            </div>
+          </div>
+        </header>
+
+        {/* --- Verification Success Banner --- */}
+        <section className="relative p-10 lg:p-12 rounded-[3rem] bg-emerald-600 text-white overflow-hidden shadow-2xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-widest border border-white/10">
+                <ShieldCheck size={14} /> Identity Verified
+              </div>
+              <h2 className="text-4xl font-black mb-2 tracking-tight">Your Profile is Ready! 🚀</h2>
+              <p className="text-emerald-50 font-medium text-lg max-w-2xl">
+                Congratulations! Your identity has been verified by the college administration. You can now access the full placement suite.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <Button className="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none">Complete Profile</Button>
+            </div>
+          </div>
         </section>
 
-        {/* --- Stats Grid --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <GlassCard className="flex items-center gap-5 p-6 hover:translate-y-[-4px] transition-all duration-300">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
-                  <stat.icon size={28} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl font-black text-text-main">{stat.value}</span>
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{stat.label}</span>
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* --- AI Matched Jobs --- */}
-          <section className="lg:col-span-2 flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                  <Zap size={20} />
-                </div>
-                <h2 className="text-xl font-black text-text-main">AI Recommended Jobs</h2>
+           <GlassCard className="p-10 rounded-[2.5rem] border-slate-100 flex flex-col gap-6 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Job Board & Placements</h3>
+                 <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">Coming Soon</span>
               </div>
-              <Button variant="ghost" className="text-student-primary hover:bg-student-primary/5 font-bold">View All <ChevronRight size={16} /></Button>
-            </div>
+              <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
+                 <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6">
+                    <Briefcase size={40} />
+                 </div>
+                 <p className="text-slate-500 font-bold max-w-sm">
+                    Companies are currently setting up their drives. You will be notified as soon as job postings matching your profile are live.
+                 </p>
+              </div>
+           </GlassCard>
 
-            <div className="flex flex-col gap-4">
-              {jobs.map((job) => (
-                <GlassCard key={job.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-6 group hover:border-student-primary/30 transition-all duration-300">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-black text-lg text-text-main group-hover:text-student-primary transition-colors">{job.title}</h3>
-                    <p className="text-sm font-medium text-text-muted">{job.company} • {job.type}</p>
-                    <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md w-fit mt-1">{job.salary}</span>
+            <div className="space-y-8 lg:col-span-1">
+               <GlassCard className="p-8 rounded-[2.5rem] border-slate-100">
+                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6">Profile Completion</h3>
+                  <div className="space-y-6">
+                     <div className="flex justify-between items-end">
+                        <span className="text-2xl font-black text-slate-900">{user?.onboardingStep ? Math.min(Math.round((user.onboardingStep / 4) * 100), 100) : 25}%</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Setup in progress</span>
+                     </div>
+                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${user?.onboardingStep ? Math.min((user.onboardingStep / 4) * 100, 100) : 25}%` }} />
+                     </div>
+                     <ul className="space-y-3">
+                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 1 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {user?.onboardingStep >= 1 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Basic Information
+                        </li>
+                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.status === 'ACTIVE' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {user?.status === 'ACTIVE' ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Identity Verification
+                        </li>
+                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 3 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {user?.onboardingStep >= 3 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Professional Skills
+                        </li>
+                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 4 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {user?.onboardingStep >= 4 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Resume Upload
+                        </li>
+                     </ul>
+                     <Button 
+                       onClick={() => router.push('/student/profile')}
+                       fullWidth className="bg-indigo-600 text-white hover:bg-indigo-700 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest border-none"
+                     >
+                       {user?.onboardingStep >= 4 ? 'Update Profile' : 'Finish Profile Setup'}
+                     </Button>
                   </div>
-                  <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl text-xs font-black">
-                      <Zap size={14} /> {job.match}% Match
-                    </div>
-                    <Button variant="outline" className="px-6 py-2 rounded-xl font-bold border-slate-200 hover:border-student-primary hover:text-student-primary transition-all">Apply</Button>
-                  </div>
-                </GlassCard>
-              ))}
-            </div>
-          </section>
+               </GlassCard>
 
-          {/* --- Skill Analysis --- */}
-          <section className="flex flex-col gap-6">
-            <h2 className="text-xl font-black text-text-main">Skill Analysis</h2>
-            <GlassCard className="p-8 flex flex-col gap-8">
-              {[
-                { name: 'React.js', value: '90%', color: 'bg-student-primary' },
-                { name: 'TypeScript', value: '80%', color: 'bg-indigo-400' },
-                { name: 'Next.js', value: '75%', color: 'bg-purple-500' }
-              ].map((skill) => (
-                <div key={skill.name} className="flex flex-col gap-3">
-                  <div className="flex justify-between items-center text-sm font-bold">
-                    <span className="text-text-main">{skill.name}</span>
-                    <span className="text-text-muted">{skill.value}</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: skill.value }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className={`h-full rounded-full ${skill.color}`} 
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" fullWidth className="mt-4 py-4 rounded-2xl font-bold border-slate-200 hover:border-student-primary hover:text-student-primary">Take Skill Assessment</Button>
-            </GlassCard>
-          </section>
+              <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white flex flex-col gap-6">
+                 <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center">
+                    <Star size={24} />
+                 </div>
+                 <h3 className="text-xl font-black tracking-tight">AI Skill Assessment</h3>
+                 <p className="text-slate-400 text-sm font-medium leading-relaxed">
+                    Improve your visibility to recruiters by taking our baseline technical assessment.
+                 </p>
+                 <Button variant="outline" className="border-white/10 text-white hover:bg-white/5 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest">Start Test</Button>
+              </div>
+           </div>
         </div>
       </div>
     </DashboardLayout>
   );
 }
-

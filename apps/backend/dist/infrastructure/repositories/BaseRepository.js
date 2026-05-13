@@ -13,5 +13,18 @@ class BaseRepository {
         const created = await this.model.create(this.toPersistence(entity));
         return this.toEntity(created);
     }
+    async update(id, entity) {
+        const updated = await this.model.findByIdAndUpdate(id, { $set: this.toPersistence(entity) }, { new: true });
+        if (!updated) {
+            throw new Error("Entity not found for update");
+        }
+        return this.toEntity(updated);
+    }
+    async delete(id) {
+        const result = await this.model.findByIdAndDelete(id);
+        if (!result) {
+            throw new Error("Entity not found for deletion");
+        }
+    }
 }
 exports.BaseRepository = BaseRepository;

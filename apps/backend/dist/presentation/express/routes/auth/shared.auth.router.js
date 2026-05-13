@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const infra_container_1 = require("@infrastructure/di/infra.container");
+const RefreshToken_controller_1 = require("@presentation/http/controllers/auth/RefreshToken.controller");
+const auth_factory_1 = require("@infrastructure/di/auth.factory");
+const validateSchema_1 = require("@presentation/express/middlewares/validateSchema");
+const validation_1 = require("@shared/validation");
+const router = (0, express_1.Router)();
+const refreshTokenController = new RefreshToken_controller_1.RefreshTokenController(infra_container_1.jwtService);
+const forgotPasswordController = (0, auth_factory_1.makeForgotPasswordController)();
+router.post("/refresh-token", refreshTokenController.refresh);
+router.post("/logout", refreshTokenController.logout);
+router.post("/forgot-password", (0, validateSchema_1.validateSchema)(validation_1.forgotPasswordSchema), forgotPasswordController.forgotPassword);
+router.post("/reset-password", (0, validateSchema_1.validateSchema)(validation_1.resetPasswordSchema), forgotPasswordController.resetPassword);
+exports.default = router;

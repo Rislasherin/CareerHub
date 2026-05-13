@@ -5,20 +5,21 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class LoginStudentUseCase {
-    constructor(studentRepository, jwtService, bcryptService) {
-        this.studentRepository = studentRepository;
-        this.jwtService = jwtService;
-        this.bcryptService = bcryptService;
+    constructor(_studentRepository, _jwtService, _bcryptService) {
+        this._studentRepository = _studentRepository;
+        this._jwtService = _jwtService;
+        this._bcryptService = _bcryptService;
     }
     async execute(dto) {
-        const student = await this.studentRepository.findByEmail(dto.email);
+        const student = await this._studentRepository.findByEmail(dto.email);
         if (!student) {
             throw new AuthError_1.InvalidCredentialsError();
         }
-        if (student.status !== user_status_enum_1.UserStatus.ACTIVE) {
-            throw new AuthError_1.UnauthorizedError();
+        const allowedStatuses = [user_status_enum_1.UserStatus.ACTIVE, user_status_enum_1.UserStatus.PENDING_VERIFICATION, user_status_enum_1.UserStatus.REJECTED];
+        if (!allowedStatuses.includes(student.status)) {
+            throw new AuthError_1.UnauthorizedError(`Account is ${student.status.toLowerCase().replace('_', ' ')}. Please contact support.`);
         }
-        const isPasswordValid = await this.bcryptService.compare(dto.password, student.password);
+        const isPasswordValid = await this._bcryptService.compare(dto.password, student.password);
         if (!isPasswordValid) {
             throw new AuthError_1.InvalidCredentialsError();
         }
@@ -28,11 +29,12 @@ class LoginStudentUseCase {
             orgId: student.toJSON().collegeId,
         };
         return {
-            accessToken: this.jwtService.signAccessToken(payload),
-            refreshToken: this.jwtService.signRefreshToken(payload),
+            accessToken: this._jwtService.signAccessToken(payload),
+            refreshToken: this._jwtService.signRefreshToken(payload),
             student: {
                 id: student.id,
-                name: student.toJSON().name,
+                firstName: student.firstName,
+                lastName: student.lastName,
                 email: student.email,
                 status: student.status,
                 isFirstLogin: student.isFirstLogin,

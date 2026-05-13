@@ -29,4 +29,14 @@ export class HRUserRepository
     const docs = await this.model.find({ companyId });
     return docs.map((doc) => this.toEntity(doc as HRUserDocument));
   }
+
+  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+    const update: any = { status };
+    if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
+      update.blockedBy = blockedBy;
+    } else if (status?.toUpperCase() !== 'BLOCKED') {
+      update.blockedBy = null;
+    }
+    await this.model.updateOne({ _id: id }, { $set: update });
+  }
 }

@@ -1,18 +1,31 @@
 import { Request, Response } from "express";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { ILoginStudentUsescase } from "@application/usecases/auth/student/interfaces/ILogin.student.usecase";
-import { IRegisterStudentUseCase } from "@application/usecases/auth/student/interfaces/IRegister.student.usecase";
-import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { IRequestAccessUseCase } from "@application/usecases/auth/student/implementations/RequestAccess.usecase";
+import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/implementations/GetStudentProfile.usecase";
+
+import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/implementations/VerifyInvitationToken.usecase";
+import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/implementations/SetupStudentPassword.usecase";
 
 export class StudentAuthController {
   constructor(
-    private readonly loginUseCase: ILoginStudentUsescase,
-    private readonly registerUseCase: IRegisterStudentUseCase
+    private readonly _loginUseCase: ILoginStudentUsescase,
+    private readonly _requestAccessUseCase: IRequestAccessUseCase,
+    private readonly _setupPasswordUseCase: ISetupStudentPasswordUseCase,
+    private readonly _getProfileUseCase: IGetStudentProfileUseCase,
+    private readonly _verifyTokenUseCase: IVerifyInvitationTokenUseCase
   ) { }
 
+  verifyInvitationToken = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.params;
+    const student = await this._verifyTokenUseCase.execute(token);
+    sendSuccess(res, student, "Token verified successfully");
+  });
+
   login = asyncHandler(async (req: Request, res: Response) => {
-    const result = await this.loginUseCase.execute(req.body);
+    const result = await this._loginUseCase.execute(req.body);
 
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
@@ -31,8 +44,28 @@ export class StudentAuthController {
     );
   });
 
-  register = asyncHandler(async (req: Request, res: Response) => {
-    await this.registerUseCase.execute(req.body);
-    sendSuccess(res, null, "Student registered successfully. Please wait for college approval.", HttpStatus.CREATED);
+  getMe = asyncHandler(async (req: any, res: Response) => {
+    const studentId = req.user?.id;
+    const student = await this._getProfileUseCase.execute(studentId);
+    sendSuccess(res, student, "Student profile retrieved successfully");
+  });
+
+  requestAccess = asyncHandler(async (req: Request, res: Response) => {
+    await this._requestAccessUseCase.execute(req.body);
+    sendSuccess(res, null, "Request submitted. Please wait for college admin review.", HttpStatus.CREATED);
+  });
+
+  setupPassword = asyncHandler(async (req: Request, res: Response) => {
+    const { token, password } = req.body;
+    const result = await this._setupPasswordUseCase.execute(token, password);
+
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 60 * 1000,
+    });
+
+    sendSuccess(res, result, "Password set successfully. Profile activated.");
   });
 }

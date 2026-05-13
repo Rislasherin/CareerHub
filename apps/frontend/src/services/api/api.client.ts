@@ -5,7 +5,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // Important for sending/receiving cookies (like refresh tokens)
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,7 +30,7 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response.data; // Just return the data part
+    return response.data;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
@@ -42,10 +42,42 @@ apiClient.interceptors.response.use(
     }
 
     const statusCode = error.response.status;
-    const errorMessage = (error.response.data as any)?.message || error.message || 'Something went wrong';
+    const errorMessage = (error.response.data as any)?.error?.message || (error.response.data as any)?.message || error.message || 'Something went wrong';
+
+    const isAuthRoute = originalRequest.url?.includes('/login') || originalRequest.url?.includes('/register');
+
+    // Shared logout function
+    const performGlobalLogout = async (errorType?: string) => {
+      if (typeof window !== 'undefined') {
+        const { store } = await import('@/redux/store');
+        const { clearAuth } = await import('@/redux/slices/authSlice');
+        const { clearStudentDetails } = await import('@/redux/slices/studentSlice');
+        const { clearCollegeAdminDetails } = await import('@/redux/slices/collegeAdminSlice');
+        const { clearHRDetails } = await import('@/redux/slices/hrSlice');
+        const { clearInterviewerDetails } = await import('@/redux/slices/interviewerSlice');
+        const { clearSuperAdminDetails } = await import('@/redux/slices/superAdminSlice');
+
+        store.dispatch(clearAuth());
+        store.dispatch(clearStudentDetails());
+        store.dispatch(clearCollegeAdminDetails());
+        store.dispatch(clearHRDetails());
+        store.dispatch(clearInterviewerDetails());
+        store.dispatch(clearSuperAdminDetails());
+
+        const loginUrl = errorType ? `/login?error=${errorType}` : '/login';
+        window.location.href = loginUrl;
+      }
+    };
+
+    // Immediate logout if blocked
+    if (errorMessage.toLowerCase().includes('blocked') || (statusCode === 401 && isAuthRoute)) {
+      toast.error(errorMessage || 'Your session has ended.');
+      await performGlobalLogout('blocked');
+      return Promise.reject(error);
+    }
 
     // Handle 401 Unauthorized (Token Expiration)
-    if (statusCode === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh-token') {
+    if (statusCode === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh-token' && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -64,7 +96,7 @@ apiClient.interceptors.response.use(
       try {
         // Attempt to refresh the token
         await axios.post(`${BASE_URL}/auth/refresh-token`, {}, { withCredentials: true });
-        
+
         isRefreshing = false;
         processQueue(null);
 
@@ -73,17 +105,14 @@ apiClient.interceptors.response.use(
       } catch (err) {
         isRefreshing = false;
         processQueue(err as Error);
-        toast.error('Session expired. Please log in again.');
-        // Optionally redirect to login here, or let the AuthContext handle it
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+
+        await performGlobalLogout('session_expired');
         return Promise.reject(err);
       }
     }
 
     // Show toast for other errors automatically, except specific expected ones if needed
-    if (statusCode >= 400 && statusCode !== 401) {
+    if (statusCode >= 400 && (statusCode !== 401 || isAuthRoute)) {
       toast.error(errorMessage);
     }
 

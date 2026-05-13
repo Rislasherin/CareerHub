@@ -12,5 +12,11 @@ const envSchema = zod_1.z.object({
     JWT_ACCESS_EXPIRES_IN: zod_1.z.string(),
     JWT_REFRESH_SECRET: zod_1.z.string().nonempty("JWT_REFRESH_SECRET is required"),
     JWT_REFRESH_EXPIRES_IN: zod_1.z.string(),
+    EMAIL_HOST: zod_1.z.string().nonempty("EMAIL_HOST is required"),
+    EMAIL_PORT: zod_1.z.string().transform(Number),
+    EMAIL_USER: zod_1.z.string().nonempty("EMAIL_USER is required"),
+    EMAIL_PASS: zod_1.z.string().nonempty("EMAIL_PASS is required"),
+    EMAIL_FROM: zod_1.z.string().default("CareerHub <no-reply@careerhub.com>"),
+    FRONTEND_URL: zod_1.z.string().default("http://localhost:3000"),
 });
 exports.env = envSchema.parse(process.env);

@@ -10,9 +10,13 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IJwtService } from "@application/interfaces/IJwt.service";
+import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
+
+import { EmailService } from "@infrastructure/services/email/email.service";
+import { IOtpRepository } from "@domain/repositories/IOtpRepository";
 
 export interface IRegisterCompanyUseCase {
-  execute(dto: RegisterCompanyRequestDto): Promise<{ accessToken: string; refreshToken: string; company: any; hrUser: any }>;
+  execute(dto: RegisterCompanyRequestDto): Promise<{ requiresOtp: boolean; email: string; message: string }>;
 }
 
 export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
@@ -20,27 +24,35 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
     private readonly _companyRepository: ICompanyRepository,
     private readonly _hrUserRepository: IHRUserRepository,
     private readonly _bcryptService: IBcryptService,
-    private readonly _jwtService: IJwtService
+    private readonly _jwtService: IJwtService,
+    private readonly _otpRepository: IOtpRepository,
+    private readonly _emailService: EmailService,
+    private readonly _crossRoleAuthService: CrossRoleAuthService
   ) {}
 
   async execute(dto: RegisterCompanyRequestDto) {
+    const globalCheck = await this._crossRoleAuthService.isEmailInUse(dto.email);
+    if (globalCheck.inUse) {
+      throw new AppError(`This email is already registered as a ${globalCheck.role}`, HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
+    }
+
     const existingUser = await this._hrUserRepository.findByEmail(dto.email);
     if (existingUser) {
       throw new AppError("HR User with this email already exists", HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
     }
 
-    // Step 1: Create Company (basic info)
+    // Step 1: Create Company (pending)
     const company = await this._companyRepository.create(
       Company.create({
-        name: dto.companyName,
-        onboardingStep: 1,
-        status: "active",
+        name: `Pending Company ${Date.now()}`,
+        onboardingStep: 0,
+        status: UserStatus.PENDING,
       })
     );
 
     const hashedPassword = await this._bcryptService.hash(dto.password);
 
-    // Step 1: Create HR User
+    // Step 2: Create HR User (pending)
     const hrUser = await this._hrUserRepository.create(
       HRUser.create({
         companyId: company.id!,
@@ -48,32 +60,24 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
         lastName: dto.lastName,
         email: dto.email,
         password: hashedPassword,
-        designation: "Admin", // Default designation for the registering HR
+        designation: dto.jobTitle, 
         role: Role.HR,
-        status: UserStatus.ACTIVE,
+        status: UserStatus.PENDING,
       })
     );
 
-    const payload = {
-        id: hrUser.id!,
-        role: Role.HR,
-        companyId: company.id!,
-    };
+    // Step 3: Generate and save OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); // As requested by user
+    await this._otpRepository.create(dto.email, otp);
 
-    const accessToken = this._jwtService.signAccessToken(payload);
-    const refreshToken = this._jwtService.signRefreshToken(payload);
+    // Step 4: Send OTP Email
+    await this._emailService.sendOTP(dto.email, otp, "New Company");
 
     return {
-      accessToken,
-      refreshToken,
-      company: company.toJSON(),
-      hrUser: {
-        id: hrUser.id,
-        firstName: hrUser.firstName,
-        lastName: hrUser.lastName,
-        email: hrUser.email,
-        role: hrUser.role,
-      },
+      requiresOtp: true,
+      email: dto.email,
+      message: "An OTP has been sent to your email.",
     };
   }
 }

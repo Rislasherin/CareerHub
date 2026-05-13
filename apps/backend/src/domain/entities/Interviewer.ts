@@ -17,7 +17,7 @@ export interface InterviewerProps {
 }
 
 export class Interviewer {
-  constructor(private readonly props: InterviewerProps) {}
+  constructor(private props: InterviewerProps) {}
 
   static create(props: InterviewerProps): Interviewer {
     return new Interviewer(props);
@@ -61,6 +61,10 @@ export class Interviewer {
 
   get status(): UserStatus {
     return this.props.status;
+  }
+
+  set status(value: UserStatus) {
+    this.props.status = value;
   }
 
   toJSON(): InterviewerProps {

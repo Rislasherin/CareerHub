@@ -8,56 +8,86 @@ export interface StudentProps {
   password: string;
   status: UserStatus;
   collegeId: string;
-  proofUrl: string;
+  proofUrl?: string;
   isFirstLogin: boolean;
+  rollNumber?: string;
+  department?: string;
+  phoneNumber?: string;
+  rejectReason?: string;
+  invitationToken?: string;
+  invitationExpiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export class Student {
-  constructor(private readonly props: StudentProps) {}
+  constructor(private readonly _props: StudentProps) {}
 
   static create(props: StudentProps): Student {
     return new Student(props);
   }
 
   get id(): string | undefined {
-    return this.props.id;
+    return this._props.id;
   }
 
   get firstName(): string {
-    return this.props.firstName;
+    return this._props.firstName;
   }
 
   get lastName(): string {
-    return this.props.lastName;
+    return this._props.lastName;
   }
 
   get email(): string {
-    return this.props.email;
+    return this._props.email;
   }
 
   get password(): string {
-    return this.props.password;
+    return this._props.password;
   }
 
   get status(): UserStatus {
-    return this.props.status;
+    return this._props.status;
   }
 
   get collegeId(): string {
-    return this.props.collegeId;
+    return this._props.collegeId;
   }
 
-  get proofUrl(): string {
-    return this.props.proofUrl;
+  get proofUrl(): string | undefined {
+    return this._props.proofUrl;
   }
 
   get isFirstLogin(): boolean {
-    return this.props.isFirstLogin;
+    return this._props.isFirstLogin;
+  }
+
+  get rollNumber(): string | undefined {
+    return this._props.rollNumber;
+  }
+
+  get department(): string | undefined {
+    return this._props.department;
+  }
+
+  get phoneNumber(): string | undefined {
+    return this._props.phoneNumber;
+  }
+
+  get rejectReason(): string | undefined {
+    return this._props.rejectReason;
+  }
+
+  get invitationToken(): string | undefined {
+    return this._props.invitationToken;
+  }
+
+  get invitationExpiresAt(): Date | undefined {
+    return this._props.invitationExpiresAt;
   }
 
   toJSON(): StudentProps {
-    return { ...this.props };
+    return { ...this._props };
   }
 }

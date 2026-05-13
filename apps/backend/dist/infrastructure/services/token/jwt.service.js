@@ -64,6 +64,17 @@ class JwtService {
             return this.handleJwtError(error);
         }
     }
+    generateResetToken(payload) {
+        return jsonwebtoken_1.default.sign(payload, jwt_constants_1.JWT_ACCESS_SECRET, { expiresIn: "1h" });
+    }
+    verifyResetToken(token) {
+        try {
+            return jsonwebtoken_1.default.verify(token, jwt_constants_1.JWT_ACCESS_SECRET);
+        }
+        catch (error) {
+            return this.handleJwtError(error);
+        }
+    }
     handleJwtError(error) {
         if (error instanceof jsonwebtoken_1.TokenExpiredError) {
             throw new AuthError_1.TokenExpiredCustomError();

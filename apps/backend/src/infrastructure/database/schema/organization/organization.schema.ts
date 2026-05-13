@@ -14,18 +14,20 @@ export const organizationSchema = new Schema(
     },
     state: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     studentCountRange: {
       type: String,
-      required: true,
+      required: false,
     },
 
     status: {
       type: String,
       required: true,
     },
+    blockedBy: { type: String, required: false },
+    isDeleted: { type: Boolean, default: false, index: true },
   },
   {
     timestamps: true,

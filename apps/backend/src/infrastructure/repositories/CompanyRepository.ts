@@ -21,20 +21,15 @@ export class CompanyRepository
   }
 
   async findByName(name: string): Promise<Company | null> {
-    const doc = await this.model.findOne({ name });
+    const doc = await this.model.findOne({ name, isDeleted: { $ne: true } });
     return doc ? this.toEntity(doc as CompanyDocument) : null;
-  }
-
-  async update(entity: Company): Promise<Company> {
-    const props = this.toPersistence(entity);
-    const updated = await this.model.findByIdAndUpdate(entity.id, props, { new: true });
-    return this.toEntity(updated as CompanyDocument);
   }
 
   async searchCompanies(query: string, page: number, limit: number): Promise<{ companies: Company[], total: number }> {
     const skip = (page - 1) * limit;
     const filter = {
-        name: { $regex: query, $options: "i" }
+        name: { $regex: query, $options: "i" },
+        isDeleted: { $ne: true }
     };
 
     const [docs, total] = await Promise.all([
@@ -46,5 +41,15 @@ export class CompanyRepository
       companies: docs.map((doc) => this.toEntity(doc as CompanyDocument)),
       total,
     };
+  }
+
+  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+    const update: any = { status };
+    if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
+      update.blockedBy = blockedBy;
+    } else if (status?.toUpperCase() !== 'BLOCKED') {
+      update.blockedBy = null;
+    }
+    await this.model.updateOne({ _id: id }, { $set: update });
   }
 }

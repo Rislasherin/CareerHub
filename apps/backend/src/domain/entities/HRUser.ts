@@ -16,7 +16,7 @@ export interface HRUserProps {
 }
 
 export class HRUser {
-  constructor(private readonly props: HRUserProps) {}
+  constructor(private props: HRUserProps) {}
 
   static create(props: HRUserProps): HRUser {
     return new HRUser(props);
@@ -56,6 +56,10 @@ export class HRUser {
 
   get status(): UserStatus {
     return this.props.status;
+  }
+
+  set status(value: UserStatus) {
+    this.props.status = value;
   }
 
   toJSON(): HRUserProps {

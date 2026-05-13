@@ -21,14 +21,15 @@ export class OrganizationRepository extends BaseRepository
     }
 
     async findByName(name: string): Promise<Organization | null> {
-    const doc = await this.model.findOne({ name });
+    const doc = await this.model.findOne({ name, isDeleted: { $ne: true } });
     return doc ? this.toEntity(doc as any) : null;
   }
 
   async searchOrganizations(query: string, page: number, limit: number): Promise<{ organizations: Organization[], total: number }> {
     const skip = (page - 1) * limit;
     const filter = {
-        name: { $regex: query, $options: "i" }
+        name: { $regex: query, $options: "i" },
+        isDeleted: { $ne: true }
     };
 
     const [docs, total] = await Promise.all([
@@ -40,6 +41,16 @@ export class OrganizationRepository extends BaseRepository
       organizations: docs.map((doc) => this.toEntity(doc as any)),
       total,
     };
+  }
+
+  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+    const update: any = { status };
+    if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
+      update.blockedBy = blockedBy;
+    } else if (status?.toUpperCase() !== 'BLOCKED') {
+      update.blockedBy = null;
+    }
+    await this.model.updateOne({ _id: id }, { $set: update });
   }
 
 }

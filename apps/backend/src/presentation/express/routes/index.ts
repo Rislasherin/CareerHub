@@ -8,6 +8,8 @@ import sharedAuthRoutes from "./auth/shared.auth.router";
 import collegeRouter from "./college/college.router";
 import hrRouter from "./hr/hr.router";
 import superAdminRouter from "./super-admin/super-admin.router";
+import studentRouter from "./student/student.router";
+import { makeStudentManagementController } from "@infrastructure/di/college.factory";
 import { ROUTES } from "@shared/constants/routes.constants";
 
 const router = Router();
@@ -20,6 +22,7 @@ router.use(`${ROUTES.AUTH.BASE}${ROUTES.AUTH.SUPER_ADMIN}`, superAdminAuthRoutes
 router.use(ROUTES.AUTH.BASE, sharedAuthRoutes);
 router.use("/college", collegeRouter);
 router.use("/hr", hrRouter);
+router.use("/student", studentRouter);
 router.use("/super-admin", superAdminRouter);
 
 export default router;

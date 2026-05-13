@@ -2,116 +2,182 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { GlassCard } from '@/components/shared/GlassCard';
-import { Button } from '@/components/shared/Button';
-import { GraduationCap, ShieldCheck, Building, TrendingUp, FileUp, ChevronRight, Users } from 'lucide-react';
+import { 
+  GraduationCap, 
+  ShieldCheck, 
+  Building2, 
+  TrendingUp, 
+  FileUp, 
+  ChevronRight, 
+  Users,
+  Search,
+  Bell,
+  CheckCircle2,
+  Clock,
+  IndianRupee,
+  Calendar,
+  MoreVertical,
+  Plus,
+  ArrowUp,
+  ExternalLink,
+  Star,
+  FileSpreadsheet
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-
-const stats = [
-  { label: 'Total Students', value: '1,245', icon: GraduationCap, color: '#10b981' },
-  { label: 'Pending Verification', value: '3', icon: ShieldCheck, color: '#f59e0b' },
-  { label: 'Partner Companies', value: '42', icon: Building, color: '#0ea5e9' },
-  { label: 'Placement Rate', value: '88%', icon: TrendingUp, color: '#8b5cf6' },
-];
+import { Button } from '@/components/shared/Button';
+import { GlassCard } from '@/components/shared/GlassCard';
+import { apiClient } from '@/services/api/api.client';
+import { useAppSelector } from '@/redux/hooks';
 
 export default function CollegeDashboard() {
+  const [dynamicStats, setDynamicStats] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response: any = await apiClient.get('/college/dashboard/stats');
+        if (response.success) {
+          setDynamicStats(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const stats = [
+    { label: 'Total Registered', value: dynamicStats?.totalStudents || '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: 'Batch 2024-25' },
+    { label: 'Pending Verification', value: dynamicStats?.pendingVerification || '0', icon: ShieldCheck, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Review needed' },
+    { label: 'Active Companies', value: dynamicStats?.totalCompanies || '0', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: 'Onboarded' },
+    { label: 'Active Drives', value: '0', icon: Calendar, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'Coming Soon' },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-8">
-        {/* --- Welcome Banner --- */}
-        <section className="flex flex-col md:flex-row items-center justify-between gap-6 p-10 rounded-[2rem] bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-600/20">
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl font-black mb-2 tracking-tight">College Admin Portal</h1>
-            <p className="text-emerald-50 font-medium opacity-90">Manage your students and track institutional placement performance.</p>
+      <div className="max-w-[1600px] mx-auto flex flex-col gap-8 pb-12">
+        
+        {/* Header */}
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+              {useAppSelector(state => state.collegeAdmin.details?.collegeName) || 'College Console'}
+            </h1>
+            <p className="text-slate-500 font-medium">Manage student identities, company registrations, and placement drives.</p>
           </div>
-          <Link href="/college/verification">
-             <Button className="bg-white text-emerald-600 hover:bg-emerald-50 border-none shadow-lg">Review Pending</Button>
-          </Link>
-        </section>
+          <div className="flex items-center gap-4">
+             <Link href="/college/students">
+                <Button variant="outline" className="rounded-xl border-slate-200 h-12 px-6 text-xs font-black gap-2 shadow-sm bg-white">
+                  <FileSpreadsheet size={18} /> Student Directory
+                </Button>
+             </Link>
+             <button className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-all shadow-sm">
+                <Bell size={20} />
+             </button>
+          </div>
+        </header>
 
-        {/* --- Stats Grid --- */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
             <motion.div
-              key={stat.label}
+              key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
+              className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm group hover:shadow-xl transition-all duration-300"
             >
-              <GlassCard className="flex items-center gap-5 p-6 hover:translate-y-[-4px] transition-all duration-300">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
-                  <stat.icon size={28} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl font-black text-text-main">{stat.value}</span>
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{stat.label}</span>
-                </div>
-              </GlassCard>
+              <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-6`}>
+                <stat.icon size={24} />
+              </div>
+              <div className="space-y-1">
+                <span className="text-4xl font-black text-slate-900 block">{stat.value}</span>
+                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">{stat.label}</span>
+              </div>
+              <div className="mt-6 pt-6 border-t border-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                 {stat.trend}
+              </div>
             </motion.div>
           ))}
         </div>
 
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* --- Recent Top Placements --- */}
-          <section className="lg:col-span-2 flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-text-main">Recent Top Placements</h2>
-              <Button variant="ghost" className="text-emerald-600 hover:bg-emerald-50 font-bold">View All <ChevronRight size={16} /></Button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {[
-                { name: 'Sarah Connor', company: 'Cyberdyne Systems', package: '₹24 LPA' },
-                { name: 'Miles Dyson', company: 'Cyberdyne Systems', package: '₹30 LPA' }
-              ].map((placement, idx) => (
-                <GlassCard key={idx} className="flex items-center justify-between p-6 group hover:border-emerald-600/30 transition-all duration-300">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                      {placement.name.split(' ').map(n => n[0]).join('')}
+           
+           {/* Student Management Focus */}
+           <div className="lg:col-span-2 space-y-8">
+              <section className="p-10 lg:p-12 rounded-[3rem] bg-indigo-600 text-white overflow-hidden shadow-2xl shadow-indigo-500/20 relative">
+                 <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
+                 <div className="relative z-10">
+                    <h2 className="text-3xl font-black mb-4 tracking-tight">Onboard your Students</h2>
+                    <p className="text-indigo-100 font-medium text-lg max-w-lg mb-8">
+                       The verification window is open. Start approving student identities or bulk-invite them via CSV to begin the placement season.
+                    </p>
+                    <div className="flex gap-4">
+                       <Link href="/college/students">
+                          <Button className="bg-white text-indigo-600 hover:bg-indigo-50 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none">Review Requests</Button>
+                       </Link>
+                       <Button variant="outline" className="border-white/20 text-white hover:bg-white/5 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest">Download Template</Button>
                     </div>
-                    <div>
-                      <h3 className="font-black text-text-main group-hover:text-emerald-600 transition-colors">{placement.name}</h3>
-                      <p className="text-sm font-medium text-text-muted">Placed at: {placement.company}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-black text-emerald-600">{placement.package}</span>
-                  </div>
-                </GlassCard>
-              ))}
-            </div>
-          </section>
+                 </div>
+              </section>
 
-          {/* --- Quick Actions --- */}
-          <section className="flex flex-col gap-6">
-            <h2 className="text-xl font-black text-text-main">Quick Actions</h2>
-            <GlassCard className="p-8 flex flex-col gap-4">
-              <Button fullWidth className="bg-emerald-600 hover:bg-emerald-700 py-4 rounded-2xl font-bold border-none shadow-lg shadow-emerald-600/20">
-                <FileUp size={18} className="mr-2" />
-                Upload Students (CSV)
-              </Button>
-              <Link href="/college/verification" className="w-full">
-                <Button fullWidth className="bg-amber-500 hover:bg-amber-600 py-4 rounded-2xl font-bold border-none shadow-lg shadow-amber-500/20 text-white">
-                  <ShieldCheck size={18} className="mr-2" />
-                  Verify Students (3)
-                </Button>
-              </Link>
-              <Button fullWidth variant="outline" className="py-4 rounded-2xl font-bold border-slate-200 hover:border-emerald-600 hover:text-emerald-600">
-                Export Placement Report
-              </Button>
-              <div className="mt-4 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
-                <div className="flex items-center gap-2 text-emerald-700 mb-1">
-                  <Users size={14} />
-                  <span className="text-xs font-bold uppercase tracking-wider">Admin Tip</span>
-                </div>
-                <p className="text-[11px] font-medium text-emerald-600 leading-relaxed">
-                  Regularly update your partner company list to keep student opportunities fresh.
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
+                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Company Portal</h3>
+                    <p className="text-slate-500 font-bold mb-8">
+                       Invite companies to register on CareerHub to start posting jobs and scheduling drives.
+                    </p>
+                    <Button fullWidth className="bg-slate-900 text-white hover:bg-slate-800 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest border-none">Invite Company</Button>
+                 </GlassCard>
+
+                 <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
+                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Placement Drives</h3>
+                    <div className="flex flex-col items-center justify-center py-4 text-center">
+                       <Calendar size={48} className="text-slate-200 mb-4" />
+                       <p className="text-xs font-bold text-slate-400">Drives will appear here once companies start posting requirements.</p>
+                    </div>
+                 </GlassCard>
               </div>
-            </GlassCard>
-          </section>
+           </div>
+
+           {/* Quick Stats / Activity */}
+           <div className="space-y-8">
+              <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
+                 <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Recent Activity</h3>
+                 <div className="space-y-8">
+                    {[
+                      { text: 'System initialized for new academic year', time: 'Online' },
+                      { text: 'College profile verified', time: 'Active' },
+                    ].map((act, i) => (
+                      <div key={i} className="flex gap-4">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                         <div>
+                            <p className="text-xs font-bold text-slate-700">{act.text}</p>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{act.time}</span>
+                         </div>
+                      </div>
+                    ))}
+                 </div>
+              </GlassCard>
+
+              <div className="p-10 rounded-[2.5rem] bg-amber-500 text-[#0B0D17] flex flex-col gap-6">
+                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                    <Star size={24} fill="currentColor" />
+                 </div>
+                 <h3 className="text-xl font-black tracking-tight">Pro Features Active</h3>
+                 <p className="text-[#0B0D17]/70 text-sm font-medium leading-relaxed">
+                    You have access to unlimited student registrations and bulk CSV tools.
+                 </p>
+              </div>
+           </div>
+
         </div>
+
       </div>
     </DashboardLayout>
   );
