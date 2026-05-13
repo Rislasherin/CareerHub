@@ -3,13 +3,13 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  GraduationCap, 
-  Building2, 
-  Briefcase, 
-  ShieldCheck, 
-  Mail, 
-  Lock, 
+import {
+  GraduationCap,
+  Building2,
+  Briefcase,
+  ShieldCheck,
+  Mail,
+  Lock,
   Eye,
   EyeOff,
   ChevronLeft
@@ -64,6 +64,13 @@ const roleContent = {
     quote: "The interview toolkit is incredible. I can focus on the candidate instead of worrying about the technical setup.",
     author: "Michael Chen",
     position: "Senior Lead at Microsoft"
+  },
+  super_admin: {
+    title: "Platform Administration",
+    subtitle: "Oversee the entire CareerHub ecosystem with comprehensive management tools.",
+    quote: "Maintaining a platform of this scale requires tools that are as powerful as the vision behind them.",
+    author: "System Admin",
+    position: "Infrastructure Team"
   }
 };
 
@@ -89,7 +96,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -110,7 +117,7 @@ function LoginContent() {
   useEffect(() => {
     const roleParam = searchParams.get('role') as UserRole;
     const validRoles: UserRole[] = ['student', 'hr', 'interviewer', 'college_admin'];
-    
+
     if (roleParam && validRoles.includes(roleParam)) {
       setActiveRole(roleParam);
     }
@@ -119,7 +126,7 @@ function LoginContent() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     // Validate
     try {
       loginSchema.parse({ email, password });
@@ -137,10 +144,11 @@ function LoginContent() {
     setIsLoading(true);
     try {
       const { user, isFirstLogin } = await loginUser(activeRole, { email, password });
-      
+      console.log('user:', user)
+
       // Update Redux state
       dispatch(setAuth({ role: user.role }));
-      
+
       // Populate role-specific slice
       switch (user.role) {
         case 'student':
@@ -161,7 +169,7 @@ function LoginContent() {
       }
 
       toast.success(`Welcome back, ${user.firstName}!`);
-      
+
       const getStudentRedirect = () => {
         if (isFirstLogin) return '/student/setup';
         if (user.status === 'PENDING_VERIFICATION' || user.status === 'REJECTED') return '/student/verify';
@@ -183,7 +191,7 @@ function LoginContent() {
         interviewer: '/interviewer',
         super_admin: '/admin'
       };
-      
+
       router.push(roleRedirects[activeRole]);
     } catch (err) {
       // Interceptor handles toast
@@ -198,12 +206,12 @@ function LoginContent() {
     <div className="min-h-screen w-full flex bg-white font-sans text-slate-900">
       {/* Split Screen Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-screen">
-        
+
         {/* Left Side: Dynamic Branding Content */}
         <div className="hidden lg:flex flex-col bg-slate-50 relative p-16 xl:p-24 overflow-hidden border-r border-slate-100">
           {/* Background Gradient */}
           <div className="absolute inset-0 z-0">
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.06),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.04),transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.06),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.04),transparent_60%)]" />
           </div>
 
           {/* Logo */}
@@ -271,11 +279,11 @@ function LoginContent() {
 
           <div className="w-full max-w-md">
             <div className="text-center lg:text-left mb-12">
-               <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-8 mx-auto lg:mx-0 shadow-sm border border-indigo-100/30">
-                  {React.createElement(roles.find(r => r.id === activeRole)!.icon, { size: 32, strokeWidth: 2.5 })}
-               </div>
-               <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter leading-none">Welcome back</h2>
-               <p className="text-slate-500 font-medium text-lg leading-relaxed">Log in to manage your enterprise placements.</p>
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-8 mx-auto lg:mx-0 shadow-sm border border-indigo-100/30">
+                {React.createElement(roles.find(r => r.id === activeRole)!.icon, { size: 32, strokeWidth: 2.5 })}
+              </div>
+              <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter leading-none">Welcome back</h2>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed">Log in to manage your enterprise placements.</p>
             </div>
 
             {/* Role Switcher Tabs */}
@@ -297,36 +305,36 @@ function LoginContent() {
             <form noValidate onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
-                <Input 
-                  type="email" 
-                  icon={<Mail size={20} className="text-slate-400" />} 
+                <Input
+                  type="email"
+                  icon={<Mail size={20} className="text-slate-400" />}
                   placeholder="name@company.com"
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   error={errors.email}
-                  required 
+                  required
                   className="h-16 bg-slate-50 border-slate-100 focus:bg-white transition-all rounded-2xl text-base px-6"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-end mb-1">
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Password</label>
                   <Link href="/forgot-password" title="Forgot password?" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Forgot Password?</Link>
                 </div>
                 <div className="relative group">
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    icon={<Lock size={20} className="text-slate-400" />} 
-                    placeholder="••••••••" 
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    icon={<Lock size={20} className="text-slate-400" />}
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                     error={errors.password}
-                    required 
+                    required
                     className="h-16 bg-slate-50 border-slate-100 focus:bg-white transition-all rounded-2xl text-base px-6"
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors"
                   >
@@ -335,9 +343,9 @@ function LoginContent() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                fullWidth 
+              <Button
+                type="submit"
+                fullWidth
                 isLoading={isLoading}
                 className="h-16 mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all border-none"
               >

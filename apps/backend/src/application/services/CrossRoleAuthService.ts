@@ -13,28 +13,28 @@ export class CrossRoleAuthService {
     private readonly _superAdminRepo: ISuperAdminRepository
   ) {}
 
-  async isEmailInUse(email: string): Promise<{ inUse: boolean; role?: string }> {
+  async isEmailInUse(email: string): Promise<{ inUse: boolean; role?: string; status?: string }> {
     const checkEmail = email.toLowerCase().trim();
 
     // Check Students
     const student = await this._studentRepo.findByEmail(checkEmail);
-    if (student) return { inUse: true, role: "Student" };
+    if (student) return { inUse: true, role: "Student", status: student.status };
 
     // Check HR
     const hr = await this._hrRepo.findByEmail(checkEmail);
-    if (hr) return { inUse: true, role: "HR" };
+    if (hr) return { inUse: true, role: "HR", status: hr.status };
 
     // Check Interviewers
     const interviewer = await this._interviewerRepo.findByEmail(checkEmail);
-    if (interviewer) return { inUse: true, role: "Interviewer" };
+    if (interviewer) return { inUse: true, role: "Interviewer", status: interviewer.status };
 
     // Check College Admins
     const collegeAdmin = await this._collegeAdminRepo.findByEmail(checkEmail);
-    if (collegeAdmin) return { inUse: true, role: "College Admin" };
+    if (collegeAdmin) return { inUse: true, role: "College Admin", status: collegeAdmin.status };
 
     // Check Super Admins
     const superAdmin = await this._superAdminRepo.findByEmail(checkEmail);
-    if (superAdmin) return { inUse: true, role: "Super Admin" };
+    if (superAdmin) return { inUse: true, role: "Super Admin", status: superAdmin.status };
 
     return { inUse: false };
   }

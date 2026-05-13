@@ -21,11 +21,11 @@ export class LoginCollegeAdminUseCase {
       throw new InvalidCredentialsError();
     }
 
-    if (admin.status === UserStatus.BLOCKED) {
-      throw new UnauthorizedError("Your account has been blocked by admin.");
+    if (admin.status === UserStatus.BLOCKED || admin.status === UserStatus.REJECTED) {
+      throw new UnauthorizedError("Your account has been blocked or rejected.");
     }
 
-    if (admin.status !== UserStatus.ACTIVE) {
+    if (admin.status !== UserStatus.ACTIVE && admin.status !== UserStatus.PENDING) {
       throw new UnauthorizedError("Your account is not active. Please verify your email.");
     }
 

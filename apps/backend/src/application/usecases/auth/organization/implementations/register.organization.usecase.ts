@@ -34,19 +34,36 @@ export class RegisterOrganizationUseCase implements IRegisterOrganizationUseCase
         
         const globalCheck = await this.crossRoleAuthService.isEmailInUse(email);
         if (globalCheck.inUse) {
-            throw new ValidationError(`This email is already registered as a ${globalCheck.role}`);
+            // Only block if it's a different role OR if it's the same role but already verified (ACTIVE)
+            if (globalCheck.role !== "College Admin" || globalCheck.status !== UserStatus.PENDING) {
+                throw new ValidationError(`This email is already registered as a ${globalCheck.role}`);
+            }
         }
 
         const existingAdmin = await this.collegeAdminRepository.findByEmail(email)
+        
+        if (existingAdmin) {
+            if (existingAdmin.status === UserStatus.PENDING) {
+                // Handle Resend OTP: User exists but not verified
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                console.log(`[OTP RE-GENERATED] College Admin Email: ${email}, OTP: ${otp}`);
+                await this.otpRepository.deleteByEmail(email);
+                await this.otpRepository.create(email, otp);
+                await this.emailService.sendOTP(email, otp, "your institution");
 
-        if(existingAdmin){
+                return {
+                    requiresOtp: true,
+                    email: email,
+                    message: "A new OTP has been sent to your college admin email."
+                };
+            }
             throw new ValidationError("Admin already exists")
         }
 
         const hashPassword = await this.bcryptService.hash(dto.password)
 
         const organization = Organization.create({
-            name: `Pending Institution ${Date.now()}`,
+            name: `Pending Institution (${dto.firstName} ${dto.lastName}) - ${Date.now()}`,
             city: "N/A",
             state: "N/A",
             studentCountRange: "Not Specified",

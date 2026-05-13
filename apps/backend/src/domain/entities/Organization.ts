@@ -44,7 +44,7 @@ export class Organization {
     return this._props.city;
   }
 
-  get state(): string {
+  get state(): string | undefined {
     return this._props.state;
   }
 
@@ -58,6 +58,10 @@ export class Organization {
 
   set status(value: UserStatus) {
     this._props.status = value;
+  }
+
+  get onboardingStep(): number | undefined {
+    return this._props.onboardingStep;
   }
 
   toJSON():OrganizationProps {

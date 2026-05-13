@@ -33,18 +33,36 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
   async execute(dto: RegisterCompanyRequestDto) {
     const globalCheck = await this._crossRoleAuthService.isEmailInUse(dto.email);
     if (globalCheck.inUse) {
-      throw new AppError(`This email is already registered as a ${globalCheck.role}`, HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
+      // Only block if it's a different role OR if it's the same role but already verified (ACTIVE)
+      if (globalCheck.role !== "HR" || globalCheck.status !== UserStatus.PENDING) {
+        throw new AppError(`This email is already registered as a ${globalCheck.role}`, HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
+      }
     }
 
     const existingUser = await this._hrUserRepository.findByEmail(dto.email);
+    
     if (existingUser) {
+      if (existingUser.status === UserStatus.PENDING) {
+        // Handle Resend OTP: User exists but not verified
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[OTP RE-GENERATED] Email: ${dto.email}, OTP: ${otp}`);
+        await this._otpRepository.deleteByEmail(dto.email);
+        await this._otpRepository.create(dto.email, otp);
+        await this._emailService.sendOTP(dto.email, otp, "New Company");
+
+        return {
+          requiresOtp: true,
+          email: dto.email,
+          message: "A new OTP has been sent to your email.",
+        };
+      }
       throw new AppError("HR User with this email already exists", HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
     }
 
     // Step 1: Create Company (pending)
     const company = await this._companyRepository.create(
       Company.create({
-        name: `Pending Company ${Date.now()}`,
+        name: `Pending Company (${dto.firstName} ${dto.lastName}) - ${Date.now()}`,
         onboardingStep: 0,
         status: UserStatus.PENDING,
       })

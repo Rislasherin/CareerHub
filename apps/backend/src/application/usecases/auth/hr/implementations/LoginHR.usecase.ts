@@ -21,11 +21,11 @@ export class LoginHRUseCase {
       throw new InvalidCredentialsError();
     }
 
-    if (hrUser.status === UserStatus.BLOCKED) {
-      throw new UnauthorizedError("Your account has been blocked by admin.");
+    if (hrUser.status === UserStatus.BLOCKED || hrUser.status === UserStatus.REJECTED) {
+      throw new UnauthorizedError("Your account has been blocked or rejected.");
     }
 
-    if (hrUser.status !== UserStatus.ACTIVE) {
+    if (hrUser.status !== UserStatus.ACTIVE && hrUser.status !== UserStatus.PENDING) {
       throw new UnauthorizedError("Your account is not active");
     }
 

@@ -29,7 +29,7 @@ export const HRUserSchema = new Schema(
     },
     designation: {
       type: String,
-      required: true,
+      required: false,
     },
     role: {
       type: String,

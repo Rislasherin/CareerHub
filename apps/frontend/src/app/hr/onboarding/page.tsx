@@ -20,21 +20,21 @@ import { setHRDetails } from '@/redux/slices/hrSlice';
 
 const step1Schema = z.object({
   name: z.string().min(3, 'Company name must be at least 3 characters'),
-  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
-  industry: z.string().min(1, 'Industry is required'),
+  website: z.string().optional().or(z.literal('')),
+  industry: z.string().optional().or(z.literal('')),
   headquarters: z.string().optional(),
   description: z.string().optional(),
 });
 
 const step2Schema = z.object({
-  size: z.string().min(1, 'Company size is required'),
-  industry: z.string().min(1, 'Industry is required'),
+  size: z.string().optional().or(z.literal('')),
+  industry: z.string().optional().or(z.literal('')),
 });
 
 const step3Schema = z.object({
   contactName: z.string().min(3, 'Contact name is required'),
   jobTitle: z.string().optional(),
-  contactEmail: z.string().email('Invalid email address'),
+  contactEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
   preferredColleges: z.array(z.string()).optional(),
   logoUrl: z.string().optional(),

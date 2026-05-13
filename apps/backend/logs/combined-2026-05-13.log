@@ -121,3 +121,50 @@
 2026-05-13 11:41:35 [[32minfo[39m]: Server running on http://localhost:5000
 2026-05-13 11:42:06 [[32minfo[39m]: Server running on http://localhost:5000
 2026-05-13 11:42:16 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 11:44:58 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 11:44:58 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 11:46:47 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 11:46:51 [[33mwarn[39m]: [VALIDATION_ERROR] This email is already registered as a College Admin
+2026-05-13 11:49:02 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active
+2026-05-13 11:50:09 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 11:50:09 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 11:50:09 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 11:50:09 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 11:50:34 [[33mwarn[39m]: [INVALID_CREDENTIALS] Invalid email or password
+2026-05-13 11:55:02 [[33mwarn[39m]: [USER_ALREADY_EXISTS] This email is already registered as a HR
+2026-05-13 11:59:30 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active
+2026-05-13 12:01:11 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 12:01:11 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 12:06:18 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 12:06:18 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 12:16:47 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:16:57 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:17:18 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 12:17:19 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 12:21:38 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active. Please verify your email.
+2026-05-13 12:22:54 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:23:04 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:23:52 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:24:32 [[33mwarn[39m]: [VALIDATION_ERROR] otp must be longer than or equal to 6 characters, otp should not be empty
+2026-05-13 12:24:43 [[33mwarn[39m]: [VALIDATION_ERROR] otp must be longer than or equal to 6 characters, otp should not be empty
+2026-05-13 12:25:11 [[33mwarn[39m]: [USER_ALREADY_EXISTS] This email is already registered as a HR
+2026-05-13 12:26:27 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:26:34 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:26:41 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 12:56:39 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:00:27 [[33mwarn[39m]: [UNAUTHORIZED] Your account has been blocked or no longer exists.
+2026-05-13 13:01:04 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active
+2026-05-13 13:02:15 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active
+2026-05-13 13:03:03 [[33mwarn[39m]: [UNAUTHORIZED] Your account is not active
+2026-05-13 13:04:28 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:04:38 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:05:03 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:05:21 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:05:47 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:11:09 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:12:15 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:12:43 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:17:13 [[33mwarn[39m]: [VALIDATION_ERROR] contactEmail must be an email
+2026-05-13 13:20:42 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:23:30 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 13:25:57 [[32minfo[39m]: Server running on http://localhost:5000

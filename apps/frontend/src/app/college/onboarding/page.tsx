@@ -24,20 +24,20 @@ const step1Schema = z.object({
   name: z.string().min(3, 'Institution name must be at least 3 characters'),
   shortName: z.string().optional(),
   yearEstablished: z.string().optional(),
-  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  website: z.string().optional().or(z.literal('')),
   address: z.string().optional(),
   naacGrade: z.string().optional(),
   logoUrl: z.string().optional(),
 });
 
 const step2Schema = z.object({
-  activeBranches: z.array(z.string()).min(1, 'Add at least one branch'),
-  currentAcademicYear: z.string().min(1),
-  activePlacementBatch: z.string().min(1),
+  activeBranches: z.array(z.string()).optional(),
+  currentAcademicYear: z.string().optional(),
+  activePlacementBatch: z.string().optional(),
 });
 
 const step3Schema = z.object({
-  plan: z.enum(['basic', 'pro']),
+  plan: z.enum(['basic', 'pro']).optional().default('pro'),
 });
 
 const steps = [
