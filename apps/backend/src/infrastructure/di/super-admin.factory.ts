@@ -8,7 +8,8 @@ import {
     companyRepository, 
     interviewerRepository, 
     superAdminRepository,
-    collegeAdminRepository
+    collegeAdminRepository,
+    hrUserRepository
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
@@ -20,7 +21,7 @@ import { studentRepository as studentRepo } from "@infrastructure/di/infra.conta
 const orgRepository = new OrganizationRepository();
 
 export const makeGetDashboardStatsUseCase = () => {
-  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, interviewerRepository);
+  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, interviewerRepository, hrUserRepository);
 };
 
 export const makeGetOrganizationsUseCase = () => {
@@ -32,7 +33,7 @@ export const makeGetStudentsUseCase = () => {
 };
 
 export const makeGetCompaniesUseCase = () => {
-  return new GetCompaniesUseCase(companyRepository);
+  return new GetCompaniesUseCase(companyRepository, hrUserRepository);
 };
 
 export const makeGetInterviewersUseCase = () => {
@@ -55,11 +56,11 @@ import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/Updat
 import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
 
 export const makeUpdateUserStatusUseCase = () => {
-  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository);
+  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
 };
 
 export const makeDeleteUserUseCase = () => {
-  return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository);
+  return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
 };
 
 export const makeSuperAdminController = () => {

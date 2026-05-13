@@ -2,6 +2,7 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { Role } from "@domain/enums/Roles.enum";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -12,7 +13,8 @@ export class DeleteUserUseCase {
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
     private readonly companyRepo: ICompanyRepository,
-    private readonly interviewerRepo: IInterviewerRepository
+    private readonly interviewerRepo: IInterviewerRepository,
+    private readonly hrRepo: IHRUserRepository
   ) {}
 
   async execute(role: string, id: string): Promise<void> {
@@ -24,7 +26,7 @@ export class DeleteUserUseCase {
         await this.orgRepo.delete(id);
         break;
       case Role.HR:
-        await this.companyRepo.delete(id);
+        await this.hrRepo.delete(id);
         break;
       case Role.INTERVIEWER:
         await this.interviewerRepo.delete(id);

@@ -37,6 +37,10 @@ export class LoginCollegeAdminUseCase {
 
     const organization = await this._organizationRepository.findById(admin.orgId);
 
+    if (organization?.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
+    }
+
     const payload = {
       id: admin.id!,
       role: Role.COLLEGE_ADMIN,

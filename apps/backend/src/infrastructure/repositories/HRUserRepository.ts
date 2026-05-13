@@ -39,4 +39,26 @@ export class HRUserRepository
     }
     await this.model.updateOne({ _id: id }, { $set: update });
   }
+
+  async searchHRUsers(query: string, page: number, limit: number): Promise<{ hrUsers: HRUser[], total: number }> {
+    const skip = (page - 1) * limit;
+    const filter = {
+      $or: [
+        { firstName: { $regex: query, $options: "i" } },
+        { lastName: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } }
+      ],
+      isDeleted: { $ne: true }
+    };
+
+    const [docs, total] = await Promise.all([
+      this.model.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
+      this.model.countDocuments(filter),
+    ]);
+
+    return {
+      hrUsers: docs.map((doc) => this.toEntity(doc as HRUserDocument)),
+      total,
+    };
+  }
 }

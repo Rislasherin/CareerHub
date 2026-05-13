@@ -1,5 +1,5 @@
 import { ActivateInterviewerUseCase } from "@application/usecases/auth/interviewer/implementations/ActivateInterviewer.usecase";
-import { interviewerRepository, bcryptService, jwtService, crossRoleAuthService } from "@infrastructure/di/infra.container";
+import { interviewerRepository, companyRepository, bcryptService, jwtService, crossRoleAuthService } from "@infrastructure/di/infra.container";
 import { InterviewerAuthController } from "@presentation/http/controllers/auth/interviewer/interviewer.auth.controller";
 
 import { LoginInterviewerUseCase } from "@application/usecases/auth/interviewer/implementations/LoginInterviewer.usecase";
@@ -11,7 +11,7 @@ export const makeActivateInterviewerUseCase = () => {
 };
 
 export const makeLoginInterviewerUseCase = () => {
-  return new LoginInterviewerUseCase(interviewerRepository, jwtService, bcryptService, crossRoleAuthService);
+  return new LoginInterviewerUseCase(interviewerRepository, companyRepository, jwtService, bcryptService, crossRoleAuthService);
 };
 
 export const makeVerifyInterviewerTokenUseCase = () => {

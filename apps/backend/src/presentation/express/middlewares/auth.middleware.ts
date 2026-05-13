@@ -52,12 +52,24 @@ export class AuthMiddleware {
             if (company) {
               const userJson = user.toJSON ? user.toJSON() : user;
               const companyJson = company.toJSON ? company.toJSON() : company;
+
+              // Check if company is blocked
+              if (companyJson.status === UserStatus.BLOCKED) {
+                throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
+              }
+
               user = { ...userJson, onboardingStep: companyJson.onboardingStep };
             }
           }
           break;
         case Role.INTERVIEWER:
           user = await this._interviewerRepository.findById(decoded.id);
+          if (user && user.companyId) {
+            const company = await this._companyRepository.findById(user.companyId);
+            if (company && company.status === UserStatus.BLOCKED) {
+              throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
+            }
+          }
           break;
         case Role.COLLEGE_ADMIN:
           user = await this._collegeAdminRepository.findById(decoded.id);
@@ -66,6 +78,12 @@ export class AuthMiddleware {
             if (org) {
               const userJson = user.toJSON ? user.toJSON() : user;
               const orgJson = org.toJSON ? org.toJSON() : org;
+              
+              // Check if organization is blocked
+              if (orgJson.status === UserStatus.BLOCKED) {
+                throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
+              }
+
               user = { ...userJson, onboardingStep: orgJson.onboardingStep };
             }
           }

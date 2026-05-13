@@ -82,7 +82,7 @@ export const registerHR = async (payload: {
 }): Promise<{ requiresOtp?: boolean; email?: string; message?: string; user?: AuthUser }> => {
   const response = await apiClient.post('/auth/hr/register', payload) as any;
   const data = response.data;
-  
+
   if (data?.requiresOtp) {
     return {
       requiresOtp: true,
@@ -109,7 +109,7 @@ export const verifyHROtp = async (payload: { email: string; otp: string }): Prom
   const data = response.data;
   const rawUser = data?.hrUser;
   const company = data?.company;
-  
+
   return {
     user: {
       id: rawUser?.id,
@@ -135,9 +135,8 @@ export const updateCollegeOnboarding = async (payload: any): Promise<any> => {
   return response.data;
 };
 
-/**
- * Register an institution (College Admin).
- */
+
+
 export const registerCollege = async (payload: {
   firstName: string;
   lastName: string;
@@ -153,7 +152,7 @@ export const verifyCollegeOtp = async (payload: { email: string; otp: string }):
   const data = response.data;
   const rawUser = data?.collegeAdmin;
   const organization = data?.organization || data?.collegeAdmin?.organization;
-  
+
   return {
     user: {
       id: rawUser?.id,

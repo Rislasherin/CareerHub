@@ -1,5 +1,6 @@
 import { InvalidCredentialsError, UnauthorizedError } from "@application/errors/AuthError";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IJwtService } from "@application/interfaces/IJwt.service";
 import { IBcryptService } from "@application/interfaces/IBcryptService";
 import { UserStatus } from "@domain/enums/user.status.enum";
@@ -9,6 +10,7 @@ import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService
 export class LoginInterviewerUseCase {
   constructor(
     private readonly _interviewerRepository: IInterviewerRepository,
+    private readonly _companyRepository: ICompanyRepository,
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService,
     private readonly _crossRoleAuthService: CrossRoleAuthService
@@ -39,6 +41,11 @@ export class LoginInterviewerUseCase {
 
     if (!isPasswordValid) {
       throw new InvalidCredentialsError();
+    }
+
+    const company = await this._companyRepository.findById(interviewer.companyId);
+    if (company?.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
     }
 
     const payload = {

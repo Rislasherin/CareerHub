@@ -2,6 +2,7 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { Role } from "@domain/enums/Roles.enum";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -12,7 +13,8 @@ export class UpdateUserStatusUseCase {
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
     private readonly companyRepo: ICompanyRepository,
-    private readonly interviewerRepo: IInterviewerRepository
+    private readonly interviewerRepo: IInterviewerRepository,
+    private readonly hrRepo: IHRUserRepository
   ) {}
 
   async execute(role: string, id: string, status: string, adminRole?: string): Promise<void> {
@@ -24,7 +26,7 @@ export class UpdateUserStatusUseCase {
         await this.orgRepo.updateStatus(id, status, adminRole);
         break;
       case Role.HR:
-        await this.companyRepo.updateStatus(id, status, adminRole);
+        await this.hrRepo.updateStatus(id, status, adminRole);
         break;
       case Role.INTERVIEWER:
         await this.interviewerRepo.updateStatus(id, status, adminRole);

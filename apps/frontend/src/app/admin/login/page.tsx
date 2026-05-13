@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  ShieldCheck, 
-  Mail, 
-  Lock, 
+import {
+  ShieldCheck,
+  Mail,
+  Lock,
   Eye,
   EyeOff,
   ChevronLeft
@@ -28,14 +28,14 @@ export default function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     // Validate
     try {
       loginSchema.parse({ email, password });
@@ -53,7 +53,7 @@ export default function SuperAdminLoginPage() {
     setIsLoading(true);
     try {
       const { user } = await loginUser('super_admin', { email, password });
-      
+
       // Update Redux state
       dispatch(setAuth({ role: user.role }));
       dispatch(setSuperAdminDetails(user));
@@ -70,11 +70,11 @@ export default function SuperAdminLoginPage() {
   return (
     <div className="min-h-screen w-full flex bg-white font-sans text-slate-900">
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-screen">
-        
+
         {/* Left Side: Admin Branding */}
         <div className="hidden lg:flex flex-col bg-slate-900 relative p-16 xl:p-24 overflow-hidden">
           <div className="absolute inset-0 z-0">
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.1),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.08),transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.1),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.08),transparent_60%)]" />
           </div>
 
           <div className="relative z-10 mb-auto">
@@ -127,46 +127,46 @@ export default function SuperAdminLoginPage() {
         <div className="flex items-center justify-center p-8 lg:p-16 xl:p-24 relative bg-white">
           <div className="w-full max-w-md">
             <div className="text-center lg:text-left mb-12">
-               <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-8 mx-auto lg:mx-0 shadow-sm border border-indigo-100/30">
-                  <ShieldCheck size={32} strokeWidth={2.5} />
-               </div>
-               <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter leading-none">Admin Login</h2>
-               <p className="text-slate-500 font-medium text-lg leading-relaxed">Secure access to the platform command center.</p>
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-8 mx-auto lg:mx-0 shadow-sm border border-indigo-100/30">
+                <ShieldCheck size={32} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter leading-none">Admin Login</h2>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed">Secure access to the platform command center.</p>
             </div>
 
             <form noValidate onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Admin Email</label>
-                <Input 
-                  type="email" 
-                  icon={<Mail size={20} className="text-slate-400" />} 
-                  placeholder="admin@careerhub.com"
+                <Input
+                  type="email"
+                  icon={<Mail size={20} className="text-slate-400" />}
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   error={errors.email}
-                  required 
+                  required
                   className="h-16 bg-slate-50 border-slate-100 focus:bg-white transition-all rounded-2xl text-base px-6"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-end mb-1">
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Password</label>
                   <Link href="/forgot-password" title="Forgot password?" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Forgot Password?</Link>
                 </div>
                 <div className="relative group">
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    icon={<Lock size={20} className="text-slate-400" />} 
-                    placeholder="••••••••" 
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    icon={<Lock size={20} className="text-slate-400" />}
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                     error={errors.password}
-                    required 
+                    required
                     className="h-16 bg-slate-50 border-slate-100 focus:bg-white transition-all rounded-2xl text-base px-6"
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors"
                   >
@@ -175,9 +175,9 @@ export default function SuperAdminLoginPage() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                fullWidth 
+              <Button
+                type="submit"
+                fullWidth
                 isLoading={isLoading}
                 className="h-16 mt-4 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-slate-900/30 active:scale-[0.98] transition-all border-none"
               >
@@ -186,10 +186,10 @@ export default function SuperAdminLoginPage() {
             </form>
 
             <div className="mt-12 pt-8 border-t border-slate-50">
-               <Link href="/login" className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors">
-                  <ChevronLeft size={16} />
-                  <span>Back to Portal Login</span>
-               </Link>
+              <Link href="/login" className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors">
+                <ChevronLeft size={16} />
+                <span>Back to Portal Login</span>
+              </Link>
             </div>
           </div>
         </div>

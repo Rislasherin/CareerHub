@@ -37,6 +37,10 @@ export class LoginHRUseCase {
 
     const company = await this._companyRepository.findById(hrUser.companyId);
 
+    if (company?.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
+    }
+
     const payload = {
       id: hrUser.id!,
       role: Role.HR,

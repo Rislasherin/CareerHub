@@ -2,6 +2,7 @@ import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepos
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 
 export interface IGetDashboardStatsUseCase {
   execute(): Promise<any>;
@@ -12,14 +13,15 @@ export class GetDashboardStatsUseCase implements IGetDashboardStatsUseCase {
     private readonly _orgRepository: IOrganizationRepository,
     private readonly _studentRepository: IStudentRepository,
     private readonly _companyRepository: ICompanyRepository,
-    private readonly _interviewerRepository: IInterviewerRepository
+    private readonly _interviewerRepository: IInterviewerRepository,
+    private readonly _hrUserRepository: IHRUserRepository
   ) {}
 
   async execute() {
     const [orgCount, studentCount, companyCount, interviewerCount] = await Promise.all([
       this._orgRepository.count({}),
       this._studentRepository.count({}),
-      this._companyRepository.count({}),
+      this._hrUserRepository.count({}),
       this._interviewerRepository.count({}),
     ]);
 
