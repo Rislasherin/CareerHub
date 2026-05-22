@@ -104,14 +104,7 @@ export default function SuperAdminDashboard() {
                  >
                    Manage Colleges
                  </Button>
-                 <Button 
-                   onClick={() => window.location.href = '/admin/students'}
-                   variant="outline" 
-                   className="border-white/10 text-white hover:bg-white/5 px-8 py-4 h-auto rounded-2xl font-black"
-                 >
-                   Manage Students
-                 </Button>
-               </div>
+                 </div>
              </div>
              <div className="hidden lg:block relative">
                 {/* Decorative Elements */}

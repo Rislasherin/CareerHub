@@ -71,8 +71,6 @@ const super_adminNav: NavCategory[] = [
     items: [
       { label: 'Colleges', icon: GraduationCap, href: '/admin/colleges' },
       { label: 'Companies', icon: Building2, href: '/admin/companies' },
-      { label: 'Students', icon: Users, href: '/admin/students' },
-      { label: 'Interviewers', icon: Briefcase, href: '/admin/interviewers' },
     ]
   }
 ];

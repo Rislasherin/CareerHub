@@ -42,3 +42,9 @@
     at async model.Query._findOneAndUpdate (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:3536:13)
     at async model.Query.exec (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:4627:63)
     at async OrganizationRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\BaseRepository.ts:21:21)
+2026-05-13 18:00:51 [[31merror[39m]: TypeError: entity.toJSON is not a function
+    at toStudentPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\mappers\student.mapper.ts:29:24)
+    at StudentRepository.toPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\student.repository.ts:18:12)
+    at StudentRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\BaseRepository.ts:23:20)
+    at ResetPasswordUseCase.execute (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\application\usecases\auth\shared\ResetPassword.usecase.ts:42:32)
+    at async <anonymous> (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\presentation\http\controllers\auth\ForgotPassword.controller.ts:22:5)

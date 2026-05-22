@@ -11,12 +11,12 @@ export class CrossRoleAuthService {
     private readonly _interviewerRepo: IInterviewerRepository,
     private readonly _collegeAdminRepo: ICollegeAdminRepository,
     private readonly _superAdminRepo: ISuperAdminRepository
-  ) {}
+  ) { }
 
   async isEmailInUse(email: string): Promise<{ inUse: boolean; role?: string; status?: string }> {
     const checkEmail = email.toLowerCase().trim();
 
-    // Check Students
+    // Check Studentse
     const student = await this._studentRepo.findByEmail(checkEmail);
     if (student) return { inUse: true, role: "Student", status: student.status };
 

@@ -4,10 +4,10 @@ export interface CompanyProps {
   id?: string;
   name: string;
   industry?: string;
-  sector?: string; // mapping for compatibility
+  sector?: string;
   website?: string;
   headquarters?: string;
-  location?: string; // mapping for compatibility
+  location?: string;
   description?: string;
   size?: string;
   contactName?: string;
@@ -23,7 +23,7 @@ export interface CompanyProps {
 }
 
 export class Company {
-  constructor(private props: CompanyProps) {}
+  constructor(private props: CompanyProps) { }
 
   static create(props: CompanyProps): Company {
     return new Company(props);
@@ -68,7 +68,7 @@ export class Company {
   get status(): UserStatus {
     return this.props.status;
   }
-  
+
   set status(value: UserStatus) {
     this.props.status = value;
   }

@@ -261,3 +261,32 @@
     at async model.Query._findOneAndUpdate (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:3536:13)
     at async model.Query.exec (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:4627:63)
     at async OrganizationRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\BaseRepository.ts:21:21)
+2026-05-13 15:27:24 [[32minfo[39m]: Server running on http://localhost:5000
+2026-05-13 15:29:27 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:29:27 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 15:30:02 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:30:02 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 15:32:26 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:26 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:26 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 15:32:26 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:26 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:31 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:31 [[33mwarn[39m]: [UNAUTHORIZED] Access token missing
+2026-05-13 15:32:31 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 15:47:18 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 15:47:18 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 17:25:48 [[33mwarn[39m]: [INVALID_CREDENTIALS] Invalid email or password
+2026-05-13 17:26:02 [[33mwarn[39m]: [UNAUTHORIZED] This email is registered as a HR. Please use the correct login portal.
+2026-05-13 17:26:23 [[33mwarn[39m]: [UNAUTHORIZED] This email is registered as a HR. Please use the correct login portal.
+2026-05-13 17:42:18 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 17:42:18 [[33mwarn[39m]: [TOKEN_EXPIRED] Token has expired
+2026-05-13 17:42:18 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 17:42:18 [[33mwarn[39m]: [UNAUTHORIZED] Refresh token not found
+2026-05-13 18:00:51 [[31merror[39m]: TypeError: entity.toJSON is not a function
+    at toStudentPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\mappers\student.mapper.ts:29:24)
+    at StudentRepository.toPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\student.repository.ts:18:12)
+    at StudentRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\BaseRepository.ts:23:20)
+    at ResetPasswordUseCase.execute (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\application\usecases\auth\shared\ResetPassword.usecase.ts:42:32)
+    at async <anonymous> (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\presentation\http\controllers\auth\ForgotPassword.controller.ts:22:5)
+2026-05-13 19:16:14 [[32minfo[39m]: Server running on http://localhost:5000
