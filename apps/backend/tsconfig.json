@@ -3,32 +3,49 @@
     "target": "ES2020",
     "module": "Node16",
     "moduleResolution": "node16",
-
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "noImplicitAny": true,
     "resolveJsonModule": true,
-
     "outDir": "./dist",
     "rootDir": "./src",
-
-
     "baseUrl": "./",
     "paths": {
-      "@domain/*": ["src/domain/*"],
-      "@application/*": ["src/application/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
-      "@presentation/*": ["src/presentation/*"],
-      "@shared/*": ["src/shared/*"],
-      "@di/*": ["src/di/*"]
+      "@domain/*": [
+        "src/domain/*"
+      ],
+      "@application/*": [
+        "src/application/*"
+      ],
+      "@infrastructure/*": [
+        "src/infrastructure/*"
+      ],
+      "@presentation/*": [
+        "src/presentation/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@di/*": [
+        "src/di/*"
+      ]
     },
-
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./src/shared/types"],
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/shared/types"
+    ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules", "dist", "scratch", ".gemini"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scratch",
+    ".gemini"
+  ]
 }
