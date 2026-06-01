@@ -1,14 +1,14 @@
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 
 export interface IGetInterviewersUseCase {
-  execute(companyId: string, query: string, page: number, limit: number): Promise<any>;
+  execute(companyId: string, query: string, page: number, limit: number, includeDeleted?: boolean): Promise<any>;
 }
 
 export class GetInterviewersUseCase implements IGetInterviewersUseCase {
   constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
 
-  async execute(companyId: string, query: string, page: number, limit: number) {
-    const { interviewers, total } = await this._interviewerRepository.searchInterviewers(companyId, query, page, limit);
+  async execute(companyId: string, query: string, page: number, limit: number, includeDeleted: boolean = false) {
+    const { interviewers, total } = await this._interviewerRepository.searchInterviewers(companyId, query, page, limit, includeDeleted);
     
     return {
       interviewers: interviewers.map((i) => {
@@ -21,6 +21,7 @@ export class GetInterviewersUseCase implements IGetInterviewersUseCase {
           designation: json.designation,
           status: json.status,
           createdAt: json.createdAt,
+          isDeleted: (json as any).isDeleted || false,
         };
       }),
       total,

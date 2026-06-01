@@ -10,8 +10,14 @@ import { InterviewerManagementController } from "@presentation/http/controllers/
 import { MockEmailService } from "@infrastructure/services/email/MockEmailService";
 
 import { EmailService } from "@infrastructure/services/email/email.service";
-
 import { LoginHRUseCase } from "@application/usecases/auth/hr/implementations/LoginHR.usecase";
+import { UpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/UpdateInterviewer.usecase";
+import { DeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/DeleteInterviewer.usecase";
+import { RestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/RestoreInterviewer.usecase";
+import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
+import { GetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/GetHRDashboardStats.usecase";
+import { HRDashboardController } from "@presentation/http/controllers/hr/hr.dashboard.controller";
+
 
 const emailService = new EmailService();
 
@@ -48,11 +54,6 @@ export const makeGetInterviewersUseCase = () => {
   return new GetInterviewersUseCase(interviewerRepository);
 };
 
-import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
-
-
-// ... (skipping some lines)
-
 export const makeToggleInterviewerStatusUseCase = () => {
   return new ToggleInterviewerStatusUseCase(interviewerRepository);
 };
@@ -61,11 +62,34 @@ export const makeResendInterviewerInviteUseCase = () => {
   return new ResendInterviewerInviteUseCase(interviewerRepository, emailService, jwtService);
 };
 
+export const makeUpdateInterviewerUseCase = () => {
+  return new UpdateInterviewerUseCase(interviewerRepository);
+};
+
+export const makeDeleteInterviewerUseCase = () => {
+  return new DeleteInterviewerUseCase(interviewerRepository);
+};
+
+export const makeRestoreInterviewerUseCase = () => {
+  return new RestoreInterviewerUseCase(interviewerRepository);
+};
+
 export const makeInterviewerManagementController = () => {
   return new InterviewerManagementController(
     makeAddInterviewerUseCase(),
     makeGetInterviewersUseCase(),
     makeToggleInterviewerStatusUseCase(),
-    makeResendInterviewerInviteUseCase()
+    makeResendInterviewerInviteUseCase(),
+    makeUpdateInterviewerUseCase(),
+    makeDeleteInterviewerUseCase(),
+    makeRestoreInterviewerUseCase()
   );
+};
+
+export const makeGetHRDashboardStatsUseCase = () => {
+  return new GetHRDashboardStatsUseCase(interviewerRepository);
+};
+
+export const makeHRDashboardController = () => {
+  return new HRDashboardController(makeGetHRDashboardStatsUseCase());
 };

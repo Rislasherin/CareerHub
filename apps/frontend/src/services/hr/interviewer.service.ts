@@ -8,6 +8,7 @@ export interface Interviewer {
   designation: string;
   status: 'active' | 'blocked' | 'pending';
   createdAt: string;
+  isDeleted?: boolean;
 }
 
 export interface GetInterviewersResponse {
@@ -17,8 +18,8 @@ export interface GetInterviewersResponse {
   limit: number;
 }
 
-export const getInterviewers = async (page: number, limit: number, query: string = ''): Promise<GetInterviewersResponse> => {
-  const response = await apiClient.get(`/hr/interviewers?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}`) as any;
+export const getInterviewers = async (page: number, limit: number, query: string = '', includeDeleted: boolean = false): Promise<GetInterviewersResponse> => {
+  const response = await apiClient.get(`/hr/interviewers?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}&includeDeleted=${includeDeleted}`) as any;
   return response.data;
 };
 
@@ -33,3 +34,19 @@ export const toggleInterviewerStatus = async (interviewerId: string): Promise<vo
 export const resendInterviewerInvite = async (interviewerId: string): Promise<void> => {
   await apiClient.post(`/hr/interviewers/${interviewerId}/resend-invite`, {});
 };
+
+export const updateInterviewer = async (
+  interviewerId: string,
+  payload: { firstName?: string; lastName?: string; designation?: string; specialization?: string }
+): Promise<void> => {
+  await apiClient.put(`/hr/interviewers/${interviewerId}`, payload);
+};
+
+export const deleteInterviewer = async (interviewerId: string): Promise<void> => {
+  await apiClient.delete(`/hr/interviewers/${interviewerId}`);
+};
+
+export const restoreInterviewer = async (interviewerId: string): Promise<void> => {
+  await apiClient.post(`/hr/interviewers/${interviewerId}/restore`, {});
+};
+

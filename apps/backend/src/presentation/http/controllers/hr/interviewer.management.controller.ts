@@ -9,13 +9,19 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 import { IToggleInterviewerStatusUseCase } from "@application/usecases/hr/interviewer-management/ToggleInterviewerStatus.usecase";
 import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
+import { IUpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/UpdateInterviewer.usecase";
+import { IDeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/DeleteInterviewer.usecase";
+import { IRestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/RestoreInterviewer.usecase";
 
 export class InterviewerManagementController {
   constructor(
     private readonly _addUseCase: IAddInterviewerUseCase,
     private readonly _getUseCase: IGetInterviewersUseCase,
     private readonly _toggleUseCase: IToggleInterviewerStatusUseCase,
-    private readonly _resendUseCase: ResendInterviewerInviteUseCase
+    private readonly _resendUseCase: ResendInterviewerInviteUseCase,
+    private readonly _updateUseCase: IUpdateInterviewerUseCase,
+    private readonly _deleteUseCase: IDeleteInterviewerUseCase,
+    private readonly _restoreUseCase: IRestoreInterviewerUseCase
   ) {}
 
   addInterviewer = asyncHandler(async (req: any, res: Response) => {
@@ -33,12 +39,13 @@ export class InterviewerManagementController {
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-    const { query = "", page = 1, limit = 10 } = req.query;
+    const { query = "", page = 1, limit = 10, includeDeleted = "false" } = req.query;
     const result = await this._getUseCase.execute(
       companyId,
       query as string,
       Number(page),
-      Number(limit)
+      Number(limit),
+      includeDeleted === "true"
     );
     sendSuccess(res, result, "Interviewers retrieved successfully");
   });
@@ -57,5 +64,41 @@ export class InterviewerManagementController {
     const { interviewerId } = req.params;
     await this._resendUseCase.execute(interviewerId);
     sendSuccess(res, null, "Invitation link resent successfully");
+  });
+
+  updateInterviewer = asyncHandler(async (req: any, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { interviewerId } = req.params;
+    const { firstName, lastName, designation, specialization } = req.body;
+    await this._updateUseCase.execute(companyId, interviewerId, {
+      firstName,
+      lastName,
+      designation,
+      specialization,
+    });
+    sendSuccess(res, null, "Interviewer updated successfully");
+  });
+
+  deleteInterviewer = asyncHandler(async (req: any, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { interviewerId } = req.params;
+    await this._deleteUseCase.execute(companyId, interviewerId);
+    sendSuccess(res, null, "Interviewer removed successfully");
+  });
+
+  restoreInterviewer = asyncHandler(async (req: any, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { interviewerId } = req.params;
+    await this._restoreUseCase.execute(companyId, interviewerId);
+    sendSuccess(res, null, "Interviewer restored successfully");
   });
 }

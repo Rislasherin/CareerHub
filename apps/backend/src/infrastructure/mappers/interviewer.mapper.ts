@@ -17,6 +17,7 @@ export const toInterviewerEntity = (doc: InterviewerDocument): Interviewer => {
     status: doc.status as UserStatus,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
+    isDeleted: doc.isDeleted || false,
   });
 };
 
@@ -33,5 +34,6 @@ export const toInterviewerPersistence = (entity: Interviewer) => {
     specialization: props.specialization,
     role: props.role,
     status: props.status,
+    isDeleted: props.isDeleted || false,
   };
 };

@@ -14,6 +14,7 @@ export interface InterviewerProps {
   status: UserStatus;
   createdAt?: Date;
   updatedAt?: Date;
+  isDeleted?: boolean;
 }
 
 export class Interviewer {
@@ -65,6 +66,10 @@ export class Interviewer {
 
   set status(value: UserStatus) {
     this.props.status = value;
+  }
+
+  get isDeleted(): boolean | undefined {
+    return this.props.isDeleted;
   }
 
   toJSON(): InterviewerProps {
