@@ -4,6 +4,7 @@ exports.StudentAuthController = void 0;
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const asyncHandler_util_1 = require("@shared/utils/asyncHandler.util");
 const response_util_1 = require("@shared/utils/response.util");
+const env_validator_1 = require("@infrastructure/config/env.validator");
 class StudentAuthController {
     constructor(_loginUseCase, _requestAccessUseCase, _setupPasswordUseCase, _getProfileUseCase, _verifyTokenUseCase) {
         this._loginUseCase = _loginUseCase;
@@ -22,7 +23,7 @@ class StudentAuthController {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 30 * 60 * 1000,
+                maxAge: env_validator_1.env.COOKIE_MAX_AGE_MS,
             });
             (0, response_util_1.sendSuccess)(res, {
                 student: result.student,
@@ -45,7 +46,7 @@ class StudentAuthController {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 30 * 60 * 1000,
+                maxAge: env_validator_1.env.COOKIE_MAX_AGE_MS,
             });
             (0, response_util_1.sendSuccess)(res, result, "Password set successfully. Profile activated.");
         });

@@ -43,7 +43,7 @@ class UpdateStudentProfileUseCase {
             } : currentProps.skills,
             // Experience mapping
             experience: dto.experience !== undefined ? dto.experience.map(exp => ({
-                comptype: exp.comptype,
+                company: exp.company,
                 role: exp.role,
                 duration: exp.duration,
                 location: exp.location,

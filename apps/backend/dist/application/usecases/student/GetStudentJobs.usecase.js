@@ -6,10 +6,10 @@ const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 class GetStudentJobsUseCase {
-    constructor(_studentRepository, _jobRepository, _comptypeRepository) {
+    constructor(_studentRepository, _jobRepository, _companyRepository) {
         this._studentRepository = _studentRepository;
         this._jobRepository = _jobRepository;
-        this._comptypeRepository = _comptypeRepository;
+        this._companyRepository = _companyRepository;
     }
     async execute(studentId) {
         const student = await this._studentRepository.findById(studentId);
@@ -38,20 +38,20 @@ class GetStudentJobsUseCase {
                 uniqueJobsMap.set(job.id, job);
         });
         const jobs = Array.from(uniqueJobsMap.values());
-        // Populate comptypeName and calculate matchScore for each job
-        const comptypeCache = new Map();
+        // Populate companyName and calculate matchScore for each job
+        const companyCache = new Map();
         const enrichedJobs = await Promise.all(jobs.map(async (job) => {
-            let comptypeName = "Campus Recruiter";
-            if (job.comptypeId) {
-                if (comptypeCache.has(job.comptypeId)) {
-                    comptypeName = comptypeCache.get(job.comptypeId);
+            let companyName = "Campus Recruiter";
+            if (job.companyId) {
+                if (companyCache.has(job.companyId)) {
+                    companyName = companyCache.get(job.companyId);
                 }
                 else {
                     try {
-                        const comptype = await this._comptypeRepository.findById(job.comptypeId);
-                        if (comptype) {
-                            comptypeName = comptype.name;
-                            comptypeCache.set(job.comptypeId, comptype.name);
+                        const company = await this._companyRepository.findById(job.companyId);
+                        if (company) {
+                            companyName = company.name;
+                            companyCache.set(job.companyId, company.name);
                         }
                     }
                     catch (e) { }
@@ -86,7 +86,7 @@ class GetStudentJobsUseCase {
             const isEligible = cgpaEligible && backlogsEligible && branchEligible;
             return {
                 ...job.toJSON(),
-                comptypeName,
+                companyName,
                 matchScore,
                 isEligible
             };

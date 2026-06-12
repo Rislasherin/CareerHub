@@ -16,7 +16,7 @@ class GetInterviewersUseCase {
                     lastName: json.lastName,
                     email: json.email,
                     status: json.status,
-                    comptypeId: json.comptypeId,
+                    companyId: json.companyId,
                     createdAt: json.createdAt
                 };
             }),

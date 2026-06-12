@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationRepository = void 0;
 const BaseRepository_1 = require("./BaseRepository");
-const organization_mapper_1 = require("@infrastructure/mappers/organization.mapper");
+const organization_mapper_1 = require("@application/mappers/organization.mapper");
 const organization_model_1 = require("@infrastructure/database/models/organizer/organization.model");
 class OrganizationRepository extends BaseRepository_1.BaseRepository {
     constructor() {

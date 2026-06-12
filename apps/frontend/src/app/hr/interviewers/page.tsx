@@ -12,9 +12,9 @@ import {
   resendInterviewerInvite,
   updateInterviewer,
   deleteInterviewer,
-  restoreInterviewer,
-  Interviewer
+  restoreInterviewer
 } from '@/services/hr/interviewer.service';
+import { Interviewer } from '@/types/interviewer';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -143,7 +143,7 @@ export default function InterviewersPage() {
       firstName: interviewer.firstName,
       lastName: interviewer.lastName,
       designation: interviewer.designation || '',
-      specialization: (interviewer as any).specialization || '',
+      specialization: (interviewer as Interviewer & { specialization?: string }).specialization || '',
     });
     setIsEditModalOpen(true);
   };

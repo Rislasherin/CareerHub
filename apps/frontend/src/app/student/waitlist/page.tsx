@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,7 +39,7 @@ export default function StudentWaitlistPage() {
 
     const checkStatus = async () => {
       try {
-        const response: type = await apiClient.get('/auth/student/me');
+        const response: any = await apiClient.get(API_ROUTES.AUTH.STUDENT_ME);
         if (response.success && response.data) {
           const updatedUser = response.data;
           dispatch(setStudentDetails(updatedUser));
@@ -122,3 +123,6 @@ export default function StudentWaitlistPage() {
     </div>
   );
 }
+
+
+

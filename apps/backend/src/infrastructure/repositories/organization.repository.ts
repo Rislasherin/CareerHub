@@ -1,7 +1,7 @@
 import { Organization } from "@domain/entities/Organization";
 import { BaseRepository } from "./BaseRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
-import { toOrganizationEntity,toOrganizationPersistence } from "@infrastructure/mappers/organization.mapper";
+import { toOrganizationEntity,toOrganizationPersistence } from "@application/mappers/organization.mapper";
 import { OrganizationDocument, OrganizationModel } from "@infrastructure/database/models/organizer/organization.model";
 
 

@@ -5,9 +5,9 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class LoginHRUseCase {
-    constructor(_hrUserRepository, _comptypeRepository, _jwtService, _bcryptService) {
+    constructor(_hrUserRepository, _companyRepository, _jwtService, _bcryptService) {
         this._hrUserRepository = _hrUserRepository;
-        this._comptypeRepository = _comptypeRepository;
+        this._companyRepository = _companyRepository;
         this._jwtService = _jwtService;
         this._bcryptService = _bcryptService;
     }
@@ -26,14 +26,14 @@ class LoginHRUseCase {
         if (!isPasswordValid) {
             throw new AuthError_1.InvalidCredentialsError();
         }
-        const comptype = await this._comptypeRepository.findById(hrUser.comptypeId);
-        if (comptype?.status === user_status_enum_1.UserStatus.BLOCKED) {
-            throw new AuthError_1.UnauthorizedError("Your comptype has been blocked. Please contact admin.");
+        const company = await this._companyRepository.findById(hrUser.companyId);
+        if (company?.status === user_status_enum_1.UserStatus.BLOCKED) {
+            throw new AuthError_1.UnauthorizedError("Your company has been blocked. Please contact admin.");
         }
         const payload = {
             id: hrUser.id,
             role: Roles_enum_1.Role.HR,
-            comptypeId: hrUser.comptypeId,
+            companyId: hrUser.companyId,
         };
         return {
             accessToken: this._jwtService.signAccessToken(payload),
@@ -44,9 +44,9 @@ class LoginHRUseCase {
                 lastName: hrUser.lastName,
                 email: hrUser.email,
                 role: hrUser.role,
-                comptypeId: hrUser.comptypeId,
+                companyId: hrUser.companyId,
             },
-            comptype: comptype?.toJSON(),
+            company: company?.toJSON(),
         };
     }
 }

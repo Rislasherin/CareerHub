@@ -6,10 +6,10 @@ const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 class UpdateUserStatusUseCase {
-    constructor(studentRepo, orgRepo, comptypeRepo, interviewerRepo, hrRepo) {
+    constructor(studentRepo, orgRepo, companyRepo, interviewerRepo, hrRepo) {
         this.studentRepo = studentRepo;
         this.orgRepo = orgRepo;
-        this.comptypeRepo = comptypeRepo;
+        this.companyRepo = companyRepo;
         this.interviewerRepo = interviewerRepo;
         this.hrRepo = hrRepo;
     }

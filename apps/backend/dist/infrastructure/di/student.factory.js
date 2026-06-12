@@ -18,7 +18,7 @@ const makeUpdateStudentProfileUseCase = () => {
 };
 exports.makeUpdateStudentProfileUseCase = makeUpdateStudentProfileUseCase;
 const makeGetStudentJobsUseCase = () => {
-    return new GetStudentJobs_usecase_1.GetStudentJobsUseCase(infra_container_1.studentRepository, infra_container_1.jobRepository, infra_container_1.comptypeRepository);
+    return new GetStudentJobs_usecase_1.GetStudentJobsUseCase(infra_container_1.studentRepository, infra_container_1.jobRepository, infra_container_1.companyRepository);
 };
 exports.makeGetStudentJobsUseCase = makeGetStudentJobsUseCase;
 const makeApplyToJobUseCase = () => {

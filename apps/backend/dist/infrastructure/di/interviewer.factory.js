@@ -11,7 +11,7 @@ const makeActivateInterviewerUseCase = () => {
 };
 exports.makeActivateInterviewerUseCase = makeActivateInterviewerUseCase;
 const makeLoginInterviewerUseCase = () => {
-    return new LoginInterviewer_usecase_1.LoginInterviewerUseCase(infra_container_1.interviewerRepository, infra_container_1.comptypeRepository, infra_container_1.jwtService, infra_container_1.bcryptService, infra_container_1.crossRoleAuthService);
+    return new LoginInterviewer_usecase_1.LoginInterviewerUseCase(infra_container_1.interviewerRepository, infra_container_1.companyRepository, infra_container_1.jwtService, infra_container_1.bcryptService, infra_container_1.crossRoleAuthService);
 };
 exports.makeLoginInterviewerUseCase = makeLoginInterviewerUseCase;
 const makeVerifyInterviewerTokenUseCase = () => {

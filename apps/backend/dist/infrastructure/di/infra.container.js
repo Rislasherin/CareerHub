@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.crossRoleAuthService = exports.authMiddleware = exports.bcryptService = exports.jwtService = exports.jobRepository = exports.organizationRepository = exports.collegeAdminRepository = exports.otpRepository = exports.interviewerRepository = exports.hrUserRepository = exports.comptypeRepository = exports.superAdminRepository = exports.studentRepository = void 0;
+exports.crossRoleAuthService = exports.authMiddleware = exports.bcryptService = exports.jwtService = exports.jobRepository = exports.organizationRepository = exports.collegeAdminRepository = exports.otpRepository = exports.interviewerRepository = exports.hrUserRepository = exports.companyRepository = exports.superAdminRepository = exports.studentRepository = void 0;
 const student_repository_1 = require("@infrastructure/repositories/student.repository");
 const SuperAdminRepository_1 = require("@infrastructure/repositories/SuperAdminRepository");
-const ComptypeRepository_1 = require("@infrastructure/repositories/ComptypeRepository");
+const CompanyRepository_1 = require("@infrastructure/repositories/CompanyRepository");
 const HRUserRepository_1 = require("@infrastructure/repositories/HRUserRepository");
 const InterviewerRepository_1 = require("@infrastructure/repositories/InterviewerRepository");
 const OtpRepository_1 = require("@infrastructure/repositories/OtpRepository");
@@ -16,7 +16,7 @@ const auth_middleware_1 = require("@presentation/express/middlewares/auth.middle
 const CrossRoleAuthService_1 = require("@application/services/CrossRoleAuthService");
 exports.studentRepository = new student_repository_1.StudentRepository();
 exports.superAdminRepository = new SuperAdminRepository_1.SuperAdminRepository();
-exports.comptypeRepository = new ComptypeRepository_1.ComptypeRepository();
+exports.companyRepository = new CompanyRepository_1.CompanyRepository();
 exports.hrUserRepository = new HRUserRepository_1.HRUserRepository();
 exports.interviewerRepository = new InterviewerRepository_1.InterviewerRepository();
 exports.otpRepository = new OtpRepository_1.OtpRepository();
@@ -25,5 +25,5 @@ exports.organizationRepository = new organization_repository_1.OrganizationRepos
 exports.jobRepository = new JobRepository_1.JobRepository();
 exports.jwtService = new jwt_service_1.JwtService();
 exports.bcryptService = new bcrypt_service_1.BcryptService();
-exports.authMiddleware = new auth_middleware_1.AuthMiddleware(exports.jwtService, exports.studentRepository, exports.hrUserRepository, exports.interviewerRepository, exports.collegeAdminRepository, exports.superAdminRepository, exports.organizationRepository, exports.comptypeRepository);
+exports.authMiddleware = new auth_middleware_1.AuthMiddleware(exports.jwtService, exports.studentRepository, exports.hrUserRepository, exports.interviewerRepository, exports.collegeAdminRepository, exports.superAdminRepository, exports.organizationRepository, exports.companyRepository);
 exports.crossRoleAuthService = new CrossRoleAuthService_1.CrossRoleAuthService(exports.studentRepository, exports.hrUserRepository, exports.interviewerRepository, exports.collegeAdminRepository, exports.superAdminRepository);

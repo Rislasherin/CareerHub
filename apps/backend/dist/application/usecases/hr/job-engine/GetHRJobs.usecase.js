@@ -5,9 +5,9 @@ class GetHRJobsUseCase {
     constructor(_jobRepository) {
         this._jobRepository = _jobRepository;
     }
-    async execute(comptypeId, filters, page, limit) {
+    async execute(companyId, filters, page, limit) {
         return await this._jobRepository.searchJobs({
-            comptypeId,
+            companyId,
             status: filters.status,
             searchQuery: filters.searchQuery
         }, page, limit);

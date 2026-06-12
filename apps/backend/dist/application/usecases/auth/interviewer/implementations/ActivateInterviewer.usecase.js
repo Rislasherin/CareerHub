@@ -44,7 +44,7 @@ class ActivateInterviewerUseCase {
         const payload = {
             id: updatedInterviewer.id,
             role: updatedInterviewer.role,
-            comptypeId: updatedInterviewer.comptypeId,
+            companyId: updatedInterviewer.companyId,
         };
         const accessToken = this._jwtService.signAccessToken(payload);
         const refreshToken = this._jwtService.signRefreshToken(payload);

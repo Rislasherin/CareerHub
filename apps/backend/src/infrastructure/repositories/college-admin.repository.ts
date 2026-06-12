@@ -3,7 +3,7 @@ import { BaseRepository } from "./BaseRepository";
 import { CollegeAdminDocument } from "@infrastructure/database/models/organizer/college-admin.model";
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { CollegeAdminModel } from "@infrastructure/database/models/organizer/college-admin.model";
-import { toCollegeAdminEntity, toCollegeAdminPersistence } from "@infrastructure/mappers/college-admin.mapper";
+import { toCollegeAdminEntity, toCollegeAdminPersistence } from "@application/mappers/college-admin.mapper";
 
 export class CollegeAdminRepository
   extends BaseRepository<CollegeAdmin, CollegeAdminDocument>

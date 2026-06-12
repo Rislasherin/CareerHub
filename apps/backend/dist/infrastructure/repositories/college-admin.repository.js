@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CollegeAdminRepository = void 0;
 const BaseRepository_1 = require("./BaseRepository");
 const college_admin_model_1 = require("@infrastructure/database/models/organizer/college-admin.model");
-const college_admin_mapper_1 = require("@infrastructure/mappers/college-admin.mapper");
+const college_admin_mapper_1 = require("@application/mappers/college-admin.mapper");
 class CollegeAdminRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(college_admin_model_1.CollegeAdminModel);

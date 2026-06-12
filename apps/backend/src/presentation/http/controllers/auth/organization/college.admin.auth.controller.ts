@@ -6,6 +6,7 @@ import { VerifyCollegeOtpUseCase } from "@application/usecases/auth/organization
 
 import { LoginCollegeAdminUseCase } from "@application/usecases/auth/organization/implementations/LoginCollegeAdmin.usecase";
 import { UpdateCollegeOnboardingUseCase } from "@application/usecases/auth/organization/implementations/UpdateCollegeOnboarding.usecase";
+import { env } from "@infrastructure/config/env.validator";
 
 export class CollegeAdminAuthController {
   constructor(
@@ -22,7 +23,7 @@ export class CollegeAdminAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(res, result, "Login successful");
@@ -40,7 +41,7 @@ export class CollegeAdminAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(

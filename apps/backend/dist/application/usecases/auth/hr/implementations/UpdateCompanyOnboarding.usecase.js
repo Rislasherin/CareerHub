@@ -1,21 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateComptypeOnboardingUseCase = void 0;
+exports.UpdateCompanyOnboardingUseCase = void 0;
 const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
-const Comptype_1 = require("@domain/entities/Comptype");
+const Company_1 = require("@domain/entities/Company");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
-class UpdateComptypeOnboardingUseCase {
-    constructor(_comptypeRepository) {
-        this._comptypeRepository = _comptypeRepository;
+class UpdateCompanyOnboardingUseCase {
+    constructor(_companyRepository) {
+        this._companyRepository = _companyRepository;
     }
-    async execute(comptypeId, dto) {
-        const comptype = await this._comptypeRepository.findById(comptypeId);
-        if (!comptype) {
-            throw new AppError_1.AppError("Comptype not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.INTERNAL_ERROR);
+    async execute(companyId, dto) {
+        const company = await this._companyRepository.findById(companyId);
+        if (!company) {
+            throw new AppError_1.AppError("Company not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.INTERNAL_ERROR);
         }
-        const currentProps = comptype.toJSON();
+        const currentProps = company.toJSON();
         // Update fields based on step
         if (dto.step === 1) {
             if (dto.name)
@@ -59,8 +59,8 @@ class UpdateComptypeOnboardingUseCase {
             currentProps.onboardingStep = 3;
             currentProps.status = user_status_enum_1.UserStatus.ACTIVE;
         }
-        const updatedComptype = await this._comptypeRepository.update(comptypeId, Comptype_1.Comptype.create(currentProps));
-        return updatedComptype.toJSON();
+        const updatedCompany = await this._companyRepository.update(companyId, Company_1.Company.create(currentProps));
+        return updatedCompany.toJSON();
     }
 }
-exports.UpdateComptypeOnboardingUseCase = UpdateComptypeOnboardingUseCase;
+exports.UpdateCompanyOnboardingUseCase = UpdateCompanyOnboardingUseCase;

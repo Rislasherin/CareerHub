@@ -14,20 +14,20 @@ class HRJobController {
         this._deleteJobUseCase = _deleteJobUseCase;
         this._getHRCandidatesUseCase = _getHRCandidatesUseCase;
         this.postJob = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
-            const result = await this._postJobUseCase.execute(comptypeId, req.body);
+            const result = await this._postJobUseCase.execute(companyId, req.body);
             (0, response_util_1.sendSuccess)(res, result.toJSON(), "Job post created and submitted for approval successfully", HttpStatus_enum_1.HttpStatus.CREATED);
         });
         this.getJobs = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
             const { status, query = "", page = 1, limit = 10 } = req.query;
-            const result = await this._getHRJobsUseCase.execute(comptypeId, {
+            const result = await this._getHRJobsUseCase.execute(companyId, {
                 status: status,
                 searchQuery: query
             }, Number(page), Number(limit));
@@ -37,29 +37,29 @@ class HRJobController {
             }, "HR Jobs retrieved successfully");
         });
         this.closeJob = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
             const { jobId } = req.params;
-            const result = await this._closeJobUseCase.execute(comptypeId, jobId);
+            const result = await this._closeJobUseCase.execute(companyId, jobId);
             (0, response_util_1.sendSuccess)(res, result.toJSON(), "Job closed successfully");
         });
         this.deleteJob = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
             const { jobId } = req.params;
-            const result = await this._deleteJobUseCase.execute(comptypeId, jobId);
+            const result = await this._deleteJobUseCase.execute(companyId, jobId);
             (0, response_util_1.sendSuccess)(res, result.toJSON(), "Job post deleted successfully");
         });
         this.getCandidates = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
-            const candidates = await this._getHRCandidatesUseCase.execute(comptypeId);
+            const candidates = await this._getHRCandidatesUseCase.execute(companyId);
             (0, response_util_1.sendSuccess)(res, candidates, "Candidates list retrieved successfully");
         });
     }

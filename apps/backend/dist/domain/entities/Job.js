@@ -14,7 +14,7 @@ class Job {
         });
     }
     get id() { return this.props.id; }
-    get comptypeId() { return this.props.comptypeId; }
+    get companyId() { return this.props.companyId; }
     get collegeId() { return this.props.collegeId; }
     get title() { return this.props.title; }
     get category() { return this.props.category; }

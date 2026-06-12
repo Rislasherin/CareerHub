@@ -1,57 +1,16 @@
+import { API_ROUTES } from '@/constants/api.routes';
 import { apiClient } from '@/services/api/api.client';
 
-export interface InterviewRoundConfig {
-  roundNumber: number;
-  name: string;
-  type: "aptitude" | "coding" | "technical" | "hr" | "group_discussion";
-  description?: string;
-}
-
-export interface EligibilityCriteria {
-  minCGPA: number;
-  allowedBacklogs: number;
-  eligibleBranches: string[];
-  passingYear: number;
-  degreeType: string;
-}
-
-export interface Job {
-  id: string;
-  companyId: string;
-  collegeId: string;
-  title: string;
-  category: string;
-  openings: number;
-  deadline: string;
-  type: string;
-  eligibility: EligibilityCriteria;
-  noticePeriod: string;
-  experienceLevel: string;
-  workMode: "on-site" | "remote" | "hybrid";
-  location: string;
-  salaryType: "per_month" | "per_year";
-  minSalary: number;
-  maxSalary: number;
-  interviewMode: "online" | "offline" | "hybrid";
-  description: string;
-  requiredSkills: string[];
-  preferredSkills?: string[];
-  rounds: InterviewRoundConfig[];
-  status: 'pending_review' | 'approved' | 'rejected' | 'active' | 'closed';
-  rejectionNote?: string;
-  approvedColleges?: string[];
-  rejectedColleges?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface GetHRJobsResponse {
-  jobs: Job[];
-  total: number;
-}
+import { Job, GetHRJobsResponse } from '@/types/job';
+import { ApiResponse } from '@/types/api';
 
 export const postJob = async (payload: Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Job> => {
-  const response = (await apiClient.post('/hr/jobs', payload)) as type;
+  const response = (await apiClient.post(API_ROUTES.HR.JOBS, payload)) as ApiResponse<Job>;
+  return response.data;
+};
+
+export const updateJob = async (jobId: string, payload: Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Job> => {
+  const response = (await apiClient.put(`${API_ROUTES.HR.JOBS}/${jobId}`, payload)) as ApiResponse<Job>;
   return response.data;
 };
 
@@ -61,20 +20,22 @@ export const getHRJobs = async (
   status?: string,
   query: string = ''
 ): Promise<GetHRJobsResponse> => {
-  let url = `/hr/jobs?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}`;
+  let url = `${API_ROUTES.HR.JOBS}?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}`;
   if (status) {
     url += `&status=${status}`;
   }
-  const response = (await apiClient.get(url)) as type;
+  const response = (await apiClient.get(url)) as ApiResponse<GetHRJobsResponse>;
   return response.data;
 };
 
 export const closeJob = async (jobId: string): Promise<Job> => {
-  const response = (await apiClient.patch(`/hr/jobs/${jobId}/close`, {})) as type;
+  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/close`, {})) as ApiResponse<Job>;
   return response.data;
 };
 
 export const deleteJob = async (jobId: string): Promise<Job> => {
-  const response = (await apiClient.delete(`/hr/jobs/${jobId}`)) as type;
+  const response = (await apiClient.delete(`${API_ROUTES.HR.JOBS}/${jobId}`)) as ApiResponse<Job>;
   return response.data;
 };
+
+

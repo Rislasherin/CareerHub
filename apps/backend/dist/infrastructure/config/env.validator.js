@@ -12,6 +12,7 @@ const envSchema = zod_1.z.object({
     JWT_ACCESS_EXPIRES_IN: zod_1.z.string(),
     JWT_REFRESH_SECRET: zod_1.z.string().nonempty("JWT_REFRESH_SECRET is required"),
     JWT_REFRESH_EXPIRES_IN: zod_1.z.string(),
+    COOKIE_MAX_AGE_MS: zod_1.z.string().transform(Number).default("1800000"),
     EMAIL_HOST: zod_1.z.string().nonempty("EMAIL_HOST is required"),
     EMAIL_PORT: zod_1.z.string().transform(Number),
     EMAIL_USER: zod_1.z.string().nonempty("EMAIL_USER is required"),

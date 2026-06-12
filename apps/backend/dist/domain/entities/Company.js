@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Comptype = void 0;
-class Comptype {
+exports.Company = void 0;
+class Company {
     constructor(props) {
         this.props = props;
     }
     static create(props) {
-        return new Comptype(props);
+        return new Company(props);
     }
     get id() {
         return this.props.id;
@@ -45,4 +45,4 @@ class Comptype {
         return { ...this.props };
     }
 }
-exports.Comptype = Comptype;
+exports.Company = Company;

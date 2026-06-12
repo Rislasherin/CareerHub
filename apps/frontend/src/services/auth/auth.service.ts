@@ -1,25 +1,22 @@
+import { API_ROUTES } from '@/constants/api.routes';
 import { apiClient } from '@/services/api/api.client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-export type UserRole = 'student' | 'hr' | 'interviewer' | 'college_admin' | 'super_admin';
+import { UserRole, AuthUser, LoginPayload } from '@/types/auth';
+import { ApiResponse } from '@/types/api';
 
-export interface AuthUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: UserRole;
-  status: string;
-  companyId?: string;
-  companyName?: string;
-  orgId?: string;
-  collegeName?: string;
-  onboardingStep?: number;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
+interface AuthResponseData {
+  student?: Partial<AuthUser> & { _id?: string };
+  hrUser?: Partial<AuthUser>;
+  interviewer?: Partial<AuthUser>;
+  admin?: Partial<AuthUser>;
+  user?: Partial<AuthUser>;
+  collegeAdmin?: Partial<AuthUser> & { orgId?: string, organization?: { name?: string, onboardingStep?: number } };
+  company?: { id?: string; name?: string; onboardingStep?: number };
+  organization?: { id?: string; name?: string; onboardingStep?: number };
+  isFirstLogin?: boolean;
+  requiresOtp?: boolean;
+  email?: string;
+  message?: string;
 }
 
 // ─── Role → API path mapping ──────────────────────────────────────────────────
@@ -41,32 +38,33 @@ export const loginUser = async (
   payload: LoginPayload
 ): Promise<{ user: AuthUser; isFirstLogin?: boolean }> => {
   const path = `${roleToPath[role]}/login`;
-  const response = await apiClient.post(path, payload) as type;
+  const response = await apiClient.post(path, payload) as ApiResponse<AuthResponseData | Partial<AuthUser>>;
   const data = response.data;
 
   // Normalize the returned user shape across all roles
-  const rawUser = data?.student || data?.hrUser || data?.interviewer || data?.admin || data?.user || data?.collegeAdmin || data;
-  const company = data?.company;
-  const organization = data?.organization;
+  const responseData = data as AuthResponseData;
+  const rawUser = responseData?.student || responseData?.hrUser || responseData?.interviewer || responseData?.admin || responseData?.user || responseData?.collegeAdmin || (data as Partial<AuthUser>);
+  const company = responseData?.company;
+  const organization = responseData?.organization;
 
   return {
     user: {
-      id: rawUser?.id || rawUser?._id,
-      firstName: rawUser?.firstName,
-      lastName: rawUser?.lastName,
-      email: rawUser?.email,
+      id: rawUser?.id || (rawUser as { _id?: string })?._id || '',
+      firstName: rawUser?.firstName || '',
+      lastName: rawUser?.lastName || '',
+      email: rawUser?.email || '',
       role,
       status: rawUser?.status || 'ACTIVE',
       // For HR
       companyId: company?.id || rawUser?.companyId,
       companyName: company?.name,
       // For College Admin
-      orgId: organization?.id || rawUser?.organizationId || rawUser?.orgId,
+      orgId: organization?.id || (rawUser as { organizationId?: string })?.organizationId || rawUser?.orgId,
       collegeName: organization?.name,
       // Onboarding Step
       onboardingStep: company?.onboardingStep || organization?.onboardingStep,
     },
-    isFirstLogin: rawUser?.isFirstLogin ?? false,
+    isFirstLogin: (rawUser as { isFirstLogin?: boolean })?.isFirstLogin ?? false,
   };
 };
 
@@ -80,7 +78,7 @@ export const registerHR = async (payload: {
   password: string;
   jobTitle: string;
 }): Promise<{ requiresOtp?: boolean; email?: string; message?: string; user?: AuthUser }> => {
-  const response = await apiClient.post('/auth/hr/register', payload) as type;
+  const response = await apiClient.post(API_ROUTES.AUTH.HR_REGISTER, payload) as ApiResponse<AuthResponseData>;
   const data = response.data;
 
   if (data?.requiresOtp) {
@@ -94,28 +92,28 @@ export const registerHR = async (payload: {
   const rawUser = data?.hrUser;
   return {
     user: {
-      id: rawUser?.id,
-      firstName: rawUser?.firstName,
-      lastName: rawUser?.lastName,
-      email: rawUser?.email,
+      id: rawUser?.id || '',
+      firstName: rawUser?.firstName || '',
+      lastName: rawUser?.lastName || '',
+      email: rawUser?.email || '',
       role: 'hr',
       status: rawUser?.status || 'ACTIVE',
     },
   };
 };
 
-export const verifyHROtp = async (payload: { email: string; otp: string }): Promise<{ user: type }> => {
-  const response = await apiClient.post('/auth/hr/verify-otp', payload) as type;
+export const verifyHROtp = async (payload: { email: string; otp: string }): Promise<{ user: AuthUser }> => {
+  const response = await apiClient.post(API_ROUTES.AUTH.HR_VERIFY_OTP, payload) as ApiResponse<AuthResponseData>;
   const data = response.data;
   const rawUser = data?.hrUser;
   const company = data?.company;
 
   return {
     user: {
-      id: rawUser?.id,
-      firstName: rawUser?.firstName,
-      lastName: rawUser?.lastName,
-      email: rawUser?.email,
+      id: rawUser?.id || '',
+      firstName: rawUser?.firstName || '',
+      lastName: rawUser?.lastName || '',
+      email: rawUser?.email || '',
       role: 'hr',
       status: rawUser?.status || 'ACTIVE',
       companyId: company?.id,
@@ -125,15 +123,15 @@ export const verifyHROtp = async (payload: { email: string; otp: string }): Prom
   };
 };
 
-export const updateHROnboarding = async (payload: type): Promise<type> => {
-  const response = await apiClient.patch('/auth/hr/onboarding', payload) as type;
+export const updateHROnboarding = async (payload: Record<string, unknown>): Promise<unknown> => {
+  const response = await apiClient.patch(API_ROUTES.AUTH.HR_ONBOARDING, payload) as ApiResponse<unknown>;
   return response.data;
-};
+}
 
-export const updateCollegeOnboarding = async (payload: type): Promise<type> => {
-  const response = await apiClient.patch('/auth/college-admin/onboarding', payload) as type;
+export const updateCollegeOnboarding = async (payload: Record<string, unknown>): Promise<unknown> => {
+  const response = await apiClient.patch(API_ROUTES.AUTH.COLLEGE_ADMIN_ONBOARDING, payload) as ApiResponse<unknown>;
   return response.data;
-};
+}
 
 
 
@@ -143,22 +141,22 @@ export const registerCollege = async (payload: {
   email: string;
   password: string;
 }): Promise<{ requiresOtp?: boolean; email?: string; message?: string }> => {
-  const response = await apiClient.post('/auth/college-admin/register', payload) as type;
+  const response = await apiClient.post(API_ROUTES.AUTH.COLLEGE_ADMIN_REGISTER, payload) as ApiResponse<AuthResponseData>;
   return response.data;
 };
 
-export const verifyCollegeOtp = async (payload: { email: string; otp: string }): Promise<{ user: type }> => {
-  const response = await apiClient.post('/auth/college-admin/verify-otp', payload) as type;
+export const verifyCollegeOtp = async (payload: { email: string; otp: string }): Promise<{ user: AuthUser }> => {
+  const response = await apiClient.post(API_ROUTES.AUTH.COLLEGE_ADMIN_VERIFY_OTP, payload) as ApiResponse<AuthResponseData>;
   const data = response.data;
   const rawUser = data?.collegeAdmin;
   const organization = data?.organization || data?.collegeAdmin?.organization;
 
   return {
     user: {
-      id: rawUser?.id,
-      firstName: rawUser?.firstName,
-      lastName: rawUser?.lastName,
-      email: rawUser?.email,
+      id: rawUser?.id || '',
+      firstName: rawUser?.firstName || '',
+      lastName: rawUser?.lastName || '',
+      email: rawUser?.email || '',
       role: 'college_admin',
       status: rawUser?.status || 'ACTIVE',
       orgId: rawUser?.orgId,
@@ -181,16 +179,16 @@ export const activateInterviewer = async (password: string, token: string, email
         Authorization: `Bearer ${token}`
       }
     }
-  ) as type;
+  ) as ApiResponse<AuthResponseData>;
   const data = response.data;
   const rawUser = data?.user;
 
   return {
     user: {
-      id: rawUser?.id,
-      firstName: rawUser?.firstName,
-      lastName: rawUser?.lastName,
-      email: rawUser?.email,
+      id: rawUser?.id || '',
+      firstName: rawUser?.firstName || '',
+      lastName: rawUser?.lastName || '',
+      email: rawUser?.email || '',
       role: 'interviewer',
       status: rawUser?.status || 'ACTIVE',
     },
@@ -201,16 +199,17 @@ export const activateInterviewer = async (password: string, token: string, email
  * Forgot Password
  */
 export const forgotPassword = async (email: string): Promise<void> => {
-  await apiClient.post('/auth/forgot-password', { email });
+  await apiClient.post(API_ROUTES.AUTH.FORGOT_PASSWORD, { email });
 };
 
 export const resetPassword = async (payload: { token: string; password: string }): Promise<void> => {
-  await apiClient.post('/auth/reset-password', payload);
+  await apiClient.post(API_ROUTES.AUTH.RESET_PASSWORD, payload);
 };
 
 /**
  * Logout
  */
 export const logoutUser = async (): Promise<void> => {
-  await apiClient.post('/auth/logout', {});
+  await apiClient.post(API_ROUTES.AUTH.LOGOUT, {});
 };
+

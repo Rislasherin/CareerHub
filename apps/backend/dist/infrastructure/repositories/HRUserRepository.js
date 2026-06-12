@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HRUserRepository = void 0;
-const hr_user_model_1 = require("@infrastructure/database/models/comptype/hr-user.model");
-const hr_user_mapper_1 = require("@infrastructure/mappers/hr-user.mapper");
+const hr_user_model_1 = require("@infrastructure/database/models/company/hr-user.model");
+const hr_user_mapper_1 = require("@application/mappers/hr-user.mapper");
 const BaseRepository_1 = require("./BaseRepository");
 class HRUserRepository extends BaseRepository_1.BaseRepository {
     constructor() {
@@ -18,8 +18,8 @@ class HRUserRepository extends BaseRepository_1.BaseRepository {
         const doc = await this.model.findOne({ email });
         return doc ? this.toEntity(doc) : null;
     }
-    async findByComptypeId(comptypeId) {
-        const docs = await this.model.find({ comptypeId });
+    async findByCompanyId(companyId) {
+        const docs = await this.model.find({ companyId });
         return docs.map((doc) => this.toEntity(doc));
     }
     async updateStatus(id, status, blockedBy) {

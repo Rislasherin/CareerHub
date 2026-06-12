@@ -1,7 +1,7 @@
 import { Company } from "@domain/entities/Company";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { CompanyDocument, CompanyModel } from "@infrastructure/database/models/company/company.model";
-import { toCompanyPersistence, toCompanyEntity } from "@infrastructure/mappers/company.mapper";
+import { toCompanyPersistence, toCompanyEntity } from "@application/mappers/company.mapper";
 import { BaseRepository } from "./BaseRepository";
 
 export class CompanyRepository

@@ -12,7 +12,7 @@ const super_admin_controller_1 = require("@presentation/http/controllers/super-a
 // Let's assume organizationRepository is also in the container, if not I'll create it
 const orgRepository = new organization_repository_1.OrganizationRepository();
 const makeGetDashboardStatsUseCase = () => {
-    return new GetDashboardStats_usecase_1.GetDashboardStatsUseCase(orgRepository, infra_container_1.studentRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
+    return new GetDashboardStats_usecase_1.GetDashboardStatsUseCase(orgRepository, infra_container_1.studentRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeGetDashboardStatsUseCase = makeGetDashboardStatsUseCase;
 const makeGetOrganizationsUseCase = () => {
@@ -24,7 +24,7 @@ const makeGetStudentsUseCase = () => {
 };
 exports.makeGetStudentsUseCase = makeGetStudentsUseCase;
 const makeGetCompaniesUseCase = () => {
-    return new GetCompanies_usecase_1.GetCompaniesUseCase(infra_container_1.comptypeRepository, infra_container_1.hrUserRepository);
+    return new GetCompanies_usecase_1.GetCompaniesUseCase(infra_container_1.companyRepository, infra_container_1.hrUserRepository);
 };
 exports.makeGetCompaniesUseCase = makeGetCompaniesUseCase;
 const makeGetInterviewersUseCase = () => {
@@ -46,11 +46,11 @@ const UpdateUserStatus_usecase_1 = require("@application/usecases/super-admin/Up
 const DeleteUser_usecase_1 = require("@application/usecases/super-admin/DeleteUser.usecase");
 const UpdateOrganizationPlan_usecase_1 = require("@application/usecases/super-admin/UpdateOrganizationPlan.usecase");
 const makeUpdateUserStatusUseCase = () => {
-    return new UpdateUserStatus_usecase_1.UpdateUserStatusUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
+    return new UpdateUserStatus_usecase_1.UpdateUserStatusUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeUpdateUserStatusUseCase = makeUpdateUserStatusUseCase;
 const makeDeleteUserUseCase = () => {
-    return new DeleteUser_usecase_1.DeleteUserUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
+    return new DeleteUser_usecase_1.DeleteUserUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeDeleteUserUseCase = makeDeleteUserUseCase;
 const makeUpdateOrganizationPlanUseCase = () => {

@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -37,7 +38,7 @@ export default function CollegeDashboard() {
   React.useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response: type = await apiClient.get('/college/dashboard/stats');
+        const response: any = await apiClient.get(API_ROUTES.COLLEGE.DASHBOARD_STATS);
         if (response.success) {
           setDynamicStats(response.data);
         }
@@ -182,3 +183,6 @@ export default function CollegeDashboard() {
     </DashboardLayout>
   );
 }
+
+
+

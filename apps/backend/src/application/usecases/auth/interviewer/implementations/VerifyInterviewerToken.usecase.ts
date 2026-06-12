@@ -36,7 +36,7 @@ export class VerifyInterviewerTokenUseCase implements IVerifyInterviewerTokenUse
         lastName: interviewer.lastName,
         email: interviewer.email,
       };
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError("Invalid or expired token", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }

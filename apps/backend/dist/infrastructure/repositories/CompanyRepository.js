@@ -1,18 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ComptypeRepository = void 0;
-const comptype_model_1 = require("@infrastructure/database/models/comptype/comptype.model");
-const comptype_mapper_1 = require("@infrastructure/mappers/comptype.mapper");
+exports.CompanyRepository = void 0;
+const company_model_1 = require("@infrastructure/database/models/company/company.model");
+const company_mapper_1 = require("@application/mappers/company.mapper");
 const BaseRepository_1 = require("./BaseRepository");
-class ComptypeRepository extends BaseRepository_1.BaseRepository {
+class CompanyRepository extends BaseRepository_1.BaseRepository {
     constructor() {
-        super(comptype_model_1.ComptypeModel);
+        super(company_model_1.CompanyModel);
     }
     toEntity(doc) {
-        return (0, comptype_mapper_1.toComptypeEntity)(doc);
+        return (0, company_mapper_1.toCompanyEntity)(doc);
     }
     toPersistence(entity) {
-        return (0, comptype_mapper_1.toComptypePersistence)(entity);
+        return (0, company_mapper_1.toCompanyPersistence)(entity);
     }
     async findByName(name) {
         const doc = await this.model.findOne({ name, isDeleted: { $ne: true } });
@@ -44,4 +44,4 @@ class ComptypeRepository extends BaseRepository_1.BaseRepository {
         await this.model.updateOne({ _id: id }, { $set: update });
     }
 }
-exports.ComptypeRepository = ComptypeRepository;
+exports.CompanyRepository = CompanyRepository;

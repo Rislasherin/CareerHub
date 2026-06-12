@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.JobSchema = void 0;
 const mongoose_1 = require("mongoose");
 exports.JobSchema = new mongoose_1.Schema({
-    comptypeId: { type: String, required: true, index: true },
+    companyId: { type: String, required: true, index: true },
     collegeId: { type: String, required: true, index: true },
     title: { type: String, required: true },
     category: { type: String, required: true },

@@ -15,7 +15,7 @@ class AddInterviewerUseCase {
         this._jwtService = _jwtService;
         this._crossRoleAuthService = _crossRoleAuthService;
     }
-    async execute(comptypeId, firstName, lastName, email) {
+    async execute(companyId, firstName, lastName, email) {
         const globalCheck = await this._crossRoleAuthService.isEmailInUse(email);
         if (globalCheck.inUse) {
             throw new AppError_1.AppError(`This email is already registered as a ${globalCheck.role}`, HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.USER_ALREADY_EXISTS);
@@ -25,7 +25,7 @@ class AddInterviewerUseCase {
             throw new AppError_1.AppError("Interviewer with this email already exists", HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.USER_ALREADY_EXISTS);
         }
         const interviewer = await this._interviewerRepository.create(Interviewer_1.Interviewer.create({
-            comptypeId,
+            companyId,
             firstName,
             lastName,
             email,

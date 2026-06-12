@@ -5,9 +5,9 @@ class GetHRDashboardStatsUseCase {
     constructor(_interviewerRepository) {
         this._interviewerRepository = _interviewerRepository;
     }
-    async execute(comptypeId) {
+    async execute(companyId) {
         // Retrieve actual active interviewer count from the database
-        const { total: activeInterviewers } = await this._interviewerRepository.searchInterviewers(comptypeId, "", 1, 1);
+        const { total: activeInterviewers } = await this._interviewerRepository.searchInterviewers(companyId, "", 1, 1);
         return {
             stats: {
                 totalCandidates: 24, // Placeholder until Application Schema is created
@@ -32,7 +32,7 @@ class GetHRDashboardStatsUseCase {
                 { title: "Antypea Sharma shortlisted for Software Engineer", time: "2 hours ago", icon: "CheckCircle2", color: "text-emerald-500", bg: "bg-emerald-50" },
                 { title: "Interview invite sent to Rohit Mehra", time: "4 hours ago", icon: "MessageSquare", color: "text-blue-500", bg: "bg-blue-50" },
                 { title: "8 new AI-matched candidates for Data Analyst", time: "Yesterday, 6:30 PM", icon: "Zap", color: "text-amber-500", bg: "bg-amber-50" },
-                { title: "Comptype profile viewed by IIT Bombay Placements", time: "Yesterday, 2:10 PM", icon: "Building2", color: "text-slate-500", bg: "bg-slate-50" },
+                { title: "Company profile viewed by IIT Bombay Placements", time: "Yesterday, 2:10 PM", icon: "Building2", color: "text-slate-500", bg: "bg-slate-50" },
             ],
             applicationsChart: [8, 12, 6, 15, 10, 4, 2] // MON to SUN applicants count
         };

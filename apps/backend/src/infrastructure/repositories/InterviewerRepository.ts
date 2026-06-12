@@ -1,7 +1,7 @@
 import { Interviewer } from "@domain/entities/Interviewer";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 import { InterviewerDocument, InterviewerModel } from "@infrastructure/database/models/company/interviewer.model";
-import { toInterviewerEntity, toInterviewerPersistence } from "@infrastructure/mappers/interviewer.mapper";
+import { toInterviewerEntity, toInterviewerPersistence } from "@application/mappers/interviewer.mapper";
 import { FilterQuery } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
 import { interviewerRepository } from "@infrastructure/di/infra.container";

@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -47,7 +48,7 @@ export default function StudentVerifyPage() {
 
     setIsLoading(true);
     try {
-      const response: type = await apiClient.post('/student/verify', formData, {
+      const response: any = await apiClient.post(API_ROUTES.STUDENT.VERIFY, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -69,7 +70,7 @@ export default function StudentVerifyPage() {
       toast.success('Verification proof uploaded successfully!');
       setIsReuploading(false);
       router.push('/student/waitlist');
-    } catch (err: type) {
+    } catch (err: unknown) {
       // toast handled by interceptor
     } finally {
       setIsLoading(false);
@@ -296,3 +297,7 @@ export default function StudentVerifyPage() {
     </div>
   );
 }
+
+
+
+

@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -33,8 +34,8 @@ import { apiClient } from '@/services/api/api.client';
 
 export default function StudentDirectoryPage() {
   const [activeTab, setActiveTab] = useState('All');
-  const [studentsList, setStudentsList] = useState<type[]>([]);
-  const [pendingVerifications, setPendingVerifications] = useState<type[]>([]);
+  const [studentsList, setStudentsList] = useState<any[]>([]);
+  const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -77,7 +78,7 @@ export default function StudentDirectoryPage() {
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      const response: type = await apiClient.get('/college/students');
+      const response: any = await apiClient.get(API_ROUTES.COLLEGE.STUDENTS);
       if (response.success) {
         setStudentsList(response.data.students);
         setTotalCount(response.data.total);
@@ -92,7 +93,7 @@ export default function StudentDirectoryPage() {
   const fetchPendingVerifications = async () => {
     setIsLoading(true);
     try {
-      const response: type = await apiClient.get('/college/students/pending?status=PENDING_VERIFICATION');
+      const response: any = await apiClient.get(`${API_ROUTES.COLLEGE.STUDENTS_PENDING}?status=PENDING_VERIFICATION`);
       if (response.success) {
         setPendingVerifications(response.data);
       }
@@ -164,7 +165,7 @@ export default function StudentDirectoryPage() {
 
       if (students.length === 0) return; // All were invalid department names or empty
 
-      const response: type = await apiClient.post('/college/students/bulk-invite', { students });
+      const response: any = await apiClient.post(API_ROUTES.COLLEGE.STUDENTS_BULK_INVITE, { students });
 
       if (response.success) {
         const { invited, skipped } = response.data;
@@ -198,7 +199,7 @@ export default function StudentDirectoryPage() {
       onConfirm: async () => {
         setModalConfig(prev => ({ ...prev, isLoading: true }));
         try {
-          await apiClient.patch(`/college/status-toggle/${id}`, { status: isBlocking ? 'BLOCKED' : 'ACTIVE' });
+          await apiClient.patch(`${API_ROUTES.COLLEGE.STATUS_TOGGLE}/${id}`, { status: isBlocking ? 'BLOCKED' : 'ACTIVE' });
           toast.success(`Student ${isBlocking ? 'blocked' : 'unblocked'} successfully`);
           fetchStudents();
         } catch (err) {
@@ -211,7 +212,7 @@ export default function StudentDirectoryPage() {
 
   const handleApprove = async (id: string) => {
     try {
-      await apiClient.patch(`/college/students/${id}/approve`);
+      await apiClient.patch(`${API_ROUTES.COLLEGE.STUDENTS}/${id}/approve`);
       toast.success('Student verified and activated');
       fetchPendingVerifications();
     } catch (err) { }
@@ -229,7 +230,7 @@ export default function StudentDirectoryPage() {
     }
     setIsProcessing(true);
     try {
-      await apiClient.patch(`/college/students/${rejectingStudentId}/reject`, { reason: rejectReason });
+      await apiClient.patch(`${API_ROUTES.COLLEGE.STUDENTS}/${rejectingStudentId}/reject`, { reason: rejectReason });
       toast.success('Request rejected');
       setIsRejectModalOpen(false);
       setRejectReason('');
@@ -277,7 +278,7 @@ export default function StudentDirectoryPage() {
     setIsProcessing(true);
     try {
       const studentToInvite = { firstName, lastName, email, rollNumber, department };
-      const response: type = await apiClient.post('/college/students/bulk-invite', { students: [studentToInvite] });
+      const response: any = await apiClient.post(API_ROUTES.COLLEGE.STUDENTS_BULK_INVITE, { students: [studentToInvite] });
       if (response.success) {
         const { invited, skipped, errors } = response.data;
         if (invited > 0) {
@@ -293,8 +294,8 @@ export default function StudentDirectoryPage() {
           toast.error('Failed to invite student. Please try again.');
         }
       }
-    } catch (err: type) {
-      const errMsg = err?.error?.message || err?.message || 'An error occurred while adding student';
+    } catch (err: unknown) {
+      const errMsg = (err as any)?.error?.message || (err as Error)?.message || 'An error occurred while adding student';
       toast.error(errMsg);
     } finally {
       setIsProcessing(false);
@@ -779,3 +780,12 @@ export default function StudentDirectoryPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+
+
+
+
+

@@ -18,6 +18,7 @@ exports.VerifyCollegeOtpRequestDto = VerifyCollegeOtpRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/, { message: "Invalid email address" }),
     (0, class_validator_1.IsNotEmpty)({ message: "Email is required" }),
     __metadata("design:type", String)
 ], VerifyCollegeOtpRequestDto.prototype, "email", void 0);
@@ -26,5 +27,6 @@ __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: "OTP is required" }),
     (0, class_validator_1.Length)(6, 6, { message: "OTP must be exactly 6 characters long" }),
+    (0, class_validator_1.Matches)(/^[0-9]{6}$/, { message: "OTP must be exactly 6 digits" }),
     __metadata("design:type", String)
 ], VerifyCollegeOtpRequestDto.prototype, "otp", void 0);

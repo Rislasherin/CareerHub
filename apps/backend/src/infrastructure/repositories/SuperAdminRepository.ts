@@ -1,7 +1,7 @@
 import { SuperAdmin } from "@domain/entities/SuperAdmin";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { SuperAdminDocument, SuperAdminModel } from "@infrastructure/database/models/superadmin/super-admin.model";
-import { toSuperAdminEntity, toSuperAdminPersistence } from "@infrastructure/mappers/super-admin.mapper";
+import { toSuperAdminEntity, toSuperAdminPersistence } from "@application/mappers/super-admin.mapper";
 import { BaseRepository } from "./BaseRepository";
 
 export class SuperAdminRepository

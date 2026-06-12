@@ -10,6 +10,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { VerifyCompanyOtpUseCase } from "@application/usecases/auth/hr/implementations/VerifyCompanyOtp.usecase";
 
 import { LoginHRUseCase } from "@application/usecases/auth/hr/implementations/LoginHR.usecase";
+import { env } from "@infrastructure/config/env.validator";
 
 export class HRAuthController {
   constructor(
@@ -26,7 +27,7 @@ export class HRAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(res, result, "Login successful");
@@ -44,7 +45,7 @@ export class HRAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(

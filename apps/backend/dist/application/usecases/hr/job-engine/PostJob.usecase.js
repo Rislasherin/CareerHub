@@ -7,9 +7,9 @@ class PostJobUseCase {
     constructor(_jobRepository) {
         this._jobRepository = _jobRepository;
     }
-    async execute(comptypeId, dto) {
+    async execute(companyId, dto) {
         const job = Job_1.Job.create({
-            comptypeId,
+            companyId,
             collegeId: dto.collegeId,
             title: dto.title,
             category: dto.category,

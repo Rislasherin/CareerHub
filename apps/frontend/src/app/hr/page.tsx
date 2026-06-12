@@ -30,9 +30,10 @@ import Link from 'next/link';
 
 import { useAppSelector } from '@/redux/hooks';
 import { RootState } from '@/redux/store';
-import { getHRDashboardStats, HRDashboardStats } from '@/services/hr/dashboard.service';
+import { getHRDashboardStats } from '@/services/hr/dashboard.service';
+import { HRDashboardStats } from '@/types/dashboard';
 
-const iconMap: Record<string, type> = {
+const iconMap: Record<string, any> = {
    CheckCircle2: CheckCircle2,
    MessageSquare: MessageSquare,
    Zap: Zap,

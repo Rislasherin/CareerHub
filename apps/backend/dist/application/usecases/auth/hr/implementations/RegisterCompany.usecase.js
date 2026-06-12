@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterComptypeUseCase = void 0;
-const Comptype_1 = require("@domain/entities/Comptype");
+exports.RegisterCompanyUseCase = void 0;
+const Company_1 = require("@domain/entities/Company");
 const HRUser_1 = require("@domain/entities/HRUser");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
-class RegisterComptypeUseCase {
-    constructor(_comptypeRepository, _hrUserRepository, _bcryptService, _jwtService, _otpRepository, _emailService, _crossRoleAuthService) {
-        this._comptypeRepository = _comptypeRepository;
+class RegisterCompanyUseCase {
+    constructor(_companyRepository, _hrUserRepository, _bcryptService, _jwtService, _otpRepository, _emailService, _crossRoleAuthService) {
+        this._companyRepository = _companyRepository;
         this._hrUserRepository = _hrUserRepository;
         this._bcryptService = _bcryptService;
         this._jwtService = _jwtService;
@@ -34,7 +34,7 @@ class RegisterComptypeUseCase {
                 console.log(`[OTP RE-GENERATED] Email: ${dto.email}, OTP: ${otp}`);
                 await this._otpRepository.deleteByEmail(dto.email);
                 await this._otpRepository.create(dto.email, otp);
-                await this._emailService.sendOTP(dto.email, otp, "New Comptype");
+                await this._emailService.sendOTP(dto.email, otp, "New Company");
                 return {
                     requiresOtp: true,
                     email: dto.email,
@@ -43,16 +43,16 @@ class RegisterComptypeUseCase {
             }
             throw new AppError_1.AppError("HR User with this email already exists", HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.USER_ALREADY_EXISTS);
         }
-        // Step 1: Create Comptype (pending)
-        const comptype = await this._comptypeRepository.create(Comptype_1.Comptype.create({
-            name: `Pending Comptype (${dto.firstName} ${dto.lastName}) - ${Date.now()}`,
+        // Step 1: Create Company (pending)
+        const company = await this._companyRepository.create(Company_1.Company.create({
+            name: `Pending Company (${dto.firstName} ${dto.lastName}) - ${Date.now()}`,
             onboardingStep: 0,
             status: user_status_enum_1.UserStatus.PENDING,
         }));
         const hashedPassword = await this._bcryptService.hash(dto.password);
         // Step 2: Create HR User (pending)
         const hrUser = await this._hrUserRepository.create(HRUser_1.HRUser.create({
-            comptypeId: comptype.id,
+            companyId: company.id,
             firstName: dto.firstName,
             lastName: dto.lastName,
             email: dto.email,
@@ -66,7 +66,7 @@ class RegisterComptypeUseCase {
         console.log(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); // As requested by user
         await this._otpRepository.create(dto.email, otp);
         // Step 4: Send OTP Email
-        await this._emailService.sendOTP(dto.email, otp, "New Comptype");
+        await this._emailService.sendOTP(dto.email, otp, "New Company");
         return {
             requiresOtp: true,
             email: dto.email,
@@ -74,4 +74,4 @@ class RegisterComptypeUseCase {
         };
     }
 }
-exports.RegisterComptypeUseCase = RegisterComptypeUseCase;
+exports.RegisterCompanyUseCase = RegisterCompanyUseCase;

@@ -6,8 +6,8 @@ class MockEmailService {
         console.log(`[MockEmailService] Sending setup email to ${email}`);
         console.log(`[MockEmailService] Setup link: ${setupLink}`);
     }
-    async sendOTP(email, otp, comptypeName) {
-        console.log(`[MockEmailService] Sending OTP ${otp} to ${email} for comptype ${comptypeName}`);
+    async sendOTP(email, otp, companyName) {
+        console.log(`[MockEmailService] Sending OTP ${otp} to ${email} for company ${companyName}`);
         return true;
     }
     async sendPasswordResetEmail(email, resetLink) {

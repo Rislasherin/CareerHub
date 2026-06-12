@@ -9,6 +9,7 @@ import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/GetHRJobs
 import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/CloseJob.usecase";
 import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/DeleteJob.usecase";
 import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/GetHRCandidates.usecase";
+import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/UpdateJob.usecase";
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 
 export class HRJobController {
@@ -17,7 +18,8 @@ export class HRJobController {
     private readonly _getHRJobsUseCase: IGetHRJobsUseCase,
     private readonly _closeJobUseCase: ICloseJobUseCase,
     private readonly _deleteJobUseCase: IDeleteJobUseCase,
-    private readonly _getHRCandidatesUseCase: IGetHRCandidatesUseCase
+    private readonly _getHRCandidatesUseCase: IGetHRCandidatesUseCase,
+    private readonly _updateJobUseCase: IUpdateJobUseCase
   ) { }
 
   postJob = asyncHandler(async (req: any, res: Response) => {
@@ -82,5 +84,14 @@ export class HRJobController {
     }
     const candidates = await this._getHRCandidatesUseCase.execute(companyId);
     sendSuccess(res, candidates, "Candidates list retrieved successfully");
+  });
+  updateJob = asyncHandler(async (req: any, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { jobId } = req.params;
+    const result = await this._updateJobUseCase.execute(jobId, companyId, req.body);
+    sendSuccess(res, result.toJSON(), "Job updated successfully", HttpStatus.OK);
   });
 }

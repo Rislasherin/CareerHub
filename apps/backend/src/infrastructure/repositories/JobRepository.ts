@@ -2,7 +2,7 @@ import { Job } from "@domain/entities/Job";
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { JobDocument, JobModel } from "@infrastructure/database/models/company/job.model";
-import { toJobEntity, toJobPersistence } from "@infrastructure/mappers/job.mapper";
+import { toJobEntity, toJobPersistence } from "@application/mappers/job.mapper";
 import { FilterQuery } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
 

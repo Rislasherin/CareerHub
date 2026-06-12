@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudentRepository = void 0;
 const BaseRepository_1 = require("@infrastructure/repositories/BaseRepository");
 const student_model_1 = require("@infrastructure/database/models/student/student.model");
-const student_mapper_1 = require("@infrastructure/mappers/student.mapper");
+const student_mapper_1 = require("@application/mappers/student.mapper");
 class StudentRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(student_model_1.StudentModel);

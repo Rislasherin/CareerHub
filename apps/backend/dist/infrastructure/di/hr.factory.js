@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeHRJobController = exports.makeGetHRCandidatesUseCase = exports.makeDeleteJobUseCase = exports.makeCloseJobUseCase = exports.makeGetHRJobsUseCase = exports.makePostJobUseCase = exports.makeHRDashboardController = exports.makeGetHRDashboardStatsUseCase = exports.makeInterviewerManagementController = exports.makeRestoreInterviewerUseCase = exports.makeDeleteInterviewerUseCase = exports.makeUpdateInterviewerUseCase = exports.makeResendInterviewerInviteUseCase = exports.makeToggleInterviewerStatusUseCase = exports.makeGetInterviewersUseCase = exports.makeAddInterviewerUseCase = exports.makeHRAuthController = exports.makeUpdateComptypeOnboardingUseCase = exports.makeVerifyComptypeOtpUseCase = exports.makeRegisterComptypeUseCase = exports.makeLoginHRUseCase = void 0;
-const RegisterComptype_usecase_1 = require("@application/usecases/auth/hr/implementations/RegisterComptype.usecase");
-const UpdateComptypeOnboarding_usecase_1 = require("@application/usecases/auth/hr/implementations/UpdateComptypeOnboarding.usecase");
+exports.makeHRJobController = exports.makeGetHRCandidatesUseCase = exports.makeDeleteJobUseCase = exports.makeCloseJobUseCase = exports.makeGetHRJobsUseCase = exports.makePostJobUseCase = exports.makeHRDashboardController = exports.makeGetHRDashboardStatsUseCase = exports.makeInterviewerManagementController = exports.makeRestoreInterviewerUseCase = exports.makeDeleteInterviewerUseCase = exports.makeUpdateInterviewerUseCase = exports.makeResendInterviewerInviteUseCase = exports.makeToggleInterviewerStatusUseCase = exports.makeGetInterviewersUseCase = exports.makeAddInterviewerUseCase = exports.makeHRAuthController = exports.makeUpdateCompanyOnboardingUseCase = exports.makeVerifyCompanyOtpUseCase = exports.makeRegisterCompanyUseCase = exports.makeLoginHRUseCase = void 0;
+const RegisterCompany_usecase_1 = require("@application/usecases/auth/hr/implementations/RegisterCompany.usecase");
+const UpdateCompanyOnboarding_usecase_1 = require("@application/usecases/auth/hr/implementations/UpdateCompanyOnboarding.usecase");
 const AddInterviewer_usecase_1 = require("@application/usecases/hr/interviewer-management/AddInterviewer.usecase");
 const GetInterviewers_usecase_1 = require("@application/usecases/hr/interviewer-management/GetInterviewers.usecase");
 const ToggleInterviewerStatus_usecase_1 = require("@application/usecases/hr/interviewer-management/ToggleInterviewerStatus.usecase");
-const VerifyComptypeOtp_usecase_1 = require("@application/usecases/auth/hr/implementations/VerifyComptypeOtp.usecase");
+const VerifyCompanyOtp_usecase_1 = require("@application/usecases/auth/hr/implementations/VerifyCompanyOtp.usecase");
 const GetHRDashboardStats_usecase_1 = require("@application/usecases/hr/dashboard/GetHRDashboardStats.usecase");
 const hr_dashboard_controller_1 = require("@presentation/http/controllers/hr/hr.dashboard.controller");
 const PostJob_usecase_1 = require("@application/usecases/hr/job-engine/PostJob.usecase");
@@ -26,23 +26,23 @@ const RestoreInterviewer_usecase_1 = require("@application/usecases/hr/interview
 const ResendInterviewerInvite_usecase_1 = require("@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase");
 const emailService = new email_service_1.EmailService();
 const makeLoginHRUseCase = () => {
-    return new LoginHR_usecase_1.LoginHRUseCase(infra_container_1.hrUserRepository, infra_container_1.comptypeRepository, infra_container_1.jwtService, infra_container_1.bcryptService);
+    return new LoginHR_usecase_1.LoginHRUseCase(infra_container_1.hrUserRepository, infra_container_1.companyRepository, infra_container_1.jwtService, infra_container_1.bcryptService);
 };
 exports.makeLoginHRUseCase = makeLoginHRUseCase;
-const makeRegisterComptypeUseCase = () => {
-    return new RegisterComptype_usecase_1.RegisterComptypeUseCase(infra_container_1.comptypeRepository, infra_container_1.hrUserRepository, infra_container_1.bcryptService, infra_container_1.jwtService, infra_container_1.otpRepository, emailService, infra_container_1.crossRoleAuthService);
+const makeRegisterCompanyUseCase = () => {
+    return new RegisterCompany_usecase_1.RegisterCompanyUseCase(infra_container_1.companyRepository, infra_container_1.hrUserRepository, infra_container_1.bcryptService, infra_container_1.jwtService, infra_container_1.otpRepository, emailService, infra_container_1.crossRoleAuthService);
 };
-exports.makeRegisterComptypeUseCase = makeRegisterComptypeUseCase;
-const makeVerifyComptypeOtpUseCase = () => {
-    return new VerifyComptypeOtp_usecase_1.VerifyComptypeOtpUseCase(infra_container_1.otpRepository, infra_container_1.hrUserRepository, infra_container_1.comptypeRepository, infra_container_1.jwtService);
+exports.makeRegisterCompanyUseCase = makeRegisterCompanyUseCase;
+const makeVerifyCompanyOtpUseCase = () => {
+    return new VerifyCompanyOtp_usecase_1.VerifyCompanyOtpUseCase(infra_container_1.otpRepository, infra_container_1.hrUserRepository, infra_container_1.companyRepository, infra_container_1.jwtService);
 };
-exports.makeVerifyComptypeOtpUseCase = makeVerifyComptypeOtpUseCase;
-const makeUpdateComptypeOnboardingUseCase = () => {
-    return new UpdateComptypeOnboarding_usecase_1.UpdateComptypeOnboardingUseCase(infra_container_1.comptypeRepository);
+exports.makeVerifyCompanyOtpUseCase = makeVerifyCompanyOtpUseCase;
+const makeUpdateCompanyOnboardingUseCase = () => {
+    return new UpdateCompanyOnboarding_usecase_1.UpdateCompanyOnboardingUseCase(infra_container_1.companyRepository);
 };
-exports.makeUpdateComptypeOnboardingUseCase = makeUpdateComptypeOnboardingUseCase;
+exports.makeUpdateCompanyOnboardingUseCase = makeUpdateCompanyOnboardingUseCase;
 const makeHRAuthController = () => {
-    return new hr_auth_controller_1.HRAuthController((0, exports.makeRegisterComptypeUseCase)(), (0, exports.makeUpdateComptypeOnboardingUseCase)(), (0, exports.makeVerifyComptypeOtpUseCase)(), (0, exports.makeLoginHRUseCase)());
+    return new hr_auth_controller_1.HRAuthController((0, exports.makeRegisterCompanyUseCase)(), (0, exports.makeUpdateCompanyOnboardingUseCase)(), (0, exports.makeVerifyCompanyOtpUseCase)(), (0, exports.makeLoginHRUseCase)());
 };
 exports.makeHRAuthController = makeHRAuthController;
 const makeAddInterviewerUseCase = () => {

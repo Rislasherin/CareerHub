@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterviewerRepository = void 0;
-const interviewer_model_1 = require("@infrastructure/database/models/comptype/interviewer.model");
-const interviewer_mapper_1 = require("@infrastructure/mappers/interviewer.mapper");
+const interviewer_model_1 = require("@infrastructure/database/models/company/interviewer.model");
+const interviewer_mapper_1 = require("@application/mappers/interviewer.mapper");
 const BaseRepository_1 = require("./BaseRepository");
-const user_status_enum_1 = require("@domain/enums/user.status.enum");
 class InterviewerRepository extends BaseRepository_1.BaseRepository {
     constructor() {
         super(interviewer_model_1.InterviewerModel);
@@ -19,14 +18,14 @@ class InterviewerRepository extends BaseRepository_1.BaseRepository {
         const doc = await this.model.findOne({ email, isDeleted: { $ne: true } });
         return doc ? this.toEntity(doc) : null;
     }
-    async findByComptypeId(comptypeId) {
-        const docs = await this.model.find({ comptypeId, isDeleted: { $ne: true } });
+    async findByCompanyId(companyId) {
+        const docs = await this.model.find({ companyId, isDeleted: { $ne: true } });
         return docs.map((doc) => this.toEntity(doc));
     }
-    async searchInterviewers(comptypeId, query, page, limit, includeDeleted = false) {
+    async searchInterviewers(companyId, query, page, limit, includeDeleted = false) {
         const skip = (page - 1) * limit;
         const filter = {
-            comptypeId,
+            companyId,
             $or: [
                 { firstName: { $regex: query, $options: "i" } },
                 { lastName: { $regex: query, $options: "i" } },
@@ -83,14 +82,6 @@ class InterviewerRepository extends BaseRepository_1.BaseRepository {
     }
     async restore(id) {
         await this.model.findByIdAndUpdate(id, { isDeleted: false });
-    }
-    async findPendingStartWithA() {
-        const docs = await this.model.find({
-            status: user_status_enum_1.UserStatus.PENDING,
-            isDeleted: { $ne: true },
-            firstName: { $regex: "^A", $options: "i" },
-        });
-        return docs.map((doc) => this.toEntity(doc));
     }
 }
 exports.InterviewerRepository = InterviewerRepository;

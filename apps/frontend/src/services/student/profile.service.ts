@@ -1,65 +1,16 @@
+import { API_ROUTES } from '@/constants/api.routes';
 import { apiClient } from '@/services/api/api.client';
+import { ApiResponse } from '@/types/api';
 
-export interface StudentExperience {
-  company: string;
-  role: string;
-  duration: string;
-  location?: string;
-  summary?: string;
-}
-
-export interface StudentProject {
-  name: string;
-  techStack: string[];
-  github?: string;
-  liveDemo?: string;
-  description?: string;
-}
-
-export interface StudentSkills {
-  languages?: string[];
-  frameworks?: string[];
-  databases?: string[];
-  cloudDevops?: string[];
-  otherTools?: string[];
-  aiMl?: string[];
-}
-
-export interface StudentProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string;
-  rollNumber?: string;
-  department?: string;
-  collegeName?: string;
-  linkedinUrl?: string;
-  githubUrl?: string;
-  portfolioUrl?: string;
-  city?: string;
-
-  // Academic (Locked)
-  degree?: string;
-  branch?: string;
-  graduationYear?: number;
-  cgpa?: number;
-  tenthPercentage?: number;
-  twelfthPercentage?: number;
-  activeBacklogs?: number;
-
-  // Arrays
-  skills?: StudentSkills;
-  experience?: StudentExperience[];
-  projects?: StudentProject[];
-}
+import { StudentProfile, StudentExperience, StudentProject, StudentSkills } from '@/types/student';
 
 export const getStudentProfile = async (): Promise<StudentProfile> => {
-  const response = (await apiClient.get('/student/profile')) as type;
+  const response = (await apiClient.get(API_ROUTES.STUDENT.PROFILE)) as ApiResponse<StudentProfile>;
   return response.data;
 };
 
 export const updateStudentProfile = async (payload: Partial<StudentProfile>): Promise<StudentProfile> => {
-  const response = (await apiClient.put('/student/profile', payload)) as type;
+  const response = (await apiClient.put(API_ROUTES.STUDENT.PROFILE, payload)) as ApiResponse<StudentProfile>;
   return response.data;
 };
+

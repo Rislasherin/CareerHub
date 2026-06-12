@@ -7,9 +7,9 @@ class GetHRCandidatesUseCase {
         this._jobRepository = _jobRepository;
         this._studentRepository = _studentRepository;
     }
-    async execute(comptypeId) {
-        // 1. Fetch all comptype jobs
-        const jobs = await this._jobRepository.findByComptypeId(comptypeId);
+    async execute(companyId) {
+        // 1. Fetch all company jobs
+        const jobs = await this._jobRepository.findByCompanyId(companyId);
         if (jobs.length === 0) {
             return [];
         }
@@ -17,7 +17,7 @@ class GetHRCandidatesUseCase {
         const { students } = await this._studentRepository.searchAllStudents("", 1, 1000);
         const candidatesList = [];
         const collegeCache = new Map();
-        // 3. For each student, check their match against each comptype job
+        // 3. For each student, check their match against each company job
         for (const student of students) {
             // Gather student skills
             const studentSkillSet = new Set();

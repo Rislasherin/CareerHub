@@ -8,6 +8,7 @@ import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/im
 
 import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/implementations/VerifyInvitationToken.usecase";
 import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/implementations/SetupStudentPassword.usecase";
+import { env } from "@infrastructure/config/env.validator";
 
 export class StudentAuthController {
   constructor(
@@ -32,7 +33,7 @@ export class StudentAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(
@@ -64,7 +65,7 @@ export class StudentAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(res, result, "Password set successfully. Profile activated.");

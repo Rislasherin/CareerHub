@@ -2,7 +2,7 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { Student } from "@domain/entities/student";
 import { BaseRepository } from "@infrastructure/repositories/BaseRepository";
 import { StudentDocument, StudentModel } from "@infrastructure/database/models/student/student.model";
-import { toStudentEntity, toStudentPersistence } from "@infrastructure/mappers/student.mapper";
+import { toStudentEntity, toStudentPersistence } from "@application/mappers/student.mapper";
 import { FilterQuery } from "mongoose";
 
 export class StudentRepository extends BaseRepository<Student, StudentDocument> implements IStudentRepository {

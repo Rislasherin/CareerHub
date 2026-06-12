@@ -20,6 +20,10 @@ __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'Token is required' }),
     (0, class_validator_1.MaxLength)(1000, { message: 'Token cannot exceed 1000 characters' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: "Token cannot have consecutive spaces" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: "Token cannot end with a space" }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: "Token cannot start with a space" }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9-]+$/, { message: "Token can only contain letters, numbers, and hyphens" }),
     __metadata("design:type", String)
 ], SetupPasswordDto.prototype, "token", void 0);
 __decorate([
@@ -28,5 +32,9 @@ __decorate([
     (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters long' }),
     (0, class_validator_1.MaxLength)(100, { message: 'Password cannot exceed 100 characters' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'Password is required' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: "Password cannot have consecutive spaces" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: "Password cannot end with a space" }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: "Password cannot start with a space" }),
+    (0, class_validator_1.Matches)(/^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':",.<>\/?]+$/, { message: "Password can only contain letters, numbers, and special characters" }),
     __metadata("design:type", String)
 ], SetupPasswordDto.prototype, "password", void 0);

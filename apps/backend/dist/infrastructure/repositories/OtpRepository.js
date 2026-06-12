@@ -13,7 +13,7 @@ class OtpRepository {
         return await otp_model_1.OtpModel.findOne({ email, otp }).exec();
     }
     async deleteByEmail(email) {
-        await otp_model_1.OtpModel.deleteMtype({ email }).exec();
+        await otp_model_1.OtpModel.deleteMany({ email }).exec();
     }
 }
 exports.OtpRepository = OtpRepository;

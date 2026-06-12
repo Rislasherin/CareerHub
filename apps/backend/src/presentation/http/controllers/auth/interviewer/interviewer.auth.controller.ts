@@ -6,6 +6,7 @@ import { LoginInterviewerUseCase } from "@application/usecases/auth/interviewer/
 
 import { IVerifyInterviewerTokenUseCase } from "@application/usecases/auth/interviewer/implementations/VerifyInterviewerToken.usecase";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { env } from "@infrastructure/config/env.validator";
 
 export class InterviewerAuthController {
   constructor(
@@ -31,7 +32,7 @@ export class InterviewerAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000, // 30 minutes
+      maxAge: env.COOKIE_MAX_AGE_MS, // 30 minutes
     });
 
     sendSuccess(res, { user: result.user }, "Account activated successfully");
@@ -44,7 +45,7 @@ export class InterviewerAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(res, result, "Login successful");

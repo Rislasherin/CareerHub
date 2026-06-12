@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JobRepository = void 0;
 const JobStatus_enum_1 = require("@domain/enums/JobStatus.enum");
-const job_model_1 = require("@infrastructure/database/models/comptype/job.model");
-const job_mapper_1 = require("@infrastructure/mappers/job.mapper");
+const job_model_1 = require("@infrastructure/database/models/company/job.model");
+const job_mapper_1 = require("@application/mappers/job.mapper");
 const BaseRepository_1 = require("./BaseRepository");
 class JobRepository extends BaseRepository_1.BaseRepository {
     constructor() {
@@ -15,8 +15,8 @@ class JobRepository extends BaseRepository_1.BaseRepository {
     toPersistence(entity) {
         return (0, job_mapper_1.toJobPersistence)(entity);
     }
-    async findByComptypeId(comptypeId) {
-        const docs = await this.model.find({ comptypeId, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
+    async findByCompanyId(companyId) {
+        const docs = await this.model.find({ companyId, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
         return docs.map((doc) => this.toEntity(doc));
     }
     async findByCollegeIdAndStatus(collegeId, status) {
@@ -62,8 +62,8 @@ class JobRepository extends BaseRepository_1.BaseRepository {
                 { collegeId: "ALL" }
             ];
         }
-        if (filters.comptypeId) {
-            filter.comptypeId = filters.comptypeId;
+        if (filters.companyId) {
+            filter.companyId = filters.companyId;
         }
         if (filters.status) {
             filter.status = filters.status;

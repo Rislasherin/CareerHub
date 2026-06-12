@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -55,7 +56,7 @@ function SetupContent() {
         return;
       }
       try {
-        const response: type = await apiClient.get(`/auth/student/verify-token/${token}`);
+        const response: any = await apiClient.get(`${API_ROUTES.AUTH.STUDENT_VERIFY_TOKEN}/${token}`);
         if (response.success) {
           setStudentInfo(response.data);
         }
@@ -92,7 +93,7 @@ function SetupContent() {
 
     setIsLoading(true);
     try {
-      const response: type = await apiClient.post('/auth/student/setup-password', { token, password });
+      const response: any = await apiClient.post(API_ROUTES.AUTH.STUDENT_SETUP_PASSWORD, { token, password });
       const { user } = response.data;
 
       // Auto-login the student
@@ -106,7 +107,7 @@ function SetupContent() {
       setTimeout(() => {
         router.push('/student/verify');
       }, 2000);
-    } catch (err: type) {
+    } catch (err: unknown) {
       // Handled by interceptor
     } finally {
       setIsLoading(false);
@@ -259,3 +260,7 @@ function SetupContent() {
     </div>
   );
 }
+
+
+
+

@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -26,11 +27,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
-import { setStudentDetails } from '@/redux/slices/studentSlice';
+import { setStudentDetails, StudentDetails } from '@/redux/slices/studentSlice';
 import { apiClient } from '@/services/api/api.client';
 import { toast } from 'sonner';
+import { Job, InterviewRoundConfig } from '@/types/job';
+import { StudentProfile } from '@/types/student';
+import { ApiResponse } from '@/types/api';
 
-const calculateProfileCompleteness = (u: any) => {
+const calculateProfileCompleteness = (u: (Partial<StudentDetails> & { phoneNumber?: string; linkedinUrl?: string; githubUrl?: string; city?: string; }) | null) => {
   if (!u) return 0;
   const fields = [
     u.firstName,
@@ -115,12 +119,12 @@ export default function StudentJobsFeed() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response: any = await apiClient.get('/student/jobs');
+      const response = await apiClient.get(API_ROUTES.STUDENT.JOBS) as ApiResponse<Job[]>;
       if (response.success) {
         setJobs(response.data || []);
       }
-    } catch (err: any) {
-      toast.error(err?.error?.message || err?.message || 'Failed to retrieve jobs feed');
+    } catch (err) {
+      toast.error((err as { error?: { message?: string } })?.error?.message || (err as Error)?.message || 'Failed to retrieve jobs feed');
     } finally {
       setLoading(false);
     }
@@ -134,7 +138,7 @@ export default function StudentJobsFeed() {
     setApplyingId(jobId);
     try {
       const idStr = String(jobId);
-      const response: any = await apiClient.post(`/student/jobs/${idStr}/apply`);
+      const response = await apiClient.post(`${API_ROUTES.STUDENT.JOBS}/${idStr}/apply`) as ApiResponse<unknown>;
       if (response.success) {
         const nextApplied = [...appliedJobs, idStr];
         setAppliedJobs(nextApplied);
@@ -148,8 +152,8 @@ export default function StudentJobsFeed() {
           duration: 5000,
         });
       }
-    } catch (err: any) {
-      toast.error(err?.error?.message || err?.message || 'Failed to submit application');
+    } catch (err) {
+      toast.error((err as { error?: { message?: string } })?.error?.message || (err as Error)?.message || 'Failed to submit application');
     } finally {
       setApplyingId(null);
     }
@@ -259,7 +263,7 @@ export default function StudentJobsFeed() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'ALL' | 'BEST_MATCH' | 'NEW_TODAY' | 'SAVED')}
                 className={`px-4 py-2 rounded-xl text-xs font-black tracking-wide transition-all ${activeTab === tab.id
                     ? 'bg-[#E11D48] text-white shadow-md shadow-rose-500/15'
                     : 'text-slate-400 hover:text-slate-700 bg-transparent'
@@ -318,12 +322,12 @@ export default function StudentJobsFeed() {
               const studentSkillSet = new Set<string>();
               if (user?.skills) {
                 const sObj = user.skills;
-                (sObj.languages || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.frameworks || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.databases || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.cloudDevops || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.otherTools || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.aiMl || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
               }
               const requiredSkills = job.requiredSkills || [];
               const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
@@ -591,12 +595,12 @@ export default function StudentJobsFeed() {
                             const studentSkillSet = new Set<string>();
                             if (user?.skills) {
                               const sObj = user.skills;
-                              (sObj.languages || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.frameworks || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.databases || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.cloudDevops || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.otherTools || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.aiMl || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
                             }
                             const requiredSkills = selectedJob.requiredSkills || [];
                             const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
@@ -661,7 +665,7 @@ export default function StudentJobsFeed() {
                                 );
                               }
 
-                              return rounds.map((round: any, idx: number) => (
+                              return rounds.map((round: InterviewRoundConfig, idx: number) => (
                                 <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                   <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0">
@@ -709,12 +713,12 @@ export default function StudentJobsFeed() {
                             const studentSkillSet = new Set<string>();
                             if (user?.skills) {
                               const sObj = user.skills;
-                              (sObj.languages || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.frameworks || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.databases || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.cloudDevops || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.otherTools || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.aiMl || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
+                              (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
                             }
                             const requiredSkills = selectedJob.requiredSkills || [];
                             const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
@@ -878,3 +882,5 @@ export default function StudentJobsFeed() {
     </DashboardLayout>
   );
 }
+
+

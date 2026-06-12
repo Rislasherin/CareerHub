@@ -1,32 +1,32 @@
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
-  return (mod && mod.__esModule) ? mod : { "default": mod };
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const env_validator_1 = require("@infrastructure/config/env.validator");
 class EmailService {
-  constructor() {
-    this._transporter = nodemailer_1.default.createTransport({
-      host: env_validator_1.env.EMAIL_HOST,
-      port: env_validator_1.env.EMAIL_PORT,
-      secure: env_validator_1.env.EMAIL_PORT === 465, // true for 465, false for other ports
-      auth: {
-        user: env_validator_1.env.EMAIL_USER,
-        pass: env_validator_1.env.EMAIL_PASS,
-      },
-    });
-  }
-  async sendOTP(email, otp, comptypeName) {
-    try {
-      await this._transporter.sendMail({
-        from: env_validator_1.env.EMAIL_FROM,
-        to: email,
-        subject: "Verify your CareerHub Organization Account",
-        html: `
+    constructor() {
+        this._transporter = nodemailer_1.default.createTransport({
+            host: env_validator_1.env.EMAIL_HOST,
+            port: env_validator_1.env.EMAIL_PORT,
+            secure: env_validator_1.env.EMAIL_PORT === 465, // true for 465, false for other ports
+            auth: {
+                user: env_validator_1.env.EMAIL_USER,
+                pass: env_validator_1.env.EMAIL_PASS,
+            },
+        });
+    }
+    async sendOTP(email, otp, companyName) {
+        try {
+            await this._transporter.sendMail({
+                from: env_validator_1.env.EMAIL_FROM,
+                to: email,
+                subject: "Verify your CareerHub Organization Account",
+                html: `
           <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-            <h2 style="color: #4f46e5;">Welcome to CareerHub, ${comptypeName}!</h2>
+            <h2 style="color: #4f46e5;">Welcome to CareerHub, ${companyName}!</h2>
             <p style="color: #334155; font-size: 16px;">
               Thank you for registering your organization. To complete your setup and verify your email address, please use the following One-Time Password (OTP):
             </p>
@@ -38,21 +38,21 @@ class EmailService {
             </p>
           </div>
         `,
-      });
-      return true;
+            });
+            return true;
+        }
+        catch (err) {
+            console.error("Nodemailer Failed to send OTP email:", err);
+            return false;
+        }
     }
-    catch (err) {
-      console.error("Nodemailer Failed to send OTP email:", err);
-      return false;
-    }
-  }
-  async sendInterviewerSetupEmail(email, setupLink) {
-    try {
-      await this._transporter.sendMail({
-        from: env_validator_1.env.EMAIL_FROM,
-        to: email,
-        subject: "Invitation to join CareerHub as an Interviewer",
-        html: `
+    async sendInterviewerSetupEmail(email, setupLink) {
+        try {
+            await this._transporter.sendMail({
+                from: env_validator_1.env.EMAIL_FROM,
+                to: email,
+                subject: "Invitation to join CareerHub as an Interviewer",
+                html: `
           <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <h2 style="color: #4f46e5;">Welcome!</h2>
             <p style="color: #334155; font-size: 16px;">
@@ -70,19 +70,19 @@ class EmailService {
             </p>
           </div>
         `,
-      });
+            });
+        }
+        catch (err) {
+            console.error("Nodemailer Failed to send invite email:", err);
+        }
     }
-    catch (err) {
-      console.error("Nodemailer Failed to send invite email:", err);
-    }
-  }
-  async sendPasswordResetEmail(email, resetLink) {
-    try {
-      await this._transporter.sendMail({
-        from: env_validator_1.env.EMAIL_FROM,
-        to: email,
-        subject: "Reset your CareerHub Password",
-        html: `
+    async sendPasswordResetEmail(email, resetLink) {
+        try {
+            await this._transporter.sendMail({
+                from: env_validator_1.env.EMAIL_FROM,
+                to: email,
+                subject: "Reset your CareerHub Password",
+                html: `
           <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <h2 style="color: #4f46e5;">Password Reset Request</h2>
             <p style="color: #334155; font-size: 16px;">
@@ -100,19 +100,19 @@ class EmailService {
             </p>
           </div>
         `,
-      });
+            });
+        }
+        catch (err) {
+            console.error("Nodemailer Failed to send reset email:", err);
+        }
     }
-    catch (err) {
-      console.error("Nodemailer Failed to send reset email:", err);
-    }
-  }
-  async sendStudentInvitationEmail(email, setupLink) {
-    try {
-      await this._transporter.sendMail({
-        from: env_validator_1.env.EMAIL_FROM,
-        to: email,
-        subject: "Invitation to join CareerHub Student Portal",
-        html: `
+    async sendStudentInvitationEmail(email, setupLink) {
+        try {
+            await this._transporter.sendMail({
+                from: env_validator_1.env.EMAIL_FROM,
+                to: email,
+                subject: "Invitation to join CareerHub Student Portal",
+                html: `
           <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <h2 style="color: #4f46e5;">Welcome to CareerHub!</h2>
             <p style="color: #334155; font-size: 16px;">
@@ -133,11 +133,11 @@ class EmailService {
             </p>
           </div>
         `,
-      });
+            });
+        }
+        catch (err) {
+            console.error("Nodemailer Failed to send student invitation email:", err);
+        }
     }
-    catch (err) {
-      console.error("Nodemailer Failed to send student invitation email:", err);
-    }
-  }
 }
 exports.EmailService = EmailService;

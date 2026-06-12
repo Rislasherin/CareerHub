@@ -9,12 +9,12 @@ class ToggleInterviewerStatusUseCase {
     constructor(_interviewerRepository) {
         this._interviewerRepository = _interviewerRepository;
     }
-    async execute(interviewerId, comptypeId) {
+    async execute(interviewerId, companyId) {
         const interviewer = await this._interviewerRepository.findById(interviewerId);
         if (!interviewer) {
             throw new AppError_1.AppError("Interviewer not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.USER_NOT_FOUND);
         }
-        if (interviewer.comptypeId !== comptypeId) {
+        if (interviewer.companyId !== companyId) {
             throw new AppError_1.AppError("Unauthorized action", HttpStatus_enum_1.HttpStatus.FORBIDDEN, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
         }
         // Toggle logic

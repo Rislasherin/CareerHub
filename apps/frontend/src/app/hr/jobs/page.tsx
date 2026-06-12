@@ -9,6 +9,7 @@ import { Stepper } from '@/components/shared/Stepper';
 import {
   getHRJobs,
   postJob,
+  updateJob,
   closeJob,
   deleteJob,
   Job,
@@ -43,6 +44,7 @@ export default function HRJobsPage() {
 
   // Wizard State
   const [showWizard, setShowWizard] = useState(false);
+  const [editJobId, setEditJobId] = useState<string | null>(null);
   const [wizardStep, setWizardStep] = useState(1);
   const [organizations, setOrganizations] = useState<{ id: string; name: string; activeBranches?: string[] }[]>([]);
 
@@ -50,17 +52,17 @@ export default function HRJobsPage() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [selectedOrgId, setSelectedOrgId] = useState('ALL');
-  const [jobType, setJobType] = useState('full_time');
+  const [jobType, setJobType] = useState('');
   const [deadline, setDeadline] = useState('');
   const [openings, setOpenings] = useState('1');
-  const [experienceLevel, setExperienceLevel] = useState('Entry-Level');
-  const [noticePeriod, setNoticePeriod] = useState('Immediate');
-  const [workMode, setWorkMode] = useState<'on-site' | 'remote' | 'hybrid'>('on-site');
+  const [experienceLevel, setExperienceLevel] = useState('');
+  const [noticePeriod, setNoticePeriod] = useState('');
+  const [workMode, setWorkMode] = useState<'on-site' | 'remote' | 'hybrid' | ''>('');
   const [location, setLocation] = useState('');
-  const [salaryType, setSalaryType] = useState<'per_month' | 'per_year'>('per_year');
+  const [salaryType, setSalaryType] = useState<'per_month' | 'per_year' | ''>('');
   const [minSalary, setMinSalary] = useState('');
   const [maxSalary, setMaxSalary] = useState('');
-  const [interviewMode, setInterviewMode] = useState<'online' | 'offline' | 'hybrid'>('online');
+  const [interviewMode, setInterviewMode] = useState<'online' | 'offline' | 'hybrid' | ''>('');
   const [description, setDescription] = useState('');
 
   // Skills
@@ -72,7 +74,7 @@ export default function HRJobsPage() {
   const [minCGPA, setMinCGPA] = useState('6.0');
   const [allowedBacklogs, setAllowedBacklogs] = useState('0');
   const [passingYear, setPassingYear] = useState('2026');
-  const [degreeType, setDegreeType] = useState('B.Tech');
+  const [degreeType, setDegreeType] = useState('');
   const [branchInput, setBranchInput] = useState('');
   const [branches, setBranches] = useState<string[]>([]);
   const [allBranchesSelected, setAllBranchesSelected] = useState(false);
@@ -100,8 +102,8 @@ export default function HRJobsPage() {
       const data = await getHRJobs(page, limit, statusFilter || undefined, searchQuery);
       setJobs(data.jobs);
       setTotal(data.total);
-    } catch (err: type) {
-      setError(err?.message || 'Failed to fetch job postings');
+    } catch (err: unknown) {
+      setError((err as Error)?.message || 'Failed to fetch job postings');
     } finally {
       setLoading(false);
     }
@@ -170,10 +172,10 @@ export default function HRJobsPage() {
       });
       fetchJobs();
       setShowDetailsModal(false);
-    } catch (err: type) {
+    } catch (err: unknown) {
       Swal.fire({
         title: 'Error',
-        text: err?.message || 'Failed to close job openings',
+        text: (err as Error)?.message || 'Failed to close job openings',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {
@@ -221,10 +223,10 @@ export default function HRJobsPage() {
       });
       fetchJobs();
       setShowDetailsModal(false);
-    } catch (err: type) {
+    } catch (err: unknown) {
       Swal.fire({
         title: 'Error',
-        text: err?.message || 'Failed to delete job posting',
+        text: (err as Error)?.message || 'Failed to delete job posting',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {
@@ -280,27 +282,57 @@ export default function HRJobsPage() {
     setRounds(updated);
   };
 
+    const handleEditJob = (job: Job) => {
+    setEditJobId(job.id || null);
+    setTitle(job.title);
+    setCategory(job.category);
+    setSelectedOrgId(job.collegeId);
+    setJobType(job.type);
+    setDeadline(new Date(job.deadline).toISOString().split('T')[0]);
+    setOpenings(String(job.openings));
+    setExperienceLevel(job.experienceLevel);
+    setNoticePeriod(job.noticePeriod);
+    setWorkMode(job.workMode);
+    setLocation(job.location);
+    setSalaryType(job.salaryType);
+    setMinSalary(String(job.minSalary));
+    setMaxSalary(String(job.maxSalary));
+    setInterviewMode(job.interviewMode);
+    setDescription(job.description);
+    setSkills(job.requiredSkills || []);
+    setNoSkillsRequired(job.requiredSkills?.includes("All Skills Welcome") || false);
+    setMinCGPA(String(job.eligibility.minCGPA));
+    setAllowedBacklogs(String(job.eligibility.allowedBacklogs));
+    setPassingYear(String(job.eligibility.passingYear));
+    setDegreeType(job.eligibility.degreeType);
+    setBranches(job.eligibility.eligibleBranches || []);
+    setAllBranchesSelected(job.eligibility.eligibleBranches?.length === 0);
+    setRounds(job.rounds || []);
+    setWizardStep(1);
+    setShowWizard(true);
+  };
+
   const resetWizard = () => {
     setTitle('');
     setCategory('');
-    setJobType('full_time');
+    setJobType('');
     setDeadline('');
     setOpenings('1');
-    setExperienceLevel('Entry-Level');
-    setNoticePeriod('Immediate');
-    setWorkMode('on-site');
+    setExperienceLevel('');
+    setNoticePeriod('');
+    setWorkMode('');
     setLocation('');
-    setSalaryType('per_year');
+    setSalaryType('');
     setMinSalary('');
     setMaxSalary('');
-    setInterviewMode('online');
+    setInterviewMode('');
     setDescription('');
     setSkills([]);
     setNoSkillsRequired(false);
     setMinCGPA('6.0');
     setAllowedBacklogs('0');
     setPassingYear('2026');
-    setDegreeType('B.Tech');
+    setDegreeType('');
     setBranches([]);
     setAllBranchesSelected(false);
     setRounds([
@@ -310,10 +342,12 @@ export default function HRJobsPage() {
     setSelectedOrgId('ALL');
     setWizardStep(1);
     setShowWizard(false);
+    setEditJobId(null);
   };
 
   const handleContinue = () => {
     if (wizardStep === 1) {
+      if (!jobType) { toast.error('Job Type is required'); return; }
       if (!title.trim()) {
         toast.error('Job Title is required');
         return;
@@ -343,6 +377,9 @@ export default function HRJobsPage() {
         toast.error('Number of openings must be at least 1');
         return;
       }
+      if (!workMode) { toast.error('Work Mode is required'); return; }
+      if (!salaryType) { toast.error('Salary Type is required'); return; }
+      if (!interviewMode) { toast.error('Interview Mode is required'); return; }
       if (!experienceLevel.trim()) {
         toast.error('Experience level is required');
         return;
@@ -460,10 +497,10 @@ export default function HRJobsPage() {
     };
 
     try {
-      await postJob(payload);
+      if (editJobId) { await updateJob(editJobId, payload as any); } else { await postJob(payload as any); }
       await Swal.fire({
         title: 'Job Submitted!',
-        text: 'Job vacancy has been created and submitted for college approval successfully!',
+        text: editJobId ? 'Job vacancy has been updated successfully!' : 'Job vacancy has been created and submitted for college approval successfully!',
         icon: 'success',
         confirmButtonText: 'Awesome',
         customClass: {
@@ -475,10 +512,10 @@ export default function HRJobsPage() {
       });
       resetWizard();
       fetchJobs();
-    } catch (err: type) {
+    } catch (err: unknown) {
       Swal.fire({
         title: 'Submission Failed',
-        text: err?.message || 'Failed to submit job posting',
+        text: (err as Error)?.message || 'Failed to submit job posting',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {
@@ -659,6 +696,16 @@ export default function HRJobsPage() {
                   >
                     View Details
                   </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditJob(job);
+                    }}
+                  >
+                    Edit
+                  </Button>
                   {job.status === 'approved' && (
                     <Button
                       variant="ghost"
@@ -747,6 +794,7 @@ export default function HRJobsPage() {
                         onChange={(e) => setJobType(e.target.value)}
                         className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                       >
+                        <option value="" disabled>Select Job Type...</option>
                         <option value="full_time">Full-Time Vacancy</option>
                         <option value="internship">Internship Vacancy</option>
                         <option value="part_time">Part-Time</option>
@@ -775,6 +823,7 @@ export default function HRJobsPage() {
                           onChange={(e) => setWorkMode(e.target.value as type)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
+                          <option value="" disabled>Select Work Mode...</option>
                           <option value="on-site">On-Site Office</option>
                           <option value="remote">Fully Remote</option>
                           <option value="hybrid">Hybrid Mode</option>
@@ -790,6 +839,7 @@ export default function HRJobsPage() {
                           onChange={(e) => setSalaryType(e.target.value as type)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
+                          <option value="" disabled>Select Salary Type...</option>
                           <option value="per_year">LPA (Per Annum)</option>
                           <option value="per_month">Monthly Stipend</option>
                         </select>
@@ -1296,3 +1346,5 @@ export default function HRJobsPage() {
     </DashboardLayout>
   );
 }
+
+

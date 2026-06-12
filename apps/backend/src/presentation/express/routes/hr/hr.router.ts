@@ -27,10 +27,12 @@ router.post("/interviewers/:interviewerId/resend-invite", interviewerManagementC
 
 router.post("/jobs", validateDto(PostJobDto), hrJobController.postJob);
 router.get("/jobs", hrJobController.getJobs);
+router.put("/jobs/:jobId", validateDto(PostJobDto), hrJobController.updateJob);
 router.patch("/jobs/:jobId/close", hrJobController.closeJob);
 router.delete("/jobs/:jobId", hrJobController.deleteJob);
 router.get("/candidates", hrJobController.getCandidates);
 
 export default router;
+
 
 

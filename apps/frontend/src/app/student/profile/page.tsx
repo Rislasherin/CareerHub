@@ -7,11 +7,14 @@ import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import {
   getStudentProfile,
-  updateStudentProfile,
+  updateStudentProfile
+} from '@/services/student/profile.service';
+import {
   StudentProfile,
   StudentExperience,
   StudentProject
-} from '@/services/student/profile.service';
+} from '@/types/student';
+import { toast } from 'sonner';
 
 export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -67,7 +70,7 @@ export default function StudentProfilePage() {
     if (profile.linkedinUrl) score += 10;
     if (profile.githubUrl) score += 10;
     if (profile.portfolioUrl) score += 10;
-    if (profile.skills && Object.values(profile.skills).some(arr => arr.length > 0)) score += 15;
+    if (profile.skills && Object.values(profile.skills).some(arr => Array.isArray(arr) && arr.length > 0)) score += 15;
     if (profile.experience && profile.experience.length > 0) score += 15;
     setCompletionPercentage(Math.min(score, 100));
   };
@@ -143,8 +146,8 @@ export default function StudentProfilePage() {
         // Calculate progress dynamically
         calculateProgress(profile);
 
-      } catch (err: type) {
-        setError(err?.message || 'Failed to load student profile');
+      } catch (err: unknown) {
+        setError((err as Error)?.message || 'Failed to load student profile');
       } finally {
         setLoading(false);
       }
@@ -177,7 +180,7 @@ export default function StudentProfilePage() {
     ]);
   };
 
-  const handleUpdateProject = (index: number, field: keyof StudentProject, value: type) => {
+  const handleUpdateProject = (index: number, field: keyof StudentProject, value: string | string[]) => {
     const updated = [...projects];
     updated[index] = { ...updated[index], [field]: value };
     setProjects(updated);
@@ -188,6 +191,36 @@ export default function StudentProfilePage() {
   };
 
   const handleSave = async () => {
+    // Validation
+    if (!firstName.trim()) { toast.error("First Name is required"); return; }
+    if (!lastName.trim()) { toast.error("Last Name is required"); return; }
+    if (!phoneNumber.trim()) { toast.error("Phone Number is required"); return; }
+    if (!degree.trim()) { toast.error("Degree is required"); return; }
+
+    if (graduationYear && isNaN(Number(graduationYear))) { toast.error("Graduation Year must be a valid number"); return; }
+    if (cgpa && (isNaN(Number(cgpa)) || Number(cgpa) < 0 || Number(cgpa) > 10)) { toast.error("CGPA must be a valid number between 0 and 10"); return; }
+    if (tenthPercentage && (isNaN(Number(tenthPercentage)) || Number(tenthPercentage) < 0 || Number(tenthPercentage) > 100)) { toast.error("10th Percentage must be between 0 and 100"); return; }
+    if (twelfthPercentage && (isNaN(Number(twelfthPercentage)) || Number(twelfthPercentage) < 0 || Number(twelfthPercentage) > 100)) { toast.error("12th Percentage must be between 0 and 100"); return; }
+    if (activeBacklogs && (isNaN(Number(activeBacklogs)) || Number(activeBacklogs) < 0)) { toast.error("Active Backlogs must be a valid non-negative number"); return; }
+
+    const invalidExp = experiences.find(exp => 
+      (exp.company.trim() || exp.role.trim() || exp.duration.trim()) && 
+      (!exp.company.trim() || !exp.role.trim() || !exp.duration.trim())
+    );
+    if (invalidExp) {
+      toast.error("Please fill Company Name, Role, and Duration for all work experiences");
+      return;
+    }
+
+    const invalidProj = projects.find(proj => 
+      (proj.name.trim() || proj.techStack.length > 0) && 
+      (!proj.name.trim() || proj.techStack.length === 0)
+    );
+    if (invalidProj) {
+      toast.error("Please fill Project Name and Tech Stack for all active projects");
+      return;
+    }
+
     setSaving(true);
     try {
       const parsedSkills = {
@@ -200,30 +233,30 @@ export default function StudentProfilePage() {
       };
 
       const payload: Partial<StudentProfile> = {
-        firstName,
-        lastName,
-        phoneNumber,
-        linkedinUrl,
-        githubUrl,
-        portfolioUrl,
-        city,
-        degree,
-        branch,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        linkedinUrl: linkedinUrl.trim(),
+        githubUrl: githubUrl.trim(),
+        portfolioUrl: portfolioUrl.trim(),
+        city: city.trim(),
+        degree: degree.trim(),
+        branch: branch.trim(),
         graduationYear: graduationYear ? Number(graduationYear) : undefined,
         cgpa: cgpa ? Number(cgpa) : undefined,
         tenthPercentage: tenthPercentage ? Number(tenthPercentage) : undefined,
         twelfthPercentage: twelfthPercentage ? Number(twelfthPercentage) : undefined,
         activeBacklogs: activeBacklogs ? Number(activeBacklogs) : undefined,
         skills: parsedSkills,
-        experience: experiences.filter(exp => exp.company && exp.role),
-        projects: projects.filter(proj => proj.name)
+        experience: experiences.filter(exp => exp.company.trim() && exp.role.trim()),
+        projects: projects.filter(proj => proj.name.trim() && proj.techStack.length > 0)
       };
 
       const updated = await updateStudentProfile(payload);
-      alert('Profile successfully saved!');
+      toast.success('Profile successfully saved!');
       calculateProgress(updated);
-    } catch (err: type) {
-      alert(err?.message || 'Failed to save student profile');
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Failed to save student profile');
     } finally {
       setSaving(false);
     }

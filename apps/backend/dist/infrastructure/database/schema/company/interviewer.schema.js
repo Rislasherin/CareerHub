@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterviewerSchema = void 0;
 const mongoose_1 = require("mongoose");
 exports.InterviewerSchema = new mongoose_1.Schema({
-    comptypeId: {
+    companyId: {
         type: String,
         required: true,
     },

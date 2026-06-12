@@ -5,9 +5,9 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class LoginInterviewerUseCase {
-    constructor(_interviewerRepository, _comptypeRepository, _jwtService, _bcryptService, _crossRoleAuthService) {
+    constructor(_interviewerRepository, _companyRepository, _jwtService, _bcryptService, _crossRoleAuthService) {
         this._interviewerRepository = _interviewerRepository;
-        this._comptypeRepository = _comptypeRepository;
+        this._companyRepository = _companyRepository;
         this._jwtService = _jwtService;
         this._bcryptService = _bcryptService;
         this._crossRoleAuthService = _crossRoleAuthService;
@@ -33,14 +33,14 @@ class LoginInterviewerUseCase {
         if (!isPasswordValid) {
             throw new AuthError_1.InvalidCredentialsError();
         }
-        const comptype = await this._comptypeRepository.findById(interviewer.comptypeId);
-        if (comptype?.status === user_status_enum_1.UserStatus.BLOCKED) {
-            throw new AuthError_1.UnauthorizedError("Your comptype has been blocked. Please contact admin.");
+        const company = await this._companyRepository.findById(interviewer.companyId);
+        if (company?.status === user_status_enum_1.UserStatus.BLOCKED) {
+            throw new AuthError_1.UnauthorizedError("Your company has been blocked. Please contact admin.");
         }
         const payload = {
             id: interviewer.id,
             role: Roles_enum_1.Role.INTERVIEWER,
-            comptypeId: interviewer.comptypeId,
+            companyId: interviewer.companyId,
         };
         return {
             accessToken: this._jwtService.signAccessToken(payload),
@@ -51,7 +51,7 @@ class LoginInterviewerUseCase {
                 lastName: interviewer.lastName,
                 email: interviewer.email,
                 role: interviewer.role,
-                comptypeId: interviewer.comptypeId,
+                companyId: interviewer.companyId,
             },
         };
     }

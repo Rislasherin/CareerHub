@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -71,10 +72,10 @@ export default function RequestAccessPage() {
 
     setIsLoading(true);
     try {
-      await apiClient.post('/auth/student/request-access', formData);
+      await apiClient.post(API_ROUTES.AUTH.STUDENT_REQUEST_ACCESS, formData);
       setIsSuccess(true);
       toast.success('Request submitted successfully!');
-    } catch (err: type) {
+    } catch (err: unknown) {
       // toast handled by interceptor
     } finally {
       setIsLoading(false);
@@ -271,3 +272,6 @@ export default function RequestAccessPage() {
     </div>
   );
 }
+
+
+

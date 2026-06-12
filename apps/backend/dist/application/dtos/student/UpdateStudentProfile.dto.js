@@ -62,7 +62,7 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], StudentExperienceDto.prototype, "comptype", void 0);
+], StudentExperienceDto.prototype, "company", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),

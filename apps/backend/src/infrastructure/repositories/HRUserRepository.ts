@@ -1,7 +1,7 @@
 import { HRUser } from "@domain/entities/HRUser";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { HRUserDocument, HRUserModel } from "@infrastructure/database/models/company/hr-user.model";
-import { toHRUserEntity, toHRUserPersistence } from "@infrastructure/mappers/hr-user.mapper";
+import { toHRUserEntity, toHRUserPersistence } from "@application/mappers/hr-user.mapper";
 import { BaseRepository } from "./BaseRepository";
 
 export class HRUserRepository

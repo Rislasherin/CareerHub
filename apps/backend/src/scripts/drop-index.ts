@@ -24,8 +24,8 @@ const run = async () => {
     console.log("Attempting to drop index 'name_1' from 'companies' collection...");
     await db.collection("companies").dropIndex("name_1");
     console.log("Successfully dropped index 'name_1'!");
-  } catch (err: any) {
-    if (err.codeName === "IndexNotFound") {
+  } catch (err) {
+    if (err instanceof Error && (err as any).codeName === "IndexNotFound") {
       console.log("Index 'name_1' not found. It may have already been dropped.");
     } else {
       console.error("Error dropping index:", err);

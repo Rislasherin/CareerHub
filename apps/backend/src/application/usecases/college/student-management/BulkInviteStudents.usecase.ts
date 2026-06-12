@@ -63,8 +63,9 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
         await this._emailService.sendStudentInvitationEmail(student.email, setupLink);
 
         results.invited++;
-      } catch (error: any) {
-        results.errors.push(`Failed to invite ${studentData.email}: ${error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        results.errors.push(`Failed to invite ${studentData.email}: ${errorMessage}`);
       }
     }
 

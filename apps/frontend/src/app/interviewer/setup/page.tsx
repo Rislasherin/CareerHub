@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -54,7 +55,7 @@ function SetupContent() {
         return;
       }
       try {
-        const response: type = await apiClient.get(`/auth/interviewer/verify-token/${token}`);
+        const response: any = await apiClient.get(`${API_ROUTES.AUTH.INTERVIEWER_VERIFY_TOKEN}/${token}`);
         if (response.success) {
           setInterviewerInfo(response.data);
         }
@@ -82,7 +83,7 @@ function SetupContent() {
 
     setIsLoading(true);
     try {
-      const response: type = await apiClient.post(`/auth/interviewer/activate?email=${encodeURIComponent(email || '')}`,
+      const response: any = await apiClient.post(`${API_ROUTES.AUTH.INTERVIEWER_ACTIVATE}?email=${encodeURIComponent(email || '')}`,
         { password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -99,7 +100,7 @@ function SetupContent() {
           router.push('/interviewer');
         }, 2000);
       }
-    } catch (err: type) {
+    } catch (err: unknown) {
       // Error handled by interceptor
     } finally {
       setIsLoading(false);
@@ -250,3 +251,7 @@ function SetupContent() {
     </div>
   );
 }
+
+
+
+

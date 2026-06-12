@@ -2,15 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetDashboardStatsUseCase = void 0;
 class GetDashboardStatsUseCase {
-    constructor(_orgRepository, _studentRepository, _comptypeRepository, _interviewerRepository, _hrUserRepository) {
+    constructor(_orgRepository, _studentRepository, _companyRepository, _interviewerRepository, _hrUserRepository) {
         this._orgRepository = _orgRepository;
         this._studentRepository = _studentRepository;
-        this._comptypeRepository = _comptypeRepository;
+        this._companyRepository = _companyRepository;
         this._interviewerRepository = _interviewerRepository;
         this._hrUserRepository = _hrUserRepository;
     }
     async execute() {
-        const [orgCount, studentCount, comptypeCount, interviewerCount] = await Promise.all([
+        const [orgCount, studentCount, companyCount, interviewerCount] = await Promise.all([
             this._orgRepository.count({}),
             this._studentRepository.count({}),
             this._hrUserRepository.count({}),
@@ -19,7 +19,7 @@ class GetDashboardStatsUseCase {
         return {
             organizations: orgCount,
             students: studentCount,
-            companies: comptypeCount,
+            companies: companyCount,
             interviewers: interviewerCount,
         };
     }

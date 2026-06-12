@@ -10,11 +10,11 @@ class HRDashboardController {
     constructor(_getStatsUseCase) {
         this._getStatsUseCase = _getStatsUseCase;
         this.getDashboardStats = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const comptypeId = req.user?.comptypeId;
-            if (!comptypeId) {
-                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const companyId = req.user?.companyId;
+            if (!companyId) {
+                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
-            const result = await this._getStatsUseCase.execute(comptypeId);
+            const result = await this._getStatsUseCase.execute(companyId);
             (0, response_util_1.sendSuccess)(res, result, "HR Dashboard stats retrieved successfully");
         });
     }

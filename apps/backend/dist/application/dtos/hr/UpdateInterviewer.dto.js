@@ -35,12 +35,15 @@ __decorate([
 ], UpdateInterviewerDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
+    (0, class_validator_1.Matches)(/^[A-Z]/, { message: 'Designation must start with a capital letter' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z ]+$/, { message: 'Designation can only contain letters and spaces' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateInterviewerDto.prototype, "designation", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
+    (0, class_validator_1.Matches)(/^[A-Z]/, { message: 'Specialization must start with a capital letter' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)

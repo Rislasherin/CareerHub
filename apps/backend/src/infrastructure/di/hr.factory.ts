@@ -7,6 +7,7 @@ import { VerifyCompanyOtpUseCase } from "@application/usecases/auth/hr/implement
 import { GetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/GetHRDashboardStats.usecase";
 import { HRDashboardController } from "@presentation/http/controllers/hr/hr.dashboard.controller";
 import { PostJobUseCase } from "@application/usecases/hr/job-engine/PostJob.usecase";
+import { UpdateJobUseCase } from "@application/usecases/hr/job-engine/UpdateJob.usecase";
 import { GetHRJobsUseCase } from "@application/usecases/hr/job-engine/GetHRJobs.usecase";
 import { CloseJobUseCase } from "@application/usecases/hr/job-engine/CloseJob.usecase";
 import { DeleteJobUseCase } from "@application/usecases/hr/job-engine/DeleteJob.usecase";
@@ -118,12 +119,19 @@ export const makeGetHRCandidatesUseCase = () => {
   return new GetHRCandidatesUseCase(jobRepository, studentRepository);
 };
 
+export const makeUpdateJobUseCase = () => {
+  return new UpdateJobUseCase(jobRepository);
+};
+
 export const makeHRJobController = () => {
   return new HRJobController(
     makePostJobUseCase(),
     makeGetHRJobsUseCase(),
     makeCloseJobUseCase(),
     makeDeleteJobUseCase(),
-    makeGetHRCandidatesUseCase()
+    makeGetHRCandidatesUseCase(),
+    makeUpdateJobUseCase()
   );
 };
+
+

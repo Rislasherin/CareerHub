@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,7 +26,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
     // Periodically check account status to handle administrative blocking
     const checkStatus = async () => {
       try {
-        const response: type = await apiClient.get('/auth/status');
+        const response: any = await apiClient.get(API_ROUTES.AUTH.STATUS);
 
         // Update Redux state with latest user data (handles real-time approvals)
         if (response.data) {
@@ -47,7 +48,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
               break;
           }
         }
-      } catch (err: type) {
+      } catch (err: unknown) {
         const msg = err.response?.data?.error?.message || err.response?.data?.message || '';
         if (msg.toLowerCase().includes('blocked')) {
           // Force immediate logout and redirect
@@ -174,3 +175,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
+
+
+

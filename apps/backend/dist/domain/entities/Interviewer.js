@@ -11,8 +11,8 @@ class Interviewer {
     get id() {
         return this.props.id;
     }
-    get comptypeId() {
-        return this.props.comptypeId;
+    get companyId() {
+        return this.props.companyId;
     }
     get firstName() {
         return this.props.firstName;

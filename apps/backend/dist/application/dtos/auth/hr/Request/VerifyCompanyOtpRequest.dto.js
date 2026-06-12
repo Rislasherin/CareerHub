@@ -9,22 +9,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VerifyComptypeOtpRequestDto = void 0;
+exports.VerifyCompanyOtpRequestDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-class VerifyComptypeOtpRequestDto {
+class VerifyCompanyOtpRequestDto {
 }
-exports.VerifyComptypeOtpRequestDto = VerifyComptypeOtpRequestDto;
+exports.VerifyCompanyOtpRequestDto = VerifyCompanyOtpRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
     (0, class_validator_1.IsNotEmpty)({ message: "Email is required" }),
     __metadata("design:type", String)
-], VerifyComptypeOtpRequestDto.prototype, "email", void 0);
+], VerifyCompanyOtpRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: "OTP is required" }),
     (0, class_validator_1.Length)(6, 6, { message: "OTP must be exactly 6 characters long" }),
     __metadata("design:type", String)
-], VerifyComptypeOtpRequestDto.prototype, "otp", void 0);
+], VerifyCompanyOtpRequestDto.prototype, "otp", void 0);

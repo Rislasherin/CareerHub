@@ -10,7 +10,7 @@ import {
   approveJob,
   rejectJob
 } from '@/services/college/job.approval.service';
-import { Job } from '@/services/hr/job.service';
+import { Job } from '@/types/job';
 import Swal from 'sweetalert2';
 
 export default function CollegeJobsApprovalPage() {
@@ -36,8 +36,8 @@ export default function CollegeJobsApprovalPage() {
       const statusParam = tab === 'pending' ? 'pending_review' : 'approved';
       const data = await getPendingJobs(statusParam);
       setJobs(data);
-    } catch (err: type) {
-      setError(err?.message || 'Failed to fetch job vacancies');
+    } catch (err) {
+      setError((err as Error)?.message || 'Failed to fetch job vacancies');
     } finally {
       setLoading(false);
     }
@@ -82,10 +82,10 @@ export default function CollegeJobsApprovalPage() {
       });
       setShowDetails(false);
       fetchJobsList(activeTab);
-    } catch (err: type) {
+    } catch (err) {
       Swal.fire({
         title: 'Error',
-        text: err?.message || 'Failed to approve job vacancy',
+        text: (err as Error)?.message || 'Failed to approve job vacancy',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {
@@ -135,10 +135,10 @@ export default function CollegeJobsApprovalPage() {
       setShowDetails(false);
       setRejectionReason('');
       fetchJobsList(activeTab);
-    } catch (err: type) {
+    } catch (err) {
       Swal.fire({
         title: 'Error',
-        text: err?.message || 'Failed to reject vacancy',
+        text: (err as Error)?.message || 'Failed to reject vacancy',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {

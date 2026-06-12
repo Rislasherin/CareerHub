@@ -8,6 +8,7 @@ const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
+const env_validator_1 = require("@infrastructure/config/env.validator");
 class RefreshTokenController {
     constructor(_jwtService, _studentRepository, _hrUserRepository, _interviewerRepository, _collegeAdminRepository, _superAdminRepository) {
         this._jwtService = _jwtService;
@@ -52,13 +53,13 @@ class RefreshTokenController {
                 id: payload.id,
                 role: payload.role,
                 orgId: payload.orgId,
-                comptypeId: payload.comptypeId,
+                companyId: payload.companyId,
             });
             res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 15 * 60 * 1000, // 15 minutes
+                maxAge: env_validator_1.env.COOKIE_MAX_AGE_MS, // using standard cookie max age
             });
             (0, response_util_1.sendSuccess)(res, null, "Token refreshed successfully");
         });

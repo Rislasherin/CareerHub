@@ -5,7 +5,7 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class AuthMiddleware {
-    constructor(_jwtService, _studentRepository, _hrUserRepository, _interviewerRepository, _collegeAdminRepository, _superAdminRepository, _organizationRepository, _comptypeRepository) {
+    constructor(_jwtService, _studentRepository, _hrUserRepository, _interviewerRepository, _collegeAdminRepository, _superAdminRepository, _organizationRepository, _companyRepository) {
         this._jwtService = _jwtService;
         this._studentRepository = _studentRepository;
         this._hrUserRepository = _hrUserRepository;
@@ -13,7 +13,7 @@ class AuthMiddleware {
         this._collegeAdminRepository = _collegeAdminRepository;
         this._superAdminRepository = _superAdminRepository;
         this._organizationRepository = _organizationRepository;
-        this._comptypeRepository = _comptypeRepository;
+        this._companyRepository = _companyRepository;
         this.protect = async (req, _res, next) => {
             try {
                 let token;
@@ -35,25 +35,25 @@ class AuthMiddleware {
                         break;
                     case Roles_enum_1.Role.HR:
                         user = await this._hrUserRepository.findById(decoded.id);
-                        if (user && user.comptypeId) {
-                            const comptype = await this._comptypeRepository.findById(user.comptypeId);
-                            if (comptype) {
+                        if (user && user.companyId) {
+                            const company = await this._companyRepository.findById(user.companyId);
+                            if (company) {
                                 const userJson = user.toJSON ? user.toJSON() : user;
-                                const comptypeJson = comptype.toJSON ? comptype.toJSON() : comptype;
-                                // Check if comptype is blocked
-                                if (comptypeJson.status === user_status_enum_1.UserStatus.BLOCKED) {
-                                    throw new AuthError_1.UnauthorizedError("Your comptype has been blocked. Please contact admin.");
+                                const companyJson = company.toJSON ? company.toJSON() : company;
+                                // Check if company is blocked
+                                if (companyJson.status === user_status_enum_1.UserStatus.BLOCKED) {
+                                    throw new AuthError_1.UnauthorizedError("Your company has been blocked. Please contact admin.");
                                 }
-                                user = { ...userJson, onboardingStep: comptypeJson.onboardingStep };
+                                user = { ...userJson, onboardingStep: companyJson.onboardingStep };
                             }
                         }
                         break;
                     case Roles_enum_1.Role.INTERVIEWER:
                         user = await this._interviewerRepository.findById(decoded.id);
-                        if (user && user.comptypeId) {
-                            const comptype = await this._comptypeRepository.findById(user.comptypeId);
-                            if (comptype && comptype.status === user_status_enum_1.UserStatus.BLOCKED) {
-                                throw new AuthError_1.UnauthorizedError("Your comptype has been blocked. Please contact admin.");
+                        if (user && user.companyId) {
+                            const company = await this._companyRepository.findById(user.companyId);
+                            if (company && company.status === user_status_enum_1.UserStatus.BLOCKED) {
+                                throw new AuthError_1.UnauthorizedError("Your company has been blocked. Please contact admin.");
                             }
                         }
                         break;
