@@ -30,7 +30,7 @@ import { setStudentDetails } from '@/redux/slices/studentSlice';
 import { apiClient } from '@/services/api/api.client';
 import { toast } from 'sonner';
 
-const calculateProfileCompleteness = (u: type) => {
+const calculateProfileCompleteness = (u: any) => {
   if (!u) return 0;
   const fields = [
     u.firstName,
@@ -56,7 +56,7 @@ export default function StudentJobsFeed() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.student.details);
 
-  const [jobs, setJobs] = useState<type[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'BEST_MATCH' | 'NEW_TODAY' | 'SAVED'>('ALL');
@@ -64,7 +64,7 @@ export default function StudentJobsFeed() {
   const [packageFilter, setPackageFilter] = useState('ALL');
 
   // Details Modal
-  const [selectedJob, setSelectedJob] = useState<type | null>(null);
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
@@ -115,11 +115,11 @@ export default function StudentJobsFeed() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response: type = await apiClient.get('/student/jobs');
+      const response: any = await apiClient.get('/student/jobs');
       if (response.success) {
         setJobs(response.data || []);
       }
-    } catch (err: type) {
+    } catch (err: any) {
       toast.error(err?.error?.message || err?.message || 'Failed to retrieve jobs feed');
     } finally {
       setLoading(false);
@@ -134,7 +134,7 @@ export default function StudentJobsFeed() {
     setApplyingId(jobId);
     try {
       const idStr = String(jobId);
-      const response: type = await apiClient.post(`/student/jobs/${idStr}/apply`);
+      const response: any = await apiClient.post(`/student/jobs/${idStr}/apply`);
       if (response.success) {
         const nextApplied = [...appliedJobs, idStr];
         setAppliedJobs(nextApplied);
@@ -148,7 +148,7 @@ export default function StudentJobsFeed() {
           duration: 5000,
         });
       }
-    } catch (err: type) {
+    } catch (err: any) {
       toast.error(err?.error?.message || err?.message || 'Failed to submit application');
     } finally {
       setApplyingId(null);
@@ -259,7 +259,7 @@ export default function StudentJobsFeed() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as type)}
+                onClick={() => setActiveTab(tab.id as any)}
                 className={`px-4 py-2 rounded-xl text-xs font-black tracking-wide transition-all ${activeTab === tab.id
                     ? 'bg-[#E11D48] text-white shadow-md shadow-rose-500/15'
                     : 'text-slate-400 hover:text-slate-700 bg-transparent'
@@ -289,7 +289,7 @@ export default function StudentJobsFeed() {
               onChange={(e) => setPackageFilter(e.target.value)}
               className="h-10 px-4 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 outline-none cursor-pointer focus:border-slate-300"
             >
-              <option value="ALL">type Package</option>
+              <option value="ALL">Any Package</option>
               <option value="UNDER_10">Under ₹10 LPA</option>
               <option value="10_20">₹10LPA - ₹20LPA</option>
               <option value="20_PLUS">Over ₹20 LPA</option>
@@ -661,7 +661,7 @@ export default function StudentJobsFeed() {
                                 );
                               }
 
-                              return rounds.map((round: type, idx: number) => (
+                              return rounds.map((round: any, idx: number) => (
                                 <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                   <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0">

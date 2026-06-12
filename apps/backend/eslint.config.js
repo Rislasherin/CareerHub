@@ -40,7 +40,7 @@ module.exports = [
     },
     rules: {
       ...typescriptPlugin.configs.recommended.rules,
-      "@typescript-eslint/no-explicit-type": "off",
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "no-console": "off",
       "no-useless-escape": "off",

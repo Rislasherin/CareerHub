@@ -143,7 +143,7 @@ export default function InterviewersPage() {
       firstName: interviewer.firstName,
       lastName: interviewer.lastName,
       designation: interviewer.designation || '',
-      specialization: (interviewer as type).specialization || '',
+      specialization: (interviewer as any).specialization || '',
     });
     setIsEditModalOpen(true);
   };
