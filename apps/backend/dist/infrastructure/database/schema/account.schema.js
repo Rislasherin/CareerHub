@@ -13,7 +13,7 @@ exports.accountSchema = new mongoose_1.Schema({
     lastName: { type: String, required: true, trim: true },
     phone: { type: String, trim: true },
     organizationId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Organization" },
-    companyId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Company" },
+    comptypeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Comptype" },
     department: { type: String, trim: true },
     designation: { type: String, trim: true },
     rollNumber: { type: String, trim: true },

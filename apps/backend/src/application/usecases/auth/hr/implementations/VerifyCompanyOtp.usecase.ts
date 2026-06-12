@@ -15,11 +15,11 @@ export class VerifyCompanyOtpUseCase {
     private readonly _hrUserRepository: IHRUserRepository,
     private readonly _companyRepository: ICompanyRepository,
     private readonly _jwtService: IJwtService
-  ) {}
+  ) { }
 
   async execute(dto: VerifyCompanyOtpRequestDto) {
     const validOtp = await this._otpRepository.findByEmailAndOtp(dto.email, dto.otp);
-    
+
     if (!validOtp) {
       throw new AppError("Invalid or expired OTP", HttpStatus.BAD_REQUEST, ErrorCode.INVALID_CREDENTIALS);
     }
@@ -47,9 +47,9 @@ export class VerifyCompanyOtpUseCase {
 
     // Generate Tokens
     const payload = {
-        id: hrUser.id!,
-        role: Role.HR,
-        companyId: company.id!,
+      id: hrUser.id!,
+      role: Role.HR,
+      companyId: company.id!,
     };
 
     const accessToken = this._jwtService.signAccessToken(payload);

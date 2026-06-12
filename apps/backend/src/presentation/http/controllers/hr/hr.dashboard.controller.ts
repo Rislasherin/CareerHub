@@ -7,7 +7,7 @@ import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class HRDashboardController {
-  constructor(private readonly _getStatsUseCase: IGetHRDashboardStatsUseCase) {}
+  constructor(private readonly _getStatsUseCase: IGetHRDashboardStatsUseCase) { }
 
   getDashboardStats = asyncHandler(async (req: any, res: Response) => {
     const companyId = req.user?.companyId;

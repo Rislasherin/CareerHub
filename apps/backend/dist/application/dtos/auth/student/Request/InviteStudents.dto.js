@@ -19,12 +19,16 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(2, { message: 'First name must be at least 2 characters' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'First name cannot exceed 50 characters' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(1, { message: 'Last name must be at least 1 character' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'Last name cannot exceed 50 characters' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "lastName", void 0);
 __decorate([
@@ -37,12 +41,17 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(3, { message: 'Roll number must be at least 3 characters' }),
+    (0, class_validator_1.MaxLength)(30, { message: 'Roll number cannot exceed 30 characters' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "rollNumber", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(2, { message: 'Department name must be at least 2 characters' }),
+    (0, class_validator_1.MaxLength)(100, { message: 'Department name cannot exceed 100 characters' }),
+    (0, class_validator_1.Matches)(/^[A-Z]/, { message: 'Department name must start with a capital letter' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "department", void 0);
 class InviteStudentsDto {

@@ -10,7 +10,7 @@ const account_repository_1 = require("@infrastructure/repositories/account.repos
 const student_repository_1 = require("@infrastructure/repositories/student.repository");
 const interviewer_repository_1 = require("@infrastructure/repositories/interviewer.repository");
 const organization_repository_1 = require("@infrastructure/repositories/organization.repository");
-const company_repository_1 = require("@infrastructure/repositories/company.repository");
+const comptype_repository_1 = require("@infrastructure/repositories/comptype.repository");
 const college_admin_model_1 = require("@infrastructure/database/models/college-admin.model");
 const hr_user_model_1 = require("@infrastructure/database/models/hr-user.model");
 const super_admin_model_1 = require("@infrastructure/database/models/super-admin.model");
@@ -21,7 +21,7 @@ const forgot_password_usecase_1 = require("@application/usecases/auth/forgot-pas
 const reset_password_usecase_1 = require("@application/usecases/auth/reset-password.usecase");
 const first_login_set_password_usecase_1 = require("@application/usecases/auth/first-login-set-password.usecase");
 const college_signup_usecase_1 = require("@application/usecases/auth/college-signup.usecase");
-const company_signup_usecase_1 = require("@application/usecases/auth/company-signup.usecase");
+const comptype_signup_usecase_1 = require("@application/usecases/auth/comptype-signup.usecase");
 const create_student_usecase_1 = require("@application/usecases/college/create-student.usecase");
 const bulk_upload_students_usecase_1 = require("@application/usecases/college/bulk-upload-students.usecase");
 const create_interviewer_usecase_1 = require("@application/usecases/hr/create-interviewer.usecase");
@@ -45,7 +45,7 @@ const hrRepository = new account_repository_1.MongooseAccountRepository(role_enu
 const interviewerRepository = new interviewer_repository_1.InterviewerRepository();
 const superAdminRepository = new account_repository_1.MongooseAccountRepository(role_enum_1.Role.SUPER_ADMIN, super_admin_model_1.SuperAdminModel);
 const organizationRepository = new organization_repository_1.OrganizationRepository();
-const companyRepository = new company_repository_1.CompanyRepository();
+const comptypeRepository = new comptype_repository_1.ComptypeRepository();
 const accountRepositories = [
     studentRepository,
     collegeAdminRepository,
@@ -68,7 +68,7 @@ exports.container = {
     hrAuthController: new hr_auth_controller_1.HrAuthController(loginUseCases.get(role_enum_1.Role.HR)),
     interviewerAuthController: new interviewer_auth_controller_1.InterviewerAuthController(loginUseCases.get(role_enum_1.Role.INTERVIEWER), new first_login_set_password_usecase_1.FirstLoginSetPasswordUseCase(interviewerRepository, hashService, role_enum_1.Role.INTERVIEWER)),
     superAdminAuthController: new super_admin_auth_controller_1.SuperAdminAuthController(loginUseCases.get(role_enum_1.Role.SUPER_ADMIN)),
-    onboardingController: new onboarding_controller_1.OnboardingController(new college_signup_usecase_1.CollegeSignupUseCase(collegeAdminRepository, organizationRepository, hashService, emailService), new company_signup_usecase_1.CompanySignupUseCase(hrRepository, companyRepository, hashService, emailService)),
+    onboardingController: new onboarding_controller_1.OnboardingController(new college_signup_usecase_1.CollegeSignupUseCase(collegeAdminRepository, organizationRepository, hashService, emailService), new comptype_signup_usecase_1.ComptypeSignupUseCase(hrRepository, comptypeRepository, hashService, emailService)),
     studentManagementController: new student_management_controller_1.StudentManagementController(new create_student_usecase_1.CreateStudentUseCase(studentRepository, hashService, randomService, emailService), new bulk_upload_students_usecase_1.BulkUploadStudentsUseCase(new create_student_usecase_1.CreateStudentUseCase(studentRepository, hashService, randomService, emailService))),
     interviewerManagementController: new interviewer_management_controller_1.InterviewerManagementController(new create_interviewer_usecase_1.CreateInterviewerUseCase(interviewerRepository, hashService, randomService, emailService)),
 };

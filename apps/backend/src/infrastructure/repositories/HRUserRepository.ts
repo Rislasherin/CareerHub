@@ -6,8 +6,7 @@ import { BaseRepository } from "./BaseRepository";
 
 export class HRUserRepository
   extends BaseRepository<HRUser, HRUserDocument>
-  implements IHRUserRepository
-{
+  implements IHRUserRepository {
   constructor() {
     super(HRUserModel);
   }
@@ -31,7 +30,7 @@ export class HRUserRepository
   }
 
   async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-    const update: any = { status };
+    const update: Record<string, unknown> = { status };
     if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status?.toUpperCase() !== 'BLOCKED') {

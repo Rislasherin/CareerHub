@@ -5,8 +5,8 @@ class GetInterviewersUseCase {
     constructor(_interviewerRepository) {
         this._interviewerRepository = _interviewerRepository;
     }
-    async execute(companyId, query, page, limit) {
-        const { interviewers, total } = await this._interviewerRepository.searchInterviewers(companyId, query, page, limit);
+    async execute(comptypeId, query, page, limit, includeDeleted = false) {
+        const { interviewers, total } = await this._interviewerRepository.searchInterviewers(comptypeId, query, page, limit, includeDeleted);
         return {
             interviewers: interviewers.map((i) => {
                 const json = i.toJSON();
@@ -18,6 +18,7 @@ class GetInterviewersUseCase {
                     designation: json.designation,
                     status: json.status,
                     createdAt: json.createdAt,
+                    isDeleted: json.isDeleted || false,
                 };
             }),
             total,

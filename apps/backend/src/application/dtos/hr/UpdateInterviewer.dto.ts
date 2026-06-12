@@ -19,11 +19,14 @@ export class UpdateInterviewerDto {
   lastName?: string;
 
   @Expose()
+  @Matches(/^[A-Z]/, { message: 'Designation must start with a capital letter' })
+  @Matches(/^[a-zA-Z ]+$/, { message: 'Designation can only contain letters and spaces' })
   @IsString()
   @IsOptional()
   designation?: string;
 
   @Expose()
+  @Matches(/^[A-Z]/, { message: 'Specialization must start with a capital letter' })
   @IsString()
   @IsOptional()
   specialization?: string;

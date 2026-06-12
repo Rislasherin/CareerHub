@@ -9,38 +9,45 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterCompanyRequestDto = void 0;
+exports.RegisterComptypeRequestDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-class RegisterCompanyRequestDto {
+class RegisterComptypeRequestDto {
 }
-exports.RegisterCompanyRequestDto = RegisterCompanyRequestDto;
+exports.RegisterComptypeRequestDto = RegisterComptypeRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "First name is required" }),
+    (0, class_validator_1.MinLength)(2, { message: "First name must be at least 2 characters long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "First name cannot exceed 50 characters" }),
     __metadata("design:type", String)
-], RegisterCompanyRequestDto.prototype, "firstName", void 0);
+], RegisterComptypeRequestDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "Last name is required" }),
+    (0, class_validator_1.MinLength)(1, { message: "Last name must be at least 1 character long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "Last name cannot exceed 50 characters" }),
     __metadata("design:type", String)
-], RegisterCompanyRequestDto.prototype, "lastName", void 0);
+], RegisterComptypeRequestDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
     __metadata("design:type", String)
-], RegisterCompanyRequestDto.prototype, "email", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(6),
-    __metadata("design:type", String)
-], RegisterCompanyRequestDto.prototype, "password", void 0);
+], RegisterComptypeRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(6, { message: "Password must be at least 6 characters long" }),
+    (0, class_validator_1.MaxLength)(100, { message: "Password cannot exceed 100 characters" }),
     __metadata("design:type", String)
-], RegisterCompanyRequestDto.prototype, "companyName", void 0);
+], RegisterComptypeRequestDto.prototype, "password", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "Job title is required" }),
+    (0, class_validator_1.MinLength)(2, { message: "Job title must be at least 2 characters long" }),
+    (0, class_validator_1.MaxLength)(100, { message: "Job title cannot exceed 100 characters" }),
+    __metadata("design:type", String)
+], RegisterComptypeRequestDto.prototype, "jobTitle", void 0);

@@ -18,8 +18,14 @@ export interface GetInterviewersResponse {
   limit: number;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 export const getInterviewers = async (page: number, limit: number, query: string = '', includeDeleted: boolean = false): Promise<GetInterviewersResponse> => {
-  const response = await apiClient.get(`/hr/interviewers?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}&includeDeleted=${includeDeleted}`) as any;
+  const response = await apiClient.get<unknown, ApiResponse<GetInterviewersResponse>>(`/hr/interviewers?page=${page}&limit=${limit}&query=${encodeURIComponent(query)}&includeDeleted=${includeDeleted}`);
   return response.data;
 };
 

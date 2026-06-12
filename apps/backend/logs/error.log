@@ -65,10 +65,10 @@
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async <anonymous> (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\presentation\http\controllers\auth\organization\college.admin.auth.controller.ts:19:20)
 2026-05-11 17:04:10 [[31merror[39m]: TypeError: entity.toJSON is not a function
-    at toCompanyPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\mappers\company.mapper.ts:22:24)
-    at CompanyRepository.toPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\CompanyRepository.ts:20:12)
-    at CompanyRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\CompanyRepository.ts:29:24)
-    at VerifyCompanyOtpUseCase.execute (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\application\usecases\auth\hr\implementations\VerifyCompanyOtp.usecase.ts:43:35)
+    at toComptypePersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\mappers\comptype.mapper.ts:22:24)
+    at ComptypeRepository.toPersistence (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\ComptypeRepository.ts:20:12)
+    at ComptypeRepository.update (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\infrastructure\repositories\ComptypeRepository.ts:29:24)
+    at VerifyComptypeOtpUseCase.execute (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\application\usecases\auth\hr\implementations\VerifyComptypeOtp.usecase.ts:43:35)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async <anonymous> (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\src\presentation\http\controllers\auth\hr\hr.auth.controller.ts:25:20)
 2026-05-11 19:05:27 [[31merror[39m]: TypeError: Cannot read properties of null (reading '_id')
@@ -101,17 +101,17 @@
     at async Collection.findOne (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongodb\src\collection.ts:552:20)
     at async model.Query._findOne (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:2710:15)
     at async model.Query.exec (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\query.js:4627:63)
-2026-05-12 09:12:47 [[31merror[39m]: ValidationError: Company validation failed: status: `PENDING` is not a valid enum value for path `status`.
+2026-05-12 09:12:47 [[31merror[39m]: ValidationError: Comptype validation failed: status: `PENDING` is not a valid enum value for path `status`.
     at Document.invalidate (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3381:32)
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3142:17
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\schemaType.js:1446:9
     at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
-2026-05-12 09:12:51 [[31merror[39m]: ValidationError: Company validation failed: status: `PENDING` is not a valid enum value for path `status`.
+2026-05-12 09:12:51 [[31merror[39m]: ValidationError: Comptype validation failed: status: `PENDING` is not a valid enum value for path `status`.
     at Document.invalidate (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3381:32)
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3142:17
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\schemaType.js:1446:9
     at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
-2026-05-12 09:13:18 [[31merror[39m]: ValidationError: Company validation failed: status: `PENDING` is not a valid enum value for path `status`.
+2026-05-12 09:13:18 [[31merror[39m]: ValidationError: Comptype validation failed: status: `PENDING` is not a valid enum value for path `status`.
     at Document.invalidate (C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3381:32)
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\document.js:3142:17
     at C:\Users\risla\OneDrive\Documents\Career-Hub\apps\backend\node_modules\mongoose\lib\schemaType.js:1446:9

@@ -36,16 +36,16 @@ class HRAuthController {
             });
             (0, response_util_1.sendSuccess)(res, {
                 hrUser: result.hrUser,
-                company: result.company,
+                comptype: result.comptype,
             }, "OTP verification successful", 200);
         });
         this.updateOnboarding = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
-            const companyId = req.user?.companyId;
-            if (!companyId) {
-                throw new AppError_1.AppError("Company ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
+            const comptypeId = req.user?.comptypeId;
+            if (!comptypeId) {
+                throw new AppError_1.AppError("Comptype ID not found in session", HttpStatus_enum_1.HttpStatus.UNAUTHORIZED, ErrorCodes_enum_1.ErrorCode.UNAUTHORIZED);
             }
-            const company = await this.onboardingUseCase.execute(companyId, req.body);
-            (0, response_util_1.sendSuccess)(res, company, `Company onboarding Step ${req.body.step} successful`);
+            const comptype = await this.onboardingUseCase.execute(comptypeId, req.body);
+            (0, response_util_1.sendSuccess)(res, comptype, `Comptype onboarding Step ${req.body.step} successful`);
         });
     }
 }

@@ -9,10 +9,10 @@
   --student-secondary: #14b8a6;
   --student-gradient: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   
-  /* Company: Purple/Indigo */
-  --company-primary: #8b5cf6;
-  --company-secondary: #6366f1;
-  --company-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  /* Comptype: Purple/Indigo */
+  --comptype-primary: #8b5cf6;
+  --comptype-secondary: #6366f1;
+  --comptype-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
   
   /* Organizer: Green/Teal */
   --organizer-primary: #10b981;

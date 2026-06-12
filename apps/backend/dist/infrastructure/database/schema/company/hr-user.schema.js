@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HRUserSchema = void 0;
 const mongoose_1 = require("mongoose");
 exports.HRUserSchema = new mongoose_1.Schema({
-    companyId: {
+    comptypeId: {
         type: String,
         required: true,
     },
@@ -30,7 +30,7 @@ exports.HRUserSchema = new mongoose_1.Schema({
     },
     designation: {
         type: String,
-        required: true,
+        required: false,
     },
     role: {
         type: String,
@@ -40,6 +40,7 @@ exports.HRUserSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    blockedBy: { type: String, required: false },
 }, {
     timestamps: true,
 });

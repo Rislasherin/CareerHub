@@ -22,7 +22,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     private readonly interviewerRepo: IInterviewerRepository,
     private readonly collegeAdminRepo: ICollegeAdminRepository,
     private readonly superAdminRepo: ISuperAdminRepository
-  ) {}
+  ) { }
 
   async execute(token: string, newPassword: string): Promise<void> {
     // 1. Verify token

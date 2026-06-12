@@ -42,8 +42,8 @@ class AccountEntity {
     getOrganizationId() {
         return this.props.organizationId;
     }
-    getCompanyId() {
-        return this.props.companyId;
+    getComptypeId() {
+        return this.props.comptypeId;
     }
     getFirstName() {
         return this.props.firstName;

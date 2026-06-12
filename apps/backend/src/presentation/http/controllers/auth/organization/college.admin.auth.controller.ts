@@ -13,7 +13,7 @@ export class CollegeAdminAuthController {
     private readonly _verifyOtpUseCase: VerifyCollegeOtpUseCase,
     private readonly _loginUseCase: LoginCollegeAdminUseCase,
     private readonly _updateOnboardingUseCase: UpdateCollegeOnboardingUseCase
-  ) {}
+  ) { }
 
   login = asyncHandler(async (req: Request, res: Response) => {
     const result = await this._loginUseCase.execute(req.body);

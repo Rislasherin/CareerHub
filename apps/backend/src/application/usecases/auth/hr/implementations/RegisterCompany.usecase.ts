@@ -28,7 +28,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
     private readonly _otpRepository: IOtpRepository,
     private readonly _emailService: EmailService,
     private readonly _crossRoleAuthService: CrossRoleAuthService
-  ) {}
+  ) { }
 
   async execute(dto: RegisterCompanyRequestDto) {
     const globalCheck = await this._crossRoleAuthService.isEmailInUse(dto.email);
@@ -40,7 +40,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
     }
 
     const existingUser = await this._hrUserRepository.findByEmail(dto.email);
-    
+
     if (existingUser) {
       if (existingUser.status === UserStatus.PENDING) {
         // Handle Resend OTP: User exists but not verified
@@ -78,7 +78,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
         lastName: dto.lastName,
         email: dto.email,
         password: hashedPassword,
-        designation: dto.jobTitle, 
+        designation: dto.jobTitle,
         role: Role.HR,
         status: UserStatus.PENDING,
       })

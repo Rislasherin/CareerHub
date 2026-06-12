@@ -9,7 +9,7 @@ export interface IDeleteInterviewerUseCase {
 }
 
 export class DeleteInterviewerUseCase implements IDeleteInterviewerUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
 
   async execute(companyId: string, interviewerId: string): Promise<void> {
     const interviewer = await this._interviewerRepository.findById(interviewerId);

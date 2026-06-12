@@ -3,13 +3,13 @@ import { GetOrganizationsUseCase } from "@application/usecases/super-admin/GetOr
 import { GetStudentsUseCase } from "@application/usecases/super-admin/GetStudents.usecase";
 import { GetCompaniesUseCase } from "@application/usecases/super-admin/GetCompanies.usecase";
 import { GetInterviewersUseCase } from "@application/usecases/super-admin/GetInterviewers.usecase";
-import { 
-    studentRepository, 
-    companyRepository, 
-    interviewerRepository, 
-    superAdminRepository,
-    collegeAdminRepository,
-    hrUserRepository
+import {
+  studentRepository,
+  companyRepository,
+  interviewerRepository,
+  superAdminRepository,
+  collegeAdminRepository,
+  hrUserRepository
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
@@ -54,6 +54,7 @@ export const makeSuperAdminAuthController = () => {
 
 import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/UpdateUserStatus.usecase";
 import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
+import { UpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/UpdateOrganizationPlan.usecase";
 
 export const makeUpdateUserStatusUseCase = () => {
   return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
@@ -61,6 +62,10 @@ export const makeUpdateUserStatusUseCase = () => {
 
 export const makeDeleteUserUseCase = () => {
   return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
+};
+
+export const makeUpdateOrganizationPlanUseCase = () => {
+  return new UpdateOrganizationPlanUseCase(orgRepository);
 };
 
 export const makeSuperAdminController = () => {
@@ -71,6 +76,7 @@ export const makeSuperAdminController = () => {
     makeGetCompaniesUseCase(),
     makeGetInterviewersUseCase(),
     makeUpdateUserStatusUseCase(),
-    makeDeleteUserUseCase()
+    makeDeleteUserUseCase(),
+    makeUpdateOrganizationPlanUseCase()
   );
 };

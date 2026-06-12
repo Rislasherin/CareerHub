@@ -18,13 +18,15 @@ exports.SetupPasswordDto = SetupPasswordDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Token is required' }),
+    (0, class_validator_1.MaxLength)(1000, { message: 'Token cannot exceed 1000 characters' }),
     __metadata("design:type", String)
 ], SetupPasswordDto.prototype, "token", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters long' }),
+    (0, class_validator_1.MaxLength)(100, { message: 'Password cannot exceed 100 characters' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Password is required' }),
     __metadata("design:type", String)
 ], SetupPasswordDto.prototype, "password", void 0);

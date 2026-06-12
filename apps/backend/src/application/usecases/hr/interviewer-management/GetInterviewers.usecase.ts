@@ -5,11 +5,11 @@ export interface IGetInterviewersUseCase {
 }
 
 export class GetInterviewersUseCase implements IGetInterviewersUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
 
   async execute(companyId: string, query: string, page: number, limit: number, includeDeleted: boolean = false) {
     const { interviewers, total } = await this._interviewerRepository.searchInterviewers(companyId, query, page, limit, includeDeleted);
-    
+
     return {
       interviewers: interviewers.map((i) => {
         const json = i.toJSON();

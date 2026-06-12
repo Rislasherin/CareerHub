@@ -27,7 +27,7 @@ var ErrorMessage;
     ErrorMessage["PASSWORD_UPDATED"] = "Password updated successfully";
     ErrorMessage["HR_NOT_FOUND"] = "HR user not found";
     ErrorMessage["HR_BLOCKED"] = "Your account has been blocked";
-    ErrorMessage["COMPANY_NOT_FOUND"] = "Company not found";
+    ErrorMessage["COMPtype_NOT_FOUND"] = "Comptype not found";
     ErrorMessage["HR_EMAIL_EXISTS"] = "Email already registered";
     ErrorMessage["INTERVIEWER_NOT_FOUND"] = "Interviewer not found";
     ErrorMessage["INTERVIEWER_BLOCKED"] = "Your account has been blocked";

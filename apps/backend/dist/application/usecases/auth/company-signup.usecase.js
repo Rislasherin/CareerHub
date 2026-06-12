@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompanySignupUseCase = void 0;
+exports.ComptypeSignupUseCase = void 0;
 const validation_error_1 = require("@application/errors/validation.error");
 const account_entity_1 = require("@domain/entities/account.entity");
-const company_entity_1 = require("@domain/entities/company.entity");
+const comptype_entity_1 = require("@domain/entities/comptype.entity");
 const account_status_enum_1 = require("@domain/enums/account-status.enum");
 const role_enum_1 = require("@domain/enums/role.enum");
 const message_constants_1 = require("@shared/constants/message.constants");
-class CompanySignupUseCase {
-    constructor(hrRepository, companyRepository, hashService, emailService) {
+class ComptypeSignupUseCase {
+    constructor(hrRepository, comptypeRepository, hashService, emailService) {
         this.hrRepository = hrRepository;
-        this.companyRepository = companyRepository;
+        this.comptypeRepository = comptypeRepository;
         this.hashService = hashService;
         this.emailService = emailService;
     }
@@ -19,13 +19,13 @@ class CompanySignupUseCase {
         if (existingHr) {
             throw new validation_error_1.ConflictError(message_constants_1.MESSAGE_CONSTANTS.CONFLICT.EMAIL_EXISTS);
         }
-        const existingCompany = await this.companyRepository.findByName(dto.companyName);
-        if (existingCompany) {
-            throw new validation_error_1.ConflictError(message_constants_1.MESSAGE_CONSTANTS.CONFLICT.COMPANY_EXISTS);
+        const existingComptype = await this.comptypeRepository.findByName(dto.comptypeName);
+        if (existingComptype) {
+            throw new validation_error_1.ConflictError(message_constants_1.MESSAGE_CONSTANTS.CONFLICT.COMPtype_EXISTS);
         }
-        const company = await this.companyRepository.create(company_entity_1.CompanyEntity.create({
-            name: dto.companyName,
-            size: dto.companySize,
+        const comptype = await this.comptypeRepository.create(comptype_entity_1.ComptypeEntity.create({
+            name: dto.comptypeName,
+            size: dto.comptypeSize,
             industry: dto.industry,
             primaryContactName: dto.primaryContactName,
             primaryContactEmail: dto.email,
@@ -37,7 +37,7 @@ class CompanySignupUseCase {
             passwordHash: await this.hashService.hash(dto.password),
             status: account_status_enum_1.AccountStatus.ACTIVE,
             isFirstLogin: false,
-            companyId: company.getId(),
+            comptypeId: comptype.getId(),
             firstName: dto.firstName,
             lastName: dto.lastName,
             designation: dto.designation,
@@ -45,13 +45,13 @@ class CompanySignupUseCase {
         await this.emailService.send({
             to: dto.email,
             subject: "Welcome to CareerHub",
-            text: `Your CareerHub HR account for ${dto.companyName} has been created.`,
-            html: `<p>Your CareerHub HR account for <strong>${dto.companyName}</strong> has been created.</p>`,
+            text: `Your CareerHub HR account for ${dto.comptypeName} has been created.`,
+            html: `<p>Your CareerHub HR account for <strong>${dto.comptypeName}</strong> has been created.</p>`,
         });
         return {
-            companyId: company.getId(),
+            comptypeId: comptype.getId(),
             hrId: hrUser.getId(),
         };
     }
 }
-exports.CompanySignupUseCase = CompanySignupUseCase;
+exports.ComptypeSignupUseCase = ComptypeSignupUseCase;

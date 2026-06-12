@@ -30,6 +30,6 @@ export interface HRDashboardStats {
 }
 
 export const getHRDashboardStats = async (): Promise<HRDashboardStats> => {
-  const response = await apiClient.get('/hr/dashboard/stats') as any;
+  const response = await apiClient.get('/hr/dashboard/stats') as type;
   return response.data;
 };

@@ -32,7 +32,7 @@ export class CollegeAdminRepository
     }
 
     async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-      const update: any = { status };
+      const update: Record<string, unknown> = { status };
       if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
         update.blockedBy = blockedBy;
       } else if (status?.toUpperCase() !== 'BLOCKED') {

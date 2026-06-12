@@ -11,8 +11,8 @@ class HRUser {
     get id() {
         return this.props.id;
     }
-    get companyId() {
-        return this.props.companyId;
+    get comptypeId() {
+        return this.props.comptypeId;
     }
     get firstName() {
         return this.props.firstName;

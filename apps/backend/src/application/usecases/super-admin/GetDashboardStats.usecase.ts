@@ -15,7 +15,7 @@ export class GetDashboardStatsUseCase implements IGetDashboardStatsUseCase {
     private readonly _companyRepository: ICompanyRepository,
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _hrUserRepository: IHRUserRepository
-  ) {}
+  ) { }
 
   async execute() {
     const [orgCount, studentCount, companyCount, interviewerCount] = await Promise.all([

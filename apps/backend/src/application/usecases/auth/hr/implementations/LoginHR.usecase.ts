@@ -12,7 +12,7 @@ export class LoginHRUseCase {
     private readonly _companyRepository: ICompanyRepository,
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService
-  ) {}
+  ) { }
 
   async execute(dto: any) {
     const hrUser = await this._hrUserRepository.findByEmail(dto.email);

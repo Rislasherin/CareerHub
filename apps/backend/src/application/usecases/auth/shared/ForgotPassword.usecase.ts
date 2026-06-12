@@ -21,10 +21,10 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     private readonly interviewerRepo: IInterviewerRepository,
     private readonly collegeAdminRepo: ICollegeAdminRepository,
     private readonly superAdminRepo: ISuperAdminRepository
-  ) {}
+  ) { }
 
   async execute(email: string): Promise<void> {
-    // 1. Find user in any of the repositories
+    // 1. Find user in type of the repositories
     let user: any = null;
     let role: string = '';
 
@@ -55,10 +55,10 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     if (!user) return;
 
     // 3. Generate a reset token (short-lived)
-    const resetToken = this.jwtService.generateResetToken({ 
-      id: user.id || user._id, 
+    const resetToken = this.jwtService.generateResetToken({
+      id: user.id || user._id,
       email: user.email,
-      role 
+      role
     });
 
     // 4. Create reset link

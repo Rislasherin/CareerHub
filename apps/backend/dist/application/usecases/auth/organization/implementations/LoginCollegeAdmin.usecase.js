@@ -5,8 +5,9 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class LoginCollegeAdminUseCase {
-    constructor(_collegeAdminRepository, _jwtService, _bcryptService) {
+    constructor(_collegeAdminRepository, _organizationRepository, _jwtService, _bcryptService) {
         this._collegeAdminRepository = _collegeAdminRepository;
+        this._organizationRepository = _organizationRepository;
         this._jwtService = _jwtService;
         this._bcryptService = _bcryptService;
     }
@@ -15,12 +16,19 @@ class LoginCollegeAdminUseCase {
         if (!admin) {
             throw new AuthError_1.InvalidCredentialsError();
         }
-        if (admin.status !== user_status_enum_1.UserStatus.ACTIVE) {
+        if (admin.status === user_status_enum_1.UserStatus.BLOCKED || admin.status === user_status_enum_1.UserStatus.REJECTED) {
+            throw new AuthError_1.UnauthorizedError("Your account has been blocked or rejected.");
+        }
+        if (admin.status !== user_status_enum_1.UserStatus.ACTIVE && admin.status !== user_status_enum_1.UserStatus.PENDING) {
             throw new AuthError_1.UnauthorizedError("Your account is not active. Please verify your email.");
         }
         const isPasswordValid = await this._bcryptService.compare(dto.password, admin.password);
         if (!isPasswordValid) {
             throw new AuthError_1.InvalidCredentialsError();
+        }
+        const organization = await this._organizationRepository.findById(admin.orgId);
+        if (organization?.status === user_status_enum_1.UserStatus.BLOCKED) {
+            throw new AuthError_1.UnauthorizedError("Your institution has been blocked. Please contact admin.");
         }
         const payload = {
             id: admin.id,
@@ -38,6 +46,7 @@ class LoginCollegeAdminUseCase {
                 role: admin.role,
                 organizationId: admin.orgId,
             },
+            organization: organization?.toJSON(),
         };
     }
 }

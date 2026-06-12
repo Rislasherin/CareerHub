@@ -11,26 +11,22 @@ interface OtpInputProps {
 
 export const OtpInput: React.FC<OtpInputProps> = ({ value, onChange, onResend, isLoading }) => {
   const [timer, setTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
+  const canResend = timer === 0;
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (timer > 0 && !canResend) {
-      interval = setInterval(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
-    } else {
-      setCanResend(true);
+      return () => clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [timer, canResend]);
+  }, [timer]);
 
   const handleResend = () => {
     if (canResend) {
       onResend();
       setTimer(30);
-      setCanResend(false);
     }
   };
 
@@ -59,7 +55,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({ value, onChange, onResend, i
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').slice(0, 6);
     if (!/^\d+$/.test(pastedData)) return;
-    
+
     onChange(pastedData);
     // Focus the last input or the next empty one
     const focusIndex = Math.min(pastedData.length, 5);
@@ -72,7 +68,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({ value, onChange, onResend, i
         {[...Array(6)].map((_, i) => (
           <input
             key={i}
-            ref={(el) => (inputRefs.current[i] = el)}
+            ref={(el) => { inputRefs.current[i] = el; }}
             type="text"
             inputMode="numeric"
             maxLength={1}

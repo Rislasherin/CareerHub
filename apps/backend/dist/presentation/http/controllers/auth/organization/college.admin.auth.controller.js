@@ -4,10 +4,11 @@ exports.CollegeAdminAuthController = void 0;
 const asyncHandler_util_1 = require("@shared/utils/asyncHandler.util");
 const response_util_1 = require("@shared/utils/response.util");
 class CollegeAdminAuthController {
-    constructor(_registerUseCase, _verifyOtpUseCase, _loginUseCase) {
+    constructor(_registerUseCase, _verifyOtpUseCase, _loginUseCase, _updateOnboardingUseCase) {
         this._registerUseCase = _registerUseCase;
         this._verifyOtpUseCase = _verifyOtpUseCase;
         this._loginUseCase = _loginUseCase;
+        this._updateOnboardingUseCase = _updateOnboardingUseCase;
         this.login = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
             const result = await this._loginUseCase.execute(req.body);
             res.cookie("accessToken", result.accessToken, {
@@ -33,6 +34,11 @@ class CollegeAdminAuthController {
             (0, response_util_1.sendSuccess)(res, {
                 collegeAdmin: result.collegeAdmin,
             }, "OTP verification successful", 200);
+        });
+        this.updateOnboarding = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
+            const { orgId } = req.user; // From auth middleware
+            const result = await this._updateOnboardingUseCase.execute(orgId, req.body);
+            (0, response_util_1.sendSuccess)(res, result, "Onboarding updated successfully");
         });
     }
 }

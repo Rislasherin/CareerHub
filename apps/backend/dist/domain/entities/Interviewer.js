@@ -11,8 +11,8 @@ class Interviewer {
     get id() {
         return this.props.id;
     }
-    get companyId() {
-        return this.props.companyId;
+    get comptypeId() {
+        return this.props.comptypeId;
     }
     get firstName() {
         return this.props.firstName;
@@ -40,6 +40,9 @@ class Interviewer {
     }
     set status(value) {
         this.props.status = value;
+    }
+    get isDeleted() {
+        return this.props.isDeleted;
     }
     toJSON() {
         return { ...this.props };

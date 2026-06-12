@@ -17,7 +17,7 @@ export class HRAuthController {
     private readonly onboardingUseCase: IUpdateCompanyOnboardingUseCase,
     private readonly verifyOtpUseCase: VerifyCompanyOtpUseCase,
     private readonly loginUseCase: LoginHRUseCase
-  ) {}
+  ) { }
 
   login = asyncHandler(async (req: Request, res: Response) => {
     const result = await this.loginUseCase.execute(req.body);

@@ -29,7 +29,7 @@ import { setSuperAdminDetails } from '@/redux/slices/superAdminSlice';
 import { loginSchema } from '@/utils/validation';
 import { z } from 'zod';
 
-const roles: { id: UserRole; label: string; icon: any }[] = [
+const roles: { id: UserRole; label: string; icon: type }[] = [
   { id: 'student', label: 'Student', icon: GraduationCap },
   { id: 'hr', label: 'Company', icon: Building2 },
   { id: 'college_admin', label: 'Institution', icon: ShieldCheck },
@@ -54,7 +54,7 @@ const roleContent = {
   college_admin: {
     title: "Empower your institution's success.",
     subtitle: "Manage placements, verify student credentials, and connect with global employers in one unified dashboard.",
-    quote: "The verification workflow saved our administration hundreds of hours. Highly recommended for any large university.",
+    quote: "The verification workflow saved our administration hundreds of hours. Highly recommended for type large university.",
     author: "Dr. Rajesh Kumar",
     position: "Dean of Placements, IIT Delhi"
   },

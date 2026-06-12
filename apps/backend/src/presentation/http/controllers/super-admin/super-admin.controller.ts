@@ -8,6 +8,7 @@ import { IGetCompaniesUseCase } from "@application/usecases/super-admin/GetCompa
 import { IGetInterviewersUseCase } from "@application/usecases/super-admin/GetInterviewers.usecase";
 import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/UpdateUserStatus.usecase";
 import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
+import { UpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/UpdateOrganizationPlan.usecase";
 
 export class SuperAdminController {
   constructor(
@@ -16,9 +17,17 @@ export class SuperAdminController {
     private readonly _getStudentsUseCase: IGetStudentsUseCase,
     private readonly _getCompaniesUseCase: IGetCompaniesUseCase,
     private readonly _getInterviewersUseCase: IGetInterviewersUseCase,
-    private readonly  _updateStatusUseCase: UpdateUserStatusUseCase,
-    private readonly _deleteUserUseCase: DeleteUserUseCase
-  ) {}
+    private readonly _updateStatusUseCase: UpdateUserStatusUseCase,
+    private readonly _deleteUserUseCase: DeleteUserUseCase,
+    private readonly _updatePlanUseCase: UpdateOrganizationPlanUseCase
+  ) { }
+
+  updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { plan } = req.body;
+    await this._updatePlanUseCase.execute(id, plan);
+    sendSuccess(res, null, `Organization subscription plan updated to ${plan}`);
+  });
 
   getStats = asyncHandler(async (req: Request, res: Response) => {
     const stats = await this._getStatsUseCase.execute();

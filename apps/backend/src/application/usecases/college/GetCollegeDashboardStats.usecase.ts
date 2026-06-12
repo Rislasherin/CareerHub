@@ -6,7 +6,7 @@ export interface IGetCollegeDashboardStatsUseCase {
 }
 
 export class GetCollegeDashboardStatsUseCase implements IGetCollegeDashboardStatsUseCase {
-  constructor(private readonly studentRepository: IStudentRepository) {}
+  constructor(private readonly studentRepository: IStudentRepository) { }
 
   async execute(orgId: string): Promise<any> {
     const [totalStudents, placedStudents, inProcessStudents] = await Promise.all([

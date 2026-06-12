@@ -9,7 +9,7 @@ export interface IGetStudentProfileUseCase {
 }
 
 export class GetStudentProfileUseCase implements IGetStudentProfileUseCase {
-  constructor(private readonly _studentRepository: IStudentRepository) {}
+  constructor(private readonly _studentRepository: IStudentRepository) { }
 
   async execute(studentId: string): Promise<any> {
     const student = await this._studentRepository.findById(studentId);

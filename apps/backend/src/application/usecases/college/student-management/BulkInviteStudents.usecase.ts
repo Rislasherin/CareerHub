@@ -15,7 +15,7 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
     private readonly _studentRepository: IStudentRepository,
     private readonly _emailService: IEmailService,
     private readonly _crossRoleAuthService: CrossRoleAuthService
-  ) {}
+  ) { }
 
   async execute(collegeId: string, dto: InviteStudentsDto): Promise<any> {
     const results = {
@@ -60,7 +60,7 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
 
         // Send invitation email
         const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/setup?token=${invitationToken}`;
-        await this._emailService.sendStudentInvitationEmail(student.email, setupLink); 
+        await this._emailService.sendStudentInvitationEmail(student.email, setupLink);
 
         results.invited++;
       } catch (error: any) {

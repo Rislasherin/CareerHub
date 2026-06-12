@@ -22,7 +22,7 @@ export class InterviewerManagementController {
     private readonly _updateUseCase: IUpdateInterviewerUseCase,
     private readonly _deleteUseCase: IDeleteInterviewerUseCase,
     private readonly _restoreUseCase: IRestoreInterviewerUseCase
-  ) {}
+  ) { }
 
   addInterviewer = asyncHandler(async (req: any, res: Response) => {
     const companyId = req.user?.companyId;

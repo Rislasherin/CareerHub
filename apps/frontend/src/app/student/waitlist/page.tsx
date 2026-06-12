@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Clock, 
+import {
+  Clock,
   LogOut,
   ArrowRight,
   ShieldQuestion,
@@ -26,24 +26,58 @@ export default function StudentWaitlistPage() {
   const user = useAppSelector((state) => state.student.details);
   const router = useRouter();
 
+  useEffect(() => {
+    // If already active or rejected, route immediately
+    if (user?.status === 'ACTIVE') {
+      router.push('/student');
+      return;
+    } else if (user?.status === 'REJECTED') {
+      router.push('/student/verify');
+      return;
+    }
+
+    const checkStatus = async () => {
+      try {
+        const response: type = await apiClient.get('/auth/student/me');
+        if (response.success && response.data) {
+          const updatedUser = response.data;
+          dispatch(setStudentDetails(updatedUser));
+          if (updatedUser.status === 'ACTIVE') {
+            router.push('/student');
+          } else if (updatedUser.status === 'REJECTED') {
+            router.push('/student/verify');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to poll status', err);
+      }
+    };
+
+    // Check once on mount in case it changed
+    checkStatus();
+
+    const interval = setInterval(checkStatus, 15000);
+    return () => clearInterval(interval);
+  }, [user?.status, router, dispatch]);
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-    } catch {}
-    
+    } catch { }
+
     dispatch(clearAuth());
     dispatch(clearStudentDetails());
     dispatch(clearCollegeAdminDetails());
     dispatch(clearHRDetails());
     dispatch(clearInterviewerDetails());
     dispatch(clearSuperAdminDetails());
-    
+
     router.push('/login?role=student');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-12 text-center border border-slate-100"
@@ -51,10 +85,10 @@ export default function StudentWaitlistPage() {
         <div className="w-24 h-24 bg-amber-50 text-amber-500 rounded-[2rem] flex items-center justify-center mb-10 mx-auto shadow-sm">
           <Clock size={48} strokeWidth={2.5} className="animate-pulse" />
         </div>
-        
+
         <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">Under Review</h1>
         <p className="text-slate-500 font-medium mb-10 leading-relaxed">
-          Your documents have been submitted and are currently being reviewed by your college administration. 
+          Your documents have been submitted and are currently being reviewed by your college administration.
           <br /><br />
           We'll notify you via email once your account is activated.
         </p>
@@ -70,8 +104,8 @@ export default function StudentWaitlistPage() {
             </p>
           </div>
 
-          <Button 
-            fullWidth 
+          <Button
+            fullWidth
             onClick={handleLogout}
             variant="outline"
             className="h-16 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl transition-all hover:bg-slate-50"

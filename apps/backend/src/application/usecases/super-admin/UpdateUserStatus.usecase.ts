@@ -15,7 +15,7 @@ export class UpdateUserStatusUseCase {
     private readonly companyRepo: ICompanyRepository,
     private readonly interviewerRepo: IInterviewerRepository,
     private readonly hrRepo: IHRUserRepository
-  ) {}
+  ) { }
 
   async execute(role: string, id: string, status: string, adminRole?: string): Promise<void> {
     switch (role) {

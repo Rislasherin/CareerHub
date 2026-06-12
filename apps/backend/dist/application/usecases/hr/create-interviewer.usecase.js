@@ -13,7 +13,7 @@ class CreateInterviewerUseCase {
         this.randomService = randomService;
         this.emailService = emailService;
     }
-    async execute(companyId, dto) {
+    async execute(comptypeId, dto) {
         const existingInterviewer = await this.interviewerRepository.findByEmail(dto.email);
         if (existingInterviewer) {
             throw new validation_error_1.ConflictError(message_constants_1.MESSAGE_CONSTANTS.CONFLICT.EMAIL_EXISTS);
@@ -25,7 +25,7 @@ class CreateInterviewerUseCase {
             passwordHash: await this.hashService.hash(temporaryPassword),
             status: account_status_enum_1.AccountStatus.ACTIVE,
             isFirstLogin: true,
-            companyId,
+            comptypeId,
             fullName: dto.fullName.trim(),
             designation: dto.designation.trim(),
             phone: dto.phone?.trim(),

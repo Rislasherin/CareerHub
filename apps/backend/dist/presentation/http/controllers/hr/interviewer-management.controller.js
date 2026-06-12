@@ -10,11 +10,11 @@ class InterviewerManagementController {
     constructor(createInterviewerUseCase) {
         this.createInterviewerUseCase = createInterviewerUseCase;
         this.createInterviewer = (0, asyncHandler_util_1.asyncHandler)(async (request, response) => {
-            const companyId = request.user?.companyId;
-            if (!companyId) {
+            const comptypeId = request.user?.comptypeId;
+            if (!comptypeId) {
                 throw new auth_error_1.UnauthorizedError();
             }
-            const result = await this.createInterviewerUseCase.execute(companyId, request.body);
+            const result = await this.createInterviewerUseCase.execute(comptypeId, request.body);
             (0, response_util_1.sendSuccess)(response, result, message_constants_1.MESSAGE_CONSTANTS.INTERVIEWER.CREATED, http_status_constants_1.HTTP_STATUS.CREATED);
         });
     }

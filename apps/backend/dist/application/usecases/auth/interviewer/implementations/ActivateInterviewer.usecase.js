@@ -13,12 +13,21 @@ class ActivateInterviewerUseCase {
         this._jwtService = _jwtService;
     }
     async execute(interviewerId, password, emailFromQuery) {
+        console.log(`[ACTIVATE] Attempting to activate interviewer. ID: ${interviewerId}, Email: ${emailFromQuery}`);
         let interviewer = await this._interviewerRepository.findById(interviewerId);
+        if (interviewer) {
+            console.log(`[ACTIVATE] Found interviewer by ID: ${interviewer.email}`);
+        }
         // Backup: Search by email if ID lookup fails
         if (!interviewer && emailFromQuery) {
+            console.log(`[ACTIVATE] ID lookup failed, searching by email: ${emailFromQuery}`);
             interviewer = await this._interviewerRepository.findByEmail(emailFromQuery);
+            if (interviewer) {
+                console.log(`[ACTIVATE] Found interviewer by fallback email: ${interviewer.id}`);
+            }
         }
         if (!interviewer) {
+            console.error(`[ACTIVATE] Interviewer not found. Received ID: ${interviewerId}, Received Email Query: ${emailFromQuery}`);
             const identifier = emailFromQuery || interviewerId;
             throw new AppError_1.AppError(`Interviewer (${identifier}) not found. Please ask your admin to resend the invite.`, HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.USER_NOT_FOUND);
         }
@@ -35,7 +44,7 @@ class ActivateInterviewerUseCase {
         const payload = {
             id: updatedInterviewer.id,
             role: updatedInterviewer.role,
-            companyId: updatedInterviewer.companyId,
+            comptypeId: updatedInterviewer.comptypeId,
         };
         const accessToken = this._jwtService.signAccessToken(payload);
         const refreshToken = this._jwtService.signRefreshToken(payload);

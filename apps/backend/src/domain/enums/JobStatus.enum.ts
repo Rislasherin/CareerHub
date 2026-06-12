@@ -4,4 +4,5 @@ export enum JobStatus {
   REJECTED = "rejected",
   ACTIVE = "active",
   CLOSED = "closed"
+
 }

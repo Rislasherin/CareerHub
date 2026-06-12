@@ -2,6 +2,7 @@ import { Interviewer } from "@domain/entities/Interviewer";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 import { InterviewerDocument, InterviewerModel } from "@infrastructure/database/models/company/interviewer.model";
 import { toInterviewerEntity, toInterviewerPersistence } from "@infrastructure/mappers/interviewer.mapper";
+import { FilterQuery } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
 import { interviewerRepository } from "@infrastructure/di/infra.container";
 import { UserStatus } from "@domain/enums/user.status.enum";
@@ -33,7 +34,7 @@ export class InterviewerRepository
 
   async searchInterviewers(companyId: string, query: string, page: number, limit: number, includeDeleted: boolean = false): Promise<{ interviewers: Interviewer[], total: number }> {
     const skip = (page - 1) * limit;
-    const filter: any = {
+    const filter: FilterQuery<InterviewerDocument> = {
       companyId,
       $or: [
         { firstName: { $regex: query, $options: "i" } },
@@ -82,7 +83,7 @@ export class InterviewerRepository
   }
 
   async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-    const update: any = { status };
+    const update: Record<string, unknown> = { status };
     if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status?.toUpperCase() !== 'BLOCKED') {
@@ -98,14 +99,5 @@ export class InterviewerRepository
 
   async restore(id: string): Promise<void> {
     await this.model.findByIdAndUpdate(id, { isDeleted: false });
-  }
-
-  async findPendingStartWithA(): Promise<Interviewer[]> {
-    const docs = await this.model.find({
-      status: UserStatus.PENDING,
-      isDeleted: { $ne: true },
-      firstName: { $regex: "^A", $options: "i" },
-    });
-    return docs.map((doc) => this.toEntity(doc as InterviewerDocument));
   }
 }

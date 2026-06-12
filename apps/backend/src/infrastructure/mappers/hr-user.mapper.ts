@@ -11,7 +11,7 @@ export const toHRUserEntity = (doc: HRUserDocument): HRUser => {
     lastName: doc.lastName,
     email: doc.email,
     password: doc.password,
-    designation: doc.designation,
+    designation: doc.designation || "",
     role: doc.role as Role,
     status: doc.status as UserStatus,
     createdAt: doc.createdAt,

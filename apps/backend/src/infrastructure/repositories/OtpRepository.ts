@@ -3,7 +3,7 @@ import { OtpModel, OtpDocument } from "@infrastructure/database/models/auth/otp.
 
 export class OtpRepository implements IOtpRepository {
   async create(email: string, otp: string): Promise<OtpDocument> {
-    // Delete any existing OTPs for this email first
+    // Delete type existing OTPs for this email first
     await this.deleteByEmail(email);
     const newOtp = new OtpModel({ email, otp });
     return await newOtp.save();

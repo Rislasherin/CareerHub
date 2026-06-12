@@ -1,13 +1,12 @@
 import { Company } from "@domain/entities/Company";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { CompanyDocument, CompanyModel } from "@infrastructure/database/models/company/company.model";
-import { toCompanyEntity, toCompanyPersistence } from "@infrastructure/mappers/company.mapper";
+import { toCompanyPersistence, toCompanyEntity } from "@infrastructure/mappers/company.mapper";
 import { BaseRepository } from "./BaseRepository";
 
 export class CompanyRepository
   extends BaseRepository<Company, CompanyDocument>
-  implements ICompanyRepository
-{
+  implements ICompanyRepository {
   constructor() {
     super(CompanyModel);
   }
@@ -28,8 +27,8 @@ export class CompanyRepository
   async searchCompanies(query: string, page: number, limit: number): Promise<{ companies: Company[], total: number }> {
     const skip = (page - 1) * limit;
     const filter = {
-        name: { $regex: query, $options: "i" },
-        isDeleted: { $ne: true }
+      name: { $regex: query, $options: "i" },
+      isDeleted: { $ne: true }
     };
 
     const [docs, total] = await Promise.all([
@@ -44,7 +43,7 @@ export class CompanyRepository
   }
 
   async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-    const update: any = { status };
+    const update: Record<string, unknown> = { status };
     if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status?.toUpperCase() !== 'BLOCKED') {
@@ -53,3 +52,4 @@ export class CompanyRepository
     await this.model.updateOne({ _id: id }, { $set: update });
   }
 }
+

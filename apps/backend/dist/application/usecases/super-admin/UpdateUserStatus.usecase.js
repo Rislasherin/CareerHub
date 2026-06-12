@@ -6,25 +6,26 @@ const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 class UpdateUserStatusUseCase {
-    constructor(studentRepo, orgRepo, companyRepo, interviewerRepo) {
+    constructor(studentRepo, orgRepo, comptypeRepo, interviewerRepo, hrRepo) {
         this.studentRepo = studentRepo;
         this.orgRepo = orgRepo;
-        this.companyRepo = companyRepo;
+        this.comptypeRepo = comptypeRepo;
         this.interviewerRepo = interviewerRepo;
+        this.hrRepo = hrRepo;
     }
-    async execute(role, id, status) {
+    async execute(role, id, status, adminRole) {
         switch (role) {
             case Roles_enum_1.Role.STUDENT:
-                await this.studentRepo.updateStatus(id, status);
+                await this.studentRepo.updateStatus(id, status, adminRole);
                 break;
             case Roles_enum_1.Role.COLLEGE_ADMIN:
-                await this.orgRepo.updateStatus(id, status);
+                await this.orgRepo.updateStatus(id, status, adminRole);
                 break;
             case Roles_enum_1.Role.HR:
-                await this.companyRepo.updateStatus(id, status);
+                await this.hrRepo.updateStatus(id, status, adminRole);
                 break;
             case Roles_enum_1.Role.INTERVIEWER:
-                await this.interviewerRepo.updateStatus(id, status);
+                await this.interviewerRepo.updateStatus(id, status, adminRole);
                 break;
             default:
                 throw new AppError_1.AppError("Invalid role for status update", HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.VALIDATION_ERROR);

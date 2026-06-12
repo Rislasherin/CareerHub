@@ -2,35 +2,35 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SuperAdmin = void 0;
 class SuperAdmin {
-    constructor(props) {
-        this.props = props;
+    constructor(_props) {
+        this._props = _props;
     }
     static create(props) {
         return new SuperAdmin(props);
     }
     get id() {
-        return this.props.id;
+        return this._props.id;
     }
     get firstName() {
-        return this.props.firstName;
+        return this._props.firstName;
     }
     get lastName() {
-        return this.props.lastName;
+        return this._props.lastName;
     }
     get email() {
-        return this.props.email;
+        return this._props.email;
     }
     get password() {
-        return this.props.password;
+        return this._props.password;
     }
     get role() {
-        return this.props.role;
+        return this._props.role;
     }
     get status() {
-        return this.props.status;
+        return this._props.status;
     }
     toJSON() {
-        return { ...this.props };
+        return { ...this._props };
     }
 }
 exports.SuperAdmin = SuperAdmin;

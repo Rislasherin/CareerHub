@@ -5,7 +5,7 @@ export interface IGetHRDashboardStatsUseCase {
 }
 
 export class GetHRDashboardStatsUseCase implements IGetHRDashboardStatsUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
 
   async execute(companyId: string): Promise<any> {
     // Retrieve actual active interviewer count from the database
@@ -32,7 +32,7 @@ export class GetHRDashboardStatsUseCase implements IGetHRDashboardStatsUseCase {
         { label: "Interviewed", value: 4, color: "bg-emerald-500" },
       ],
       recentActivity: [
-        { title: "Ananya Sharma shortlisted for Software Engineer", time: "2 hours ago", icon: "CheckCircle2", color: "text-emerald-500", bg: "bg-emerald-50" },
+        { title: "Antypea Sharma shortlisted for Software Engineer", time: "2 hours ago", icon: "CheckCircle2", color: "text-emerald-500", bg: "bg-emerald-50" },
         { title: "Interview invite sent to Rohit Mehra", time: "4 hours ago", icon: "MessageSquare", color: "text-blue-500", bg: "bg-blue-50" },
         { title: "8 new AI-matched candidates for Data Analyst", time: "Yesterday, 6:30 PM", icon: "Zap", color: "text-amber-500", bg: "bg-amber-50" },
         { title: "Company profile viewed by IIT Bombay Placements", time: "Yesterday, 2:10 PM", icon: "Building2", color: "text-slate-500", bg: "bg-slate-50" },

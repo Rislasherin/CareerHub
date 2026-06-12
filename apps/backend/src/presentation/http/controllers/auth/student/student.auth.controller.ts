@@ -12,6 +12,7 @@ import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student
 export class StudentAuthController {
   constructor(
     private readonly _loginUseCase: ILoginStudentUsescase,
+
     private readonly _requestAccessUseCase: IRequestAccessUseCase,
     private readonly _setupPasswordUseCase: ISetupStudentPasswordUseCase,
     private readonly _getProfileUseCase: IGetStudentProfileUseCase,

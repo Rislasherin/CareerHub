@@ -10,15 +10,15 @@ const run = async () => {
     console.error("No MONGODB_URI found");
     return;
   }
-  
+
   try {
     console.log("Connecting to MongoDB...");
     await mongoose.connect(uri);
     const db = mongoose.connection.db;
-    
+
     if (!db) {
-        console.error("DB connection failed");
-        return;
+      console.error("DB connection failed");
+      return;
     }
 
     console.log("Attempting to drop index 'name_1' from 'companies' collection...");

@@ -18,7 +18,7 @@ export interface InterviewerProps {
 }
 
 export class Interviewer {
-  constructor(private props: InterviewerProps) {}
+  constructor(private props: InterviewerProps) { }
 
   static create(props: InterviewerProps): Interviewer {
     return new Interviewer(props);

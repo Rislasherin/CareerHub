@@ -5,7 +5,7 @@ const Interviewer_1 = require("@domain/entities/Interviewer");
 const toInterviewerEntity = (doc) => {
     return Interviewer_1.Interviewer.create({
         id: doc._id.toString(),
-        companyId: doc.companyId,
+        comptypeId: doc.comptypeId,
         firstName: doc.firstName,
         lastName: doc.lastName,
         email: doc.email,
@@ -16,13 +16,14 @@ const toInterviewerEntity = (doc) => {
         status: doc.status,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt,
+        isDeleted: doc.isDeleted || false,
     });
 };
 exports.toInterviewerEntity = toInterviewerEntity;
 const toInterviewerPersistence = (entity) => {
     const props = entity.toJSON();
     return {
-        companyId: props.companyId,
+        comptypeId: props.comptypeId,
         firstName: props.firstName,
         lastName: props.lastName,
         email: props.email,
@@ -31,6 +32,7 @@ const toInterviewerPersistence = (entity) => {
         specialization: props.specialization,
         role: props.role,
         status: props.status,
+        isDeleted: props.isDeleted || false,
     };
 };
 exports.toInterviewerPersistence = toInterviewerPersistence;

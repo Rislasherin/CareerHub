@@ -15,9 +15,22 @@ class CollegeAdminRepository extends BaseRepository_1.BaseRepository {
         return (0, college_admin_mapper_1.toCollegeAdminPersistence)(entity);
     }
     async findByEmail(email) {
-        const doc = await this.model.findOne({ email });
-        return doc ? this.toEntity(doc)
-            : null;
+        const doc = await this.model.findOne({ email, isDeleted: { $ne: true } });
+        return doc ? this.toEntity(doc) : null;
+    }
+    async findByOrgId(orgId) {
+        const doc = await this.model.findOne({ orgId, isDeleted: { $ne: true } });
+        return doc ? this.toEntity(doc) : null;
+    }
+    async updateStatus(id, status, blockedBy) {
+        const update = { status };
+        if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
+            update.blockedBy = blockedBy;
+        }
+        else if (status?.toUpperCase() !== 'BLOCKED') {
+            update.blockedBy = null;
+        }
+        await this.model.updateOne({ _id: id }, { $set: update });
     }
 }
 exports.CollegeAdminRepository = CollegeAdminRepository;

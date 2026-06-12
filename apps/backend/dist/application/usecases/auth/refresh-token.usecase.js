@@ -29,7 +29,7 @@ class RefreshTokenUseCase {
             role: account.getRole(),
             email: account.getEmail(),
             organizationId: account.getOrganizationId(),
-            companyId: account.getCompanyId(),
+            comptypeId: account.getComptypeId(),
         };
         const newAccessToken = this.tokenService.generateAccessToken(newPayload);
         const newRefreshToken = this.tokenService.generateRefreshToken(newPayload);

@@ -6,7 +6,7 @@ class BaseRepository {
         this.model = model;
     }
     async findById(id) {
-        const doc = await this.model.findById(id);
+        const doc = await this.model.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
         return doc ? this.toEntity(doc) : null;
     }
     async create(entity) {
@@ -21,10 +21,13 @@ class BaseRepository {
         return this.toEntity(updated);
     }
     async delete(id) {
-        const result = await this.model.findByIdAndDelete(id);
+        const result = await this.model.findByIdAndUpdate(id, { isDeleted: true });
         if (!result) {
             throw new Error("Entity not found for deletion");
         }
+    }
+    async count(filter) {
+        return this.model.countDocuments({ ...filter, isDeleted: { $ne: true } });
     }
 }
 exports.BaseRepository = BaseRepository;

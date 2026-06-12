@@ -21,6 +21,11 @@ export const superAdminService = {
     return response.data;
   },
 
+  updateOrganizationPlan: async (id: string, plan: string) => {
+    const response = await apiClient.patch(`/super-admin/organizations/${id}/plan`, { plan });
+    return response.data;
+  },
+
   getStudents: async (query = '', page = 1, limit = 10) => {
     const response = await apiClient.get(`/super-admin/students?query=${query}&page=${page}&limit=${limit}`);
     return response.data;

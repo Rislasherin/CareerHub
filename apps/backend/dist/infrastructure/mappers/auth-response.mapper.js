@@ -10,7 +10,7 @@ const toAuthUserResponse = (account) => ({
     fullName: account.getFullName(),
     designation: account.getDesignation(),
     organizationId: account.getOrganizationId(),
-    companyId: account.getCompanyId(),
+    comptypeId: account.getComptypeId(),
     branch: account.getBranch(),
     cgpa: account.getCgpa(),
     rollNumber: account.getRollNumber(),

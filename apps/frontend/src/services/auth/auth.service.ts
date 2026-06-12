@@ -34,14 +34,14 @@ const roleToPath: Record<UserRole, string> = {
 // ─── Auth Service ─────────────────────────────────────────────────────────────
 
 /**
- * Login any role by hitting the correct endpoint.
+ * Login type role by hitting the correct endpoint.
  */
 export const loginUser = async (
   role: UserRole,
   payload: LoginPayload
 ): Promise<{ user: AuthUser; isFirstLogin?: boolean }> => {
   const path = `${roleToPath[role]}/login`;
-  const response = await apiClient.post(path, payload) as any;
+  const response = await apiClient.post(path, payload) as type;
   const data = response.data;
 
   // Normalize the returned user shape across all roles
@@ -80,7 +80,7 @@ export const registerHR = async (payload: {
   password: string;
   jobTitle: string;
 }): Promise<{ requiresOtp?: boolean; email?: string; message?: string; user?: AuthUser }> => {
-  const response = await apiClient.post('/auth/hr/register', payload) as any;
+  const response = await apiClient.post('/auth/hr/register', payload) as type;
   const data = response.data;
 
   if (data?.requiresOtp) {
@@ -104,8 +104,8 @@ export const registerHR = async (payload: {
   };
 };
 
-export const verifyHROtp = async (payload: { email: string; otp: string }): Promise<{ user: any }> => {
-  const response = await apiClient.post('/auth/hr/verify-otp', payload) as any;
+export const verifyHROtp = async (payload: { email: string; otp: string }): Promise<{ user: type }> => {
+  const response = await apiClient.post('/auth/hr/verify-otp', payload) as type;
   const data = response.data;
   const rawUser = data?.hrUser;
   const company = data?.company;
@@ -125,13 +125,13 @@ export const verifyHROtp = async (payload: { email: string; otp: string }): Prom
   };
 };
 
-export const updateHROnboarding = async (payload: any): Promise<any> => {
-  const response = await apiClient.patch('/auth/hr/onboarding', payload) as any;
+export const updateHROnboarding = async (payload: type): Promise<type> => {
+  const response = await apiClient.patch('/auth/hr/onboarding', payload) as type;
   return response.data;
 };
 
-export const updateCollegeOnboarding = async (payload: any): Promise<any> => {
-  const response = await apiClient.patch('/auth/college-admin/onboarding', payload) as any;
+export const updateCollegeOnboarding = async (payload: type): Promise<type> => {
+  const response = await apiClient.patch('/auth/college-admin/onboarding', payload) as type;
   return response.data;
 };
 
@@ -143,12 +143,12 @@ export const registerCollege = async (payload: {
   email: string;
   password: string;
 }): Promise<{ requiresOtp?: boolean; email?: string; message?: string }> => {
-  const response = await apiClient.post('/auth/college-admin/register', payload) as any;
+  const response = await apiClient.post('/auth/college-admin/register', payload) as type;
   return response.data;
 };
 
-export const verifyCollegeOtp = async (payload: { email: string; otp: string }): Promise<{ user: any }> => {
-  const response = await apiClient.post('/auth/college-admin/verify-otp', payload) as any;
+export const verifyCollegeOtp = async (payload: { email: string; otp: string }): Promise<{ user: type }> => {
+  const response = await apiClient.post('/auth/college-admin/verify-otp', payload) as type;
   const data = response.data;
   const rawUser = data?.collegeAdmin;
   const organization = data?.organization || data?.collegeAdmin?.organization;
@@ -181,7 +181,7 @@ export const activateInterviewer = async (password: string, token: string, email
         Authorization: `Bearer ${token}`
       }
     }
-  ) as any;
+  ) as type;
   const data = response.data;
   const rawUser = data?.user;
 

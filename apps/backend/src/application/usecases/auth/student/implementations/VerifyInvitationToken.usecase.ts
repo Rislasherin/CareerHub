@@ -9,11 +9,11 @@ export interface IVerifyInvitationTokenUseCase {
 }
 
 export class VerifyInvitationTokenUseCase implements IVerifyInvitationTokenUseCase {
-  constructor(private readonly _studentRepository: IStudentRepository) {}
+  constructor(private readonly _studentRepository: IStudentRepository) { }
 
   async execute(token: string): Promise<any> {
     const student = await this._studentRepository.findByInvitationToken(token);
-    
+
     if (!student) {
       throw new AppError("Invalid or expired invitation token", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }

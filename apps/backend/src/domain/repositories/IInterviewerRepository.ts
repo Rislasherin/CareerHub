@@ -9,6 +9,6 @@ export interface IInterviewerRepository extends IBaseRepository<Interviewer> {
   updateStatus(id: string, status: string, blockedBy?: string): Promise<void>;
   findDeletedById(id: string): Promise<Interviewer | null>;
   restore(id: string): Promise<void>;
-  findPendingStartWithA(): Promise<Interviewer[]>;
+
 }
 

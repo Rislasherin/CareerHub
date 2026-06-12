@@ -13,7 +13,7 @@ export class VerifyInterviewerTokenUseCase implements IVerifyInterviewerTokenUse
   constructor(
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _jwtService: IJwtService
-  ) {}
+  ) { }
 
   async execute(token: string): Promise<any> {
     try {

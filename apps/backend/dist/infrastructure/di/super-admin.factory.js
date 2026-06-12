@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeSuperAdminController = exports.makeDeleteUserUseCase = exports.makeUpdateUserStatusUseCase = exports.makeSuperAdminAuthController = exports.makeLoginSuperAdminUseCase = exports.makeGetInterviewersUseCase = exports.makeGetCompaniesUseCase = exports.makeGetStudentsUseCase = exports.makeGetOrganizationsUseCase = exports.makeGetDashboardStatsUseCase = void 0;
+exports.makeSuperAdminController = exports.makeUpdateOrganizationPlanUseCase = exports.makeDeleteUserUseCase = exports.makeUpdateUserStatusUseCase = exports.makeSuperAdminAuthController = exports.makeLoginSuperAdminUseCase = exports.makeGetInterviewersUseCase = exports.makeGetCompaniesUseCase = exports.makeGetStudentsUseCase = exports.makeGetOrganizationsUseCase = exports.makeGetDashboardStatsUseCase = void 0;
 const GetDashboardStats_usecase_1 = require("@application/usecases/super-admin/GetDashboardStats.usecase");
 const GetOrganizations_usecase_1 = require("@application/usecases/super-admin/GetOrganizations.usecase");
 const GetStudents_usecase_1 = require("@application/usecases/super-admin/GetStudents.usecase");
@@ -12,19 +12,19 @@ const super_admin_controller_1 = require("@presentation/http/controllers/super-a
 // Let's assume organizationRepository is also in the container, if not I'll create it
 const orgRepository = new organization_repository_1.OrganizationRepository();
 const makeGetDashboardStatsUseCase = () => {
-    return new GetDashboardStats_usecase_1.GetDashboardStatsUseCase(orgRepository, infra_container_1.studentRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository);
+    return new GetDashboardStats_usecase_1.GetDashboardStatsUseCase(orgRepository, infra_container_1.studentRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeGetDashboardStatsUseCase = makeGetDashboardStatsUseCase;
 const makeGetOrganizationsUseCase = () => {
-    return new GetOrganizations_usecase_1.GetOrganizationsUseCase(orgRepository);
+    return new GetOrganizations_usecase_1.GetOrganizationsUseCase(orgRepository, infra_container_1.studentRepository, infra_container_1.collegeAdminRepository);
 };
 exports.makeGetOrganizationsUseCase = makeGetOrganizationsUseCase;
 const makeGetStudentsUseCase = () => {
-    return new GetStudents_usecase_1.GetStudentsUseCase(infra_container_1.studentRepository);
+    return new GetStudents_usecase_1.GetStudentsUseCase(infra_container_1.studentRepository, orgRepository);
 };
 exports.makeGetStudentsUseCase = makeGetStudentsUseCase;
 const makeGetCompaniesUseCase = () => {
-    return new GetCompanies_usecase_1.GetCompaniesUseCase(infra_container_1.companyRepository);
+    return new GetCompanies_usecase_1.GetCompaniesUseCase(infra_container_1.comptypeRepository, infra_container_1.hrUserRepository);
 };
 exports.makeGetCompaniesUseCase = makeGetCompaniesUseCase;
 const makeGetInterviewersUseCase = () => {
@@ -44,15 +44,20 @@ const makeSuperAdminAuthController = () => {
 exports.makeSuperAdminAuthController = makeSuperAdminAuthController;
 const UpdateUserStatus_usecase_1 = require("@application/usecases/super-admin/UpdateUserStatus.usecase");
 const DeleteUser_usecase_1 = require("@application/usecases/super-admin/DeleteUser.usecase");
+const UpdateOrganizationPlan_usecase_1 = require("@application/usecases/super-admin/UpdateOrganizationPlan.usecase");
 const makeUpdateUserStatusUseCase = () => {
-    return new UpdateUserStatus_usecase_1.UpdateUserStatusUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository);
+    return new UpdateUserStatus_usecase_1.UpdateUserStatusUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeUpdateUserStatusUseCase = makeUpdateUserStatusUseCase;
 const makeDeleteUserUseCase = () => {
-    return new DeleteUser_usecase_1.DeleteUserUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.companyRepository, infra_container_1.interviewerRepository);
+    return new DeleteUser_usecase_1.DeleteUserUseCase(infra_container_1.studentRepository, orgRepository, infra_container_1.comptypeRepository, infra_container_1.interviewerRepository, infra_container_1.hrUserRepository);
 };
 exports.makeDeleteUserUseCase = makeDeleteUserUseCase;
+const makeUpdateOrganizationPlanUseCase = () => {
+    return new UpdateOrganizationPlan_usecase_1.UpdateOrganizationPlanUseCase(orgRepository);
+};
+exports.makeUpdateOrganizationPlanUseCase = makeUpdateOrganizationPlanUseCase;
 const makeSuperAdminController = () => {
-    return new super_admin_controller_1.SuperAdminController((0, exports.makeGetDashboardStatsUseCase)(), (0, exports.makeGetOrganizationsUseCase)(), (0, exports.makeGetStudentsUseCase)(), (0, exports.makeGetCompaniesUseCase)(), (0, exports.makeGetInterviewersUseCase)(), (0, exports.makeUpdateUserStatusUseCase)(), (0, exports.makeDeleteUserUseCase)());
+    return new super_admin_controller_1.SuperAdminController((0, exports.makeGetDashboardStatsUseCase)(), (0, exports.makeGetOrganizationsUseCase)(), (0, exports.makeGetStudentsUseCase)(), (0, exports.makeGetCompaniesUseCase)(), (0, exports.makeGetInterviewersUseCase)(), (0, exports.makeUpdateUserStatusUseCase)(), (0, exports.makeDeleteUserUseCase)(), (0, exports.makeUpdateOrganizationPlanUseCase)());
 };
 exports.makeSuperAdminController = makeSuperAdminController;

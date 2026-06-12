@@ -18,35 +18,42 @@ exports.RegisterStudentRequestDto = RegisterStudentRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "First name is required" }),
+    (0, class_validator_1.MinLength)(2, { message: "First name must be at least 2 characters long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "First name cannot exceed 50 characters" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "Last name is required" }),
+    (0, class_validator_1.MinLength)(1, { message: "Last name must be at least 1 character long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "Last name cannot exceed 50 characters" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.MinLength)(6, { message: "Password must be at least 6 characters long" }),
+    (0, class_validator_1.MaxLength)(100, { message: "Password cannot exceed 100 characters" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "password", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "College ID is required" }),
+    (0, class_validator_1.MaxLength)(100, { message: "College ID cannot exceed 100 characters" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "collegeId", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: "Proof URL is required" }),
+    (0, class_validator_1.MaxLength)(2000, { message: "Proof URL cannot exceed 2000 characters" }),
     __metadata("design:type", String)
 ], RegisterStudentRequestDto.prototype, "proofUrl", void 0);

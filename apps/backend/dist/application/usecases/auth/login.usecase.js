@@ -27,7 +27,7 @@ class LoginUseCase {
             role: account.getRole(),
             email: account.getEmail(),
             organizationId: account.getOrganizationId(),
-            companyId: account.getCompanyId(),
+            comptypeId: account.getComptypeId(),
         };
         const accessToken = this.tokenService.generateAccessToken(payload);
         const refreshToken = this.tokenService.generateRefreshToken(payload);

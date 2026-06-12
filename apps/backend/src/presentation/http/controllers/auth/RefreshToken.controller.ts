@@ -21,7 +21,7 @@ export class RefreshTokenController {
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _superAdminRepository: ISuperAdminRepository
-  ) {}
+  ) { }
 
   refresh = asyncHandler(async (req: Request, res: Response) => {
     const refreshToken: string | undefined = req.cookies?.refreshToken;

@@ -18,7 +18,7 @@ export interface IUpdateInterviewerUseCase {
 }
 
 export class UpdateInterviewerUseCase implements IUpdateInterviewerUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
 
   async execute(
     companyId: string,

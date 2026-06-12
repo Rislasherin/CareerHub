@@ -8,7 +8,7 @@ const http_status_constants_1 = require("@shared/constants/http-status.constants
 const cookie_constants_1 = require("@shared/constants/cookie.constants");
 const auth_error_1 = require("@application/errors/auth.error");
 class AuthController {
-    constructor(loginUseCases, refreshTokenUseCase, logoutUseCase, forgotPasswordUseCase, resetPasswordUseCase, studentSetPasswordUseCase, collegeSignupUseCase, companySignupUseCase) {
+    constructor(loginUseCases, refreshTokenUseCase, logoutUseCase, forgotPasswordUseCase, resetPasswordUseCase, studentSetPasswordUseCase, collegeSignupUseCase, comptypeSignupUseCase) {
         this.loginUseCases = loginUseCases;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
@@ -16,7 +16,7 @@ class AuthController {
         this.resetPasswordUseCase = resetPasswordUseCase;
         this.studentSetPasswordUseCase = studentSetPasswordUseCase;
         this.collegeSignupUseCase = collegeSignupUseCase;
-        this.companySignupUseCase = companySignupUseCase;
+        this.comptypeSignupUseCase = comptypeSignupUseCase;
         this.login = (0, asyncHandler_util_1.asyncHandler)(async (request, response) => {
             const dto = request.body;
             const useCase = this.loginUseCases.get(dto.role);
@@ -69,9 +69,9 @@ class AuthController {
             const result = await this.collegeSignupUseCase.execute(request.body);
             (0, response_util_1.sendSuccess)(response, result, message_constants_1.MESSAGE_CONSTANTS.SIGNUP.COLLEGE_CREATED, http_status_constants_1.HTTP_STATUS.CREATED);
         });
-        this.companySignup = (0, asyncHandler_util_1.asyncHandler)(async (request, response) => {
-            const result = await this.companySignupUseCase.execute(request.body);
-            (0, response_util_1.sendSuccess)(response, result, message_constants_1.MESSAGE_CONSTANTS.SIGNUP.COMPANY_CREATED, http_status_constants_1.HTTP_STATUS.CREATED);
+        this.comptypeSignup = (0, asyncHandler_util_1.asyncHandler)(async (request, response) => {
+            const result = await this.comptypeSignupUseCase.execute(request.body);
+            (0, response_util_1.sendSuccess)(response, result, message_constants_1.MESSAGE_CONSTANTS.SIGNUP.COMPtype_CREATED, http_status_constants_1.HTTP_STATUS.CREATED);
         });
     }
     attachRefreshCookie(response, refreshToken) {

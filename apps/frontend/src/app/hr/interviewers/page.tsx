@@ -1,24 +1,25 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Users, Search, Plus, UserX, UserCheck, Mail, Building2, MoreVertical, Loader2, RotateCw, Pencil, Trash2 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
-import { 
-  getInterviewers, 
-  addInterviewer, 
-  toggleInterviewerStatus, 
-  resendInterviewerInvite, 
-  updateInterviewer, 
-  deleteInterviewer, 
+import {
+  getInterviewers,
+  addInterviewer,
+  toggleInterviewerStatus,
+  resendInterviewerInvite,
+  updateInterviewer,
+  deleteInterviewer,
   restoreInterviewer,
-  Interviewer 
+  Interviewer
 } from '@/services/hr/interviewer.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
+import { Table, Column } from '@/components/shared/Table';
 
 export default function InterviewersPage() {
   const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
@@ -32,7 +33,7 @@ export default function InterviewersPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [isResending, setIsResending] = useState<string | null>(null);
   const [isToggling, setIsToggling] = useState(false);
-  
+
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingInterviewer, setEditingInterviewer] = useState<Interviewer | null>(null);
@@ -70,7 +71,7 @@ export default function InterviewersPage() {
     interviewerId: '',
     action: 'block',
   });
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -99,7 +100,7 @@ export default function InterviewersPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast.error('All fields are required');
       return;
@@ -142,7 +143,7 @@ export default function InterviewersPage() {
       firstName: interviewer.firstName,
       lastName: interviewer.lastName,
       designation: interviewer.designation || '',
-      specialization: (interviewer as any).specialization || '',
+      specialization: (interviewer as type).specialization || '',
     });
     setIsEditModalOpen(true);
   };
@@ -262,6 +263,104 @@ export default function InterviewersPage() {
     }
   };
 
+  const columns: Column<Interviewer>[] = useMemo(() => [
+    {
+      header: 'Interviewer',
+      render: (interviewer) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm uppercase">
+            {interviewer.firstName?.[0] || ''}{interviewer.lastName?.[0] || ''}
+          </div>
+          <div>
+            <div className="font-bold text-white">
+              {interviewer.firstName || 'Unknown'} {interviewer.lastName || 'Interviewer'}
+            </div>
+            <div className="text-xs text-slate-400 font-medium">{interviewer.email}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Designation',
+      render: (interviewer) => (
+        <span className="text-sm font-medium text-slate-300">{interviewer.designation || 'Interviewer'}</span>
+      )
+    },
+    {
+      header: 'Status',
+      render: (interviewer) => (
+        interviewer.isDeleted ? (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold capitalize bg-slate-100 text-slate-500">
+            Archived
+          </span>
+        ) : (
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold capitalize
+            ${interviewer.status?.toUpperCase() === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' :
+              interviewer.status?.toUpperCase() === 'BLOCKED' ? 'bg-red-50 text-red-600' :
+                'bg-amber-50 text-amber-600'}`}
+          >
+            {interviewer.status}
+          </span>
+        )
+      )
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      render: (interviewer) => (
+        <div className="flex items-center justify-end gap-1">
+          {interviewer.isDeleted ? (
+            <button
+              onClick={() => handleRestoreClick(interviewer.id, `${interviewer.firstName} ${interviewer.lastName}`)}
+              className="p-2 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+              title="Restore Access"
+            >
+              <RotateCw size={18} />
+            </button>
+          ) : (
+            <>
+              {interviewer.status?.toLowerCase() === 'pending' ? (
+                <button
+                  onClick={() => handleResendInvite(interviewer.id)}
+                  disabled={isResending === interviewer.id}
+                  className="p-2 rounded-lg text-amber-500 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                  title="Resend Invitation Link"
+                >
+                  <RotateCw size={18} className={isResending === interviewer.id ? 'animate-spin' : ''} />
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleEditClick(interviewer)}
+                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Edit Profile Details"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatusRequest(interviewer.id, interviewer.status)}
+                    className={`p-2 rounded-lg transition-colors ${interviewer.status?.toUpperCase() === 'ACTIVE' ? 'text-amber-500 hover:bg-amber-500/20' : 'text-emerald-500 hover:bg-emerald-500/20'
+                      }`}
+                    title={interviewer.status?.toUpperCase() === 'ACTIVE' ? 'Block Access' : 'Unblock Access'}
+                  >
+                    {interviewer.status?.toUpperCase() === 'ACTIVE' ? <UserX size={18} /> : <UserCheck size={18} />}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => handleDeleteClick(interviewer.id, `${interviewer.firstName} ${interviewer.lastName}`)}
+                className="p-2 rounded-lg text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                title="Remove Interviewer"
+              >
+                <Trash2 size={18} />
+              </button>
+            </>
+          )}
+        </div>
+      )
+    }
+  ], [handleRestoreClick, handleResendInvite, isResending, handleEditClick, handleToggleStatusRequest, handleDeleteClick]);
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -282,7 +381,7 @@ export default function InterviewersPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
+              <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={query}
@@ -293,9 +392,9 @@ export default function InterviewersPage() {
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               />
             </div>
-            
+
             <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input 
+              <input
                 type="checkbox"
                 checked={includeDeleted}
                 onChange={(e) => {
@@ -308,153 +407,23 @@ export default function InterviewersPage() {
             </label>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-slate-400">Interviewer</th>
-                  <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-slate-400">Designation</th>
-                  <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-slate-400 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-slate-400">
-                      <Loader2 className="animate-spin mx-auto" size={24} />
-                    </td>
-                  </tr>
-                ) : interviewers.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-slate-500 font-medium">
-                      No interviewers found.
-                    </td>
-                  </tr>
-                ) : (
-                  interviewers.map((interviewer) => (
-                    <tr 
-                      key={interviewer.id} 
-                      className={`hover:bg-slate-50/50 transition-colors ${interviewer.isDeleted ? 'opacity-65 bg-slate-50/30' : ''}`}
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                            {interviewer.firstName[0]}{interviewer.lastName[0]}
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-900">{interviewer.firstName} {interviewer.lastName}</div>
-                            <div className="text-xs text-slate-500 font-medium">{interviewer.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm font-medium text-slate-600">{interviewer.designation || 'Interviewer'}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        {interviewer.isDeleted ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold capitalize bg-slate-100 text-slate-500">
-                            Archived
-                          </span>
-                        ) : (
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold capitalize
-                            ${interviewer.status?.toUpperCase() === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 
-                              interviewer.status?.toUpperCase() === 'BLOCKED' ? 'bg-red-50 text-red-600' : 
-                              'bg-amber-50 text-amber-600'}`}
-                          >
-                            {interviewer.status}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {interviewer.isDeleted ? (
-                            <button 
-                              onClick={() => handleRestoreClick(interviewer.id, `${interviewer.firstName} ${interviewer.lastName}`)}
-                              className="p-2 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
-                              title="Restore Access"
-                            >
-                              <RotateCw size={18} />
-                            </button>
-                          ) : (
-                            <>
-                              {interviewer.status?.toLowerCase() === 'pending' ? (
-                                <button 
-                                  onClick={() => handleResendInvite(interviewer.id)}
-                                  disabled={isResending === interviewer.id}
-                                  className="p-2 rounded-lg text-amber-500 hover:bg-amber-50 transition-colors disabled:opacity-50"
-                                  title="Resend Invitation Link"
-                                >
-                                  <RotateCw size={18} className={isResending === interviewer.id ? 'animate-spin' : ''} />
-                                </button>
-                              ) : (
-                                <>
-                                  <button 
-                                    onClick={() => handleEditClick(interviewer)}
-                                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-                                    title="Edit Profile Details"
-                                  >
-                                    <Pencil size={18} />
-                                  </button>
-                                  <button 
-                                    onClick={() => handleToggleStatusRequest(interviewer.id, interviewer.status)}
-                                    className={`p-2 rounded-lg transition-colors ${
-                                      interviewer.status?.toUpperCase() === 'ACTIVE' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'
-                                    }`}
-                                    title={interviewer.status?.toUpperCase() === 'ACTIVE' ? 'Block Access' : 'Unblock Access'}
-                                  >
-                                    {interviewer.status?.toUpperCase() === 'ACTIVE' ? <UserX size={18} /> : <UserCheck size={18} />}
-                                  </button>
-                                </>
-                              )}
-                              <button 
-                                onClick={() => handleDeleteClick(interviewer.id, `${interviewer.firstName} ${interviewer.lastName}`)}
-                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                title="Remove Interviewer"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 mt-4 pt-4 px-4">
-              <span className="text-sm font-medium text-slate-500">
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} results
-              </span>
-              <div className="flex items-center gap-2">
-                <button 
-                  disabled={page === 1}
-                  onClick={() => setPage(p => p - 1)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button 
-                  disabled={page === totalPages}
-                  onClick={() => setPage(p => p + 1)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          <Table
+            columns={columns}
+            data={interviewers}
+            isLoading={isLoading}
+            emptyMessage="No interviewers found."
+            page={page}
+            total={total}
+            pageSize={limit}
+            onPageChange={setPage}
+          />
         </GlassCard>
 
         {/* Add Modal */}
         <AnimatePresence>
           {isModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -467,32 +436,32 @@ export default function InterviewersPage() {
 
                 <form noValidate onSubmit={handleAddSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                      <Input 
-                        label="First Name" 
-                        placeholder="John" 
-                        value={formData.firstName}
-                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                      />
-                      <Input 
-                        label="Last Name" 
-                        placeholder="Doe" 
-                        value={formData.lastName}
-                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                      />
+                    <Input
+                      label="First Name"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    />
+                    <Input
+                      label="Last Name"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    />
                   </div>
-                  <Input 
-                    label="Email Address" 
+                  <Input
+                    label="Email Address"
                     type="email"
                     icon={<Mail size={18} />}
-                    placeholder="john.doe@company.com" 
+                    placeholder="john.doe@company.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
 
                   <div className="flex gap-3 pt-4">
-                    <button 
-                      type="button" 
-                      onClick={() => setIsModalOpen(false)} 
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
                       className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold h-12 rounded-xl transition-all duration-200 flex items-center justify-center"
                     >
                       Cancel
@@ -511,7 +480,7 @@ export default function InterviewersPage() {
         <AnimatePresence>
           {isEditModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -524,36 +493,36 @@ export default function InterviewersPage() {
 
                 <form noValidate onSubmit={handleEditSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                      <Input 
-                        label="First Name" 
-                        placeholder="John" 
-                        value={editFormData.firstName}
-                        onChange={(e) => setEditFormData({...editFormData, firstName: e.target.value})}
-                      />
-                      <Input 
-                        label="Last Name" 
-                        placeholder="Doe" 
-                        value={editFormData.lastName}
-                        onChange={(e) => setEditFormData({...editFormData, lastName: e.target.value})}
-                      />
+                    <Input
+                      label="First Name"
+                      placeholder="John"
+                      value={editFormData.firstName}
+                      onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
+                    />
+                    <Input
+                      label="Last Name"
+                      placeholder="Doe"
+                      value={editFormData.lastName}
+                      onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
+                    />
                   </div>
-                  <Input 
-                    label="Designation" 
-                    placeholder="Senior Developer / Tech Lead" 
+                  <Input
+                    label="Designation"
+                    placeholder="Senior Developer / Tech Lead"
                     value={editFormData.designation}
-                    onChange={(e) => setEditFormData({...editFormData, designation: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, designation: e.target.value })}
                   />
-                  <Input 
-                    label="Specialization" 
-                    placeholder="System Design, Algorithms" 
+                  <Input
+                    label="Specialization"
+                    placeholder="System Design, Algorithms"
                     value={editFormData.specialization}
-                    onChange={(e) => setEditFormData({...editFormData, specialization: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, specialization: e.target.value })}
                   />
 
                   <div className="flex gap-3 pt-4">
-                    <button 
-                      type="button" 
-                      onClick={() => setIsEditModalOpen(false)} 
+                    <button
+                      type="button"
+                      onClick={() => setIsEditModalOpen(false)}
                       className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold h-12 rounded-xl transition-all duration-200 flex items-center justify-center"
                     >
                       Cancel
@@ -569,7 +538,7 @@ export default function InterviewersPage() {
         </AnimatePresence>
 
         {/* Status Confirmation Modal */}
-        <ConfirmModal 
+        <ConfirmModal
           isOpen={confirmConfig.isOpen}
           onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
           onConfirm={handleConfirmToggle}
@@ -581,7 +550,7 @@ export default function InterviewersPage() {
         />
 
         {/* Delete Confirmation Modal */}
-        <ConfirmModal 
+        <ConfirmModal
           isOpen={deleteConfirmConfig.isOpen}
           onClose={() => setDeleteConfirmConfig({ ...deleteConfirmConfig, isOpen: false, interviewerId: '', interviewerName: '' })}
           onConfirm={handleConfirmDelete}
@@ -593,7 +562,7 @@ export default function InterviewersPage() {
         />
 
         {/* Restore Confirmation Modal */}
-        <ConfirmModal 
+        <ConfirmModal
           isOpen={restoreConfirmConfig.isOpen}
           onClose={() => setRestoreConfirmConfig({ ...restoreConfirmConfig, isOpen: false, interviewerId: '', interviewerName: '' })}
           onConfirm={handleConfirmRestore}

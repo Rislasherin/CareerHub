@@ -11,11 +11,11 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
     private readonly _orgRepository: IOrganizationRepository,
     private readonly _studentRepository: IStudentRepository,
     private readonly _collegeAdminRepository: ICollegeAdminRepository
-  ) {}
+  ) { }
 
   async execute(query: string, page: number, limit: number) {
     const { organizations, total } = await this._orgRepository.searchOrganizations(query, page, limit);
-    
+
     const enrichedOrgs = await Promise.all(organizations.map(async (org) => {
       const [studentCount, admin] = await Promise.all([
         this._studentRepository.count({ collegeId: org.id }),

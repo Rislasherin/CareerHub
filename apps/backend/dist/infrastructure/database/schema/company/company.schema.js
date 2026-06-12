@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompanySchema = void 0;
+exports.ComptypeSchema = void 0;
 const mongoose_1 = require("mongoose");
-exports.CompanySchema = new mongoose_1.Schema({
+exports.ComptypeSchema = new mongoose_1.Schema({
     name: {
         type: String,
         required: true,
@@ -33,15 +33,23 @@ exports.CompanySchema = new mongoose_1.Schema({
         type: String,
         required: false,
     },
+    website: { type: String, required: false },
+    logoUrl: { type: String, required: false },
+    industry: { type: String, required: false },
+    headquarters: { type: String, required: false },
+    description: { type: String, required: false },
+    contactJobTitle: { type: String, required: false },
+    preferredColleges: [{ type: String }],
     onboardingStep: {
         type: Number,
-        default: 1,
+        default: 0,
     },
     status: {
         type: String,
-        enum: ["active", "inactive", "pending"],
-        default: "pending",
+        required: true,
     },
+    blockedBy: { type: String, required: false },
+    isDeleted: { type: Boolean, default: false, index: true },
 }, {
     timestamps: true,
 });

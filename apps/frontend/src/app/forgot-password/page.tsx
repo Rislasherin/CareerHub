@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     try {
       forgotPasswordSchema.parse({ email });
     } catch (err) {
@@ -51,8 +51,8 @@ export default function ForgotPasswordPage() {
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.08),transparent_50%),radial-gradient(circle_at_80%_70%,rgba(16,185,129,0.05),transparent_50%)]" />
       </div>
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -76,9 +76,9 @@ export default function ForgotPasswordPage() {
               <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Email</label>
-                  <Input 
+                  <Input
                     type="email"
-                    icon={<Mail size={20} className="text-slate-400" />} 
+                    icon={<Mail size={20} className="text-slate-400" />}
                     placeholder="name@company.com"
                     value={email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}

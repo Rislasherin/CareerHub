@@ -16,13 +16,13 @@ export class ActivateInterviewerUseCase implements IActivateInterviewerUseCase {
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _bcryptService: IBcryptService,
     private readonly _jwtService: IJwtService
-  ) {}
+  ) { }
 
   async execute(interviewerId: string, password: string, emailFromQuery?: string) {
     console.log(`[ACTIVATE] Attempting to activate interviewer. ID: ${interviewerId}, Email: ${emailFromQuery}`);
-    
+
     let interviewer = await this._interviewerRepository.findById(interviewerId);
-    
+
     if (interviewer) {
       console.log(`[ACTIVATE] Found interviewer by ID: ${interviewer.email}`);
     }
@@ -57,9 +57,9 @@ export class ActivateInterviewerUseCase implements IActivateInterviewerUseCase {
     await this._interviewerRepository.update(interviewer.id!, updatedInterviewer);
 
     const payload = {
-        id: updatedInterviewer.id!,
-        role: updatedInterviewer.role,
-        companyId: updatedInterviewer.companyId,
+      id: updatedInterviewer.id!,
+      role: updatedInterviewer.role,
+      companyId: updatedInterviewer.companyId,
     };
 
     const accessToken = this._jwtService.signAccessToken(payload);

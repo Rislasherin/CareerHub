@@ -23,10 +23,10 @@ export class StudentManagementController {
     private readonly _getDashboardStatsUseCase: IGetCollegeDashboardStatsUseCase,
     private readonly _getAllStudentsUseCase: IGetAllStudentsUseCase,
     private readonly _toggleStatusUseCase: IToggleStudentStatusUseCase
-  ) {}
+  ) { }
 
   getPendingStudents = asyncHandler(async (req: any, res: Response) => {
-    const orgId = req.user?.orgId; 
+    const orgId = req.user?.orgId;
     const status = req.query.status as any;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);

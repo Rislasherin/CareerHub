@@ -29,12 +29,12 @@ exports.MESSAGE_CONSTANTS = {
     },
     SIGNUP: {
         COLLEGE_CREATED: "College account created successfully.",
-        COMPANY_CREATED: "Company account created successfully.",
+        COMPtype_CREATED: "Comptype account created successfully.",
     },
     CONFLICT: {
         EMAIL_EXISTS: "Email is already registered.",
         ORGANIZATION_EXISTS: "Organization already exists.",
-        COMPANY_EXISTS: "Company already exists.",
+        COMPtype_EXISTS: "Comptype already exists.",
         ROLL_NUMBER_EXISTS: "Roll number is already registered for this college.",
     },
     STUDENT: {

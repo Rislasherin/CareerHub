@@ -4,9 +4,15 @@ exports.InterviewerAuthController = void 0;
 const asyncHandler_util_1 = require("@shared/utils/asyncHandler.util");
 const response_util_1 = require("@shared/utils/response.util");
 class InterviewerAuthController {
-    constructor(activateUseCase, loginUseCase) {
+    constructor(activateUseCase, loginUseCase, verifyTokenUseCase) {
         this.activateUseCase = activateUseCase;
         this.loginUseCase = loginUseCase;
+        this.verifyTokenUseCase = verifyTokenUseCase;
+        this.verifyToken = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
+            const { token } = req.params;
+            const result = await this.verifyTokenUseCase.execute(token);
+            (0, response_util_1.sendSuccess)(res, result, "Token verified successfully");
+        });
         this.activate = (0, asyncHandler_util_1.asyncHandler)(async (req, res) => {
             // @ts-ignore
             const interviewerId = req.user.id;

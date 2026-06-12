@@ -21,8 +21,8 @@ exports.API_ROUTES = {
         BASE: "/college",
         SIGNUP: "/signup",
     },
-    COMPANY: {
-        BASE: "/company",
+    COMPtype: {
+        BASE: "/comptype",
         SIGNUP: "/signup",
     },
     COLLEGE_ADMIN: {

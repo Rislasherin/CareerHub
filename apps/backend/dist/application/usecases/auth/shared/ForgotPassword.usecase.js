@@ -13,7 +13,7 @@ class ForgotPasswordUseCase {
         this.superAdminRepo = superAdminRepo;
     }
     async execute(email) {
-        // 1. Find user in any of the repositories
+        // 1. Find user in type of the repositories
         let user = null;
         let role = '';
         user = await this.studentRepo.findByEmail(email);

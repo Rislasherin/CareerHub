@@ -10,4 +10,6 @@ var UserStatus;
     UserStatus["PENDING_INVITE"] = "PENDING_INVITE";
     UserStatus["PENDING_VERIFICATION"] = "PENDING_VERIFICATION";
     UserStatus["REJECTED"] = "REJECTED";
+    UserStatus["PLACED"] = "PLACED";
+    UserStatus["IN_PROCESS"] = "IN_PROCESS";
 })(UserStatus || (exports.UserStatus = UserStatus = {}));
