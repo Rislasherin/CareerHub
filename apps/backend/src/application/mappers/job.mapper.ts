@@ -91,7 +91,7 @@ export const toJobPersistence = (entity: Job) => {
     description: props.description,
     requiredSkills: props.requiredSkills,
     preferredSkills: props.preferredSkills || [],
-    rounds: props.rounds.map((round: any) => ({
+    rounds: props.rounds.map((round) => ({
       roundNumber: round.roundNumber,
       name: round.name,
       type: round.type,
