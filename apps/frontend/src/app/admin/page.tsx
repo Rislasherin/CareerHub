@@ -34,7 +34,7 @@ import { useAppSelector } from '@/redux/hooks';
 import { RootState } from '@/redux/store';
 
 export default function SuperAdminDashboard() {
-   const [stats, setStats] = useState<type>(null);
+   const [stats, setStats] = useState<any>(null);
    const [isLoading, setIsLoading] = useState(true);
 
    useEffect(() => {
