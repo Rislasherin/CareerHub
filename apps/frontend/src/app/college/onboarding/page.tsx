@@ -16,6 +16,7 @@ import * as z from 'zod';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { updateCollegeOnboarding, logoutUser } from '@/services/auth/auth.service';
+import { PLATFORM_BRANCHES } from '@/constants/academic';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setCollegeAdminDetails, clearCollegeAdminDetails } from '@/redux/slices/collegeAdminSlice';
@@ -75,14 +76,16 @@ export default function CollegeOnboardingPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [branchInput, setBranchInput] = useState('');
+  const [customBranch, setCustomBranch] = useState('');
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<CollegeFormValues>({
+  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<CollegeFormValues>({
     resolver: zodResolver(
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :
           step3Schema
-    ) as type,
+    ) as any,
+    mode: 'onChange',
     defaultValues: {
       name: '',
       shortName: '',
@@ -91,8 +94,8 @@ export default function CollegeOnboardingPage() {
       address: '',
       naacGrade: '',
       activeBranches: [] as string[],
-      currentAcademicYear: '2024 - 2025',
-      activePlacementBatch: 'Batch 2025',
+      currentAcademicYear: '',
+      activePlacementBatch: '',
       plan: 'pro' as 'basic' | 'pro',
       logoUrl: ''
     }
@@ -115,9 +118,11 @@ export default function CollegeOnboardingPage() {
   };
 
   const addBranch = () => {
-    if (branchInput.trim() && !activeBranches.includes(branchInput.trim())) {
-      setValue('activeBranches', [...activeBranches, branchInput.trim()], { shouldValidate: true });
-      setBranchInput('');
+    const valueToAdd = branchInput === 'custom' ? customBranch.trim() : branchInput.trim();
+    if (valueToAdd && !activeBranches.includes(valueToAdd)) {
+      setValue('activeBranches', [...activeBranches, valueToAdd], { shouldValidate: true });
+      if (branchInput !== 'custom') setBranchInput('');
+      setCustomBranch('');
     }
   };
 
@@ -125,16 +130,17 @@ export default function CollegeOnboardingPage() {
     setValue('activeBranches', activeBranches.filter(b => b !== branch), { shouldValidate: true });
   };
 
-  const onSubmit = async (data: type) => {
+  const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedOrg = await updateCollegeOnboarding({ ...data, step: currentStep });
+      const updatedOrg = await updateCollegeOnboarding({ ...data, step: currentStep }) as any;
 
       if (collegeAdminDetails) {
         dispatch(setCollegeAdminDetails({
           ...collegeAdminDetails,
           collegeName: updatedOrg.name,
           onboardingStep: updatedOrg.onboardingStep,
+          activeBranches: updatedOrg.activeBranches || collegeAdminDetails.activeBranches || [],
           status: updatedOrg.status || collegeAdminDetails.status
         }));
       }
@@ -205,7 +211,7 @@ export default function CollegeOnboardingPage() {
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
               <AnimatePresence mode="wait">
-                {currentStep === 1 && (
+                {currentStep === 1 ? (
                   <motion.div
                     key="step1"
                     initial={{ opacity: 0, x: 10 }}
@@ -292,9 +298,7 @@ export default function CollegeOnboardingPage() {
                       </div>
                     </div>
                   </motion.div>
-                )}
-
-                {currentStep === 2 && (
+                ) : currentStep === 2 ? (
                   <motion.div
                     key="step2"
                     initial={{ opacity: 0, x: 10 }}
@@ -310,22 +314,29 @@ export default function CollegeOnboardingPage() {
 
                       <div className="flex gap-2">
                         <div className="flex-1">
-                          <select
-                            className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 h-12 text-sm font-medium outline-none focus:border-emerald-500 appearance-none cursor-pointer"
-                            value={branchInput}
-                            onChange={(e: type) => setBranchInput(e.target.value)}
-                          >
-                            <option value="">Select a branch to add...</option>
-                            <option value="Computer Science and Engineering">B.Tech - CS & Engineering</option>
-                            <option value="Information Technology">B.Tech - Information Technology</option>
-                            <option value="Artificial Intelligence & Data Science">B.Tech - AI & Data Science</option>
-                            <option value="MCA">MCA (Master of Computer Applications)</option>
-                            <option value="M.Tech - Computer Science">M.Tech - Computer Science</option>
-                            <option value="M.Tech - IT">M.Tech - IT</option>
-                            <option value="M.Sc - Computer Science">M.Sc - Computer Science</option>
-                            <option value="Cyber Security">Cyber Security</option>
-                            <option value="Software Engineering">Software Engineering</option>
-                          </select>
+                          <div className="flex flex-col gap-2 w-full">
+                            <select
+                              className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 h-12 text-sm font-medium outline-none focus:border-emerald-500 appearance-none cursor-pointer"
+                              value={branchInput}
+                              onChange={(e) => setBranchInput(e.target.value)}
+                            >
+                              <option value="">Select a branch to add...</option>
+                              {PLATFORM_BRANCHES.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                              <option value="custom">Other (Add Custom Branch)...</option>
+                            </select>
+                            {branchInput === 'custom' && (
+                              <input
+                                type="text"
+                                placeholder="Type your custom branch name..."
+                                className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 h-12 text-sm font-medium outline-none focus:border-emerald-500"
+                                value={customBranch}
+                                onChange={(e) => setCustomBranch(e.target.value)}
+                                autoFocus
+                              />
+                            )}
+                          </div>
                         </div>
                         <Button type="button" onClick={addBranch} className="h-12 px-6 bg-emerald-50 text-emerald-600 border-none hover:bg-emerald-100 font-bold transition-all">
                           + Add
@@ -352,8 +363,9 @@ export default function CollegeOnboardingPage() {
                           className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 h-12 text-sm font-bold text-slate-900 appearance-none cursor-pointer outline-none focus:border-emerald-500"
                           {...register('currentAcademicYear')}
                         >
-                          <option>2024 - 2025</option>
-                          <option>2025 - 2026</option>
+                          <option value="" disabled>Select Year</option>
+                          <option value="2024 - 2025">2024 - 2025</option>
+                          <option value="2025 - 2026">2025 - 2026</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -362,15 +374,14 @@ export default function CollegeOnboardingPage() {
                           className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 h-12 text-sm font-bold text-slate-900 appearance-none cursor-pointer outline-none focus:border-emerald-500"
                           {...register('activePlacementBatch')}
                         >
-                          <option>Batch 2025</option>
-                          <option>Batch 2026</option>
+                          <option value="" disabled>Select Batch</option>
+                          <option value="Batch 2025">Batch 2025</option>
+                          <option value="Batch 2026">Batch 2026</option>
                         </select>
                       </div>
                     </div>
                   </motion.div>
-                )}
-
-                {currentStep === 3 && (
+                ) : currentStep === 3 ? (
                   <motion.div
                     key="step3"
                     initial={{ opacity: 0, x: 10 }}
@@ -435,9 +446,7 @@ export default function CollegeOnboardingPage() {
                       </div>
                     </div>
                   </motion.div>
-                )}
-
-                {currentStep === 4 && (
+                ) : currentStep === 4 ? (
                   <motion.div
                     key="step4"
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -477,7 +486,7 @@ export default function CollegeOnboardingPage() {
                       Go to Dashboard <ArrowRight size={18} />
                     </Button>
                   </motion.div>
-                )}
+                ) : null}
               </AnimatePresence>
 
               {/* Navigation Buttons - Fixed at bottom */}
@@ -505,8 +514,9 @@ export default function CollegeOnboardingPage() {
 
                   <Button
                     type="submit"
+                    disabled={!isValid}
                     isLoading={isLoading}
-                    className="px-10 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] text-white font-black shadow-xl shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
+                    className="px-10 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] text-white font-black shadow-xl shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all flex items-center gap-2 border-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Continue <ArrowRight size={18} />
                   </Button>
