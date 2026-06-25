@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
@@ -17,15 +17,49 @@ import {
   Bell,
   CheckCircle2,
   ShieldCheck,
-  UserCircle
+  UserCircle,
+  AlertCircle,
+  X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useAppSelector } from '@/redux/hooks';
+import { getStudentProfile } from '@/services/student/profile.service';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const user = useAppSelector((state) => state.student.details);
+  const [showReminder, setShowReminder] = useState(false);
+
+  
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    const checkProfileCompletion = async () => {
+      if (user && user.status === 'ACTIVE') {
+        try {
+          const profile = await getStudentProfile();
+          let score = 30; // Base verified score
+          if (profile.phoneNumber) score += 10;
+          if (profile.linkedinUrl) score += 10;
+          if (profile.githubUrl) score += 10;
+          if (profile.portfolioUrl) score += 10;
+          if (profile.skills && Object.values(profile.skills).some(arr => Array.isArray(arr) && arr.length > 0)) score += 15;
+          if (profile.experience && profile.experience.length > 0) score += 15;
+          
+          // Only show reminder if score is strictly less than 100 (meaning they haven't finished the profile)
+          if (score < 100) {
+            timer = setTimeout(() => setShowReminder(true), 1500);
+          }
+        } catch (error) {
+          console.error("Failed to check profile status", error);
+        }
+      }
+    };
+    
+    checkProfileCompletion();
+    return () => clearTimeout(timer);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -73,10 +107,7 @@ export default function StudentDashboard() {
                 Congratulations! Your identity has been verified by the college administration. You can now access the full placement suite.
               </p>
             </div>
-            <div className="flex gap-4">
-              <Button className="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none">Complete Profile</Button>
             </div>
-          </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -137,11 +168,63 @@ export default function StudentDashboard() {
                  <p className="text-slate-400 text-sm font-medium leading-relaxed">
                     Improve your visibility to recruiters by taking our baseline technical assessment.
                  </p>
-                 <Button variant="outline" className="border-white/10 text-white hover:bg-white/5 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest">Start Test</Button>
               </div>
            </div>
         </div>
       </div>
+    
+      {/* Profile Completion Reminder Modal */}
+      <AnimatePresence>
+        {showReminder && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2rem] shadow-2xl border border-slate-100 max-w-lg w-full p-8 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-amber-600" />
+              
+              <button 
+                onClick={() => setShowReminder(false)}
+                className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-start gap-5 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle size={28} />
+                </div>
+                <div className="pt-1">
+                  <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Complete Your Profile!</h3>
+                  <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                    HRs and recruiters can currently see your profile, but it looks incomplete. 
+                    Adding your skills, experience, and resume increases your chances of getting shortlisted by <strong>80%</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 w-full">
+                <Button 
+                  onClick={() => setShowReminder(false)}
+                  variant="outline" 
+                  className="flex-1 py-4 h-auto rounded-xl font-black text-xs uppercase tracking-widest"
+                >
+                  Later
+                </Button>
+                <Button 
+                  onClick={() => router.push('/student/profile')}
+                  className="flex-[2] bg-amber-500 hover:bg-amber-600 text-white py-4 h-auto rounded-xl font-black text-xs uppercase tracking-widest border-none shadow-lg shadow-amber-500/20"
+                >
+                  Complete Profile Now
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </DashboardLayout>
   );
 }
