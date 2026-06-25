@@ -96,12 +96,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 overflow-hidden">
                   {user ? (
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as type).collegeName || 'User'}`} alt="avatar" className="w-full h-full object-cover" />
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).collegeName || 'User'}`} alt="avatar" className="w-full h-full object-cover" />
                   ) : <UserIcon size={18} />}
                 </div>
                 <div className="hidden sm:flex flex-col">
                   <span className="text-xs font-black text-slate-900 truncate max-w-[120px]">
-                    {user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as type).collegeName) : 'Account'}
+                    {user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).collegeName) : 'Account'}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{role?.replace('_', ' ')}</span>
                 </div>
