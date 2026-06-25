@@ -1,6 +1,0 @@
-﻿src/presentation/http/controllers/college/notice.controller.ts(10,38): error TS1261: Already included file name 'C:/Users/risla/OneDrive/Documents/Career-Hub-Test/CareerHub/backend/src/application/usecases/college/notices/interfaces/IDeleteNotice.useCase.ts' differs from file name 'C:/Users/risla/OneDrive/Documents/Career-Hub-Test/CareerHub/backend/src/application/usecases/college/notices/interfaces/IDeleteNotice.usecase.ts' only in casing.
-  The file is in the program because:
-    Imported via "@application/usecases/college/notices/interfaces/IDeleteNotice.useCase" from file 'C:/Users/risla/OneDrive/Documents/Career-Hub-Test/CareerHub/backend/src/presentation/http/controllers/college/notice.controller.ts'
-    Imported via "../interfaces/IDeleteNotice.useCase" from file 'C:/Users/risla/OneDrive/Documents/Career-Hub-Test/CareerHub/backend/src/application/usecases/college/notices/implementations/Delete.notice.UseCase.ts'
-    Matched by default include pattern '**/*'
-  File is CommonJS module because 'C:/Users/risla/OneDrive/Documents/Career-Hub-Test/CareerHub/backend/package.json' has field "type" whose value is not "module"
