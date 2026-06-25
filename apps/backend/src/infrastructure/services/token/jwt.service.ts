@@ -36,7 +36,7 @@ export class JwtService implements IJwtService {
     }
   }
 
-  generateResetToken(payload: any): string {
+  generateResetToken(payload: Record<string, unknown>): string {
     return jwt.sign(payload, JWT_ACCESS_SECRET, { expiresIn: "1h" });
   }
 
