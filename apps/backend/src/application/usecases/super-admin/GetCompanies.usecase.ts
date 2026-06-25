@@ -2,7 +2,7 @@ import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 
 export interface IGetCompaniesUseCase {
-  execute(query: string, page: number, limit: number): Promise<any>;
+  execute(query: string, page: number, limit: number, status?: string): Promise<any>;
 }
 
 export class GetCompaniesUseCase implements IGetCompaniesUseCase {
@@ -11,13 +11,16 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
     private readonly _hrUserRepository: IHRUserRepository
   ) { }
 
-  async execute(query: string, page: number, limit: number) {
-    const { hrUsers, total } = await this._hrUserRepository.searchHRUsers(query, page, limit);
+
+  async execute(query: string, page: number, limit: number, status?: string) {
+    const { hrUsers, total } = await this._hrUserRepository.searchHRUsers(query, page, limit, status);
 
     const companiesWithHR = await Promise.all(hrUsers.map(async (user) => {
       const company = await this._companyRepository.findById(user.companyId);
       const userJson = user.toJSON();
       const companyProps = company?.toJSON();
+
+
 
       return {
         id: userJson.id, // Use User ID for actions (blocking/deleting the person)
