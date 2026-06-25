@@ -42,9 +42,7 @@ export default function InterviewsPage() {
               Interview scheduling will be available soon.
             </p>
           </div>
-          <Button disabled className="bg-slate-200 text-slate-500 font-bold px-8">
-            Coming Soon
-          </Button>
+
         </GlassCard>
       </div>
     </div>
