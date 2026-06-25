@@ -91,14 +91,22 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
 
       const cgpaEligible = studentCGPA >= minCGPA;
       const backlogsEligible = studentBacklogs <= allowedBacklogs;
-      const branchEligible = eligibleBranches.length === 0 ||
-        eligibleBranches.some(b => b.toLowerCase().trim() === studentBranch.toLowerCase().trim());
+      const branchEligible = eligibleBranches.length === 0 || eligibleBranches.includes('Any IT Branch') ||
+        eligibleBranches.some(b => {
+          const hrBranch = b.toLowerCase().trim();
+          const studBranch = studentBranch.toLowerCase().trim();
+          return hrBranch.includes(studBranch) || studBranch.includes(hrBranch);
+        });
+
+      const requiredDegree = job.eligibility?.degreeType || '';
+      const degreeEligible = !requiredDegree || requiredDegree === 'Any Degree' || 
+        (student.degree && student.degree.toLowerCase().trim() === requiredDegree.toLowerCase().trim());
 
       const cgpaScore = cgpaEligible ? 15 : 0;
       const backlogsScore = backlogsEligible ? 15 : 0;
 
       const matchScore = Math.round(skillMatchScore + cgpaScore + backlogsScore);
-      const isEligible = cgpaEligible && backlogsEligible && branchEligible;
+      const isEligible = cgpaEligible && backlogsEligible && branchEligible && !!degreeEligible;
 
       return {
         ...job.toJSON(),
