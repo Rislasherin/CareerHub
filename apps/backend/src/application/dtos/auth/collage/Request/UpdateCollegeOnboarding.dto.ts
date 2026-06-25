@@ -1,11 +1,12 @@
 import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches, Min, Max } from "class-validator";
 
 export class UpdateCollegeOnboardingDto {
   @Expose()
   @IsNotEmpty({ message: "Step is required" })
   @IsNumber({}, { message: "Step must be a number" })
-  @Matches(/^[1-3]$/, { message: "Step must be a number between 1 and 3" })  
+  @Min(1, { message: "Step must be at least 1" })
+  @Max(4, { message: "Step must not exceed 4" })
   step!: number;
 
   // Step 1 fields
@@ -103,10 +104,11 @@ export class UpdateCollegeOnboardingDto {
   @Expose()
   @IsArray()
   @IsOptional()
-  @Matches(/^(?!.*\s\s)/, { message: "Branch name cannot have consecutive spaces" })
-  @Matches(/^(?!.*\s$)/, { message: "Branch name cannot end with a space" })
-  @Matches(/^(?!^\s)/, { message: "Branch name cannot start with a space" })
-  @MaxLength(100, { message: "Branch name cannot exceed 100 characters" })
+  @IsString({ each: true })
+  @Matches(/^(?!.*\s\s)/, { each: true, message: "Branch name cannot have consecutive spaces" })
+  @Matches(/^(?!.*\s$)/, { each: true, message: "Branch name cannot end with a space" })
+  @Matches(/^(?!^\s)/, { each: true, message: "Branch name cannot start with a space" })
+  @MaxLength(100, { each: true, message: "Branch name cannot exceed 100 characters" })
   activeBranches?: string[];
 
   @Expose()
@@ -136,4 +138,10 @@ export class UpdateCollegeOnboardingDto {
   @MaxLength(50, { message: "Plan cannot exceed 50 characters" })
   @Matches(/^(?![a-zA-Z]$)/, { message: "Plan cannot be a single letter" })
   plan?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  @MaxLength(500, { message: "Verification document URL cannot exceed 500 characters" })
+  verificationDocument?: string;
 }
