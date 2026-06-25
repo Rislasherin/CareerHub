@@ -6,7 +6,9 @@ import { IBcryptService } from "@application/interfaces/IBcryptService";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
 
-export class LoginHRUseCase {
+import { ILoginHRUseCase } from "../interfaces/ILoginHR.usecase";
+
+export class LoginHRUseCase implements ILoginHRUseCase {
   constructor(
     private readonly _hrUserRepository: IHRUserRepository,
     private readonly _companyRepository: ICompanyRepository,
@@ -14,7 +16,7 @@ export class LoginHRUseCase {
     private readonly _bcryptService: IBcryptService
   ) { }
 
-  async execute(dto: any) {
+  async execute(dto: { email: string; password: string; [key: string]: unknown }) {
     const hrUser = await this._hrUserRepository.findByEmail(dto.email);
 
     if (!hrUser) {
