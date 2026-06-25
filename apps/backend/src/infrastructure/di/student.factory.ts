@@ -5,6 +5,7 @@ import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinar
 import { UpdateStudentProfileUseCase } from "@application/usecases/student/UpdateStudentProfile.usecase";
 import { GetStudentJobsUseCase } from "@application/usecases/student/GetStudentJobs.usecase";
 import { ApplyToJobUseCase } from "@application/usecases/student/ApplyToJob.usecase";
+import { makeGetCollegeNoticeUseCase } from "./college.factory";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -23,12 +24,15 @@ export const makeApplyToJobUseCase = () => {
   return new ApplyToJobUseCase(studentRepository, jobRepository);
 };
 
+
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
     makeUpdateStudentProfileUseCase(),
     studentRepository,
     makeGetStudentJobsUseCase(),
-    makeApplyToJobUseCase()
+    makeApplyToJobUseCase(),
+    makeGetCollegeNoticeUseCase(),
+
   );
 };
