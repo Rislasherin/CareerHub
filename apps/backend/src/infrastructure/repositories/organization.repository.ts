@@ -25,12 +25,15 @@ export class OrganizationRepository extends BaseRepository
     return doc ? this.toEntity(doc as OrganizationDocument) : null;
   }
 
-  async searchOrganizations(query: string, page: number, limit: number): Promise<{ organizations: Organization[], total: number }> {
+  async searchOrganizations(query: string, page: number, limit: number, status?: string): Promise<{ organizations: Organization[], total: number }> {
     const skip = (page - 1) * limit;
-    const filter = {
+    const filter: Record<string, unknown> = {
         name: { $regex: query, $options: "i" },
         isDeleted: { $ne: true }
     };
+    if (status) {
+      filter.status = { $regex: `^${status}$`, $options: 'i' };
+    }
 
     const [docs, total] = await Promise.all([
       this.model.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
