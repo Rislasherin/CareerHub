@@ -45,10 +45,6 @@ export default function InterviewerDashboard() {
               <p className="text-slate-400 font-medium text-lg max-w-lg mb-8">
                 Your interview schedule is currently empty. You will receive notifications when HR assigns new candidates for evaluation.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                <Button className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 h-auto rounded-2xl font-black">Sync Calendar</Button>
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/5 px-8 py-4 h-auto rounded-2xl font-black">View Guidelines</Button>
-              </div>
             </div>
             <div className="hidden lg:block">
               <CalendarDays size={180} className="text-white/5" />
