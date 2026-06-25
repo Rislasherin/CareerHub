@@ -8,6 +8,7 @@ export interface CollegeAdminDetails {
   collegeName?: string;
   status: string;
   onboardingStep?: number;
+  activeBranches?: string[];
 }
 
 interface CollegeAdminState {
