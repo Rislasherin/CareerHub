@@ -96,7 +96,7 @@ export default function HROnboardingPage() {
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :
           step3Schema
-    ) as type,
+    ) as any,
     defaultValues: {
       name: '',
       website: '',
@@ -141,10 +141,10 @@ export default function HROnboardingPage() {
     setValue('preferredColleges', preferredColleges.filter(c => c !== college), { shouldValidate: true });
   };
 
-  const onSubmit = async (data: type) => {
+  const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedCompany = await updateHROnboarding({ ...data, step: currentStep });
+      const updatedCompany = (await updateHROnboarding({ ...data, step: currentStep })) as any;
 
       // Update Redux state with new onboarding step and company info
       if (hrDetails) {
@@ -222,7 +222,7 @@ export default function HROnboardingPage() {
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
               <AnimatePresence mode="wait">
-                {currentStep === 1 && (
+                {currentStep === 1 ? (
                   <motion.div
                     key="step1"
                     initial={{ opacity: 0, x: 10 }}
@@ -278,9 +278,7 @@ export default function HROnboardingPage() {
                       />
                     </div>
                   </motion.div>
-                )}
-
-                {currentStep === 2 && (
+                ) : currentStep === 2 ? (
                   <motion.div
                     key="step2"
                     initial={{ opacity: 0, x: 10 }}
@@ -320,9 +318,7 @@ export default function HROnboardingPage() {
                       {errors.industry && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.industry.message as string}</p>}
                     </div>
                   </motion.div>
-                )}
-
-                {currentStep === 3 && (
+                ) : currentStep === 3 ? (
                   <motion.div
                     key="step3"
                     initial={{ opacity: 0, x: 10 }}
@@ -373,8 +369,8 @@ export default function HROnboardingPage() {
                               <Input
                                 placeholder="Type college name and add..."
                                 value={collegeInput}
-                                onChange={(e: type) => setCollegeInput(e.target.value)}
-                                onKeyDown={(e: type) => e.key === 'Enter' && (e.preventDefault(), addCollege())}
+                                onChange={(e: any) => setCollegeInput(e.target.value)}
+                                onKeyDown={(e: any) => e.key === 'Enter' && (e.preventDefault(), addCollege())}
                                 className="bg-slate-50/50 h-11"
                               />
                             </div>
@@ -409,7 +405,7 @@ export default function HROnboardingPage() {
                       </div>
                     </div>
                   </motion.div>
-                )}
+                ) : null}
               </AnimatePresence>
 
               {/* Navigation Buttons */}
