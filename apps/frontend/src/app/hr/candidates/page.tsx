@@ -314,7 +314,7 @@ export default function CandidatesPage() {
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as type)}
+                    onClick={() => setActiveTab(tab.id as any)}
                     className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === tab.id
                         ? 'bg-white text-indigo-650 shadow-sm border border-slate-205/10'
                         : 'text-slate-500 hover:text-slate-700'
@@ -354,7 +354,7 @@ export default function CandidatesPage() {
                         <button
                           key={item.id}
                           onClick={() => {
-                            setSortBy(item.id as type);
+                            setSortBy(item.id as any);
                             setShowSortDropdown(false);
                           }}
                           className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all ${sortBy === item.id
