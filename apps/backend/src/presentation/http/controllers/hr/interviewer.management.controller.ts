@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IAddInterviewerUseCase } from "@application/usecases/hr/interviewer-management/AddInterviewer.usecase";
@@ -8,7 +8,7 @@ import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 import { IToggleInterviewerStatusUseCase } from "@application/usecases/hr/interviewer-management/ToggleInterviewerStatus.usecase";
-import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
+import { IResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IResendInterviewerInvite.usecase";
 import { IUpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/UpdateInterviewer.usecase";
 import { IDeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/DeleteInterviewer.usecase";
 import { IRestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/RestoreInterviewer.usecase";
@@ -18,13 +18,13 @@ export class InterviewerManagementController {
     private readonly _addUseCase: IAddInterviewerUseCase,
     private readonly _getUseCase: IGetInterviewersUseCase,
     private readonly _toggleUseCase: IToggleInterviewerStatusUseCase,
-    private readonly _resendUseCase: ResendInterviewerInviteUseCase,
+    private readonly _resendUseCase: IResendInterviewerInviteUseCase,
     private readonly _updateUseCase: IUpdateInterviewerUseCase,
     private readonly _deleteUseCase: IDeleteInterviewerUseCase,
     private readonly _restoreUseCase: IRestoreInterviewerUseCase
   ) { }
 
-  addInterviewer = asyncHandler(async (req: any, res: Response) => {
+  addInterviewer = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -34,7 +34,7 @@ export class InterviewerManagementController {
     sendSuccess(res, null, "Interviewer added and setup email sent successfully", HttpStatus.CREATED);
   });
 
-  getInterviewers = asyncHandler(async (req: any, res: Response) => {
+  getInterviewers = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -50,7 +50,7 @@ export class InterviewerManagementController {
     sendSuccess(res, result, "Interviewers retrieved successfully");
   });
 
-  toggleStatus = asyncHandler(async (req: any, res: Response) => {
+  toggleStatus = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -60,13 +60,13 @@ export class InterviewerManagementController {
     sendSuccess(res, null, "Interviewer status updated successfully");
   });
 
-  resendInvite = asyncHandler(async (req: any, res: Response) => {
+  resendInvite = asyncHandler(async (req: Request, res: Response) => {
     const { interviewerId } = req.params;
     await this._resendUseCase.execute(interviewerId);
     sendSuccess(res, null, "Invitation link resent successfully");
   });
 
-  updateInterviewer = asyncHandler(async (req: any, res: Response) => {
+  updateInterviewer = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -82,7 +82,7 @@ export class InterviewerManagementController {
     sendSuccess(res, null, "Interviewer updated successfully");
   });
 
-  deleteInterviewer = asyncHandler(async (req: any, res: Response) => {
+  deleteInterviewer = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -92,7 +92,7 @@ export class InterviewerManagementController {
     sendSuccess(res, null, "Interviewer removed successfully");
   });
 
-  restoreInterviewer = asyncHandler(async (req: any, res: Response) => {
+  restoreInterviewer = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
