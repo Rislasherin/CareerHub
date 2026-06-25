@@ -24,9 +24,10 @@ import { toast } from 'sonner';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 
 export default function CompaniesManagement() {
-  const [data, setData] = useState<type[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
@@ -52,7 +53,7 @@ export default function CompaniesManagement() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const res = await superAdminService.getCompanies(search, page, 10);
+      const res = await superAdminService.getCompanies(search, page, 10, statusFilter);
       setData(res.companies || []);
       setTotal(res.total || 0);
     } catch (err) {
@@ -63,7 +64,7 @@ export default function CompaniesManagement() {
 
   useEffect(() => {
     fetchData();
-  }, [page, search]);
+  }, [page, search, statusFilter]);
 
   const handleStatusToggle = (id: string, currentStatus: string) => {
     const isBlocking = currentStatus?.toUpperCase() !== 'BLOCKED';
@@ -119,9 +120,6 @@ export default function CompaniesManagement() {
             <h1 className="text-3xl font-black text-white tracking-tight mb-1">Company Management</h1>
             <p className="text-slate-500 text-sm font-medium">Oversee and manage registered hiring partners</p>
           </div>
-          <Button className="bg-cyan-500 hover:bg-cyan-600 text-[#0B0D17] font-black text-xs rounded-xl px-6 h-10 border-none shadow-lg shadow-cyan-500/20">
-            <Plus size={16} className="mr-2" /> Add Company
-          </Button>
         </header>
 
         {/* Filters */}
@@ -138,12 +136,19 @@ export default function CompaniesManagement() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#121520] border border-white/5 text-sm font-bold text-slate-400 hover:text-white transition-all">
-            <Filter size={18} />
-            Filters
-          </button>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="px-6 py-3 rounded-2xl bg-[#121520] border border-white/5 text-sm font-bold text-slate-400 hover:text-white transition-all appearance-none outline-none focus:border-cyan-500/50 cursor-pointer min-w-[150px]"
+          >
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="BLOCKED">Blocked</option>
+          </select>
         </div>
-
         {/* Table Content */}
         <div className="bg-[#121520] border border-white/5 rounded-[2.5rem] overflow-hidden">
           <div className="overflow-x-auto">
@@ -158,7 +163,7 @@ export default function CompaniesManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-8 py-20 text-center">
@@ -207,11 +212,11 @@ export default function CompaniesManagement() {
                           {company.industry || company.sector || 'Not specified'}
                         </td>
                         <td className="px-8 py-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${company.status === 'blocked'
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${company.status?.toUpperCase() === 'BLOCKED'
                               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${company.status === 'blocked' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                            <div className={`w-1.5 h-1.5 rounded-full ${company.status?.toUpperCase() === 'BLOCKED' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                             {company.status || 'active'}
                           </span>
                         </td>
@@ -222,11 +227,11 @@ export default function CompaniesManagement() {
                             </button>
                             <button
                               onClick={() => handleStatusToggle(company.id, company.status)}
-                              className={`p-2 rounded-lg bg-white/5 transition-all ${company.status === 'blocked' ? 'text-emerald-400 hover:bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10'
+                              className={`p-2 rounded-lg bg-white/5 transition-all ${company.status?.toUpperCase() === 'BLOCKED' ? 'text-emerald-400 hover:bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10'
                                 }`}
-                              title={company.status === 'blocked' ? 'Unblock' : 'Block'}
+                              title={company.status?.toUpperCase() === 'BLOCKED' ? 'Unblock' : 'Block'}
                             >
-                              {company.status === 'blocked' ? <ShieldCheck size={16} /> : <ShieldAlert size={16} />}
+                              {company.status?.toUpperCase() === 'BLOCKED' ? <ShieldCheck size={16} /> : <ShieldAlert size={16} />}
                             </button>
                             <button
                               onClick={() => handleDelete(company.id)}
