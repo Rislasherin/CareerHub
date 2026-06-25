@@ -9,7 +9,9 @@ import { Role } from "@domain/enums/Roles.enum";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { VerifyCollegeOtpRequestDto } from "@application/dtos/auth/collage/Request/VerifyCollegeOtpRequest.dto";
 
-export class VerifyCollegeOtpUseCase {
+import { IVerifyCollegeOtpUseCase } from "../interfaces/IVerifyCollegeOtp.usecase";
+
+export class VerifyCollegeOtpUseCase implements IVerifyCollegeOtpUseCase {
   constructor(
     private readonly _otpRepository: IOtpRepository,
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
