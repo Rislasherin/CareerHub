@@ -7,7 +7,9 @@ import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
 
-export class LoginInterviewerUseCase {
+import { ILoginInterviewerUseCase } from "../interfaces/ILoginInterviewer.usecase";
+
+export class LoginInterviewerUseCase implements ILoginInterviewerUseCase {
   constructor(
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _companyRepository: ICompanyRepository,
@@ -16,7 +18,7 @@ export class LoginInterviewerUseCase {
     private readonly _crossRoleAuthService: CrossRoleAuthService
   ) { }
 
-  async execute(dto: any) {
+  async execute(dto: { email: string; password: string; [key: string]: unknown }) {
     console.log(`[LOGIN] Attempting login for interviewer: ${dto.email}`);
     const interviewer = await this._interviewerRepository.findByEmail(dto.email);
     console.log(`[LOGIN] Interviewer lookup result: ${interviewer ? 'Found' : 'Not Found'}`);
