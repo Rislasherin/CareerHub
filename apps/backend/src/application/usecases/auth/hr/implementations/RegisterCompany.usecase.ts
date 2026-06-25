@@ -15,9 +15,7 @@ import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService
 import { EmailService } from "@infrastructure/services/email/email.service";
 import { IOtpRepository } from "@domain/repositories/IOtpRepository";
 
-export interface IRegisterCompanyUseCase {
-  execute(dto: RegisterCompanyRequestDto): Promise<{ requiresOtp: boolean; email: string; message: string }>;
-}
+import { IRegisterCompanyUseCase } from "../interfaces/IRegisterCompany.usecase";
 
 export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
   constructor(
