@@ -17,7 +17,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
-import { loginUser, UserRole } from '@/services/auth/auth.service';
+import { loginUser } from '@/services/auth/auth.service';
+import { UserRole } from '@/types/auth';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/redux/hooks';
 import { setAuth } from '@/redux/slices/authSlice';
@@ -29,14 +30,14 @@ import { setSuperAdminDetails } from '@/redux/slices/superAdminSlice';
 import { loginSchema } from '@/utils/validation';
 import { z } from 'zod';
 
-const roles: { id: UserRole; label: string; icon: type }[] = [
+const roles: { id: UserRole; label: string; icon: any }[] = [
   { id: 'student', label: 'Student', icon: GraduationCap },
   { id: 'hr', label: 'Company', icon: Building2 },
   { id: 'college_admin', label: 'Institution', icon: ShieldCheck },
   { id: 'interviewer', label: 'Interviewer', icon: Briefcase },
 ];
 
-const roleContent = {
+const roleContent: Record<UserRole, { title: string; subtitle: string; quote: string; author: string; position: string }> = {
   student: {
     title: "Your gateway to dream careers.",
     subtitle: "Join over 10,000+ students landing jobs at top-tier companies worldwide using CareerHub's AI matching.",
