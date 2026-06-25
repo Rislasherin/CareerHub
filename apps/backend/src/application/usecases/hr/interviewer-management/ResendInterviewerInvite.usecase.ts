@@ -8,7 +8,9 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { env } from "@infrastructure/config/env.validator";
 
-export class ResendInterviewerInviteUseCase {
+import { IResendInterviewerInviteUseCase } from "./interfaces/IResendInterviewerInvite.usecase";
+
+export class ResendInterviewerInviteUseCase implements IResendInterviewerInviteUseCase {
   constructor(
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _emailService: IEmailService,
