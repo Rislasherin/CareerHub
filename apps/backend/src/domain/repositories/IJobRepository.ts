@@ -16,4 +16,5 @@ export interface IJobRepository extends IBaseRepository<Job> {
     limit: number
   ): Promise<{ jobs: Job[]; total: number }>;
 
+
 }
