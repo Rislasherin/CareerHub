@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@presentation/express/middlewares/error.middleware";
 import routes from "@presentation/express/routes";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 const app: Application = express();
 
@@ -14,14 +15,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/api/health", (_req: Request, res: Response) => {
-  res.status(200).json({ success: true, message: "Server is healthy" });
+  res.status(HttpStatus.OK).json({ success: true, message: "Server is healthy" });
 });
 
 
 app.use("/api", routes);
 
 app.use((_req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: "Route not found" });
+  res.status(HttpStatus.NOT_FOUND).json({ success: false, message: "Route not found" });
 });
 
 app.use(errorMiddleware);
