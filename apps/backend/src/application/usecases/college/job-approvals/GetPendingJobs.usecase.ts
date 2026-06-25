@@ -29,9 +29,13 @@ export class GetPendingJobsUseCase implements IGetPendingJobsUseCase {
             return true;
           }
           // Check if there is an intersection between the job's eligible branches and college's active branches
-          const hasBranchOverlap = eligibleBranches.some((branch) =>
-            collegeBranches.includes(branch)
-          );
+          const hasBranchOverlap = eligibleBranches.some((branch) => {
+            const hrBranch = branch.toLowerCase().trim();
+            return collegeBranches.some(cb => {
+              const colBranch = cb.toLowerCase().trim();
+              return hrBranch.includes(colBranch) || colBranch.includes(hrBranch);
+            });
+          });
           return hasBranchOverlap;
         });
       }
