@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Building2, Mail, Lock, User, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Building2, Mail, Lock, User, ArrowRight, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
@@ -25,8 +25,12 @@ export default function HRRegistrationPage() {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     jobTitle: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState('');
@@ -36,6 +40,11 @@ export default function HRRegistrationPage() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setErrors({});
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrors({ confirmPassword: 'Passwords do not match' });
+      return;
+    }
 
     // Validate
     try {
@@ -61,6 +70,12 @@ export default function HRRegistrationPage() {
         setRegisteredEmail(result.email || formData.email);
         setShowOtp(true);
         toast.success(result.message || 'OTP sent to your email.');
+      } else {
+        // Directly register HR without OTP
+        dispatch(setAuth({ role: 'hr' }));
+        dispatch(setHRDetails(result.user!));
+        toast.success('Company registered successfully!');
+        router.push('/hr/onboarding');
       }
     } catch {
       // Handled by interceptor
@@ -140,16 +155,45 @@ export default function HRRegistrationPage() {
               error={errors.email}
               required
             />
-            <Input
-              label="Password"
-              type="password"
-              icon={<Lock size={18} />}
-              placeholder="Create a strong password"
-              value={formData.password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')}
-              error={errors.password}
-              required
-            />
+            <div className="relative group">
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                icon={<Lock size={18} />}
+                placeholder="Create a strong password"
+                value={formData.password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')}
+                error={errors.password}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={`absolute right-4 ${errors.password ? 'top-[40%]' : 'top-[60%]'} -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10`}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            
+            <div className="relative group">
+              <Input
+                label="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
+                icon={<Lock size={18} />}
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'confirmPassword')}
+                error={errors.confirmPassword}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className={`absolute right-4 ${errors.confirmPassword ? 'top-[40%]' : 'top-[60%]'} -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10`}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <Input
               label="Job Title"
               icon={<Building2 size={18} />}
