@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
     };
 
     // Immediate logout if blocked
-    if (errorMessage.toLowerCase().includes('blocked') || (statusCode === 401 && isAuthRoute)) {
+    if (errorMessage.toLowerCase().includes('blocked')) {
       toast.error(errorMessage || 'Your session has ended.');
       await performGlobalLogout('blocked');
       return Promise.reject(error);
