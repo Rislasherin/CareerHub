@@ -5,6 +5,7 @@ import { JobDocument, JobModel } from "@infrastructure/database/models/company/j
 import { toJobEntity, toJobPersistence } from "@application/mappers/job.mapper";
 import { FilterQuery } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
+import { UserStatus } from "@domain/enums/user.status.enum";
 
 export class JobRepository extends BaseRepository<Job, JobDocument> implements IJobRepository {
   constructor() {
@@ -32,7 +33,7 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
         { collegeId, status: JobStatus.PENDING_REVIEW },
         {
           collegeId: "ALL",
-          status: JobStatus.PENDING_REVIEW,
+          status: { $in: [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE] },
           approvedColleges: { $ne: collegeId },
           rejectedColleges: { $ne: collegeId }
         }
@@ -46,6 +47,11 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
       query.$or = [
         { collegeId, status: JobStatus.REJECTED },
         { collegeId: "ALL", rejectedColleges: collegeId }
+      ];
+    } else if (status === JobStatus.ACTIVE) {
+      query.$or = [
+        { collegeId, status: JobStatus.ACTIVE },
+        { collegeId: "ALL", status: JobStatus.ACTIVE, approvedColleges: collegeId }
       ];
     } else {
       query.$or = [
@@ -105,3 +111,6 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
     };
   }
 }
+
+
+
