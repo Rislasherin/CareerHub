@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { ValidationError } from "@application/errors/validation.error";
 
-type ClassConstructor<T extends object> = new (...args: any[]) => T;
+type ClassConstructor<T extends object> = new (...args: unknown[]) => T;
 
 export const validateDto = <T extends object>(dtoClass: ClassConstructor<T>) => {
   return async (req: Request, _res: Response, next: NextFunction) => {
