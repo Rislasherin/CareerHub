@@ -38,6 +38,7 @@ export default function InterviewersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingInterviewer, setEditingInterviewer] = useState<Interviewer | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [editFormData, setEditFormData] = useState({
     firstName: '',
     lastName: '',
@@ -72,6 +73,7 @@ export default function InterviewersPage() {
     action: 'block',
   });
 
+  const [addErrors, setAddErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -100,28 +102,20 @@ export default function InterviewersPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      toast.error('All fields are required');
-      return;
-    }
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    else if (formData.firstName[0] !== formData.firstName[0].toUpperCase()) newErrors.firstName = 'First name must start with a capital letter';
 
-    // Capitalization Validation
-    if (formData.firstName[0] !== formData.firstName[0].toUpperCase()) {
-      toast.error('First name must start with a capital letter');
-      return;
-    }
-    if (formData.lastName[0] !== formData.lastName[0].toUpperCase()) {
-      toast.error('Last name must start with a capital letter');
-      return;
-    }
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    else if (formData.lastName[0] !== formData.lastName[0].toUpperCase()) newErrors.lastName = 'Last name must start with a capital letter';
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
+    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
+    if (!formData.email) newErrors.email = 'Email is required';
+    else if (!emailRegex.test(formData.email)) newErrors.email = 'Please enter a valid email address';
+
+    setAddErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     setIsAdding(true);
     try {
@@ -129,6 +123,7 @@ export default function InterviewersPage() {
       toast.success('Interviewer invited successfully!');
       setIsModalOpen(false);
       setFormData({ firstName: '', lastName: '', email: '' });
+      setAddErrors({});
       fetchInterviewers(query, page, includeDeleted);
     } catch (err) {
       toast.error('Failed to invite interviewer');
@@ -151,27 +146,23 @@ export default function InterviewersPage() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingInterviewer) return;
+    const newErrors: Record<string, string> = {};
 
-    if (!editFormData.firstName || !editFormData.lastName) {
-      toast.error('First and Last names are required');
-      return;
-    }
+    if (!editFormData.firstName) newErrors.firstName = 'First name is required';
+    else if (editFormData.firstName[0] !== editFormData.firstName[0].toUpperCase()) newErrors.firstName = 'First name must start with a capital letter';
 
-    // Capitalization validation
-    if (editFormData.firstName[0] !== editFormData.firstName[0].toUpperCase()) {
-      toast.error('First name must start with a capital letter');
-      return;
-    }
-    if (editFormData.lastName[0] !== editFormData.lastName[0].toUpperCase()) {
-      toast.error('Last name must start with a capital letter');
-      return;
-    }
+    if (!editFormData.lastName) newErrors.lastName = 'Last name is required';
+    else if (editFormData.lastName[0] !== editFormData.lastName[0].toUpperCase()) newErrors.lastName = 'Last name must start with a capital letter';
+
+    setEditErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     setIsUpdating(true);
     try {
       await updateInterviewer(editingInterviewer.id, editFormData);
       toast.success('Interviewer profile updated successfully!');
       setIsEditModalOpen(false);
+      setEditErrors({});
       fetchInterviewers(query, page, includeDeleted);
     } catch (err) {
       toast.error('Failed to update interviewer');
@@ -461,7 +452,7 @@ export default function InterviewersPage() {
                   <div className="flex gap-3 pt-4">
                     <button
                       type="button"
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => { setIsModalOpen(false); setAddErrors({}); }}
                       className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold h-12 rounded-xl transition-all duration-200 flex items-center justify-center"
                     >
                       Cancel
@@ -522,7 +513,7 @@ export default function InterviewersPage() {
                   <div className="flex gap-3 pt-4">
                     <button
                       type="button"
-                      onClick={() => setIsEditModalOpen(false)}
+                      onClick={() => { setIsEditModalOpen(false); setEditErrors({}); }}
                       className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold h-12 rounded-xl transition-all duration-200 flex items-center justify-center"
                     >
                       Cancel
@@ -576,3 +567,4 @@ export default function InterviewersPage() {
     </DashboardLayout>
   );
 }
+
