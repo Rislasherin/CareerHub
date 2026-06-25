@@ -21,4 +21,5 @@ router.put("/profile", validateDto(UpdateStudentProfileDto), studentController.u
 router.get("/jobs", studentController.getJobs);
 router.post("/jobs/:id/apply", studentController.applyJob);
 
+router.get("/notices",studentController.getNotices.bind(studentController));
 export default router;
