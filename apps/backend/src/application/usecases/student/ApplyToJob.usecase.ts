@@ -34,6 +34,16 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
       throw new AppError("Already applied to this job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
+    if((student.appliedJobs?.length) >= 3){
+      throw new AppError(
+        'Maximum applications reached',
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_ERROR,
+      )
+    }
+
+    
+
 
 
     
