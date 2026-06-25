@@ -18,7 +18,7 @@ export class CloudinaryService implements IStorageService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder,
-          resource_type: 'image',
+          resource_type: 'auto',
         },
         (error, result) => {
           if (error) {
