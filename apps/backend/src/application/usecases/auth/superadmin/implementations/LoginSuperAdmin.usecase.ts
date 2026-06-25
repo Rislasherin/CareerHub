@@ -4,14 +4,16 @@ import { IJwtService } from "@application/interfaces/IJwt.service";
 import { IBcryptService } from "@application/interfaces/IBcryptService";
 import { Role } from "@domain/enums/Roles.enum";
 
-export class LoginSuperAdminUseCase {
+import { ILoginSuperAdminUseCase } from "../interfaces/ILoginSuperAdmin.usecase";
+
+export class LoginSuperAdminUseCase implements ILoginSuperAdminUseCase {
   constructor(
     private readonly _superAdminRepository: ISuperAdminRepository,
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService
   ) { }
 
-  async execute(dto: any) {
+  async execute(dto: { email: string; password: string; [key: string]: unknown }) {
     const admin = await this._superAdminRepository.findByEmail(dto.email);
 
     if (!admin) {
