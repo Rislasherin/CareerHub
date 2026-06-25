@@ -49,4 +49,6 @@ export class PostJobUseCase implements IPostJobUseCase {
 
     return await this._jobRepository.create(job);
   }
+
+
 }
