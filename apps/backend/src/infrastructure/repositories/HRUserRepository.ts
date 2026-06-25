@@ -3,6 +3,7 @@ import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { HRUserDocument, HRUserModel } from "@infrastructure/database/models/company/hr-user.model";
 import { toHRUserEntity, toHRUserPersistence } from "@application/mappers/hr-user.mapper";
 import { BaseRepository } from "./BaseRepository";
+import { UserStatus } from "@domain/enums/user.status.enum";
 
 export class HRUserRepository
   extends BaseRepository<HRUser, HRUserDocument>
@@ -39,16 +40,20 @@ export class HRUserRepository
     await this.model.updateOne({ _id: id }, { $set: update });
   }
 
-  async searchHRUsers(query: string, page: number, limit: number): Promise<{ hrUsers: HRUser[], total: number }> {
+  async searchHRUsers(query: string, page: number, limit: number, status?: string): Promise<{ hrUsers: HRUser[], total: number }> {
     const skip = (page - 1) * limit;
-    const filter = {
+    const filter: Record<string,unknown> = {
       $or: [
         { firstName: { $regex: query, $options: "i" } },
         { lastName: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } }
       ],
-      isDeleted: { $ne: true }
-    };
+      isDeleted: { $ne: true },
+    }
+    
+    if (status) {
+      filter.status = { $regex: `^${status}$`, $options: 'i' };
+    }
 
     const [docs, total] = await Promise.all([
       this.model.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
