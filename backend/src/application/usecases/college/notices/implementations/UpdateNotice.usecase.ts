@@ -4,21 +4,20 @@ import { NoticeRequestDto } from "@application/dtos/college/Request/notice.reque
 import { Notice } from "@domain/entities/Notice";
 
 export class UpdateNoticeUseCase implements IUpdateNoticeUseCase {
-    constructor(private readonly _noticeRepository:INoticeRepository){}
+    constructor(private readonly _noticeRepository: INoticeRepository) {}
 
     async execute(collegeId: string, noticeId: string, dto: NoticeRequestDto): Promise<Notice> {
-        const existingNotice = await this._noticeRepository.findById(noticeId)
-        if(!existingNotice || existingNotice.collegeId !== collegeId ) {
+        const existingNotice = await this._noticeRepository.findById(noticeId);
+        
+        if (!existingNotice || existingNotice.collegeId !== collegeId) {
             throw new Error("Notice not found or unauthorized");
-        };
+        }
 
-        const updatedNoticeData: Notice = {
-            ...existingNotice,
-            title:dto.title,
-            content:dto.content,
-            priority:dto.priority
-        };
+        // Use the new class setters
+        existingNotice.title = dto.title;
+        existingNotice.content = dto.content;
+        existingNotice.priority = dto.priority;
 
-        return await this._noticeRepository.update(noticeId,updatedNoticeData)
+        return await this._noticeRepository.update(noticeId, existingNotice);
     }
 }

@@ -1,9 +1,9 @@
-import { Notice } from "@domain/entities/Notice";
+import { Notice, NoticeProps } from "@domain/entities/Notice";
 import { NoticePriority } from "@domain/enums/NoticePriority";
 import { NoticeDocument } from "@infrastructure/database/models/organizer/notice.model";
 
 export const toNoticeEntity = (doc: NoticeDocument): Notice => {
-    return {
+    return Notice.create({
         id: doc._id.toString(),
         title: doc.title || "",
         content: doc.content || "",
@@ -12,7 +12,7 @@ export const toNoticeEntity = (doc: NoticeDocument): Notice => {
         isActive: doc.isActive !== undefined ? doc.isActive : true,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
-    };
+    });
 };
 
 export const toNoticePersistence = (entity: Notice): Record<string, unknown> => {
