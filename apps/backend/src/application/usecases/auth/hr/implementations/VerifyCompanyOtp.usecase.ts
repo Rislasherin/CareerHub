@@ -9,7 +9,9 @@ import { Role } from "@domain/enums/Roles.enum";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { VerifyCompanyOtpRequestDto } from "@application/dtos/auth/hr/Request/VerifyCompanyOtpRequest.dto";
 
-export class VerifyCompanyOtpUseCase {
+import { IVerifyCompanyOtpUseCase } from "../interfaces/IVerifyCompanyOtp.usecase";
+
+export class VerifyCompanyOtpUseCase implements IVerifyCompanyOtpUseCase {
   constructor(
     private readonly _otpRepository: IOtpRepository,
     private readonly _hrUserRepository: IHRUserRepository,
