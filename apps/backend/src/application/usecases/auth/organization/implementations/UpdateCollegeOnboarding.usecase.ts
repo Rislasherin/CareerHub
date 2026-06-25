@@ -6,9 +6,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Organization } from "@domain/entities/Organization";
 import { UserStatus } from "@domain/enums/user.status.enum";
 
-export interface IUpdateCollegeOnboardingUseCase {
-  execute(orgId: string, dto: UpdateCollegeOnboardingDto): Promise<any>;
-}
+import { IUpdateCollegeOnboardingUseCase } from "../interfaces/IUpdateCollegeOnboarding.usecase";
 
 export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingUseCase {
   constructor(private readonly _organizationRepository: IOrganizationRepository) { }
@@ -43,6 +41,14 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
       if (dto.plan) currentProps.plan = dto.plan;
       currentProps.onboardingStep = 3;
       currentProps.status = UserStatus.ACTIVE;
+    }
+
+    // Validate duplicate organization name if changed
+    if (dto.name && dto.name !== organization.name) {
+      const existing = await this._organizationRepository.findByName(dto.name);
+      if (existing) {
+        throw new AppError('Organization name already exists', HttpStatus.CONFLICT, ErrorCode.RESOURCE_EXISTS);
+      }
     }
 
     const updatedOrg = await this._organizationRepository.update(orgId, Organization.create(currentProps));
