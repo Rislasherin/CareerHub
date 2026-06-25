@@ -11,6 +11,7 @@ import { BcryptService } from "@infrastructure/services/hash/bcrypt.service";
 import { JwtService } from "@infrastructure/services/token/jwt.service";
 import { AuthMiddleware } from "@presentation/express/middlewares/auth.middleware";
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
+import { NoticeRepository } from "@infrastructure/repositories/NoticeRepository";
 
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
@@ -20,6 +21,7 @@ export const interviewerRepository = new InterviewerRepository();
 export const otpRepository = new OtpRepository();
 export const collegeAdminRepository = new CollegeAdminRepository();
 export const organizationRepository = new OrganizationRepository();
+export const noticeRepository = new NoticeRepository()
 export const jobRepository = new JobRepository();
 export const jwtService = new JwtService();
 export const bcryptService = new BcryptService();
