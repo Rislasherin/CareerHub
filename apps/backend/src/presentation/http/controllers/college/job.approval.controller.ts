@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -16,7 +16,7 @@ export class CollegeJobApprovalController {
     private readonly _rejectUseCase: IRejectJobUseCase
   ) { }
 
-  getPendingJobs = asyncHandler(async (req: any, res: Response) => {
+  getPendingJobs = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -26,7 +26,7 @@ export class CollegeJobApprovalController {
     sendSuccess(res, result.map((job) => job.toJSON()), "Jobs retrieved successfully");
   });
 
-  approveJob = asyncHandler(async (req: any, res: Response) => {
+  approveJob = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -36,7 +36,7 @@ export class CollegeJobApprovalController {
     sendSuccess(res, result.toJSON(), "Job approved successfully");
   });
 
-  rejectJob = asyncHandler(async (req: any, res: Response) => {
+  rejectJob = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
