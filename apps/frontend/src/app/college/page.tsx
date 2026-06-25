@@ -32,7 +32,7 @@ import { apiClient } from '@/services/api/api.client';
 import { useAppSelector } from '@/redux/hooks';
 
 export default function CollegeDashboard() {
-  const [dynamicStats, setDynamicStats] = React.useState<type>(null);
+  const [dynamicStats, setDynamicStats] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
