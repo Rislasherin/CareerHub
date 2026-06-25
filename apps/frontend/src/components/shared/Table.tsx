@@ -56,7 +56,7 @@ export function Table<T>({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {isLoading ? (
                 <tr>
                   <td colSpan={columns.length} className="px-8 py-20 text-center">
