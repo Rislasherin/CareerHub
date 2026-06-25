@@ -12,61 +12,32 @@ export interface NoticeProps {
 }
 
 export class Notice {
-    constructor(private props: NoticeProps) {}
+    constructor(private _props: NoticeProps) {}
 
     static create(props: NoticeProps): Notice {
         return new Notice(props);
     }
 
-    get id(): string | undefined {
-        return this.props.id;
-    }
+    get id(): string | undefined { return this._props.id; }
+    
+    get title(): string { return this._props.title; }
+    set title(value: string) { this._props.title = value; }
 
-    get title(): string {
-        return this.props.title;
-    }
+    get content(): string { return this._props.content; }
+    set content(value: string) { this._props.content = value; }
 
-    set title(value: string) {
-        this.props.title = value;
-    }
+    get priority(): NoticePriority { return this._props.priority; }
+    set priority(value: NoticePriority) { this._props.priority = value; }
 
-    get content(): string {
-        return this.props.content;
-    }
+    get collegeId(): string { return this._props.collegeId; }
+    
+    get isActive(): boolean { return this._props.isActive; }
+    set isActive(value: boolean) { this._props.isActive = value; }
 
-    set content(value: string) {
-        this.props.content = value;
-    }
-
-    get priority(): NoticePriority {
-        return this.props.priority;
-    }
-
-    set priority(value: NoticePriority) {
-        this.props.priority = value;
-    }
-
-    get collegeId(): string {
-        return this.props.collegeId;
-    }
-
-    get isActive(): boolean {
-        return this.props.isActive;
-    }
-
-    set isActive(value: boolean) {
-        this.props.isActive = value;
-    }
-
-    get createdAt(): Date | undefined {
-        return this.props.createdAt;
-    }
-
-    get updatedAt(): Date | undefined {
-        return this.props.updatedAt;
-    }
+    get createdAt(): Date | undefined { return this._props.createdAt; }
+    get updatedAt(): Date | undefined { return this._props.updatedAt; }
 
     toJSON(): NoticeProps {
-        return { ...this.props };
+        return { ...this._props };
     }
-}
+}

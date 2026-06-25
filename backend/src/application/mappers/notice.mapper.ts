@@ -1,4 +1,4 @@
-import { Notice } from "@domain/entities/Notice";
+import { Notice, NoticeProps } from "@domain/entities/Notice";
 import { NoticePriority } from "@domain/enums/NoticePriority";
 import { NoticeDocument } from "@infrastructure/database/models/organizer/notice.model";
 
