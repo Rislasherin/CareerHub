@@ -9,31 +9,21 @@ import {
   UserCircle,
   Users,
   Building2,
-  ShieldCheck,
   LogOut,
   GraduationCap,
   FileCheck,
-  Calendar,
-  Settings,
-  HelpCircle,
-  ChevronRight,
-  ClipboardCheck,
-  Send,
-  MessageSquare,
-  BarChart3,
   Bell,
-  Star,
   Plus,
   X,
-  FileText,
-  Clock,
-  CheckCircle2,
-  PieChart,
   Megaphone,
   CreditCard,
+  ClipboardCheck,
+  Calendar,
+  Star,
+  FileText,
+  MessageSquare,
   Target,
-  Sparkles,
-  Zap
+  BarChart3,
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -49,7 +39,7 @@ import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface NavItem {
   label: string;
-  icon: type;
+  icon: any;
   href: string;
   badge?: string | number;
 }
@@ -88,6 +78,7 @@ const collegeAdminNav: NavCategory[] = [
     items: [
       { label: 'Student Directory', icon: Users, href: '/college/students' },
       { label: 'Drive Approvals', icon: FileCheck, href: '/college/jobs' },
+      {label: "Notice Board", icon:Bell, href:"/college/notices"}
     ]
   }
 ];
@@ -117,6 +108,12 @@ const studentNav: NavCategory[] = [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
       { label: 'Jobs Feed', icon: Briefcase, href: '/student/jobs' },
       { label: 'My Profile', icon: UserCircle, href: '/student/profile' },
+    ]
+  },
+  {
+    title: 'CAREER',
+    items: [
+      { label: 'Notice Board', icon: Megaphone, href: '/student/notices' }
     ]
   }
 ];
@@ -286,11 +283,11 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 mb-8">
             <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden border border-white/10">
               {user ? (
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as type).name}`} alt="avatar" className="w-full h-full object-cover" />
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).name}`} alt="avatar" className="w-full h-full object-cover" />
               ) : <div className="text-[10px] font-black text-slate-500">SA</div>}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as type).name) : 'Super Admin'}</span>
+              <span className="text-sm font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).name) : 'Super Admin'}</span>
               <span className="text-[10px] font-bold text-slate-500 truncate">{user?.email || 'admin@careerhub.io'}</span>
             </div>
           </div>
@@ -370,11 +367,11 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all cursor-pointer relative">
             <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden border border-white/10">
               {user ? (
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as type).name}`} alt="avatar" className="w-full h-full object-cover" />
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).name}`} alt="avatar" className="w-full h-full object-cover" />
               ) : <div className="text-[10px] font-black text-slate-500">?</div>}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as type).name) : 'User Account'}</span>
+              <span className="text-xs font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).name) : 'User Account'}</span>
               <span className="text-[9px] uppercase font-black text-slate-500 tracking-widest truncate">{role?.replace('_', ' ')}</span>
             </div>
             <button
