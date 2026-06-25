@@ -12,6 +12,7 @@ import { IGetCollegeDashboardStatsUseCase } from "@application/usecases/college/
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
+import { UserStatus } from "@domain/enums/user.status.enum";
 
 export class StudentManagementController {
   constructor(
@@ -25,9 +26,9 @@ export class StudentManagementController {
     private readonly _toggleStatusUseCase: IToggleStudentStatusUseCase
   ) { }
 
-  getPendingStudents = asyncHandler(async (req: any, res: Response) => {
+  getPendingStudents = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
-    const status = req.query.status as any;
+    const status = req.query.status as UserStatus | undefined;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
@@ -48,8 +49,11 @@ export class StudentManagementController {
     sendSuccess(res, null, "Student rejected successfully");
   });
 
-  bulkInvite = asyncHandler(async (req: any, res: Response) => {
+  bulkInvite = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
     const result = await this._bulkInviteUseCase.execute(orgId, req.body);
     sendSuccess(res, result, "Bulk invitation processed");
   });
@@ -60,7 +64,7 @@ export class StudentManagementController {
     sendSuccess(res, null, "Access request approved and invitation sent");
   });
 
-  getDashboardStats = asyncHandler(async (req: any, res: Response) => {
+  getDashboardStats = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
     if (!orgId) {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -69,7 +73,7 @@ export class StudentManagementController {
     sendSuccess(res, stats, "Dashboard stats retrieved successfully");
   });
 
-  getAllStudents = asyncHandler(async (req: any, res: Response) => {
+  getAllStudents = asyncHandler(async (req: Request, res: Response) => {
     const orgId = req.user?.orgId;
     const { query, page, limit } = req.query;
     if (!orgId) {
@@ -79,7 +83,7 @@ export class StudentManagementController {
     sendSuccess(res, result, "Students retrieved successfully");
   });
 
-  toggleStatus = asyncHandler(async (req: any, res: Response) => {
+  toggleStatus = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     const { status } = req.body;
     const adminRole = req.user?.role;
