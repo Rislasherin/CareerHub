@@ -21,6 +21,10 @@ export class ApproveStudentUseCase implements IApproveStudentUseCase {
       throw new AppError("Student has not completed verification setup", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }
 
+    if (!student.proofUrl) {
+      throw new AppError("Student must upload an ID proof document before they can be approved", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
+    }
+
     await this._studentRepository.updateStatus(studentId, UserStatus.ACTIVE);
   }
 }
