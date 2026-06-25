@@ -6,9 +6,9 @@ import { IGetOrganizationsUseCase } from "@application/usecases/super-admin/GetO
 import { IGetStudentsUseCase } from "@application/usecases/super-admin/GetStudents.usecase";
 import { IGetCompaniesUseCase } from "@application/usecases/super-admin/GetCompanies.usecase";
 import { IGetInterviewersUseCase } from "@application/usecases/super-admin/GetInterviewers.usecase";
-import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/UpdateUserStatus.usecase";
-import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
-import { UpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/UpdateOrganizationPlan.usecase";
+import { IUpdateUserStatusUseCase } from "@application/usecases/super-admin/interfaces/IUpdateUserStatus.usecase";
+import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces/IDeleteUser.usecase";
+import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
 
 export class SuperAdminController {
   constructor(
@@ -17,9 +17,9 @@ export class SuperAdminController {
     private readonly _getStudentsUseCase: IGetStudentsUseCase,
     private readonly _getCompaniesUseCase: IGetCompaniesUseCase,
     private readonly _getInterviewersUseCase: IGetInterviewersUseCase,
-    private readonly _updateStatusUseCase: UpdateUserStatusUseCase,
-    private readonly _deleteUserUseCase: DeleteUserUseCase,
-    private readonly _updatePlanUseCase: UpdateOrganizationPlanUseCase
+    private readonly _updateStatusUseCase: IUpdateUserStatusUseCase,
+    private readonly _deleteUserUseCase: IDeleteUserUseCase,
+    private readonly _updatePlanUseCase: IUpdateOrganizationPlanUseCase
   ) { }
 
   updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -35,8 +35,8 @@ export class SuperAdminController {
   });
 
   getOrganizations = asyncHandler(async (req: Request, res: Response) => {
-    const { query = "", page = 1, limit = 10 } = req.query;
-    const result = await this._getOrgsUseCase.execute(query as string, Number(page), Number(limit));
+    const { query = "", page = 1, limit = 10, status } = req.query;
+    const result = await this._getOrgsUseCase.execute(query as string, Number(page), Number(limit), status as string);
     sendSuccess(res, result, "Organizations retrieved successfully");
   });
 
@@ -47,8 +47,8 @@ export class SuperAdminController {
   });
 
   getCompanies = asyncHandler(async (req: Request, res: Response) => {
-    const { query = "", page = 1, limit = 10 } = req.query;
-    const result = await this._getCompaniesUseCase.execute(query as string, Number(page), Number(limit));
+    const { query = "", page = 1, limit = 10, status } = req.query;
+    const result = await this._getCompaniesUseCase.execute(query as string, Number(page), Number(limit), status as string);
     sendSuccess(res, result, "Companies retrieved successfully");
   });
 
@@ -58,7 +58,7 @@ export class SuperAdminController {
     sendSuccess(res, result, "Interviewers retrieved successfully");
   });
 
-  updateStatus = asyncHandler(async (req: any, res: Response) => {
+  updateStatus = asyncHandler(async (req: Request, res: Response) => {
     const { role, id } = req.params;
     const { status } = req.body;
     const adminRole = req.user?.role;
