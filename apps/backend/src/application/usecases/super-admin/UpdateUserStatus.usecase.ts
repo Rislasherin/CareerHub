@@ -8,7 +8,9 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-export class UpdateUserStatusUseCase {
+import { IUpdateUserStatusUseCase } from "./interfaces/IUpdateUserStatus.usecase";
+
+export class UpdateUserStatusUseCase implements IUpdateUserStatusUseCase {
   constructor(
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
