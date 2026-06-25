@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -22,7 +22,7 @@ export class HRJobController {
     private readonly _updateJobUseCase: IUpdateJobUseCase
   ) { }
 
-  postJob = asyncHandler(async (req: any, res: Response) => {
+  postJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -31,7 +31,7 @@ export class HRJobController {
     sendSuccess(res, result.toJSON(), "Job post created and submitted for approval successfully", HttpStatus.CREATED);
   });
 
-  getJobs = asyncHandler(async (req: any, res: Response) => {
+  getJobs = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -57,7 +57,7 @@ export class HRJobController {
     );
   });
 
-  closeJob = asyncHandler(async (req: any, res: Response) => {
+  closeJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -67,7 +67,7 @@ export class HRJobController {
     sendSuccess(res, result.toJSON(), "Job closed successfully");
   });
 
-  deleteJob = asyncHandler(async (req: any, res: Response) => {
+  deleteJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -77,7 +77,7 @@ export class HRJobController {
     sendSuccess(res, result.toJSON(), "Job post deleted successfully");
   });
 
-  getCandidates = asyncHandler(async (req: any, res: Response) => {
+  getCandidates = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -85,7 +85,7 @@ export class HRJobController {
     const candidates = await this._getHRCandidatesUseCase.execute(companyId);
     sendSuccess(res, candidates, "Candidates list retrieved successfully");
   });
-  updateJob = asyncHandler(async (req: any, res: Response) => {
+  updateJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
