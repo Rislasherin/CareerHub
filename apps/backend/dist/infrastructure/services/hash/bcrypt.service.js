@@ -7,10 +7,10 @@ exports.BcryptService = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 class BcryptService {
     constructor() {
-        this.SALT_ROUNDS = 10;
+        this._SALT_ROUNDS = 10;
     }
     async hash(password) {
-        return bcrypt_1.default.hash(password, this.SALT_ROUNDS);
+        return bcrypt_1.default.hash(password, this._SALT_ROUNDS);
     }
     async compare(plain, hash) {
         return bcrypt_1.default.compare(plain, hash);

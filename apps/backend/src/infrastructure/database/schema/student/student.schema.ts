@@ -19,6 +19,56 @@ export const studentSchema = new Schema(
     invitationExpiresAt: { type: Date, required: false },
     isFirstLogin: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false, index: true },
+    appliedJobs: [{ type: String, default: [] }],
+
+    // Day 12 Student Profile fields
+    linkedinUrl: { type: String, required: false },
+    githubUrl: { type: String, required: false },
+    portfolioUrl: { type: String, required: false },
+    city: { type: String, required: false },
+
+    // Academic details (verified & locked)
+    degree: { type: String, required: false },
+    branch: { type: String, required: false },
+    graduationYear: { type: Number, required: false },
+    cgpa: { type: Number, required: false },
+    tenthPercentage: { type: Number, required: false },
+    twelfthPercentage: { type: Number, required: false },
+    activeBacklogs: { type: Number, required: false, default: 0 },
+
+    // Skills
+    skills: {
+      languages: [{ type: String }],
+      frameworks: [{ type: String }],
+      databases: [{ type: String }],
+      cloudDevops: [{ type: String }],
+      otherTools: [{ type: String }],
+      aiMl: [{ type: String }]
+    },
+
+    // Work Experience
+    experience: [
+      {
+        company: { type: String, required: true },
+        role: { type: String, required: true },
+        duration: { type: String, required: true },
+        location: { type: String, required: false },
+        summary: { type: String, required: false }
+      }
+    ],
+
+    // Projects
+    projects: [
+      {
+        name: { type: String, required: true },
+        techStack: [{ type: String }],
+        github: { type: String, required: false },
+        liveDemo: { type: String, required: false },
+        description: { type: String, required: false }
+      }
+    ]
   },
   { timestamps: true }
 );
+
+studentSchema.index({ rollNumber: 1, collegeId: 1 }, { unique: true, sparse: true });

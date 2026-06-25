@@ -5,8 +5,9 @@ const AuthError_1 = require("@application/errors/AuthError");
 const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const Roles_enum_1 = require("@domain/enums/Roles.enum");
 class LoginHRUseCase {
-    constructor(_hrUserRepository, _jwtService, _bcryptService) {
+    constructor(_hrUserRepository, _companyRepository, _jwtService, _bcryptService) {
         this._hrUserRepository = _hrUserRepository;
+        this._companyRepository = _companyRepository;
         this._jwtService = _jwtService;
         this._bcryptService = _bcryptService;
     }
@@ -15,12 +16,19 @@ class LoginHRUseCase {
         if (!hrUser) {
             throw new AuthError_1.InvalidCredentialsError();
         }
-        if (hrUser.status !== user_status_enum_1.UserStatus.ACTIVE) {
+        if (hrUser.status === user_status_enum_1.UserStatus.BLOCKED || hrUser.status === user_status_enum_1.UserStatus.REJECTED) {
+            throw new AuthError_1.UnauthorizedError("Your account has been blocked or rejected.");
+        }
+        if (hrUser.status !== user_status_enum_1.UserStatus.ACTIVE && hrUser.status !== user_status_enum_1.UserStatus.PENDING) {
             throw new AuthError_1.UnauthorizedError("Your account is not active");
         }
         const isPasswordValid = await this._bcryptService.compare(dto.password, hrUser.password);
         if (!isPasswordValid) {
             throw new AuthError_1.InvalidCredentialsError();
+        }
+        const company = await this._companyRepository.findById(hrUser.companyId);
+        if (company?.status === user_status_enum_1.UserStatus.BLOCKED) {
+            throw new AuthError_1.UnauthorizedError("Your company has been blocked. Please contact admin.");
         }
         const payload = {
             id: hrUser.id,
@@ -38,6 +46,7 @@ class LoginHRUseCase {
                 role: hrUser.role,
                 companyId: hrUser.companyId,
             },
+            company: company?.toJSON(),
         };
     }
 }

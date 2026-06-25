@@ -21,7 +21,7 @@ export class AddInterviewerUseCase implements IAddInterviewerUseCase {
     private readonly _emailService: IEmailService,
     private readonly _jwtService: IJwtService,
     private readonly _crossRoleAuthService: CrossRoleAuthService
-  ) {}
+  ) { }
 
   async execute(companyId: string, firstName: string, lastName: string, email: string) {
     const globalCheck = await this._crossRoleAuthService.isEmailInUse(email);

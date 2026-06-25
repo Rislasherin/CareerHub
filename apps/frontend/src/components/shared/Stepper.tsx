@@ -31,7 +31,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps, currentStep, roleType =
         return (
           <React.Fragment key={index}>
             <div className="flex flex-col items-center gap-2 relative z-10">
-              <div 
+              <div
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
                   ${isCompleted ? `${getRoleColors()} text-white` : ''}
@@ -47,8 +47,8 @@ export const Stepper: React.FC<StepperProps> = ({ steps, currentStep, roleType =
             </div>
             {index < steps.length - 1 && (
               <div className="flex-1 h-0.5 mx-4 bg-slate-100 relative -top-3">
-                <div 
-                  className={`absolute left-0 top-0 h-full transition-all duration-500 ${getRoleColors()}`} 
+                <div
+                  className={`absolute left-0 top-0 h-full transition-all duration-500 ${getRoleColors()}`}
                   style={{ width: isCompleted ? '100%' : '0%' }}
                 />
               </div>

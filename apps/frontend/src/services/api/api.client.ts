@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -11,18 +11,25 @@ export const apiClient = axios.create({
   },
 });
 
+interface ErrorResponseData {
+  error?: {
+    message?: string;
+  };
+  message?: string;
+}
+
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
+  resolve: () => void;
+  reject: (error: Error) => void;
 }> = [];
 
-const processQueue = (error: Error | null, token: string | null = null) => {
+const processQueue = (error: Error | null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
   failedQueue = [];
@@ -33,7 +40,7 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
     // Handle Network Errors or Server Down
     if (!error.response) {
@@ -41,8 +48,13 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
     const statusCode = error.response.status;
-    const errorMessage = (error.response.data as any)?.error?.message || (error.response.data as any)?.message || error.message || 'Something went wrong';
+    const errorData = error.response.data as ErrorResponseData | undefined;
+    const errorMessage = errorData?.error?.message || errorData?.message || error.message || 'Something went wrong';
 
     const isAuthRoute = originalRequest.url?.includes('/login') || originalRequest.url?.includes('/register');
 
@@ -79,7 +91,7 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized (Token Expiration)
     if (statusCode === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh-token' && !isAuthRoute) {
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise<void>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then(() => {
@@ -104,7 +116,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (err) {
         isRefreshing = false;
-        processQueue(err as Error);
+        processQueue(err instanceof Error ? err : new Error('Token refresh failed'));
 
         await performGlobalLogout('session_expired');
         return Promise.reject(err);

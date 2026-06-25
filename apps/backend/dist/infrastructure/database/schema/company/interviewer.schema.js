@@ -44,6 +44,8 @@ exports.InterviewerSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    blockedBy: { type: String, required: false },
+    isDeleted: { type: Boolean, default: false, index: true },
 }, {
     timestamps: true,
 });

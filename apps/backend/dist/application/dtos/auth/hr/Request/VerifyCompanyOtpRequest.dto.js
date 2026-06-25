@@ -17,14 +17,14 @@ class VerifyCompanyOtpRequestDto {
 exports.VerifyCompanyOtpRequestDto = VerifyCompanyOtpRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
+    (0, class_validator_1.IsNotEmpty)({ message: "Email is required" }),
     __metadata("design:type", String)
 ], VerifyCompanyOtpRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Length)(6, 6),
+    (0, class_validator_1.IsNotEmpty)({ message: "OTP is required" }),
+    (0, class_validator_1.Length)(6, 6, { message: "OTP must be exactly 6 characters long" }),
     __metadata("design:type", String)
 ], VerifyCompanyOtpRequestDto.prototype, "otp", void 0);

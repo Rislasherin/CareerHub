@@ -27,10 +27,10 @@ class VerifyCompanyOtpUseCase {
         if (!company) {
             throw new AppError_1.AppError("Company not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.USER_NOT_FOUND);
         }
-        // Activate
-        hrUser.status = user_status_enum_1.UserStatus.ACTIVE;
+        // Activate to pending onboarding state
+        hrUser.status = user_status_enum_1.UserStatus.PENDING;
         await this._hrUserRepository.update(hrUser.id, hrUser);
-        company.status = "active";
+        company.status = user_status_enum_1.UserStatus.PENDING;
         await this._companyRepository.update(company.id, company);
         // Delete OTP after successful verification
         await this._otpRepository.deleteByEmail(dto.email);

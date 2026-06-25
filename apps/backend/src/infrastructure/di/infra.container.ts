@@ -6,6 +6,7 @@ import { InterviewerRepository } from "@infrastructure/repositories/InterviewerR
 import { OtpRepository } from "@infrastructure/repositories/OtpRepository";
 import { CollegeAdminRepository } from "@infrastructure/repositories/college-admin.repository";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
+import { JobRepository } from "@infrastructure/repositories/JobRepository";
 import { BcryptService } from "@infrastructure/services/hash/bcrypt.service";
 import { JwtService } from "@infrastructure/services/token/jwt.service";
 import { AuthMiddleware } from "@presentation/express/middlewares/auth.middleware";
@@ -19,6 +20,7 @@ export const interviewerRepository = new InterviewerRepository();
 export const otpRepository = new OtpRepository();
 export const collegeAdminRepository = new CollegeAdminRepository();
 export const organizationRepository = new OrganizationRepository();
+export const jobRepository = new JobRepository();
 export const jwtService = new JwtService();
 export const bcryptService = new BcryptService();
 export const authMiddleware = new AuthMiddleware(

@@ -19,17 +19,26 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(2, { message: 'First name must be at least 2 characters' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'First name cannot exceed 50 characters' }),
+    (0, class_validator_1.Matches)(/^[A-Z]/, { message: 'First name must start with a capital letter' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z ]+$/, { message: 'First name can only contain letters and spaces' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(1, { message: 'Last name must be at least 1 character' }),
+    (0, class_validator_1.MaxLength)(50, { message: 'Last name cannot exceed 50 characters' }),
+    (0, class_validator_1.Matches)(/^[A-Z]/, { message: 'Last name must start with a capital letter' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z ]+$/, { message: 'Last name can only contain letters and spaces' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/, { message: 'Invalid email address' }),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "email", void 0);
@@ -37,12 +46,24 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(3, { message: 'Roll number must be at least 3 characters' }),
+    (0, class_validator_1.MaxLength)(30, { message: 'Roll number cannot exceed 30 characters' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: 'Roll number cannot have consecutive spaces' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: 'Roll number cannot end with a space' }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: 'Roll number cannot start with a space' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9-]+$/, { message: 'Roll number can only contain letters, numbers, and hyphens' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "rollNumber", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(2, { message: 'Department name must be at least 2 characters' }),
+    (0, class_validator_1.MaxLength)(100, { message: 'Department name cannot exceed 100 characters' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: 'Department name cannot have consecutive spaces' }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: 'Department name cannot end with a space' }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: 'Department name cannot start with a space' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z ]+$/, { message: 'Department name can only contain letters and spaces' }),
     __metadata("design:type", String)
 ], InviteStudentItemDto.prototype, "department", void 0);
 class InviteStudentsDto {

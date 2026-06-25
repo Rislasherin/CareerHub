@@ -6,6 +6,7 @@ const response_util_1 = require("@shared/utils/response.util");
 const AppError_1 = require("@application/errors/AppError");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
+const env_validator_1 = require("@infrastructure/config/env.validator");
 class HRAuthController {
     constructor(registerUseCase, onboardingUseCase, verifyOtpUseCase, loginUseCase) {
         this.registerUseCase = registerUseCase;
@@ -18,7 +19,7 @@ class HRAuthController {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 30 * 60 * 1000,
+                maxAge: env_validator_1.env.COOKIE_MAX_AGE_MS,
             });
             (0, response_util_1.sendSuccess)(res, result, "Login successful");
         });
@@ -32,7 +33,7 @@ class HRAuthController {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 30 * 60 * 1000,
+                maxAge: env_validator_1.env.COOKIE_MAX_AGE_MS,
             });
             (0, response_util_1.sendSuccess)(res, {
                 hrUser: result.hrUser,

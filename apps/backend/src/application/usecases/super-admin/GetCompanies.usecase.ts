@@ -9,16 +9,16 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
   constructor(
     private readonly _companyRepository: ICompanyRepository,
     private readonly _hrUserRepository: IHRUserRepository
-  ) {}
+  ) { }
 
   async execute(query: string, page: number, limit: number) {
     const { hrUsers, total } = await this._hrUserRepository.searchHRUsers(query, page, limit);
-    
+
     const companiesWithHR = await Promise.all(hrUsers.map(async (user) => {
       const company = await this._companyRepository.findById(user.companyId);
       const userJson = user.toJSON();
       const companyProps = company?.toJSON();
-      
+
       return {
         id: userJson.id, // Use User ID for actions (blocking/deleting the person)
         companyId: companyProps?.id,

@@ -15,10 +15,10 @@ export default function InterviewerRegisterInfoPage() {
         </div>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem' }}>Interviewer Access</h1>
         <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem' }}>
-          Interviewer accounts are created by your company's HR or Recruitment Manager. 
+          Interviewer accounts are created by your company's HR or Recruitment Manager.
           You will receive an invitation email once you've been added to a hiring team.
         </p>
-        
+
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', textAlign: 'left', marginBottom: '2rem', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
             <Mail size={20} color="var(--brand-secondary)" />

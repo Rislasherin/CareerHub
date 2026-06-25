@@ -24,7 +24,7 @@ const buildAuthResponse = (account, jwtService) => {
             firstName: props.firstName,
             lastName: props.lastName,
             organizationId: props.organizationId,
-            companyId: props.companyId,
+            comptypeId: props.comptypeId,
             mustChangePassword: props.mustChangePassword,
         },
     };

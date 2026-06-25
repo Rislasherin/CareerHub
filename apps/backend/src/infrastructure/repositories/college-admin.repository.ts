@@ -3,7 +3,7 @@ import { BaseRepository } from "./BaseRepository";
 import { CollegeAdminDocument } from "@infrastructure/database/models/organizer/college-admin.model";
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { CollegeAdminModel } from "@infrastructure/database/models/organizer/college-admin.model";
-import { toCollegeAdminEntity, toCollegeAdminPersistence } from "@infrastructure/mappers/college-admin.mapper";
+import { toCollegeAdminEntity, toCollegeAdminPersistence } from "@application/mappers/college-admin.mapper";
 
 export class CollegeAdminRepository
   extends BaseRepository<CollegeAdmin, CollegeAdminDocument>
@@ -32,7 +32,7 @@ export class CollegeAdminRepository
     }
 
     async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-      const update: any = { status };
+      const update: Record<string, unknown> = { status };
       if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
         update.blockedBy = blockedBy;
       } else if (status?.toUpperCase() !== 'BLOCKED') {

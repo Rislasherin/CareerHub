@@ -79,13 +79,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               </p>
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
+                <button
+                  type="button"
                   onClick={onClose}
-                  className="flex-1 h-14 rounded-2xl font-bold border-slate-200"
+                  className="flex-1 h-14 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-800 transition-all duration-200"
                 >
                   {cancelText}
-                </Button>
+                </button>
                 <Button
                   onClick={onConfirm}
                   isLoading={isLoading}

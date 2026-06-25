@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/shared/Button';
-import { 
-  Building2, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  ShieldAlert, 
-  ShieldCheck, 
-  Trash2, 
+import {
+  Building2,
+  Search,
+  Filter,
+  MoreVertical,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
   Eye,
   ArrowUpDown,
   ChevronLeft,
@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 
 export default function CollegesManagement() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<type[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -45,7 +45,7 @@ export default function CollegesManagement() {
     title: '',
     message: '',
     confirmText: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     isLoading: false
   });
 
@@ -179,7 +179,7 @@ export default function CollegesManagement() {
                     </tr>
                   ) : (
                     data.map((college, i) => (
-                      <motion.tr 
+                      <motion.tr
                         key={college.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -207,11 +207,10 @@ export default function CollegesManagement() {
                           {college.countOfStudents || 0}
                         </td>
                         <td className="px-8 py-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            college.status === 'blocked' 
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${college.status === 'blocked'
+                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
+                            }`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${college.status === 'blocked' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                             {college.status || 'active'}
                           </span>
@@ -221,16 +220,15 @@ export default function CollegesManagement() {
                             <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                               <Eye size={16} />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleStatusToggle(college.id, college.status)}
-                              className={`p-2 rounded-lg bg-white/5 transition-all ${
-                                college.status === 'blocked' ? 'text-emerald-400 hover:bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10'
-                              }`}
+                              className={`p-2 rounded-lg bg-white/5 transition-all ${college.status === 'blocked' ? 'text-emerald-400 hover:bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10'
+                                }`}
                               title={college.status === 'blocked' ? 'Unblock' : 'Block'}
                             >
                               {college.status === 'blocked' ? <ShieldCheck size={16} /> : <ShieldAlert size={16} />}
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDelete(college.id)}
                               className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 transition-all"
                             >
@@ -263,7 +261,7 @@ export default function CollegesManagement() {
               Showing <span className="text-white">{(page - 1) * 10 + 1}</span> to <span className="text-white">{Math.min(page * 10, total)}</span> of <span className="text-white">{total}</span> colleges
             </span>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-all"
@@ -272,18 +270,17 @@ export default function CollegesManagement() {
               </button>
               <div className="flex items-center gap-1">
                 {[...Array(Math.ceil(total / 10))].map((_, i) => (
-                  <button 
+                  <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${
-                      page === i + 1 ? 'bg-cyan-500 text-[#0B0D17]' : 'bg-white/5 text-slate-400 hover:text-white'
-                    }`}
+                    className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${page === i + 1 ? 'bg-cyan-500 text-[#0B0D17]' : 'bg-white/5 text-slate-400 hover:text-white'
+                      }`}
                   >
                     {i + 1}
                   </button>
                 )).slice(0, 5)}
               </div>
-              <button 
+              <button
                 onClick={() => setPage(p => p + 1)}
                 disabled={page >= Math.ceil(total / 10)}
                 className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-all"

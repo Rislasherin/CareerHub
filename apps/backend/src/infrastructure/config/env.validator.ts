@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string(),
   JWT_REFRESH_SECRET: z.string().nonempty("JWT_REFRESH_SECRET is required"),
   JWT_REFRESH_EXPIRES_IN: z.string(),
+  COOKIE_MAX_AGE_MS: z.string().transform(Number).default("1800000"),
   EMAIL_HOST: z.string().nonempty("EMAIL_HOST is required"),
   EMAIL_PORT: z.string().transform(Number),
   EMAIL_USER: z.string().nonempty("EMAIL_USER is required"),

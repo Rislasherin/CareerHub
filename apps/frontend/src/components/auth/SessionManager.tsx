@@ -1,4 +1,5 @@
 'use client';
+import { API_ROUTES } from '@/constants/api.routes';
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,7 +26,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
     // Periodically check account status to handle administrative blocking
     const checkStatus = async () => {
       try {
-        const response: any = await apiClient.get('/auth/status');
+        const response: any = await apiClient.get(API_ROUTES.AUTH.STATUS);
 
         // Update Redux state with latest user data (handles real-time approvals)
         if (response.data) {
@@ -47,7 +48,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
               break;
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         const msg = err.response?.data?.error?.message || err.response?.data?.message || '';
         if (msg.toLowerCase().includes('blocked')) {
           // Force immediate logout and redirect
@@ -94,8 +95,8 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
       };
 
       // 3. Onboarding Redirection Logic
-      const hrOnboardingComplete = (hrDetails?.onboardingStep || 0) >= 3;
-      const collegeOnboardingComplete = (collegeAdminDetails?.onboardingStep || 0) >= 3;
+      const hrOnboardingComplete = (hrDetails?.onboardingStep || 0) >= 3 || hrDetails?.status?.toUpperCase() === 'ACTIVE';
+      const collegeOnboardingComplete = (collegeAdminDetails?.onboardingStep || 0) >= 3 || collegeAdminDetails?.status?.toUpperCase() === 'ACTIVE';
 
       // Handle auth route redirects (Login/Register -> Dashboard)
       if (authRoutes.some(route => pathname === route) || pathname === '/') {
@@ -129,7 +130,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
         const isWaitlistPage = pathname === '/student/waitlist';
         const isVerifyPage = pathname === '/student/verify';
         const isSetupPage = pathname === '/student/setup';
-        
+
         // 4. Student Specific Status Redirection
         if (status === 'ACTIVE') {
           if (isWaitlistPage || isVerifyPage || isSetupPage) {
@@ -174,3 +175,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
+
+
+

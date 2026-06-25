@@ -9,7 +9,7 @@ export class LoginSuperAdminUseCase {
     private readonly _superAdminRepository: ISuperAdminRepository,
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService
-  ) {}
+  ) { }
 
   async execute(dto: any) {
     const admin = await this._superAdminRepository.findByEmail(dto.email);

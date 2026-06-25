@@ -9,60 +9,60 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompanySignupRequestDto = void 0;
+exports.ComptypeSignupRequestDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-class CompanySignupRequestDto {
+class ComptypeSignupRequestDto {
 }
-exports.CompanySignupRequestDto = CompanySignupRequestDto;
+exports.ComptypeSignupRequestDto = ComptypeSignupRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "firstName", void 0);
+], ComptypeSignupRequestDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "lastName", void 0);
+], ComptypeSignupRequestDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "email", void 0);
+], ComptypeSignupRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "password", void 0);
+], ComptypeSignupRequestDto.prototype, "password", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "companyName", void 0);
+], ComptypeSignupRequestDto.prototype, "comptypeName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "companySize", void 0);
+], ComptypeSignupRequestDto.prototype, "comptypeSize", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "industry", void 0);
+], ComptypeSignupRequestDto.prototype, "industry", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "primaryContactName", void 0);
+], ComptypeSignupRequestDto.prototype, "primaryContactName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "primaryContactPhone", void 0);
+], ComptypeSignupRequestDto.prototype, "primaryContactPhone", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CompanySignupRequestDto.prototype, "designation", void 0);
+], ComptypeSignupRequestDto.prototype, "designation", void 0);

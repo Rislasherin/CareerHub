@@ -49,7 +49,7 @@ import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface NavItem {
   label: string;
-  icon: any;
+  icon: type;
   href: string;
   badge?: string | number;
 }
@@ -71,6 +71,7 @@ const super_adminNav: NavCategory[] = [
     items: [
       { label: 'Colleges', icon: GraduationCap, href: '/admin/colleges' },
       { label: 'Companies', icon: Building2, href: '/admin/companies' },
+      { label: 'Subscriptions', icon: CreditCard, href: '/admin/subscriptions' },
     ]
   }
 ];
@@ -86,6 +87,7 @@ const collegeAdminNav: NavCategory[] = [
     title: 'MANAGEMENT',
     items: [
       { label: 'Student Directory', icon: Users, href: '/college/students' },
+      { label: 'Drive Approvals', icon: FileCheck, href: '/college/jobs' },
     ]
   }
 ];
@@ -95,12 +97,15 @@ const hrNav: NavCategory[] = [
     title: 'OVERVIEW',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/hr' },
+      { label: 'Candidates', icon: Users, href: '/hr/candidates' },
     ]
   },
   {
     title: 'MANAGEMENT',
     items: [
-      { label: 'Interviewers', icon: Briefcase, href: '/hr/interviewers' },
+      { label: 'Campus Drives', icon: Briefcase, href: '/hr/jobs' },
+      { label: 'Post a Job', icon: Plus, href: '/hr/jobs?action=post-job' },
+      { label: 'Interviewers', icon: Users, href: '/hr/interviewers' },
     ]
   }
 ];
@@ -110,6 +115,8 @@ const studentNav: NavCategory[] = [
     title: 'OVERVIEW',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
+      { label: 'Jobs Feed', icon: Briefcase, href: '/student/jobs' },
+      { label: 'My Profile', icon: UserCircle, href: '/student/profile' },
     ]
   }
 ];
@@ -126,10 +133,10 @@ const interviewerNav: NavCategory[] = [
 export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; onLogoutRequest?: () => void }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  
+
   const dispatch = useAppDispatch();
   const { activeRole: role } = useAppSelector(state => state.auth);
-  
+
   const studentDetails = useAppSelector(state => state.student.details);
   const collegeAdminDetails = useAppSelector(state => state.collegeAdmin.details);
   const hrDetails = useAppSelector(state => state.hr.details);
@@ -143,7 +150,7 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
     setIsLoggingOut(true);
     try {
       await logoutUser();
-    } catch {}
+    } catch { }
     dispatch(clearAuth());
     dispatch(clearStudentDetails());
     dispatch(clearCollegeAdminDetails());
@@ -228,7 +235,7 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
     <aside className={`w-80 ${sidebarBg} h-screen flex flex-col fixed left-0 top-0 z-[60] border-r border-white/5`}>
       {/* Mobile Close Button */}
       {onClose && (
-        <button 
+        <button
           onClick={onClose}
           className="lg:hidden absolute top-6 right-6 w-10 h-10 flex items-center justify-center text-slate-500 hover:text-white bg-white/5 rounded-xl transition-all"
         >
@@ -245,24 +252,45 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
           <div className="flex flex-col">
             <span className="text-xl font-black text-white tracking-tighter leading-none">CareerHub</span>
             <span className={`text-[10px] font-bold ${accentColor} opacity-60 uppercase tracking-widest mt-1`}>
-              {role === 'super_admin' ? 'Super Admin' : 
-               role === 'hr' ? 'Company Portal' : 
-               role === 'interviewer' ? 'Interviewer' : 
-               role === 'college_admin' ? 'College Portal' : 'Student Portal'}
+              {role === 'super_admin' ? 'Super Admin' :
+                role === 'hr' ? 'Company Portal' :
+                  role === 'interviewer' ? 'Interviewer' :
+                    role === 'college_admin' ? 'College Portal' : 'Student Portal'}
             </span>
           </div>
         </div>
+
+        {/* Student Profile Card (Top for Student) */}
+        {role === 'student' && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-inner font-black text-sm uppercase">
+              {studentDetails?.firstName ? `${studentDetails.firstName.charAt(0)}${studentDetails.lastName ? studentDetails.lastName.charAt(0) : ''}` : 'AS'}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-black text-white truncate">
+                {studentDetails?.firstName ? `${studentDetails.firstName} ${studentDetails.lastName || ''}` : 'Student Account'}
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 truncate mt-0.5">
+                {studentDetails?.rollNumber || '21CS001'} • {studentDetails?.branch || 'CS Engineering'}
+              </span>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-rose-500 font-black text-xs block leading-none">{studentDetails?.cgpa || '9.1'}</span>
+              <span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block mt-0.5">CGPA</span>
+            </div>
+          </div>
+        )}
 
         {/* User Profile (Top for Super Admin) */}
         {isSuperAdmin && (
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 mb-8">
             <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden border border-white/10">
               {user ? (
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).name}`} alt="avatar" className="w-full h-full object-cover" />
-              ) : <div className="text-[10px] font-black text-slate-500">SA</div> }
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as type).name}`} alt="avatar" className="w-full h-full object-cover" />
+              ) : <div className="text-[10px] font-black text-slate-500">SA</div>}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).name) : 'Super Admin'}</span>
+              <span className="text-sm font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as type).name) : 'Super Admin'}</span>
               <span className="text-[10px] font-bold text-slate-500 truncate">{user?.email || 'admin@careerhub.io'}</span>
             </div>
           </div>
@@ -271,13 +299,13 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
         {/* Institution Info Card */}
         {role === 'college_admin' && (
           <div className="bg-white/5 rounded-2xl p-4 border border-white/5 mb-8">
-             <div className="flex items-center justify-between mb-2">
-               <span className="text-sm font-black text-white truncate max-w-[150px]">
-                 {collegeAdminDetails?.collegeName || 'My Institution'}
-               </span>
-               <span className={`px-1.5 py-0.5 rounded-md ${accentBg} ${accentColor} text-[8px] font-black uppercase tracking-widest border border-white/5`}>PRO</span>
-             </div>
-             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">AY {new Date().getFullYear()}-{new Date().getFullYear() + 1}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-black text-white truncate max-w-[150px]">
+                {collegeAdminDetails?.collegeName || 'My Institution'}
+              </span>
+              <span className={`px-1.5 py-0.5 rounded-md ${accentBg} ${accentColor} text-[8px] font-black uppercase tracking-widest border border-white/5`}>PRO</span>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">AY {new Date().getFullYear()}-{new Date().getFullYear() + 1}</span>
           </div>
         )}
       </div>
@@ -327,18 +355,29 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
 
       {/* User & Logout Footer */}
       <div className="p-4 mt-auto border-t border-white/5">
-        {!isSuperAdmin ? (
+        {role === 'student' ? (
+          <button
+            onClick={() => {
+              if (onLogoutRequest) onLogoutRequest();
+              else setIsLogoutModalOpen(true);
+            }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all group w-full"
+          >
+            <LogOut size={18} className="text-slate-500 group-hover:text-rose-500 rotate-180" />
+            <span className="text-[13px]">Sign Out</span>
+          </button>
+        ) : !isSuperAdmin ? (
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all cursor-pointer relative">
             <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden border border-white/10">
-               {user ? (
-                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).name}`} alt="avatar" className="w-full h-full object-cover" />
-               ) : <div className="text-[10px] font-black text-slate-500">?</div> }
+              {user ? (
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as type).name}`} alt="avatar" className="w-full h-full object-cover" />
+              ) : <div className="text-[10px] font-black text-slate-500">?</div>}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).name) : 'User Account'}</span>
+              <span className="text-xs font-black text-white truncate">{user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as type).name) : 'User Account'}</span>
               <span className="text-[9px] uppercase font-black text-slate-500 tracking-widest truncate">{role?.replace('_', ' ')}</span>
             </div>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 if (onLogoutRequest) onLogoutRequest();
@@ -350,7 +389,7 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
             </button>
           </div>
         ) : (
-          <button 
+          <button
             onClick={() => {
               if (onLogoutRequest) onLogoutRequest();
               else setIsLogoutModalOpen(true);

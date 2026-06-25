@@ -17,11 +17,11 @@ export class SetupStudentPasswordUseCase implements ISetupStudentPasswordUseCase
     private readonly _studentRepository: IStudentRepository,
     private readonly _bcryptService: IBcryptService,
     private readonly _jwtService: IJwtService
-  ) {}
+  ) { }
 
   async execute(token: string, password: string): Promise<any> {
     const student = await this._studentRepository.findByInvitationToken(token);
-    
+
     if (!student) {
       throw new AppError("Invalid or expired invitation token", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }

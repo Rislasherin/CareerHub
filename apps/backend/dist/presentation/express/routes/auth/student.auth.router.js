@@ -6,9 +6,12 @@ const login_student_request_dto_1 = require("@application/dtos/auth/student/Requ
 const RequestAccess_dto_1 = require("@application/dtos/auth/student/Request/RequestAccess.dto");
 const SetupPassword_dto_1 = require("@application/dtos/auth/student/Request/SetupPassword.dto");
 const validateDto_1 = require("@presentation/express/middlewares/validateDto");
+const infra_container_1 = require("@infrastructure/di/infra.container");
 const router = (0, express_1.Router)();
 const studentAuthController = (0, auth_factory_1.makeStudentAuthController)();
 router.post("/login", (0, validateDto_1.validateDto)(login_student_request_dto_1.StudentLoginRequestDto), studentAuthController.login);
 router.post("/request-access", (0, validateDto_1.validateDto)(RequestAccess_dto_1.RequestAccessDto), studentAuthController.requestAccess);
 router.post("/setup-password", (0, validateDto_1.validateDto)(SetupPassword_dto_1.SetupPasswordDto), studentAuthController.setupPassword);
+router.get("/verify-token/:token", studentAuthController.verifyInvitationToken);
+router.get("/me", infra_container_1.authMiddleware.protect, studentAuthController.getMe);
 exports.default = router;

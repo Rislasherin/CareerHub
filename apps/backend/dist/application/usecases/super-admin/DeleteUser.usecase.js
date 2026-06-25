@@ -6,11 +6,12 @@ const AppError_1 = require("@application/errors/AppError");
 const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 class DeleteUserUseCase {
-    constructor(studentRepo, orgRepo, companyRepo, interviewerRepo) {
+    constructor(studentRepo, orgRepo, companyRepo, interviewerRepo, hrRepo) {
         this.studentRepo = studentRepo;
         this.orgRepo = orgRepo;
         this.companyRepo = companyRepo;
         this.interviewerRepo = interviewerRepo;
+        this.hrRepo = hrRepo;
     }
     async execute(role, id) {
         switch (role) {
@@ -21,7 +22,7 @@ class DeleteUserUseCase {
                 await this.orgRepo.delete(id);
                 break;
             case Roles_enum_1.Role.HR:
-                await this.companyRepo.delete(id);
+                await this.hrRepo.delete(id);
                 break;
             case Roles_enum_1.Role.INTERVIEWER:
                 await this.interviewerRepo.delete(id);

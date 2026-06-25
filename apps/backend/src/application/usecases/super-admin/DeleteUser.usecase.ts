@@ -15,7 +15,7 @@ export class DeleteUserUseCase {
     private readonly companyRepo: ICompanyRepository,
     private readonly interviewerRepo: IInterviewerRepository,
     private readonly hrRepo: IHRUserRepository
-  ) {}
+  ) { }
 
   async execute(role: string, id: string): Promise<void> {
     switch (role) {

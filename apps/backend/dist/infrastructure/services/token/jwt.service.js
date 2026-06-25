@@ -39,14 +39,14 @@ const jwt_constants_1 = require("@infrastructure/config/jwt.constants");
 const AuthError_1 = require("@application/errors/AuthError");
 class JwtService {
     constructor() {
-        this.accessOptions = { expiresIn: jwt_constants_1.JWT_ACCESS_EXPIRES_IN };
-        this.refreshOptions = { expiresIn: jwt_constants_1.JWT_REFRESH_EXPIRES_IN };
+        this._accessOptions = { expiresIn: jwt_constants_1.JWT_ACCESS_EXPIRES_IN };
+        this._refreshOptions = { expiresIn: jwt_constants_1.JWT_REFRESH_EXPIRES_IN };
     }
     signAccessToken(payload) {
-        return jsonwebtoken_1.default.sign(payload, jwt_constants_1.JWT_ACCESS_SECRET, this.accessOptions);
+        return jsonwebtoken_1.default.sign(payload, jwt_constants_1.JWT_ACCESS_SECRET, this._accessOptions);
     }
     signRefreshToken(payload) {
-        return jsonwebtoken_1.default.sign(payload, jwt_constants_1.JWT_REFRESH_SECRET, this.refreshOptions);
+        return jsonwebtoken_1.default.sign(payload, jwt_constants_1.JWT_REFRESH_SECRET, this._refreshOptions);
     }
     verifyAccessToken(token) {
         try {

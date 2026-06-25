@@ -18,44 +18,39 @@ exports.RegisterCollegeRequestDto = RegisterCollegeRequestDto;
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2, { message: "First name must be at least 2 characters long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "First name cannot exceed 50 characters" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: "First name cannot have consecutive spaces" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: "First name cannot end with a space" }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: "First name cannot start with a space" }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z\s'-]+$/, { message: "First name can only contain letters, spaces, hyphens, and apostrophes" }),
     __metadata("design:type", String)
 ], RegisterCollegeRequestDto.prototype, "firstName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(1, { message: "Last name must be at least 1 character long" }),
+    (0, class_validator_1.MaxLength)(50, { message: "Last name cannot exceed 50 characters" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: "Last name cannot have consecutive spaces" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: "Last name cannot end with a space" }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: "Last name cannot start with a space" }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z\s'-]*$/, { message: "Last name can only contain letters, spaces, hyphens, and apostrophes" }),
     __metadata("design:type", String)
 ], RegisterCollegeRequestDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: "Please provide a valid email address" }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/, { message: "Invalid email address" }),
     __metadata("design:type", String)
 ], RegisterCollegeRequestDto.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.MinLength)(8, { message: "Password must be at least 8 characters long" }),
+    (0, class_validator_1.MaxLength)(100, { message: "Password cannot exceed 100 characters" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s\s)/, { message: "Password cannot have consecutive spaces" }),
+    (0, class_validator_1.Matches)(/^(?!.*\s$)/, { message: "Password cannot end with a space" }),
+    (0, class_validator_1.Matches)(/^(?!^\s)/, { message: "Password cannot start with a space" }),
+    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/, { message: "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character" }),
     __metadata("design:type", String)
 ], RegisterCollegeRequestDto.prototype, "password", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterCollegeRequestDto.prototype, "organizationName", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterCollegeRequestDto.prototype, "city", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterCollegeRequestDto.prototype, "state", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterCollegeRequestDto.prototype, "studentCountRange", void 0);
-
-

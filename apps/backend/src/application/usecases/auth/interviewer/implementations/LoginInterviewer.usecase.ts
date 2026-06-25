@@ -14,7 +14,7 @@ export class LoginInterviewerUseCase {
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService,
     private readonly _crossRoleAuthService: CrossRoleAuthService
-  ) {}
+  ) { }
 
   async execute(dto: any) {
     console.log(`[LOGIN] Attempting login for interviewer: ${dto.email}`);

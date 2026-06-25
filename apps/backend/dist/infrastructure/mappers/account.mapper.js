@@ -14,7 +14,7 @@ class AccountMapper {
             lastName: document.lastName,
             phone: document.phone ?? undefined,
             organizationId: document.organizationId?.toString(),
-            companyId: document.companyId?.toString(),
+            comptypeId: document.comptypeId?.toString(),
             department: document.department ?? undefined,
             designation: document.designation ?? undefined,
             rollNumber: document.rollNumber ?? undefined,

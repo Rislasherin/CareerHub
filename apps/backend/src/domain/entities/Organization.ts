@@ -64,6 +64,10 @@ export class Organization {
     return this._props.onboardingStep;
   }
 
+  get activeBranches(): string[] {
+    return this._props.activeBranches || [];
+  }
+
   toJSON():OrganizationProps {
      return {...this._props};
   }

@@ -16,7 +16,7 @@ export interface HRUserProps {
 }
 
 export class HRUser {
-  constructor(private props: HRUserProps) {}
+  constructor(private props: HRUserProps) { }
 
   static create(props: HRUserProps): HRUser {
     return new HRUser(props);

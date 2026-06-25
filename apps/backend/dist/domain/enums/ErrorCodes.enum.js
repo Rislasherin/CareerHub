@@ -15,4 +15,6 @@ var ErrorCode;
     ErrorCode["INTERVIEWER_NOT_FOUND"] = "INTERVIEWER_NOT_FOUND";
     ErrorCode["INVALID_TOKEN"] = "INVALID_TOKEN";
     ErrorCode["TOKEN_NOT_FOUND"] = "TOKEN_NOT_FOUND";
+    ErrorCode["NOT_FOUND"] = "NOT_FOUND";
+    ErrorCode["ALREADY_BLOCKED"] = "ALREADY_BLOCKED";
 })(ErrorCode || (exports.ErrorCode = ErrorCode = {}));

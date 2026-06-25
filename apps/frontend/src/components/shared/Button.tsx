@@ -7,17 +7,18 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
   roleType = 'default',
   isLoading = false,
   fullWidth = false,
   className = '',
-  ...props 
+  ...props
 }) => {
   const getVariantStyles = () => {
     switch (variant) {
+      case 'secondary': return 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm';
       case 'outline': return 'border-2 bg-transparent';
       case 'ghost': return 'bg-transparent shadow-none';
       default: return 'text-white shadow-lg';
@@ -25,6 +26,9 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const getRoleStyles = () => {
+    if (variant === 'secondary') {
+      return '';
+    }
     if (variant === 'outline' || variant === 'ghost') {
       switch (roleType) {
         case 'student': return 'border-student-primary text-student-primary hover:bg-student-primary/5';
@@ -34,7 +38,7 @@ export const Button: React.FC<ButtonProps> = ({
         default: return 'border-indigo-600 text-indigo-600 hover:bg-indigo-600/5';
       }
     }
-    
+
     switch (roleType) {
       case 'student': return 'bg-student-primary hover:opacity-90';
       case 'hr': return 'bg-company-primary hover:opacity-90';
@@ -45,15 +49,15 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <button 
+    <button
       className={`
         inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 
         disabled:opacity-50 disabled:cursor-not-allowed
         ${getVariantStyles()} ${getRoleStyles()}
         ${fullWidth ? 'w-full' : ''}
         ${className}
-      `} 
-      disabled={isLoading || props.disabled} 
+      `}
+      disabled={isLoading || props.disabled}
       {...props}
     >
       {isLoading ? (

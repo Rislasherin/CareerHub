@@ -5,12 +5,12 @@ const HRUser_1 = require("@domain/entities/HRUser");
 const toHRUserEntity = (doc) => {
     return HRUser_1.HRUser.create({
         id: doc._id.toString(),
-        companyId: doc.companyId,
+        comptypeId: doc.comptypeId,
         firstName: doc.firstName,
         lastName: doc.lastName,
         email: doc.email,
         password: doc.password,
-        designation: doc.designation,
+        designation: doc.designation || "",
         role: doc.role,
         status: doc.status,
         createdAt: doc.createdAt,
@@ -21,7 +21,7 @@ exports.toHRUserEntity = toHRUserEntity;
 const toHRUserPersistence = (entity) => {
     const props = entity.toJSON();
     return {
-        companyId: props.companyId,
+        comptypeId: props.comptypeId,
         firstName: props.firstName,
         lastName: props.lastName,
         email: props.email,

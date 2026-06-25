@@ -12,6 +12,7 @@ import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepos
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
+import { env } from "@infrastructure/config/env.validator";
 
 export class RefreshTokenController {
   constructor(
@@ -21,7 +22,7 @@ export class RefreshTokenController {
     private readonly _interviewerRepository: IInterviewerRepository,
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _superAdminRepository: ISuperAdminRepository
-  ) {}
+  ) { }
 
   refresh = asyncHandler(async (req: Request, res: Response) => {
     const refreshToken: string | undefined = req.cookies?.refreshToken;
@@ -79,7 +80,7 @@ export class RefreshTokenController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: env.COOKIE_MAX_AGE_MS, // using standard cookie max age
     });
 
     sendSuccess(res, null, "Token refreshed successfully");

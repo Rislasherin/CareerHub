@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompanyEntity = void 0;
-class CompanyEntity {
+exports.ComptypeEntity = void 0;
+class ComptypeEntity {
     constructor(props) {
         this.props = props;
     }
     static create(props) {
-        return new CompanyEntity(props);
+        return new ComptypeEntity(props);
     }
     getId() {
         if (!this.props.id) {
-            throw new Error("Company id is missing.");
+            throw new Error("Comptype id is missing.");
         }
         return this.props.id;
     }
@@ -33,4 +33,4 @@ class CompanyEntity {
         return this.props.primaryContactPhone;
     }
 }
-exports.CompanyEntity = CompanyEntity;
+exports.ComptypeEntity = ComptypeEntity;

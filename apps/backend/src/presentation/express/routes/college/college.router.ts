@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { makeStudentManagementController } from "@infrastructure/di/college.factory";
+import { makeStudentManagementController, makeCollegeJobApprovalController } from "@infrastructure/di/college.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { InviteStudentsDto } from "@application/dtos/auth/student/Request/InviteStudents.dto";
 
 const router = Router();
 const studentManagementController = makeStudentManagementController();
+const collegeJobApprovalController = makeCollegeJobApprovalController();
 
 router.get("/test", (req, res) => res.json({ success: true, message: "College router is active" }));
 // Use authMiddleware.protect for all routes in this router
@@ -18,5 +19,9 @@ router.patch("/students/:studentId/reject", studentManagementController.rejectSt
 router.patch("/students/:studentId/approve-access", studentManagementController.approveAccessRequest);
 router.get("/dashboard/stats", studentManagementController.getDashboardStats);
 router.get("/students", studentManagementController.getAllStudents);
+
+router.get("/jobs/pending", collegeJobApprovalController.getPendingJobs);
+router.patch("/jobs/:jobId/approve", collegeJobApprovalController.approveJob);
+router.patch("/jobs/:jobId/reject", collegeJobApprovalController.rejectJob);
 
 export default router;

@@ -6,40 +6,40 @@ import { User, Briefcase, GraduationCap, Building2, ArrowRight, ChevronLeft } fr
 import { motion } from 'framer-motion';
 
 const registerRoutes = [
-  { 
-    id: 'student', 
-    label: 'Student', 
+  {
+    id: 'student',
+    label: 'Student',
     title: 'Candidate',
     description: 'Connect with premium employers and track your career growth.',
-    href: '/student/register', 
-    icon: GraduationCap, 
+    href: '/student/register',
+    icon: GraduationCap,
     lightColor: 'bg-indigo-50 text-indigo-600'
   },
-  { 
-    id: 'hr', 
-    label: 'Company', 
+  {
+    id: 'hr',
+    label: 'Company',
     title: 'Employer / HR',
     description: 'Post jobs, manage interviews, and hire top talent from verified colleges.',
-    href: '/hr/register', 
-    icon: Briefcase, 
+    href: '/hr/register',
+    icon: Briefcase,
     lightColor: 'bg-indigo-50 text-indigo-600'
   },
-  { 
-    id: 'college', 
-    label: 'Institution', 
+  {
+    id: 'college',
+    label: 'Institution',
     title: 'College / University',
     description: 'Register your campus to streamline placements and verify students.',
-    href: '/college/register', 
-    icon: Building2, 
+    href: '/college/register',
+    icon: Building2,
     lightColor: 'bg-indigo-50 text-indigo-600'
   },
-  { 
-    id: 'interviewer', 
-    label: 'Interviewer', 
+  {
+    id: 'interviewer',
+    label: 'Interviewer',
     title: 'Reviewer',
     description: 'Join a hiring team to conduct interviews and evaluate candidates.',
-    href: '/interviewer/register', 
-    icon: User, 
+    href: '/interviewer/register',
+    icon: User,
     lightColor: 'bg-indigo-50 text-indigo-600'
   },
 ];
@@ -93,7 +93,7 @@ export default function RegisterSelectionPage() {
                     <div className={`w-16 h-16 rounded-2xl ${route.lightColor} flex items-center justify-center mb-10 shadow-sm border border-indigo-100/30 group-hover:scale-110 transition-transform duration-500`}>
                       <route.icon size={32} strokeWidth={2.5} />
                     </div>
-                    
+
                     <div className="flex-1">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 block">{route.label}</span>
                       <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-indigo-600 transition-colors tracking-tight">{route.title}</h3>

@@ -15,7 +15,7 @@ export class UploadStudentVerificationUseCase implements IUploadStudentVerificat
   constructor(
     private readonly _studentRepository: IStudentRepository,
     private readonly _storageService: IStorageService
-  ) {}
+  ) { }
 
   async execute(studentId: string, file: any): Promise<Student> {
     const student = await this._studentRepository.findById(studentId);

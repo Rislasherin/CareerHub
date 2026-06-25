@@ -8,7 +8,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const env_validator_1 = require("@infrastructure/config/env.validator");
 class EmailService {
     constructor() {
-        this.transporter = nodemailer_1.default.createTransport({
+        this._transporter = nodemailer_1.default.createTransport({
             host: env_validator_1.env.EMAIL_HOST,
             port: env_validator_1.env.EMAIL_PORT,
             secure: env_validator_1.env.EMAIL_PORT === 465, // true for 465, false for other ports
@@ -20,7 +20,7 @@ class EmailService {
     }
     async sendOTP(email, otp, companyName) {
         try {
-            await this.transporter.sendMail({
+            await this._transporter.sendMail({
                 from: env_validator_1.env.EMAIL_FROM,
                 to: email,
                 subject: "Verify your CareerHub Organization Account",
@@ -48,7 +48,7 @@ class EmailService {
     }
     async sendInterviewerSetupEmail(email, setupLink) {
         try {
-            await this.transporter.sendMail({
+            await this._transporter.sendMail({
                 from: env_validator_1.env.EMAIL_FROM,
                 to: email,
                 subject: "Invitation to join CareerHub as an Interviewer",
@@ -78,7 +78,7 @@ class EmailService {
     }
     async sendPasswordResetEmail(email, resetLink) {
         try {
-            await this.transporter.sendMail({
+            await this._transporter.sendMail({
                 from: env_validator_1.env.EMAIL_FROM,
                 to: email,
                 subject: "Reset your CareerHub Password",
@@ -108,7 +108,7 @@ class EmailService {
     }
     async sendStudentInvitationEmail(email, setupLink) {
         try {
-            await this.transporter.sendMail({
+            await this._transporter.sendMail({
                 from: env_validator_1.env.EMAIL_FROM,
                 to: email,
                 subject: "Invitation to join CareerHub Student Portal",

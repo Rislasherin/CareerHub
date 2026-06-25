@@ -5,9 +5,10 @@ const user_status_enum_1 = require("@domain/enums/user.status.enum");
 const uuid_1 = require("uuid");
 const student_1 = require("@domain/entities/student");
 class BulkInviteStudentsUseCase {
-    constructor(_studentRepository, _emailService) {
+    constructor(_studentRepository, _emailService, _crossRoleAuthService) {
         this._studentRepository = _studentRepository;
         this._emailService = _emailService;
+        this._crossRoleAuthService = _crossRoleAuthService;
     }
     async execute(collegeId, dto) {
         const results = {
@@ -17,6 +18,11 @@ class BulkInviteStudentsUseCase {
         };
         for (const studentData of dto.students) {
             try {
+                const globalCheck = await this._crossRoleAuthService.isEmailInUse(studentData.email);
+                if (globalCheck.inUse) {
+                    results.errors.push(`Email ${studentData.email} is already registered as a ${globalCheck.role}`);
+                    continue;
+                }
                 const exists = await this._studentRepository.existsByEmail(studentData.email);
                 if (exists) {
                     results.skipped++;

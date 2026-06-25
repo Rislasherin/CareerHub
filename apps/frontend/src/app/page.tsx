@@ -2,13 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  Check, 
-  X, 
-  ArrowRight, 
-  Users, 
-  Zap, 
-  BarChart3, 
+import {
+  Check,
+  X,
+  ArrowRight,
+  Users,
+  Zap,
+  BarChart3,
   Settings,
   Globe
 } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-8 flex items-center gap-4">
             <div className="flex">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map(i => (
                 <div key={i} className={`w-8 h-8 rounded-full border-2 border-white bg-slate-200 ${i !== 1 ? '-ml-3' : ''}`} />
               ))}
             </div>
@@ -131,7 +131,7 @@ export default function LandingPage() {
         <span className="text-indigo-600 font-bold uppercase tracking-widest text-sm mb-4 block">Pricing</span>
         <h2 className="text-4xl lg:text-5xl font-extrabold mb-4 tracking-tight">Simple, transparent pricing</h2>
         <p className="text-slate-500 max-w-2xl mx-auto mb-16 text-lg">Choose the plan that fits your organization's needs.</p>
-        
+
         <div className="flex flex-col lg:flex-row justify-center items-stretch gap-8">
           {/* Basic Plan */}
           <div className="p-12 rounded-[2.5rem] border border-slate-200 w-full lg:w-[400px] text-left flex flex-col hover:border-indigo-200 transition-all">
@@ -167,7 +167,7 @@ export default function LandingPage() {
             <Link href="/register-selection" className="w-full py-4 text-center rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-500/30 transition-all">Continue →</Link>
           </div>
         </div>
-        
+
         <div className="mt-16 inline-flex items-center gap-4 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl">
           <span className="text-2xl">🎁</span>
           <p className="text-sm font-medium text-slate-600">
@@ -212,11 +212,11 @@ export default function LandingPage() {
       </footer>
       <div className="bg-slate-950 py-10 px-[10%] flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/5">
         <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">© 2026 CareerHub Inc. All rights reserved.</p>
-          <div className="flex gap-8 text-slate-400">
-            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
-            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
-            <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
-          </div>
+        <div className="flex gap-8 text-slate-400">
+          <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+          <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+          <Globe size={20} className="hover:text-white transition-colors cursor-pointer" />
+        </div>
       </div>
     </div>
   );

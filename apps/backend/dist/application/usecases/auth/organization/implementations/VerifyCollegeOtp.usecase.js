@@ -27,10 +27,10 @@ class VerifyCollegeOtpUseCase {
         if (!organization) {
             throw new AppError_1.AppError("Organization not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.USER_NOT_FOUND);
         }
-        // Activate
-        collegeAdmin.status = user_status_enum_1.UserStatus.ACTIVE;
+        // Activate to pending onboarding state
+        collegeAdmin.status = user_status_enum_1.UserStatus.PENDING;
         await this._collegeAdminRepository.update(collegeAdmin.id, collegeAdmin);
-        organization.status = user_status_enum_1.UserStatus.ACTIVE;
+        organization.status = user_status_enum_1.UserStatus.PENDING;
         await this._organizationRepository.update(organization.id, organization);
         // Delete OTP after successful verification
         await this._otpRepository.deleteByEmail(dto.email);
@@ -54,6 +54,7 @@ class VerifyCollegeOtpUseCase {
                 status: collegeAdmin.status,
                 orgId: collegeAdmin.orgId
             },
+            organization: organization.toJSON(),
         };
     }
 }

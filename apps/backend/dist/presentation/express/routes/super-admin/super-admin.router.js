@@ -14,5 +14,6 @@ router.get("/companies", superAdminController.getCompanies);
 router.get("/interviewers", superAdminController.getInterviewers);
 // Management actions
 router.patch("/management/:role/:id/status", superAdminController.updateStatus);
+router.patch("/organizations/:id/plan", superAdminController.updateOrganizationPlan);
 router.delete("/management/:role/:id", superAdminController.deleteUser);
 exports.default = router;

@@ -9,11 +9,11 @@ export interface IToggleInterviewerStatusUseCase {
 }
 
 export class ToggleInterviewerStatusUseCase implements IToggleInterviewerStatusUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
 
   async execute(interviewerId: string, companyId: string): Promise<void> {
     const interviewer = await this._interviewerRepository.findById(interviewerId);
-    
+
     if (!interviewer) {
       throw new AppError("Interviewer not found", HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND);
     }

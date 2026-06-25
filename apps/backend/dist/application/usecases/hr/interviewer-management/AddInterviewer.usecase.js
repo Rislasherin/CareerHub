@@ -9,12 +9,17 @@ const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 const env_validator_1 = require("@infrastructure/config/env.validator");
 class AddInterviewerUseCase {
-    constructor(_interviewerRepository, _emailService, _jwtService) {
+    constructor(_interviewerRepository, _emailService, _jwtService, _crossRoleAuthService) {
         this._interviewerRepository = _interviewerRepository;
         this._emailService = _emailService;
         this._jwtService = _jwtService;
+        this._crossRoleAuthService = _crossRoleAuthService;
     }
     async execute(companyId, firstName, lastName, email) {
+        const globalCheck = await this._crossRoleAuthService.isEmailInUse(email);
+        if (globalCheck.inUse) {
+            throw new AppError_1.AppError(`This email is already registered as a ${globalCheck.role}`, HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.USER_ALREADY_EXISTS);
+        }
         const existing = await this._interviewerRepository.findByEmail(email);
         if (existing) {
             throw new AppError_1.AppError("Interviewer with this email already exists", HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.USER_ALREADY_EXISTS);
@@ -35,7 +40,7 @@ class AddInterviewerUseCase {
             role: Roles_enum_1.Role.INTERVIEWER,
             type: "SETUP"
         });
-        const setupLink = `${env_validator_1.env.FRONTEND_URL}/interviewer/setup?token=${setupToken}&email=${email}`;
+        const setupLink = `${env_validator_1.env.FRONTEND_URL}/interviewer/setup?token=${setupToken}&email=${encodeURIComponent(email)}`;
         await this._emailService.sendInterviewerSetupEmail(email, setupLink);
     }
 }

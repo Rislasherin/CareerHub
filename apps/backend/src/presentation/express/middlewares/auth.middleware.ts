@@ -21,7 +21,7 @@ export class AuthMiddleware {
     private readonly _superAdminRepository: ISuperAdminRepository,
     private readonly _organizationRepository: IOrganizationRepository,
     private readonly _companyRepository: ICompanyRepository
-  ) {}
+  ) { }
 
   protect = async (req: Request, _res: Response, next: NextFunction) => {
     try {
@@ -38,7 +38,7 @@ export class AuthMiddleware {
       }
 
       const decoded = this._jwtService.verifyAccessToken(token) as any;
-      
+
       // Real-time status check to handle automatic logout if blocked
       let user: any;
       switch (decoded.role) {
@@ -78,7 +78,7 @@ export class AuthMiddleware {
             if (org) {
               const userJson = user.toJSON ? user.toJSON() : user;
               const orgJson = org.toJSON ? org.toJSON() : org;
-              
+
               // Check if organization is blocked
               if (orgJson.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");

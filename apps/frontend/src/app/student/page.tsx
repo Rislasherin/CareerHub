@@ -107,24 +107,24 @@ export default function StudentDashboard() {
                         <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${user?.onboardingStep ? Math.min((user.onboardingStep / 4) * 100, 100) : 25}%` }} />
                      </div>
                      <ul className="space-y-3">
-                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 1 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                           {user?.onboardingStep >= 1 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Basic Information
+                        <li className={`flex items-center gap-3 text-xs font-bold ${(user?.onboardingStep ?? 0) >= 1 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {(user?.onboardingStep ?? 0) >= 1 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Basic Information
                         </li>
                         <li className={`flex items-center gap-3 text-xs font-bold ${user?.status === 'ACTIVE' ? 'text-emerald-600' : 'text-slate-400'}`}>
                            {user?.status === 'ACTIVE' ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Identity Verification
                         </li>
-                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 3 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                           {user?.onboardingStep >= 3 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Professional Skills
+                        <li className={`flex items-center gap-3 text-xs font-bold ${(user?.onboardingStep ?? 0) >= 3 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {(user?.onboardingStep ?? 0) >= 3 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Professional Skills
                         </li>
-                        <li className={`flex items-center gap-3 text-xs font-bold ${user?.onboardingStep >= 4 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                           {user?.onboardingStep >= 4 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Resume Upload
+                        <li className={`flex items-center gap-3 text-xs font-bold ${(user?.onboardingStep ?? 0) >= 4 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                           {(user?.onboardingStep ?? 0) >= 4 ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200" />} Resume Upload
                         </li>
                      </ul>
                      <Button 
                        onClick={() => router.push('/student/profile')}
                        fullWidth className="bg-indigo-600 text-white hover:bg-indigo-700 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest border-none"
                      >
-                       {user?.onboardingStep >= 4 ? 'Update Profile' : 'Finish Profile Setup'}
+                       {(user?.onboardingStep ?? 0) >= 4 ? 'Update Profile' : 'Finish Profile Setup'}
                      </Button>
                   </div>
                </GlassCard>

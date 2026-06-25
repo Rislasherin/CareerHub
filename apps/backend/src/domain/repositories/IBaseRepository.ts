@@ -3,5 +3,5 @@ export interface IBaseRepository<T> {
   create(entity: T): Promise<T>;
   update(id: string, entity: T): Promise<T>;
   delete(id: string): Promise<void>;
-  count(filter: any): Promise<number>;
+  count(filter: Record<string, unknown>): Promise<number>;
 }

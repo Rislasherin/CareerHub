@@ -5,9 +5,9 @@ const mongoose_1 = require("mongoose");
 const shared_schema_1 = require("@infrastructure/database/schema/shared.schema");
 exports.hrUserSchema = new mongoose_1.Schema({
     ...shared_schema_1.authStateFields,
-    companyId: {
+    comptypeId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Company",
+        ref: "Comptype",
         required: true,
         index: true,
     },

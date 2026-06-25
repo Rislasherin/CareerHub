@@ -27,7 +27,7 @@ export default function HRRegistrationPage() {
     password: '',
     jobTitle: ''
   });
-  
+
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState('');
   const [registeredEmail, setRegisteredEmail] = useState('');
@@ -36,12 +36,12 @@ export default function HRRegistrationPage() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setErrors({});
-    
+
     // Validate
     try {
       // For registration, we might need a slightly different schema if the UI fields don't match 1:1, 
       // but let's assume they match or adjust.
-      hrRegisterSchema.parse(formData); 
+      hrRegisterSchema.parse(formData);
     } catch (err) {
       if (err instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -56,7 +56,7 @@ export default function HRRegistrationPage() {
     setIsLoading(true);
     try {
       const result = await registerHR(formData);
-      
+
       if (result.requiresOtp) {
         setRegisteredEmail(result.email || formData.email);
         setShowOtp(true);
@@ -77,7 +77,7 @@ export default function HRRegistrationPage() {
       dispatch(setAuth({ role: 'hr' }));
       dispatch(setHRDetails(user));
       toast.success('Company verified successfully!');
-      router.push('/hr/onboarding'); 
+      router.push('/hr/onboarding');
     } catch {
       // Handled by interceptor
     } finally {
@@ -110,76 +110,76 @@ export default function HRRegistrationPage() {
 
         {!showOtp ? (
           <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="First Name" 
-              icon={<User size={18} />} 
-              placeholder="John" 
-              value={formData.firstName} 
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'firstName')} 
-              error={errors.firstName}
-              required 
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="First Name"
+                icon={<User size={18} />}
+                placeholder="John"
+                value={formData.firstName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'firstName')}
+                error={errors.firstName}
+                required
+              />
+              <Input
+                label="Last Name"
+                icon={<User size={18} />}
+                placeholder="Doe"
+                value={formData.lastName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'lastName')}
+                error={errors.lastName}
+                required
+              />
+            </div>
+            <Input
+              label="Work Email"
+              type="email"
+              icon={<Mail size={18} />}
+              placeholder="hr@company.com"
+              value={formData.email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'email')}
+              error={errors.email}
+              required
             />
-            <Input 
-              label="Last Name" 
-              icon={<User size={18} />} 
-              placeholder="Doe" 
-              value={formData.lastName} 
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'lastName')} 
-              error={errors.lastName}
-              required 
+            <Input
+              label="Password"
+              type="password"
+              icon={<Lock size={18} />}
+              placeholder="Create a strong password"
+              value={formData.password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')}
+              error={errors.password}
+              required
             />
-          </div>
-          <Input 
-            label="Work Email" 
-            type="email" 
-            icon={<Mail size={18} />} 
-            placeholder="hr@company.com" 
-            value={formData.email} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'email')} 
-            error={errors.email}
-            required 
-          />
-          <Input 
-            label="Password" 
-            type="password" 
-            icon={<Lock size={18} />} 
-            placeholder="Create a strong password" 
-            value={formData.password} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')} 
-            error={errors.password}
-            required 
-          />
-          <Input 
-            label="Job Title" 
-            icon={<Building2 size={18} />} 
-            placeholder="e.g. HR Manager" 
-            value={formData.jobTitle} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'jobTitle')} 
-            error={errors.jobTitle}
-            required 
-          />
-          <Button 
-            type="submit" 
-            fullWidth 
-            isLoading={isLoading} 
-            className="mt-4 bg-indigo-600 hover:bg-indigo-700 font-bold"
-          >
-            Create Account <ArrowRight size={18} className="ml-2" />
-          </Button>
-        </form>
+            <Input
+              label="Job Title"
+              icon={<Building2 size={18} />}
+              placeholder="e.g. HR Manager"
+              value={formData.jobTitle}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'jobTitle')}
+              error={errors.jobTitle}
+              required
+            />
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isLoading}
+              className="mt-4 bg-indigo-600 hover:bg-indigo-700 font-bold"
+            >
+              Create Account <ArrowRight size={18} className="ml-2" />
+            </Button>
+          </form>
         ) : (
           <form onSubmit={handleOtpSubmit} className="flex flex-col gap-8">
-            <OtpInput 
+            <OtpInput
               value={otp}
               onChange={setOtp}
               onResend={() => handleSubmit()}
               isLoading={isLoading}
             />
-            <Button 
-              type="submit" 
-              fullWidth 
-              isLoading={isLoading} 
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isLoading}
               className="bg-indigo-600 hover:bg-indigo-700 font-bold h-14 rounded-2xl"
             >
               Verify & Continue

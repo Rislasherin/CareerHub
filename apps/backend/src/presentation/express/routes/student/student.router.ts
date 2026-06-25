@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { makeStudentController } from "@infrastructure/di/student.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
-
+import { validateDto } from "@presentation/express/middlewares/validateDto";
+import { UpdateStudentProfileDto } from "@application/dtos/student/UpdateStudentProfile.dto";
 import multer from "multer";
 
 const router = Router();
@@ -13,5 +14,11 @@ router.use(authMiddleware.protect);
 
 router.get("/me", studentController.getMe);
 router.post("/verify", upload.single('file'), studentController.uploadVerification);
+
+router.get("/profile", studentController.getProfile);
+router.put("/profile", validateDto(UpdateStudentProfileDto), studentController.updateProfile);
+
+router.get("/jobs", studentController.getJobs);
+router.post("/jobs/:id/apply", studentController.applyJob);
 
 export default router;

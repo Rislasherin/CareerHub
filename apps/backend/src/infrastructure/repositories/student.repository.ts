@@ -2,7 +2,8 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { Student } from "@domain/entities/student";
 import { BaseRepository } from "@infrastructure/repositories/BaseRepository";
 import { StudentDocument, StudentModel } from "@infrastructure/database/models/student/student.model";
-import { toStudentEntity, toStudentPersistence } from "@infrastructure/mappers/student.mapper";
+import { toStudentEntity, toStudentPersistence } from "@application/mappers/student.mapper";
+import { FilterQuery } from "mongoose";
 
 export class StudentRepository extends BaseRepository<Student, StudentDocument> implements IStudentRepository {
   constructor() {
@@ -40,7 +41,7 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
   }
 
   async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
-    const update: any = { status };
+    const update: Record<string, unknown> = { status };
     if (status === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status !== 'BLOCKED') {
@@ -51,7 +52,7 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
 
   async searchAllStudents(query: string, page: number, limit: number, collegeId?: string): Promise<{ students: Student[], total: number }> {
     const skip = (page - 1) * limit;
-    const filter: any = {
+    const filter: FilterQuery<StudentDocument> = {
       isDeleted: { $ne: true },
       $or: [
         { firstName: { $regex: query, $options: "i" } },
@@ -74,8 +75,10 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
       total,
     };
   }
-  async findByInvitationToken(token: string): Promise<Student | null> {
+   async findByInvitationToken(token: string): Promise<Student | null> {
     const doc = await this.model.findOne({ invitationToken: token, isDeleted: { $ne: true } });
     return doc ? this.toEntity(doc as StudentDocument) : null;
   }
+
+  
 }

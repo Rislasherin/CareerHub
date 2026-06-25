@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SuperAdminRepository = void 0;
 const super_admin_model_1 = require("@infrastructure/database/models/superadmin/super-admin.model");
-const super_admin_mapper_1 = require("@infrastructure/mappers/super-admin.mapper");
+const super_admin_mapper_1 = require("@application/mappers/super-admin.mapper");
 const BaseRepository_1 = require("./BaseRepository");
 class SuperAdminRepository extends BaseRepository_1.BaseRepository {
     constructor() {

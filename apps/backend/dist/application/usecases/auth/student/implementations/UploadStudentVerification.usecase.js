@@ -7,10 +7,11 @@ const HttpStatus_enum_1 = require("@domain/enums/HttpStatus.enum");
 const ErrorCodes_enum_1 = require("@domain/enums/ErrorCodes.enum");
 const student_1 = require("@domain/entities/student");
 class UploadStudentVerificationUseCase {
-    constructor(_studentRepository) {
+    constructor(_studentRepository, _storageService) {
         this._studentRepository = _studentRepository;
+        this._storageService = _storageService;
     }
-    async execute(studentId, proofUrl) {
+    async execute(studentId, file) {
         const student = await this._studentRepository.findById(studentId);
         if (!student) {
             throw new AppError_1.AppError("Student not found", HttpStatus_enum_1.HttpStatus.NOT_FOUND, ErrorCodes_enum_1.ErrorCode.INTERNAL_ERROR);
@@ -18,12 +19,14 @@ class UploadStudentVerificationUseCase {
         if (student.status !== user_status_enum_1.UserStatus.PENDING_VERIFICATION && student.status !== user_status_enum_1.UserStatus.REJECTED) {
             throw new AppError_1.AppError("Verification details cannot be uploaded at this stage", HttpStatus_enum_1.HttpStatus.BAD_REQUEST, ErrorCodes_enum_1.ErrorCode.INTERNAL_ERROR);
         }
+        const proofUrl = await this._storageService.uploadFile(file, `student-verifications/${studentId}`);
         const updatedStudent = student_1.Student.create({
             ...student.toJSON(),
             proofUrl,
             status: user_status_enum_1.UserStatus.PENDING_VERIFICATION, // Reset status if it was rejected
         });
         await this._studentRepository.update(studentId, updatedStudent);
+        return updatedStudent;
     }
 }
 exports.UploadStudentVerificationUseCase = UploadStudentVerificationUseCase;

@@ -7,8 +7,12 @@ import { GetAllStudentsUseCase } from "@application/usecases/college/student-man
 import { ToggleStudentStatusUseCase } from "@application/usecases/college/student-management/ToggleStudentStatus.usecase";
 import { GetCollegeDashboardStatsUseCase } from "@application/usecases/college/GetCollegeDashboardStats.usecase";
 import { EmailService } from "@infrastructure/services/email/email.service";
-import { studentRepository, crossRoleAuthService } from "@infrastructure/di/infra.container";
+import { studentRepository, crossRoleAuthService, jobRepository, organizationRepository } from "@infrastructure/di/infra.container";
 import { StudentManagementController } from "@presentation/http/controllers/college/student.management.controller";
+import { GetPendingJobsUseCase } from "@application/usecases/college/job-approvals/GetPendingJobs.usecase";
+import { ApproveJobUseCase } from "@application/usecases/college/job-approvals/ApproveJob.usecase";
+import { RejectJobUseCase } from "@application/usecases/college/job-approvals/RejectJob.usecase";
+import { CollegeJobApprovalController } from "@presentation/http/controllers/college/job.approval.controller";
 
 export const makeGetPendingStudentsUseCase = () => {
   return new GetPendingStudentsUseCase(studentRepository);
@@ -54,5 +58,25 @@ export const makeStudentManagementController = () => {
     makeGetCollegeDashboardStatsUseCase(),
     makeGetAllStudentsUseCase(),
     makeToggleStudentStatusUseCase()
+  );
+};
+
+export const makeGetPendingJobsUseCase = () => {
+  return new GetPendingJobsUseCase(jobRepository, organizationRepository);
+};
+
+export const makeApproveJobUseCase = () => {
+  return new ApproveJobUseCase(jobRepository);
+};
+
+export const makeRejectJobUseCase = () => {
+  return new RejectJobUseCase(jobRepository);
+};
+
+export const makeCollegeJobApprovalController = () => {
+  return new CollegeJobApprovalController(
+    makeGetPendingJobsUseCase(),
+    makeApproveJobUseCase(),
+    makeRejectJobUseCase()
   );
 };

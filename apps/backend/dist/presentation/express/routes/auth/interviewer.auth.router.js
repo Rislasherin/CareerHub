@@ -8,5 +8,6 @@ const validation_1 = require("@shared/validation");
 const router = (0, express_1.Router)();
 const interviewerAuthController = (0, interviewer_factory_1.makeInterviewerAuthController)();
 router.post("/login", (0, validateSchema_1.validateSchema)(validation_1.loginSchema), interviewerAuthController.login);
+router.get("/verify-token/:token", interviewerAuthController.verifyToken);
 router.post("/activate", infra_container_1.authMiddleware.protect, interviewerAuthController.activate);
 exports.default = router;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeForgotPasswordController = exports.makeStudentAuthController = exports.makeSetupStudentPasswordUseCase = exports.makeRequestAccessUseCase = exports.makeLoginStudentUseCase = void 0;
+exports.makeForgotPasswordController = exports.makeStudentAuthController = exports.makeVerifyInvitationTokenUseCase = exports.makeGetStudentProfileUseCase = exports.makeSetupStudentPasswordUseCase = exports.makeRequestAccessUseCase = exports.makeLoginStudentUseCase = void 0;
 const login_student_usecase_1 = require("@application/usecases/auth/student/implementations/login.student.usecase");
 const infra_container_1 = require("@infrastructure/di/infra.container");
 const student_auth_controller_1 = require("@presentation/http/controllers/auth/student/student.auth.controller");
@@ -9,8 +9,10 @@ const ForgotPassword_controller_1 = require("@presentation/http/controllers/auth
 const email_service_1 = require("@infrastructure/services/email/email.service");
 const RequestAccess_usecase_1 = require("@application/usecases/auth/student/implementations/RequestAccess.usecase");
 const SetupStudentPassword_usecase_1 = require("@application/usecases/auth/student/implementations/SetupStudentPassword.usecase");
+const GetStudentProfile_usecase_1 = require("@application/usecases/auth/student/implementations/GetStudentProfile.usecase");
+const VerifyInvitationToken_usecase_1 = require("@application/usecases/auth/student/implementations/VerifyInvitationToken.usecase");
 const makeLoginStudentUseCase = () => {
-    return new login_student_usecase_1.LoginStudentUseCase(infra_container_1.studentRepository, infra_container_1.jwtService, infra_container_1.bcryptService);
+    return new login_student_usecase_1.LoginStudentUseCase(infra_container_1.studentRepository, infra_container_1.jwtService, infra_container_1.bcryptService, infra_container_1.crossRoleAuthService);
 };
 exports.makeLoginStudentUseCase = makeLoginStudentUseCase;
 const makeRequestAccessUseCase = () => {
@@ -21,8 +23,16 @@ const makeSetupStudentPasswordUseCase = () => {
     return new SetupStudentPassword_usecase_1.SetupStudentPasswordUseCase(infra_container_1.studentRepository, infra_container_1.bcryptService, infra_container_1.jwtService);
 };
 exports.makeSetupStudentPasswordUseCase = makeSetupStudentPasswordUseCase;
+const makeGetStudentProfileUseCase = () => {
+    return new GetStudentProfile_usecase_1.GetStudentProfileUseCase(infra_container_1.studentRepository);
+};
+exports.makeGetStudentProfileUseCase = makeGetStudentProfileUseCase;
+const makeVerifyInvitationTokenUseCase = () => {
+    return new VerifyInvitationToken_usecase_1.VerifyInvitationTokenUseCase(infra_container_1.studentRepository);
+};
+exports.makeVerifyInvitationTokenUseCase = makeVerifyInvitationTokenUseCase;
 const makeStudentAuthController = () => {
-    return new student_auth_controller_1.StudentAuthController((0, exports.makeLoginStudentUseCase)(), (0, exports.makeRequestAccessUseCase)(), (0, exports.makeSetupStudentPasswordUseCase)());
+    return new student_auth_controller_1.StudentAuthController((0, exports.makeLoginStudentUseCase)(), (0, exports.makeRequestAccessUseCase)(), (0, exports.makeSetupStudentPasswordUseCase)(), (0, exports.makeGetStudentProfileUseCase)(), (0, exports.makeVerifyInvitationTokenUseCase)());
 };
 exports.makeStudentAuthController = makeStudentAuthController;
 const ResetPassword_usecase_1 = require("@application/usecases/auth/shared/ResetPassword.usecase");

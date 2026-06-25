@@ -38,7 +38,7 @@ export abstract class BaseRepository<TEntity, TDocument> implements IBaseReposit
     }
   }
 
-  async count(filter: any): Promise<number> {
+  async count(filter: Record<string, unknown>): Promise<number> {
     return this.model.countDocuments({ ...filter, isDeleted: { $ne: true } });
   }
 }

@@ -12,7 +12,7 @@ export class LoginCollegeAdminUseCase {
     private readonly _organizationRepository: IOrganizationRepository,
     private readonly _jwtService: IJwtService,
     private readonly _bcryptService: IBcryptService
-  ) {}
+  ) { }
 
   async execute(dto: any) {
     const admin = await this._collegeAdminRepository.findByEmail(dto.email);

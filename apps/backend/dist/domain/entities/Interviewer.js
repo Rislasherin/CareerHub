@@ -41,6 +41,9 @@ class Interviewer {
     set status(value) {
         this.props.status = value;
     }
+    get isDeleted() {
+        return this.props.isDeleted;
+    }
     toJSON() {
         return { ...this.props };
     }
