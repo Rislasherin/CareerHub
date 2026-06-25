@@ -25,8 +25,17 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
     const candidatesList: any[] = [];
     const collegeCache = new Map<string, string>();
 
+    const companyJobIds = jobs.map(j => String(j.id));
+
     // 3. For each student, check their match against each company job
     for (const student of students) {
+      const studentAppliedJobs = (student.appliedJobs || []).map(id => String(id));
+      const hasAppliedToCompany = studentAppliedJobs.some(id => companyJobIds.includes(id));
+
+      if (!hasAppliedToCompany) {
+        continue;
+      }
+
       // Gather student skills
       const studentSkillSet = new Set<string>();
       if (student.skills) {
@@ -44,6 +53,10 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
       let highestScore = -1;
 
       for (const job of jobs) {
+        if (!job.id || !studentAppliedJobs.includes(String(job.id))) {
+          continue;
+        }
+
         // Skill Match (70%)
         const requiredSkills = job.requiredSkills || [];
         let skillMatchScore = 70;
@@ -121,7 +134,8 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
           jobTitle: bestJob.title,
           jobId: bestJob.id,
           dateApplied: student.createdAt || new Date(),
-          hasApplied: (student.appliedJobs || []).includes(bestJob.id)
+          hasApplied: (student.appliedJobs || []).map(id => String(id)).includes(String(bestJob.id)),
+          status: 'NEW'
         });
       }
     }
