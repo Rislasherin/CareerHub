@@ -36,6 +36,15 @@ export class StudentAuthController {
       maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
+    if (result.refreshToken) {
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
+      });
+    }
+
     sendSuccess(
       res,
       {
@@ -46,9 +55,9 @@ export class StudentAuthController {
     );
   });
 
-  getMe = asyncHandler(async (req: any, res: Response) => {
+  getMe = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;
-    const student = await this._getProfileUseCase.execute(studentId);
+    const student = await this._getProfileUseCase.execute(studentId as string);
     sendSuccess(res, student, "Student profile retrieved successfully");
   });
 
@@ -67,6 +76,15 @@ export class StudentAuthController {
       sameSite: "strict",
       maxAge: env.COOKIE_MAX_AGE_MS,
     });
+
+    if (result.refreshToken) {
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
+      });
+    }
 
     sendSuccess(res, result, "Password set successfully. Profile activated.");
   });
