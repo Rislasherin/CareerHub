@@ -31,8 +31,12 @@ import { Button } from '@/components/shared/Button';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { toast } from 'sonner';
 import { apiClient } from '@/services/api/api.client';
+import { PLATFORM_BRANCHES } from '@/constants/academic';
+import { useAppSelector } from '@/redux/hooks';
 
 export default function StudentDirectoryPage() {
+  const { details: collegeAdminDetails } = useAppSelector(state => state.collegeAdmin);
+  const collegeBranches = collegeAdminDetails?.activeBranches || [];
   const [activeTab, setActiveTab] = useState('All');
   const [studentsList, setStudentsList] = useState<any[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
@@ -43,6 +47,7 @@ export default function StudentDirectoryPage() {
   // Add Student Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newStudent, setNewStudent] = useState({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
+  const [customDept, setCustomDept] = useState('');
 
   // Rejection Modal State
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -438,8 +443,14 @@ export default function StudentDirectoryPage() {
                         <td className="px-6 py-6 text-sm font-bold text-slate-600">{v.department}</td>
                         <td className="px-10 py-6 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleReject(v.id)} className="w-9 h-9 rounded-lg bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20" title="Reject Application"><XCircle size={18} /></button>
-                            <button onClick={() => handleApprove(v.id)} className="h-9 px-4 bg-emerald-500 text-white rounded-lg flex items-center gap-2 hover:bg-emerald-600 transition-all text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={14} /> Approve</button>
+                            {v.proofUrl ? (
+                              <>
+                                <button onClick={() => handleReject(v.id)} className="w-9 h-9 rounded-lg bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20" title="Reject Application"><XCircle size={18} /></button>
+                                <button onClick={() => handleApprove(v.id)} className="h-9 px-4 bg-emerald-500 text-white rounded-lg flex items-center gap-2 hover:bg-emerald-600 transition-all text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={14} /> Approve</button>
+                              </>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg">Pending Document</span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -614,22 +625,19 @@ export default function StudentDirectoryPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Department</label>
-                    <select
-                      value={newStudent.department}
-                      onChange={e => setNewStudent({ ...newStudent, department: e.target.value })}
-                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer"
-                    >
-                      <option value="">Select Department</option>
-                      <option value="Computer Science and Engineering">B.Tech - CS & Engineering</option>
-                      <option value="Information Technology">B.Tech - Information Technology</option>
-                      <option value="Artificial Intelligence & Data Science">B.Tech - AI & Data Science</option>
-                      <option value="MCA">MCA (Master of Computer Applications)</option>
-                      <option value="M.Tech - Computer Science">M.Tech - Computer Science</option>
-                      <option value="M.Tech - IT">M.Tech - IT</option>
-                      <option value="M.Sc - Computer Science">M.Sc - Computer Science</option>
-                      <option value="Cyber Security">Cyber Security</option>
-                      <option value="Software Engineering">Software Engineering</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={newStudent.department}
+                        onChange={e => setNewStudent({ ...newStudent, department: e.target.value })}
+                        className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="" disabled>Select department...</option>
+                        {collegeBranches.map(branch => (
+                          <option key={branch} value={branch}>{branch}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                    </div>
                   </div>
                 </div>
 
