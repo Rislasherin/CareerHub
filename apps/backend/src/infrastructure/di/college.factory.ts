@@ -13,6 +13,13 @@ import { GetPendingJobsUseCase } from "@application/usecases/college/job-approva
 import { ApproveJobUseCase } from "@application/usecases/college/job-approvals/ApproveJob.usecase";
 import { RejectJobUseCase } from "@application/usecases/college/job-approvals/RejectJob.usecase";
 import { CollegeJobApprovalController } from "@presentation/http/controllers/college/job.approval.controller";
+import { CreateNoticeUseCase } from "@application/usecases/college/notices/implementations/CreateNotice.usecase";
+import { GetCollegeNoticeUseCase } from "@application/usecases/college/notices/implementations/GetCollegeNotices.usecase";
+import { NoticeController } from "@presentation/http/controllers/college/notice.controller";
+import { noticeRepository } from "@infrastructure/di/infra.container";
+import { UpdateNoticeUseCase } from "@application/usecases/college/notices/implementations/UpdateNotice.usecase";
+import { DeleteNoticeUseCase } from "@application/usecases/college/notices/implementations/Delete.notice.UseCase";
+
 
 export const makeGetPendingStudentsUseCase = () => {
   return new GetPendingStudentsUseCase(studentRepository);
@@ -80,3 +87,27 @@ export const makeCollegeJobApprovalController = () => {
     makeRejectJobUseCase()
   );
 };
+
+export const makeCreateNoticeUseCase = () => {
+  return new CreateNoticeUseCase(noticeRepository)
+};
+
+export const makeGetCollegeNoticeUseCase = () => {
+  return new GetCollegeNoticeUseCase(noticeRepository)
+};
+
+export const makeUpdateNoticeUseCase = () => {
+  return new UpdateNoticeUseCase(noticeRepository)
+}
+export const makeDeleteNoticeUseCase = () =>{
+  return new DeleteNoticeUseCase(noticeRepository)
+}
+
+export const makeNoticeController = () => {
+  return new NoticeController(
+    makeCreateNoticeUseCase(),
+    makeGetCollegeNoticeUseCase(),
+    makeDeleteNoticeUseCase(),
+    makeUpdateNoticeUseCase(),
+  )
+}
