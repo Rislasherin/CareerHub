@@ -11,26 +11,18 @@ import {
   postJob,
   updateJob,
   closeJob,
-  deleteJob,
+  deleteJob
+} from '@/services/hr/job.service';
+import {
   Job,
   InterviewRoundConfig,
   EligibilityCriteria
-} from '@/services/hr/job.service';
+} from '@/types/job';
 import { OrganizationService } from '@/services/organization/organization.service';
 import Swal from 'sweetalert2';
 import { toast } from 'sonner';
 
-const PLATFORM_BRANCHES = [
-  "Computer Science and Engineering",
-  "Information Technology",
-  "Artificial Intelligence & Data Science",
-  "MCA",
-  "M.Tech - Computer Science",
-  "M.Tech - IT",
-  "M.Sc - Computer Science",
-  "Cyber Security",
-  "Software Engineering"
-];
+import { PLATFORM_DEGREES, PLATFORM_BRANCHES } from '@/constants/academic';
 
 export default function HRJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -76,6 +68,8 @@ export default function HRJobsPage() {
   const [passingYear, setPassingYear] = useState('2026');
   const [degreeType, setDegreeType] = useState('');
   const [branchInput, setBranchInput] = useState('');
+  const [customBranchInput, setCustomBranchInput] = useState('');
+  const [customDegreeType, setCustomDegreeType] = useState('');
   const [branches, setBranches] = useState<string[]>([]);
   const [allBranchesSelected, setAllBranchesSelected] = useState(false);
 
@@ -251,9 +245,11 @@ export default function HRJobsPage() {
   };
 
   const handleAddBranch = () => {
-    if (branchInput.trim() && !branches.includes(branchInput.trim())) {
-      setBranches([...branches, branchInput.trim()]);
-      setBranchInput('');
+    const val = branchInput === 'custom' ? customBranchInput.trim() : branchInput.trim();
+    if (val && !branches.includes(val)) {
+      setBranches([...branches, val]);
+      if (branchInput !== 'custom') setBranchInput('');
+      setCustomBranchInput('');
     }
   };
 
@@ -608,7 +604,7 @@ export default function HRJobsPage() {
                     : 'text-slate-500 hover:text-slate-900'
                   }`}
               >
-                {status === '' ? 'All Jobs' : getStatusLabel(status as type)}
+                {status === '' ? 'All Jobs' : getStatusLabel(status as any)}
               </button>
             ))}
           </div>
@@ -820,7 +816,7 @@ export default function HRJobsPage() {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Work Mode *</label>
                         <select
                           value={workMode}
-                          onChange={(e) => setWorkMode(e.target.value as type)}
+                          onChange={(e) => setWorkMode(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
                           <option value="" disabled>Select Work Mode...</option>
@@ -836,7 +832,7 @@ export default function HRJobsPage() {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary Type *</label>
                         <select
                           value={salaryType}
-                          onChange={(e) => setSalaryType(e.target.value as type)}
+                          onChange={(e) => setSalaryType(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
                           <option value="" disabled>Select Salary Type...</option>
@@ -854,7 +850,7 @@ export default function HRJobsPage() {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Interview Format *</label>
                         <select
                           value={interviewMode}
-                          onChange={(e) => setInterviewMode(e.target.value as type)}
+                          onChange={(e) => setInterviewMode(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
                           <option value="online">Online / VC rounds</option>
@@ -873,7 +869,21 @@ export default function HRJobsPage() {
                       <Input type="number" step="0.1" label="Minimum CGPA *" value={minCGPA} onChange={(e) => setMinCGPA(e.target.value)} />
                       <Input type="number" label="Max Backlogs allowed *" value={allowedBacklogs} onChange={(e) => setAllowedBacklogs(e.target.value)} />
                       <Input type="number" label="Passing Year *" value={passingYear} onChange={(e) => setPassingYear(e.target.value)} />
-                      <Input label="Degree Type *" placeholder="e.g. B.Tech / BE" value={degreeType} onChange={(e) => setDegreeType(e.target.value)} />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Degree Type *</label>
+                        <input
+                          list="hr-degrees"
+                          className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
+                          placeholder="Type or select a degree..."
+                          value={degreeType}
+                          onChange={(e) => setDegreeType(e.target.value)}
+                        />
+                        <datalist id="hr-degrees">
+                          {PLATFORM_DEGREES.map((b) => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
 
                     {/* Branches Tag Cloud Input */}
@@ -896,18 +906,31 @@ export default function HRJobsPage() {
 
                       {!allBranchesSelected ? (
                         <>
-                          <div className="flex gap-2">
-                            <select
-                              value={branchInput}
-                              onChange={(e) => setBranchInput(e.target.value)}
-                              className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
-                            >
-                              <option value="">Select an eligible branch...</option>
-                              {PLATFORM_BRANCHES.map((b) => (
-                                <option key={b} value={b}>{b}</option>
-                              ))}
-                            </select>
-                            <Button type="button" onClick={handleAddBranch} className="bg-slate-900 text-white rounded-2xl px-6 font-bold h-[50px]">Add</Button>
+                          <div className="flex flex-col gap-2 w-full">
+                            <div className="flex gap-2">
+                              <select
+                                className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full appearance-none cursor-pointer"
+                                value={branchInput}
+                                onChange={(e) => setBranchInput(e.target.value)}
+                              >
+                                <option value="">Select an eligible branch...</option>
+                                {PLATFORM_BRANCHES.map((b) => (
+                                  <option key={b} value={b}>{b}</option>
+                                ))}
+                                <option value="custom">Other (Add Custom Branch)...</option>
+                              </select>
+                              <Button type="button" onClick={handleAddBranch} className="bg-slate-900 text-white rounded-2xl px-6 font-bold h-[50px]">Add</Button>
+                            </div>
+                            {branchInput === 'custom' && (
+                              <input
+                                type="text"
+                                className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
+                                placeholder="Type custom branch name..."
+                                value={customBranchInput}
+                                onChange={(e) => setCustomBranchInput(e.target.value)}
+                                autoFocus
+                              />
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {branches.map((b) => (
@@ -1011,7 +1034,7 @@ export default function HRJobsPage() {
                         <div className="flex flex-col gap-1.5">
                           <select
                             value={newRoundType}
-                            onChange={(e) => setNewRoundType(e.target.value as type)}
+                            onChange={(e) => setNewRoundType(e.target.value as any)}
                             className="bg-white border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] mt-1"
                           >
                             <option value="aptitude">Aptitude Round</option>
@@ -1165,7 +1188,11 @@ export default function HRJobsPage() {
                   if (jobBranches.length === 0 || !org.activeBranches || org.activeBranches.length === 0) {
                     return true;
                   }
-                  return org.activeBranches.some(b => jobBranches.includes(b));
+                  return org.activeBranches.some(b => jobBranches.some((jb: string) => {
+                    const hrBranch = jb.toLowerCase().trim();
+                    const colBranch = b.toLowerCase().trim();
+                    return hrBranch.includes(colBranch) || colBranch.includes(hrBranch);
+                  }));
                 });
 
                 const approvedCount = eligibleColleges.filter(org => selectedJob.approvedColleges?.includes(org.id)).length;
@@ -1283,7 +1310,7 @@ export default function HRJobsPage() {
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Required Skills</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {selectedJob.requiredSkills.map((s) => (
+                    {selectedJob.requiredSkills.map((s: string) => (
                       <span key={s} className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold border border-slate-200">
                         {s}
                       </span>
@@ -1294,7 +1321,7 @@ export default function HRJobsPage() {
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Interview Rounds</span>
                   <div className="space-y-2">
-                    {selectedJob.rounds.map((round) => (
+                    {selectedJob.rounds.map((round: any) => (
                       <div key={round.roundNumber} className="bg-slate-50 p-3 rounded-xl border border-slate-100/50 flex items-center justify-between text-xs">
                         <div>
                           <span className="font-bold text-slate-800 mr-2">Stage {round.roundNumber}: {round.name}</span>
