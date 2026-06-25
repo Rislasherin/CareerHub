@@ -4,6 +4,8 @@ import { sendSuccess } from "@shared/utils/response.util";
 import { IForgotPasswordUseCase } from "@application/usecases/auth/shared/ForgotPassword.usecase";
 
 import { IResetPasswordUseCase } from "@application/usecases/auth/shared/ResetPassword.usecase";
+import { errorMonitor } from "events";
+import { logger } from "@infrastructure/logger/logger";
 
 export class ForgotPasswordController {
   constructor(
@@ -16,10 +18,11 @@ export class ForgotPasswordController {
     await this._forgotPasswordUseCase.execute(email);
     sendSuccess(res, null, "If an account exists with that email, a password reset link has been sent.");
   });
+  
 
   resetPassword = asyncHandler(async (req: Request, res: Response) => {
     const { token, password } = req.body;
     await this._resetPasswordUseCase.execute(token, password);
-    sendSuccess(res, null, "Password reset successfully.");
+    sendSuccess(res, null, "Password reset successfully.")
   });
 }
