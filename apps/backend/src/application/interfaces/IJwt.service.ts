@@ -13,6 +13,6 @@ export interface IJwtService {
   signRefreshToken(payload: JwtPayload): string;
   verifyAccessToken(token: string): JwtPayload;
   verifyRefreshToken(token: string): JwtPayload;
-  generateResetToken(payload: any): string;
+  generateResetToken(payload: Record<string, unknown>): string;
   verifyResetToken(token: string): any;
 }
