@@ -24,6 +24,10 @@ export class RejectStudentUseCase implements IRejectStudentUseCase {
       throw new AppError("Student is not in a rejectable status", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }
 
+    if (student.status === UserStatus.PENDING_VERIFICATION && !student.proofUrl) {
+      throw new AppError("Student must upload an ID proof document before they can be reviewed", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
+    }
+
     const updatedStudent = Student.create({
       ...student.toJSON(),
       status: UserStatus.REJECTED,
