@@ -6,7 +6,9 @@ import { IBcryptService } from "@application/interfaces/IBcryptService";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
 
-export class LoginCollegeAdminUseCase {
+import { ILoginCollegeAdminUseCase } from "../interfaces/ILoginCollegeAdmin.usecase";
+
+export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
   constructor(
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _organizationRepository: IOrganizationRepository,
@@ -14,8 +16,8 @@ export class LoginCollegeAdminUseCase {
     private readonly _bcryptService: IBcryptService
   ) { }
 
-  async execute(dto: any) {
-    const admin = await this._collegeAdminRepository.findByEmail(dto.email);
+  async execute(dto: Record<string, unknown>) {
+    const admin = await this._collegeAdminRepository.findByEmail(dto.email as string);
 
     if (!admin) {
       throw new InvalidCredentialsError();
@@ -29,7 +31,7 @@ export class LoginCollegeAdminUseCase {
       throw new UnauthorizedError("Your account is not active. Please verify your email.");
     }
 
-    const isPasswordValid = await this._bcryptService.compare(dto.password, admin.password);
+    const isPasswordValid = await this._bcryptService.compare(dto.password as string, admin.password);
 
     if (!isPasswordValid) {
       throw new InvalidCredentialsError();
@@ -57,6 +59,7 @@ export class LoginCollegeAdminUseCase {
         email: admin.email,
         role: admin.role,
         organizationId: admin.orgId,
+        activeBranches: organization?.activeBranches || [],
       },
       organization: organization?.toJSON(),
     };
