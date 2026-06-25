@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, Mail, Lock, User, MapPin, ChevronLeft, ArrowRight } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, MapPin, ChevronLeft, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
@@ -25,7 +25,11 @@ export default function CollegeRegistrationPage() {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState('');
@@ -127,27 +131,55 @@ export default function CollegeRegistrationPage() {
               />
             </div>
             
+            <Input 
+              label="Institutional Email" 
+              type="email" 
+              icon={<Mail size={18} />} 
+              placeholder="admin@university.edu" 
+              value={formData.email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'email')}
+              error={errors.email}
+              required 
+            />
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label="Institutional Email" 
-                type="email" 
-                icon={<Mail size={18} />} 
-                placeholder="admin@university.edu" 
-                value={formData.email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'email')}
-                error={errors.email}
-                required 
-              />
-              <Input 
-                label="Password" 
-                type="password" 
-                icon={<Lock size={18} />} 
-                placeholder="Secure password" 
-                value={formData.password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')}
-                error={errors.password}
-                required 
-              />
+              <div className="relative group">
+                <Input 
+                  label="Password" 
+                  type={showPassword ? "text" : "password"} 
+                  icon={<Lock size={18} />} 
+                  placeholder="Secure password" 
+                  value={formData.password}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'password')}
+                  error={errors.password}
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute right-4 ${errors.password ? 'top-[40%]' : 'top-[60%]'} -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10`}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <div className="relative group">
+                <Input 
+                  label="Confirm Password" 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  icon={<Lock size={18} />} 
+                  placeholder="Confirm password" 
+                  value={formData.confirmPassword}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e, 'confirmPassword')}
+                  error={errors.confirmPassword}
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className={`absolute right-4 ${errors.confirmPassword ? 'top-[40%]' : 'top-[60%]'} -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors z-10`}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <Button 
