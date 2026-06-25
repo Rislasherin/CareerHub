@@ -9,8 +9,9 @@ export const superAdminService = {
     return response.data;
   },
 
-  getOrganizations: async (query = '', page = 1, limit = 10) => {
-    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.ORGANIZATIONS}?query=${query}&page=${page}&limit=${limit}`);
+  getOrganizations: async (query = '', page = 1, limit = 10, status = '') => {
+    const statusParam = status ? `&status=${status}` : '';
+    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.ORGANIZATIONS}?query=${query}&page=${page}&limit=${limit}${statusParam}`);
     return response.data;
   },
 
@@ -24,8 +25,9 @@ export const superAdminService = {
     return response.data;
   },
 
-  getCompanies: async (query = '', page = 1, limit = 10) => {
-    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.COMPANIES}?query=${query}&page=${page}&limit=${limit}`);
+  getCompanies: async (query = '', page = 1, limit = 10, status = '') => {
+    const statusParam = status ? `&status=${status}` : '';
+    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.COMPANIES}?query=${query}&page=${page}&limit=${limit}${statusParam}`);
     return response.data;
   },
 
