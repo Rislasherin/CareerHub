@@ -13,6 +13,7 @@ import { makeForgotPasswordController } from "@infrastructure/di/auth.factory";
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
 import { forgotPasswordSchema, resetPasswordSchema } from "@shared/validation";
 import { OrganizationModel } from "@infrastructure/database/models/organizer/organization.model";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 const router = Router();
 const refreshTokenController = new RefreshTokenController(
@@ -38,7 +39,7 @@ router.get("/organizations/approved", async (req, res) => {
         });
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        res.status(500).json({ success: false, message });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message });
     }
 });
 
