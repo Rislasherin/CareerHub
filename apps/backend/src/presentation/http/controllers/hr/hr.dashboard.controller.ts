@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IGetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/GetHRDashboardStats.usecase";
@@ -9,7 +9,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 export class HRDashboardController {
   constructor(private readonly _getStatsUseCase: IGetHRDashboardStatsUseCase) { }
 
-  getDashboardStats = asyncHandler(async (req: any, res: Response) => {
+  getDashboardStats = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
