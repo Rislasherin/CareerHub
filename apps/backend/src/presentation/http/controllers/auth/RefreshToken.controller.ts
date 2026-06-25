@@ -36,10 +36,10 @@ export class RefreshTokenController {
     }
 
     // Verify the refresh token (throws if invalid/expired)
-    const payload = this._jwtService.verifyRefreshToken(refreshToken) as any;
+    const payload = this._jwtService.verifyRefreshToken(refreshToken) as any; // Revert to any for jwt payload temporary to fix type error
 
     // Check user status before refreshing
-    let user: any;
+    let user: Record<string, unknown> | unknown;
     switch (payload.role) {
       case Role.STUDENT:
         user = await this._studentRepository.findById(payload.id);
@@ -58,7 +58,7 @@ export class RefreshTokenController {
         break;
     }
 
-    if (!user || user.status === UserStatus.BLOCKED) {
+    if (!user || (user as { status?: string }).status === UserStatus.BLOCKED) {
       res.clearCookie("accessToken");
       res.clearCookie("refreshToken");
       throw new AppError(
@@ -76,11 +76,26 @@ export class RefreshTokenController {
       companyId: payload.companyId,
     });
 
+    // Issue a new refresh token for sliding expiration
+    const newRefreshToken = this._jwtService.signRefreshToken({
+      id: payload.id,
+      role: payload.role,
+      orgId: payload.orgId,
+      companyId: payload.companyId,
+    });
+
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: env.COOKIE_MAX_AGE_MS, // using standard cookie max age
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
     });
 
     sendSuccess(res, null, "Token refreshed successfully");
