@@ -36,7 +36,7 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
   }
 
   async findByOrgIdAndStatus(orgId: string, status: string): Promise<Student[]> {
-    const docs = await this.model.find({ collegeId: orgId, status, isDeleted: { $ne: true } });
+    const docs = await this.model.find({ collegeId: orgId, status, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
     return docs.map((doc) => this.toEntity(doc as StudentDocument));
   }
 
