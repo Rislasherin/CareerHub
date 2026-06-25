@@ -6,9 +6,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Company } from "@domain/entities/Company";
 import { UserStatus } from "@domain/enums/user.status.enum";
 
-export interface IUpdateCompanyOnboardingUseCase {
-  execute(companyId: string, dto: UpdateCompanyOnboardingDto): Promise<any>;
-}
+import { IUpdateCompanyOnboardingUseCase } from "../interfaces/IUpdateCompanyOnboarding.usecase";
 
 export class UpdateCompanyOnboardingUseCase implements IUpdateCompanyOnboardingUseCase {
   constructor(private readonly _companyRepository: ICompanyRepository) { }
