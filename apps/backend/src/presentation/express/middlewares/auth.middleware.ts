@@ -37,7 +37,7 @@ export class AuthMiddleware {
         throw new UnauthorizedError("Access token missing");
       }
 
-      const decoded = this._jwtService.verifyAccessToken(token) as any;
+      const decoded = this._jwtService.verifyAccessToken(token) as any; // Revert to any for jwt payload temporary to fix type error
 
       // Real-time status check to handle automatic logout if blocked
       let user: any;
@@ -48,7 +48,7 @@ export class AuthMiddleware {
         case Role.HR:
           user = await this._hrUserRepository.findById(decoded.id);
           if (user && user.companyId) {
-            const company = await this._companyRepository.findById(user.companyId);
+            const company: any = await this._companyRepository.findById(user.companyId);
             if (company) {
               const userJson = user.toJSON ? user.toJSON() : user;
               const companyJson = company.toJSON ? company.toJSON() : company;
@@ -65,7 +65,7 @@ export class AuthMiddleware {
         case Role.INTERVIEWER:
           user = await this._interviewerRepository.findById(decoded.id);
           if (user && user.companyId) {
-            const company = await this._companyRepository.findById(user.companyId);
+            const company: any = await this._companyRepository.findById(user.companyId);
             if (company && company.status === UserStatus.BLOCKED) {
               throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
             }
@@ -74,7 +74,7 @@ export class AuthMiddleware {
         case Role.COLLEGE_ADMIN:
           user = await this._collegeAdminRepository.findById(decoded.id);
           if (user && user.orgId) {
-            const org = await this._organizationRepository.findById(user.orgId);
+            const org: any = await this._organizationRepository.findById(user.orgId);
             if (org) {
               const userJson = user.toJSON ? user.toJSON() : user;
               const orgJson = org.toJSON ? org.toJSON() : org;
@@ -84,7 +84,12 @@ export class AuthMiddleware {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
               }
 
-              user = { ...userJson, onboardingStep: orgJson.onboardingStep };
+              user = { 
+                ...userJson, 
+                onboardingStep: orgJson.onboardingStep,
+                collegeName: orgJson.name,
+                activeBranches: orgJson.activeBranches || []
+              };
             }
           }
           break;
