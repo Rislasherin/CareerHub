@@ -8,7 +8,9 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-export class DeleteUserUseCase {
+import { IDeleteUserUseCase } from "./interfaces/IDeleteUser.usecase";
+
+export class DeleteUserUseCase implements IDeleteUserUseCase {
   constructor(
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
