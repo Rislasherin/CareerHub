@@ -3,9 +3,8 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 
 export interface IGetOrganizationsUseCase {
-  execute(query: string, page: number, limit: number): Promise<any>;
+  execute(query: string, page: number, limit: number, status?: string): Promise<any>;
 }
-
 export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
   constructor(
     private readonly _orgRepository: IOrganizationRepository,
@@ -13,8 +12,8 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
     private readonly _collegeAdminRepository: ICollegeAdminRepository
   ) { }
 
-  async execute(query: string, page: number, limit: number) {
-    const { organizations, total } = await this._orgRepository.searchOrganizations(query, page, limit);
+  async execute(query: string, page: number, limit: number, status?: string) {
+    const { organizations, total } = await this._orgRepository.searchOrganizations(query, page, limit, status);
 
     const enrichedOrgs = await Promise.all(organizations.map(async (org) => {
       const [studentCount, admin] = await Promise.all([
