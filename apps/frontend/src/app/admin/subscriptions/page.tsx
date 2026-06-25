@@ -22,6 +22,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { superAdminService } from '@/services/super-admin/super-admin.service';
 import { toast } from 'sonner';
 
+interface Organization {
+  id: string;
+  name: string;
+  city?: string;
+  state?: string;
+  countOfStudents?: number;
+  plan?: 'BASIC' | 'PRO';
+}
+
 interface SubscriptionPlan {
   id: 'BASIC' | 'PRO';
   name: string;
@@ -35,7 +44,7 @@ interface SubscriptionPlan {
 }
 
 export default function SubscriptionManagement() {
-  const [colleges, setColleges] = useState<type[]>([]);
+  const [colleges, setColleges] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -86,6 +95,7 @@ export default function SubscriptionManagement() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const [editFeatures, setEditFeatures] = useState<{ text: string; included: boolean }[]>([]);
+  const [newFeatureText, setNewFeatureText] = useState('');
 
   // Load college plans and fetch configs
   useEffect(() => {
@@ -176,6 +186,7 @@ export default function SubscriptionManagement() {
     setEditingPlan(plan);
     setEditPrice(plan.price);
     setEditFeatures([...plan.features]);
+    setNewFeatureText('');
   };
 
   const handleSavePlanSettings = () => {
@@ -203,7 +214,7 @@ export default function SubscriptionManagement() {
     toast.success(`${editingPlan.name} settings updated!`);
   };
 
-  const columns: Column<type>[] = useMemo(() => [
+  const columns: Column<Organization>[] = useMemo(() => [
     {
       header: 'College Details',
       render: (college) => (
@@ -248,7 +259,7 @@ export default function SubscriptionManagement() {
           <div className="flex items-center justify-end gap-2">
             <select
               value={activePlan}
-              onChange={(e) => handlePlanChange(college.id, e.target.value as type)}
+              onChange={(e) => handlePlanChange(college.id, e.target.value as 'BASIC' | 'PRO')}
               className="bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-black text-slate-300 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
             >
               <option value="BASIC">BASIC PLAN</option>
@@ -470,6 +481,26 @@ export default function SubscriptionManagement() {
                         />
                       </div>
                     ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <input
+                      type="text"
+                      placeholder="Add new feature..."
+                      value={newFeatureText}
+                      onChange={(e) => setNewFeatureText(e.target.value)}
+                      className="flex-1 bg-[#121520] border border-white/10 rounded-xl py-2.5 px-3 text-xs font-bold text-white focus:outline-none focus:border-cyan-500/50"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (newFeatureText.trim()) {
+                          setEditFeatures([...editFeatures, { text: newFeatureText.trim(), included: true }]);
+                          setNewFeatureText('');
+                        }
+                      }}
+                      className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-black text-xs rounded-xl px-4 h-[38px] border border-cyan-500/20"
+                    >
+                      Add
+                    </Button>
                   </div>
                 </div>
               </div>
