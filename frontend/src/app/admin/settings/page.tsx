@@ -15,7 +15,6 @@ export default function PlatformSettingsPage() {
     maintenanceMessage: "",
     collegeRegistration: true,
     companyRegistration: true,
-    studentRegistration: true,
     requireApproval: true,
     contactEmail: "support@careerhub.com",
   });
@@ -153,7 +152,6 @@ export default function PlatformSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Toggle label="College Signups" description="Allow new colleges to register" icon={Building2} checked={settings.collegeRegistration} onChange={(val: boolean) => setSettings({...settings, collegeRegistration: val})} />
             <Toggle label="Company Signups" description="Allow new companies to register" icon={Users} checked={settings.companyRegistration} onChange={(val: boolean) => setSettings({...settings, companyRegistration: val})} />
-            <Toggle label="Student Signups" description="Allow new students to register" icon={GraduationCap} checked={settings.studentRegistration} onChange={(val: boolean) => setSettings({...settings, studentRegistration: val})} />
             <Toggle label="Require Approval" description="Manual verification required after signup" icon={ShieldAlert} checked={settings.requireApproval} onChange={(val: boolean) => setSettings({...settings, requireApproval: val})} />
           </div>
         </motion.div>
