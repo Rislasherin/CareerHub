@@ -57,6 +57,10 @@ export class AuthMiddleware {
               if (companyJson.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
               }
+              // Check if company is pending approval
+              if (companyJson.status === UserStatus.PENDING && companyJson.onboardingStep >= 3) {
+                throw new UnauthorizedError("Your company account is currently pending administrator approval.");
+              }
 
               user = { ...userJson, onboardingStep: companyJson.onboardingStep };
             }
@@ -82,6 +86,10 @@ export class AuthMiddleware {
               // Check if organization is blocked
               if (orgJson.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
+              }
+              // Check if organization is pending approval
+              if (orgJson.status === UserStatus.PENDING && orgJson.onboardingStep >= 3) {
+                throw new UnauthorizedError("Your institution account is currently pending administrator approval.");
               }
 
               user = { 

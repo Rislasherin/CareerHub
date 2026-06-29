@@ -43,6 +43,10 @@ export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
       throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
     }
 
+    if (organization?.status === UserStatus.PENDING && (organization?.onboardingStep ?? 0) >= 3) {
+      throw new UnauthorizedError("Your account is currently pending administrator approval.");
+    }
+
     const payload = {
       id: admin.id!,
       role: Role.COLLEGE_ADMIN,

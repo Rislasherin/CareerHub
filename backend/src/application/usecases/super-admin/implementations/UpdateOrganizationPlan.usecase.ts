@@ -4,12 +4,12 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-import { IUpdateOrganizationPlanUseCase } from "./interfaces/IUpdateOrganizationPlan.usecase";
+import { IUpdateOrganizationPlanUseCase } from "../interfaces/IUpdateOrganizationPlan.usecase";
 
 export class UpdateOrganizationPlanUseCase implements IUpdateOrganizationPlanUseCase {
   constructor(
     private readonly orgRepo: IOrganizationRepository
-  ) {}
+  ) { }
 
   async execute(id: string, plan: string): Promise<void> {
     const org = await this.orgRepo.findById(id);

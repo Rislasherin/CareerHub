@@ -24,6 +24,7 @@ import {
   MessageSquare,
   Target,
   BarChart3,
+  Settings,
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -62,6 +63,7 @@ const super_adminNav: NavCategory[] = [
       { label: 'Colleges', icon: GraduationCap, href: '/admin/colleges' },
       { label: 'Companies', icon: Building2, href: '/admin/companies' },
       { label: 'Subscriptions', icon: CreditCard, href: '/admin/subscriptions' },
+      { label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
     ]
   }
 ];

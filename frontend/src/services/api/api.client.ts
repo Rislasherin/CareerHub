@@ -13,6 +13,7 @@ export const apiClient = axios.create({
 
 interface ErrorResponseData {
   error?: {
+    code?: string;
     message?: string;
   };
   message?: string;
@@ -57,6 +58,15 @@ apiClient.interceptors.response.use(
     const errorMessage = errorData?.error?.message || errorData?.message || error.message || 'Something went wrong';
 
     const isAuthRoute = originalRequest.url?.includes('/login') || originalRequest.url?.includes('/register');
+
+    // Handle Maintenance Mode
+    if (statusCode === 503 && errorData?.error?.code === 'MAINTENANCE_MODE') {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/maintenance') {
+        const message = encodeURIComponent(errorData.error.message || 'Platform is under maintenance');
+        window.location.href = `/maintenance?message=${message}`;
+      }
+      return Promise.reject(error);
+    }
 
     // Shared logout function
     const performGlobalLogout = async (errorType?: string) => {

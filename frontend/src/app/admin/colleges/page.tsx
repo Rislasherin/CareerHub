@@ -8,8 +8,9 @@ import {
   Search,
   Filter,
   MoreVertical,
-  ShieldAlert,
-  ShieldCheck,
+  Ban,
+  Unlock,
+  CheckCircle2,
   Trash2,
   Eye,
   ArrowUpDown,
@@ -25,6 +26,7 @@ import { ConfirmModal } from '@/components/shared/ConfirmModal';
 
 export default function CollegesManagement() {
   const [data, setData] = useState<any[]>([]);
+  const [viewedCollege, setViewedCollege] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -67,19 +69,26 @@ export default function CollegesManagement() {
   }, [page, search, statusFilter]);
 
   const handleStatusToggle = (id: string, currentStatus: string) => {
-    const isBlocking = currentStatus?.toUpperCase() !== 'BLOCKED';
+    const isPending = currentStatus?.toUpperCase() === 'PENDING';
+    const isBlocking = currentStatus?.toUpperCase() === 'ACTIVE';
+    
+    const newStatus = isPending ? 'ACTIVE' : (isBlocking ? 'BLOCKED' : 'ACTIVE');
+    const actionWord = isPending ? 'approve' : (isBlocking ? 'block' : 'unblock');
+
     setModalConfig({
       isOpen: true,
       type: isBlocking ? 'warning' : 'info',
-      title: isBlocking ? 'Block College' : 'Unblock College',
-      message: `Are you sure you want to ${isBlocking ? 'block' : 'unblock'} this institution? ${isBlocking ? 'They will lose access to the platform.' : 'They will regain access.'}`,
-      confirmText: isBlocking ? 'Block College' : 'Unblock College',
+      title: isPending ? 'Approve College' : (isBlocking ? 'Block College' : 'Unblock College'),
+      message: isPending 
+        ? 'Are you sure you want to approve this college? They will gain full access to the platform.'
+        : `Are you sure you want to ${actionWord} this institution? ${isBlocking ? 'They will lose access to the platform.' : 'They will regain access.'}`,
+      confirmText: isPending ? 'Approve College' : (isBlocking ? 'Block College' : 'Unblock College'),
       isLoading: false,
       onConfirm: async () => {
         setModalConfig(prev => ({ ...prev, isLoading: true }));
         try {
-          await superAdminService.updateStatus('college_admin', id, isBlocking ? 'BLOCKED' : 'ACTIVE');
-          toast.success(`College ${isBlocking ? 'blocked' : 'unblocked'} successfully`);
+          await superAdminService.updateStatus('college_admin', id, newStatus);
+          toast.success(`College ${actionWord}d successfully`);
           fetchColleges();
         } catch (err) {
           toast.error('Failed to update status');
@@ -146,6 +155,7 @@ export default function CollegesManagement() {
           >
             <option value="">All Status</option>
             <option value="ACTIVE">Active</option>
+            <option value="PENDING">Pending Approval</option>
             <option value="BLOCKED">Blocked</option>
           </select>
         </div>
@@ -212,26 +222,42 @@ export default function CollegesManagement() {
                           {college.countOfStudents || 0}
                         </td>
                         <td className="px-8 py-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${college.status?.toUpperCase() === 'BLOCKED'
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            college.status?.toUpperCase() === 'BLOCKED'
                               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              : college.status?.toUpperCase() === 'PENDING'
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${college.status?.toUpperCase() === 'BLOCKED' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              college.status?.toUpperCase() === 'BLOCKED' ? 'bg-rose-500' :
+                              college.status?.toUpperCase() === 'PENDING' ? 'bg-amber-500' :
+                              'bg-emerald-500'
+                            }`} />
                             {college.status || 'active'}
                           </span>
                         </td>
                         <td className="px-8 py-6">
                           <div className="flex items-center justify-end gap-2">
-                            <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                            <button 
+                              onClick={() => setViewedCollege(college)}
+                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                            >
                               <Eye size={16} />
                             </button>
                             <button
                               onClick={() => handleStatusToggle(college.id, college.status)}
-                              className={`p-2 rounded-lg bg-white/5 transition-all ${college.status?.toUpperCase() === 'BLOCKED' ? 'text-emerald-400 hover:bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10'
+                              className={`p-2 rounded-lg bg-white/5 transition-all ${
+                                college.status?.toUpperCase() === 'PENDING' ? 'text-emerald-400 hover:bg-emerald-400/10' :
+                                college.status?.toUpperCase() === 'BLOCKED' ? 'text-amber-400 hover:bg-amber-400/10' : 'text-rose-400 hover:bg-rose-400/10'
                                 }`}
-                              title={college.status?.toUpperCase() === 'BLOCKED' ? 'Unblock' : 'Block'}
+                              title={
+                                college.status?.toUpperCase() === 'PENDING' ? 'Approve' :
+                                college.status?.toUpperCase() === 'BLOCKED' ? 'Unblock' : 'Block'
+                              }
                             >
-                              {college.status?.toUpperCase() === 'BLOCKED' ? <ShieldCheck size={16} /> : <ShieldAlert size={16} />}
+                              {college.status?.toUpperCase() === 'PENDING' ? <CheckCircle2 size={16} /> :
+                               college.status?.toUpperCase() === 'BLOCKED' ? <Unlock size={16} /> : <Ban size={16} />}
                               
                             </button>
                             <button
@@ -260,6 +286,56 @@ export default function CollegesManagement() {
             confirmText={modalConfig.confirmText}
             type={modalConfig.type}
           />
+
+          {/* View Details Modal */}
+          <AnimatePresence>
+            {viewedCollege && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-[#0B0D17] border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden"
+                >
+                  <div className="p-6 md:p-8 flex flex-col gap-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-4 items-center">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/5">
+                          <Building2 size={28} className="text-cyan-400" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-black text-white tracking-tight">{viewedCollege.name}</h2>
+                          <p className="text-slate-400 font-medium">Institution</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setViewedCollege(null)} className="p-2 bg-white/5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+                        <span className="sr-only">Close</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contact Details</p>
+                        <p className="text-sm text-slate-300 mb-1"><span className="font-medium text-slate-500">Email:</span> {viewedCollege.placementContactEmail || viewedCollege.email || 'N/A'}</p>
+                        <p className="text-sm text-slate-300"><span className="font-medium text-slate-500">Phone:</span> {viewedCollege.placementContactPhone || 'N/A'}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Location</p>
+                        <p className="text-sm text-slate-300 mb-1"><span className="font-medium text-slate-500">City:</span> {viewedCollege.city || 'N/A'}</p>
+                        <p className="text-sm text-slate-300"><span className="font-medium text-slate-500">State:</span> {viewedCollege.state || 'N/A'}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/5 md:col-span-2">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Platform Details</p>
+                        <p className="text-sm text-slate-300 leading-relaxed"><span className="font-medium text-slate-500">Registered Students:</span> {viewedCollege.countOfStudents || 0}</p>
+                        <p className="text-sm text-slate-300 leading-relaxed mt-2"><span className="font-medium text-slate-500">Active Branches:</span> {viewedCollege.activeBranches?.join(', ') || 'None specified.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* Pagination */}
           <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between">

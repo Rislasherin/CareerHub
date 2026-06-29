@@ -1,8 +1,8 @@
-import { GetDashboardStatsUseCase } from "@application/usecases/super-admin/GetDashboardStats.usecase";
-import { GetOrganizationsUseCase } from "@application/usecases/super-admin/GetOrganizations.usecase";
-import { GetStudentsUseCase } from "@application/usecases/super-admin/GetStudents.usecase";
-import { GetCompaniesUseCase } from "@application/usecases/super-admin/GetCompanies.usecase";
-import { GetInterviewersUseCase } from "@application/usecases/super-admin/GetInterviewers.usecase";
+import { GetDashboardStatsUseCase } from "@application/usecases/super-admin/implementations/GetDashboardStats.usecase";
+import { GetOrganizationsUseCase } from "@application/usecases/super-admin/implementations/GetOrganizations.usecase";
+import { GetStudentsUseCase } from "@application/usecases/super-admin/implementations/GetStudents.usecase";
+import { GetCompaniesUseCase } from "@application/usecases/super-admin/implementations/GetCompanies.usecase";
+import { GetInterviewersUseCase } from "@application/usecases/super-admin/implementations/GetInterviewers.usecase";
 import {
   studentRepository,
   companyRepository,
@@ -13,12 +13,13 @@ import {
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
-
-// We need an instance of organizationRepository which might not be in the main container or it is
 import { studentRepository as studentRepo } from "@infrastructure/di/infra.container";
+import { PlatformSettingsController } from "@presentation/http/controllers/super-admin/platformSettings.controller";
+import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
-// Let's assume organizationRepository is also in the container, if not I'll create it
+
 const orgRepository = new OrganizationRepository();
+const platformSettingsRepository = new PlatformSettingsRepository();
 
 export const makeGetDashboardStatsUseCase = () => {
   return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, interviewerRepository, hrUserRepository);
@@ -52,9 +53,12 @@ export const makeSuperAdminAuthController = () => {
   return new SuperAdminAuthController(makeLoginSuperAdminUseCase());
 };
 
-import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/UpdateUserStatus.usecase";
-import { DeleteUserUseCase } from "@application/usecases/super-admin/DeleteUser.usecase";
-import { UpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/UpdateOrganizationPlan.usecase";
+import { UpdateUserStatusUseCase } from "@application/usecases/super-admin/implementations/UpdateUserStatus.usecase";
+import { DeleteUserUseCase } from "@application/usecases/super-admin/implementations/DeleteUser.usecase";
+import { UpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/implementations/UpdateOrganizationPlan.usecase";
+import { GetPlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/GetPlatformSettings.usecase";
+import { UpdatePlatformSettingsDTO } from "@application/dtos/super-admin/Request/platformSettings.request.dto";
+import { UpdatePlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/UpdatePlatformSettings.usecase";
 
 export const makeUpdateUserStatusUseCase = () => {
   return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
@@ -68,6 +72,13 @@ export const makeUpdateOrganizationPlanUseCase = () => {
   return new UpdateOrganizationPlanUseCase(orgRepository);
 };
 
+
+export const makeGetPlatformSettingsUseCase = () => {
+    return new GetPlatformSettingsUseCase(platformSettingsRepository);
+};
+export const makeUpdatePlatformSettingsUseCase = () => {
+    return new UpdatePlatformSettingsUseCase(platformSettingsRepository);
+};
 export const makeSuperAdminController = () => {
   return new SuperAdminController(
     makeGetDashboardStatsUseCase(),
@@ -79,4 +90,12 @@ export const makeSuperAdminController = () => {
     makeDeleteUserUseCase(),
     makeUpdateOrganizationPlanUseCase()
   );
+};
+
+
+export const makePlatformSettingsController = () => {
+    return new PlatformSettingsController(
+        makeGetPlatformSettingsUseCase(),
+        makeUpdatePlatformSettingsUseCase()
+    );
 };

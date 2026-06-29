@@ -11,8 +11,12 @@ import superAdminRouter from "./super-admin/super-admin.router";
 import studentRouter from "./student/student.router";
 import { makeStudentManagementController } from "@infrastructure/di/college.factory";
 import { ROUTES } from "@shared/constants/routes.constants";
+import { maintenanceMiddleware } from "../middlewares/maintenance.middleware";
 
 const router = Router();
+
+// Apply Maintenance Mode block globally
+router.use(maintenanceMiddleware);
 
 router.use(`${ROUTES.AUTH.BASE}${ROUTES.AUTH.STUDENT}`, studentAuthRoutes);
 router.use(`${ROUTES.AUTH.BASE}${ROUTES.AUTH.HR}`, hrAuthRoutes);

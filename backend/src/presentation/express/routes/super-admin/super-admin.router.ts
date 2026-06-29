@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { makeSuperAdminController } from "@infrastructure/di/super-admin.factory";
+import { makePlatformSettingsController, makeSuperAdminController } from "@infrastructure/di/super-admin.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 
 const router = Router();
 const superAdminController = makeSuperAdminController();
+const platformSettingsController = makePlatformSettingsController()
 
 // Protect all Super Admin routes
 router.use(authMiddleware.protect);
@@ -18,5 +19,9 @@ router.get("/interviewers", superAdminController.getInterviewers);
 router.patch("/management/:role/:id/status", superAdminController.updateStatus);
 router.patch("/organizations/:id/plan", superAdminController.updateOrganizationPlan);
 router.delete("/management/:role/:id", superAdminController.deleteUser);
+
+//Platform Settings
+router.get("/platform-settings", platformSettingsController.getSettings);
+router.patch("/platform-settings", platformSettingsController.updateSettings);
 
 export default router;

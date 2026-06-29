@@ -7,12 +7,13 @@ import { UpdateCollegeOnboardingDto } from "@application/dtos/auth/collage/Reque
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
 import { loginSchema } from "@shared/validation";
 import { authMiddleware } from "@infrastructure/di/infra.container";
+import { checkRegistrationEnabled } from "@presentation/express/middlewares/registration.middleware";
 
 const router = Router();
 const collegeAdminAuthController = makeCollegeAdminAuthController();
 
 router.post("/login", validateSchema(loginSchema), collegeAdminAuthController.login);
-router.post("/register", validateDto(RegisterCollegeRequestDto), collegeAdminAuthController.register);
+router.post("/register", checkRegistrationEnabled('college'), validateDto(RegisterCollegeRequestDto), collegeAdminAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCollegeOtpRequestDto), collegeAdminAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCollegeOnboardingDto), collegeAdminAuthController.updateOnboarding);
 

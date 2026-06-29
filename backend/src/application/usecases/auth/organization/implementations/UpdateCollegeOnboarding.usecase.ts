@@ -5,6 +5,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Organization } from "@domain/entities/Organization";
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
 import { IUpdateCollegeOnboardingUseCase } from "../interfaces/IUpdateCollegeOnboarding.usecase";
 
@@ -40,7 +41,14 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
     } else if (dto.step === 3) {
       if (dto.plan) currentProps.plan = dto.plan;
       currentProps.onboardingStep = 3;
-      currentProps.status = UserStatus.ACTIVE;
+      
+      const settingsRepo = new PlatformSettingsRepository();
+      const settings = await settingsRepo.getSettings();
+      if (settings && settings.requireApproval) {
+          currentProps.status = UserStatus.PENDING;
+      } else {
+          currentProps.status = UserStatus.ACTIVE;
+      }
     }
 
     // Validate duplicate organization name if changed

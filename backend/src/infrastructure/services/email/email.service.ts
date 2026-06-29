@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { env } from "@infrastructure/config/env.validator";
 import { IEmailService } from "@application/services/IEmailService";
+import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
 export class EmailService implements IEmailService {
   private _transporter: nodemailer.Transporter;
@@ -17,10 +18,22 @@ export class EmailService implements IEmailService {
     });
   }
 
+  private async getContactEmail(): Promise<string> {
+    try {
+      const settingsRepo = new PlatformSettingsRepository();
+      const settings = await settingsRepo.getSettings();
+      return settings?.contactEmail || env.EMAIL_FROM;
+    } catch {
+      return env.EMAIL_FROM;
+    }
+  }
+
   async sendOTP(email: string, otp: string, companyName: string): Promise<boolean> {
     try {
+      const replyTo = await this.getContactEmail();
       await this._transporter.sendMail({
         from: env.EMAIL_FROM,
+        replyTo,
         to: email,
         subject: "Verify your CareerHub Organization Account",
         html: `
@@ -48,8 +61,10 @@ export class EmailService implements IEmailService {
 
   async sendInterviewerSetupEmail(email: string, setupLink: string): Promise<void> {
     try {
+      const replyTo = await this.getContactEmail();
       await this._transporter.sendMail({
         from: env.EMAIL_FROM,
+        replyTo,
         to: email,
         subject: "Invitation to join CareerHub as an Interviewer",
         html: `
@@ -78,8 +93,10 @@ export class EmailService implements IEmailService {
 
   async sendPasswordResetEmail(email: string, resetLink: string): Promise<void> {
     try {
+      const replyTo = await this.getContactEmail();
       await this._transporter.sendMail({
         from: env.EMAIL_FROM,
+        replyTo,
         to: email,
         subject: "Reset your CareerHub Password",
         html: `
@@ -108,8 +125,10 @@ export class EmailService implements IEmailService {
 
   async sendStudentInvitationEmail(email: string, setupLink: string): Promise<void> {
     try {
+      const replyTo = await this.getContactEmail();
       await this._transporter.sendMail({
         from: env.EMAIL_FROM,
+        replyTo,
         to: email,
         subject: "Invitation to join CareerHub Student Portal",
         html: `

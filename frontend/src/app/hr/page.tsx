@@ -51,7 +51,7 @@ export default function HRDashboard() {
             const statsData = await getHRDashboardStats();
             setData(statsData);
          } catch (error) {
-            console.error("Failed to load HR dashboard statistics:", error);
+            // Silently handle error as apiClient interceptor will show a toast if necessary
          } finally {
             setLoading(false);
          }

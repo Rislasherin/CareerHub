@@ -6,12 +6,13 @@ import { SetupPasswordDto } from "@application/dtos/auth/student/Request/SetupPa
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 
 import { authMiddleware } from "@infrastructure/di/infra.container";
+import { checkRegistrationEnabled } from "@presentation/express/middlewares/registration.middleware";
 
 const router = Router();
 const studentAuthController = makeStudentAuthController();
 
 router.post("/login", validateDto(StudentLoginRequestDto), studentAuthController.login);
-router.post("/request-access", validateDto(RequestAccessDto), studentAuthController.requestAccess);
+router.post("/request-access", checkRegistrationEnabled('student'), validateDto(RequestAccessDto), studentAuthController.requestAccess);
 router.post("/setup-password", validateDto(SetupPasswordDto), studentAuthController.setupPassword);
 router.get("/verify-token/:token", studentAuthController.verifyInvitationToken);
 router.get("/me", authMiddleware.protect, studentAuthController.getMe);

@@ -7,12 +7,13 @@ import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
 import { loginSchema } from "@shared/validation";
+import { checkRegistrationEnabled } from "@presentation/express/middlewares/registration.middleware";
 
 const router = Router();
 const hrAuthController = makeHRAuthController();
 
 router.post("/login", validateSchema(loginSchema), hrAuthController.login);
-router.post("/register", validateDto(RegisterCompanyRequestDto), hrAuthController.register);
+router.post("/register", checkRegistrationEnabled('company'), validateDto(RegisterCompanyRequestDto), hrAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCompanyOtpRequestDto), hrAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCompanyOnboardingDto), hrAuthController.updateOnboarding);
 

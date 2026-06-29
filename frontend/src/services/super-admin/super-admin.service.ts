@@ -44,6 +44,16 @@ export const superAdminService = {
   deleteUser: async (role: string, id: string) => {
     const response = await apiClient.delete(`${API_ROUTES.SUPER_ADMIN.MANAGEMENT}/${role}/${id}`);
     return response.data;
+  },
+
+  getPlatformSettings: async () => {
+    const response = await apiClient.get('/super-admin/platform-settings');
+    return response.data;
+  },
+
+  updatePlatformSettings: async (settingsData: any) => {
+    const response = await apiClient.patch('/super-admin/platform-settings', settingsData);
+    return response.data;
   }
 };
 

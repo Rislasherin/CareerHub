@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
-import { IGetDashboardStatsUseCase } from "@application/usecases/super-admin/GetDashboardStats.usecase";
-import { IGetOrganizationsUseCase } from "@application/usecases/super-admin/GetOrganizations.usecase";
-import { IGetStudentsUseCase } from "@application/usecases/super-admin/GetStudents.usecase";
-import { IGetCompaniesUseCase } from "@application/usecases/super-admin/GetCompanies.usecase";
-import { IGetInterviewersUseCase } from "@application/usecases/super-admin/GetInterviewers.usecase";
+import { IGetDashboardStatsUseCase } from "@application/usecases/super-admin/implementations/GetDashboardStats.usecase";
+import { IGetOrganizationsUseCase } from "@application/usecases/super-admin/implementations/GetOrganizations.usecase";
+import { IGetStudentsUseCase } from "@application/usecases/super-admin/implementations/GetStudents.usecase";
+import { IGetCompaniesUseCase } from "@application/usecases/super-admin/implementations/GetCompanies.usecase";
+import { IGetInterviewersUseCase } from "@application/usecases/super-admin/implementations/GetInterviewers.usecase";
 import { IUpdateUserStatusUseCase } from "@application/usecases/super-admin/interfaces/IUpdateUserStatus.usecase";
 import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces/IDeleteUser.usecase";
 import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
