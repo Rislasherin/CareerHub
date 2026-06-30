@@ -179,7 +179,8 @@ export default function SuperAdminLoginPage() {
                 type="submit"
                 fullWidth
                 isLoading={isLoading}
-                className="h-16 mt-4 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-slate-900/30 active:scale-[0.98] transition-all border-none"
+                disabled={!email || !password || isLoading}
+                className="h-16 mt-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-slate-900/30 active:scale-[0.98] transition-all border-none"
               >
                 Authenticate
               </Button>

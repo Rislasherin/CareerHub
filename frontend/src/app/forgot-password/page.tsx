@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
 
-                <Button type="submit" fullWidth isLoading={isLoading} className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all bg-indigo-600 hover:bg-indigo-700">
+                <Button type="submit" fullWidth isLoading={isLoading} disabled={!email || isLoading} className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
                   Send Recovery Link
                 </Button>
               </form>

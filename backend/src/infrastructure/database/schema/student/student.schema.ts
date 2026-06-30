@@ -58,6 +58,31 @@ export const studentSchema = new Schema(
     ],
 
     // Projects
+    resumeScore: { type: Number, required: false },
+    resumeUrl: { type: String, required: false },
+    preferences: {
+      preferredRole: { type: String, required: false },
+      workMode: { type: String, required: false },
+      location: { type: String, required: false },
+      expectedCtc: { type: String, required: false },
+      noticePeriod: { type: String, required: false },
+      jobType: { type: String, required: false },
+      startDate: { type: String, required: false }
+    },
+    softSkills: [{ type: String }],
+    spokenLanguages: [
+      {
+        language: { type: String, required: true },
+        proficiency: { type: String, required: true }
+      }
+    ],
+    achievements: [
+      {
+        title: { type: String, required: true },
+        subtitle: { type: String, required: false },
+        type: { type: String, enum: ['award', 'certification', 'coding', 'other'], default: 'other' }
+      }
+    ],
     projects: [
       {
         name: { type: String, required: true },

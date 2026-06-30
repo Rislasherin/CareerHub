@@ -1195,13 +1195,15 @@ export default function HRJobsPage() {
                   }));
                 });
 
-                const approvedCount = eligibleColleges.filter(org => selectedJob.approvedColleges?.includes(org.id)).length;
+                const approvedCount = selectedJob.approvedColleges?.includes('ALL') 
+                  ? eligibleColleges.length 
+                  : eligibleColleges.filter(org => selectedJob.approvedColleges?.includes(org.id)).length;
                 const rejectedCount = eligibleColleges.filter(org => selectedJob.rejectedColleges?.includes(org.id)).length;
                 const totalCollegesCount = eligibleColleges.length;
                 const pendingCount = totalCollegesCount - approvedCount - rejectedCount;
 
                 const filteredOrgs = eligibleColleges.filter(org => {
-                  const isApproved = selectedJob.approvedColleges?.includes(org.id);
+                  const isApproved = selectedJob.approvedColleges?.includes('ALL') || selectedJob.approvedColleges?.includes(org.id);
                   const isRejected = selectedJob.rejectedColleges?.includes(org.id);
 
                   // Search query match
@@ -1272,7 +1274,7 @@ export default function HRJobsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[160px] overflow-y-auto pr-1">
                       {filteredOrgs.length > 0 ? (
                         filteredOrgs.map(org => {
-                          const isApproved = selectedJob.approvedColleges?.includes(org.id);
+                          const isApproved = selectedJob.approvedColleges?.includes('ALL') || selectedJob.approvedColleges?.includes(org.id);
                           const isRejected = selectedJob.rejectedColleges?.includes(org.id);
                           return (
                             <div key={org.id} className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">

@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
-import { IUploadStudentVerificationUseCase } from "@application/usecases/auth/student/implementations/UploadStudentVerification.usecase";
-import { IUpdateStudentProfileUseCase } from "@application/usecases/student/UpdateStudentProfile.usecase";
+import { IUploadStudentVerificationUseCase } from "@application/usecases/auth/student/interfaces/IUploadStudentVerification.usecase";
+import { IUpdateStudentProfileUseCase } from "@application/usecases/student/interfaces/IUpdateStudentProfile.usecase";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
-import { IGetStudentJobsUseCase } from "@application/usecases/student/GetStudentJobs.usecase";
-import { IApplyToJobUseCase } from "@application/usecases/student/ApplyToJob.usecase";
+import { IGetStudentJobsUseCase } from "@application/usecases/student/interfaces/IGetStudentJobs.usecase";
+import { IApplyToJobUseCase } from "@application/usecases/student/interfaces/IApplyToJob.usecase";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";

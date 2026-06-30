@@ -1,8 +1,5 @@
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
-
-export interface IGetInterviewersUseCase {
-  execute(query: string, page: number, limit: number): Promise<any>;
-}
+import { IGetInterviewersUseCase } from "../interfaces/IGetInterviewersUseCase.usecase";
 
 export class GetInterviewersUseCase implements IGetInterviewersUseCase {
   constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
@@ -28,3 +25,4 @@ export class GetInterviewersUseCase implements IGetInterviewersUseCase {
     };
   }
 }
+

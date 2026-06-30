@@ -8,9 +8,7 @@ import { Student } from "@domain/entities/student";
 import { IJwtService } from "@application/interfaces/IJwt.service";
 import { Role } from "@domain/enums/Roles.enum";
 
-export interface ISetupStudentPasswordUseCase {
-  execute(token: string, password: string): Promise<any>;
-}
+import { ISetupStudentPasswordUseCase, SetupPasswordResponse } from "../interfaces/ISetupStudentPassword.usecase";
 
 export class SetupStudentPasswordUseCase implements ISetupStudentPasswordUseCase {
   constructor(
@@ -19,7 +17,7 @@ export class SetupStudentPasswordUseCase implements ISetupStudentPasswordUseCase
     private readonly _jwtService: IJwtService
   ) { }
 
-  async execute(token: string, password: string): Promise<any> {
+  async execute(token: string, password: string): Promise<SetupPasswordResponse> {
     const student = await this._studentRepository.findByInvitationToken(token);
 
     if (!student) {

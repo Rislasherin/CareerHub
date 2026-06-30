@@ -1,10 +1,8 @@
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
+import { IGetOrganizationsUseCase } from "../interfaces/IGetOrganizationsUseCase.usecase";
 
-export interface IGetOrganizationsUseCase {
-  execute(query: string, page: number, limit: number, status?: string): Promise<any>;
-}
 export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
   constructor(
     private readonly _orgRepository: IOrganizationRepository,
@@ -39,3 +37,4 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
     };
   }
 }
+

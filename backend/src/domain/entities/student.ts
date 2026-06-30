@@ -8,6 +8,24 @@ export interface StudentExperience {
   summary?: string;
 }
 
+export interface StudentPreferences {
+  preferredRole?: string;
+  workMode?: string;
+  location?: string;
+  expectedCtc?: string;
+  noticePeriod?: string;
+  jobType?: string;
+  startDate?: string;
+}
+export interface StudentSpokenLanguage {
+  language: string;
+  proficiency: string;
+}
+export interface StudentAchievement {
+  title: string;
+  subtitle?: string;
+  type: 'award' | 'certification' | 'coding' | 'other';
+}
 export interface StudentProject {
   name: string;
   techStack: string[];
@@ -64,6 +82,12 @@ export interface StudentProps {
   experience?: StudentExperience[];
   projects?: StudentProject[];
   appliedJobs?: string[];
+  resumeScore?: number;
+  resumeUrl?: string;
+  preferences?: StudentPreferences;
+  softSkills?: string[];
+  spokenLanguages?: StudentSpokenLanguage[];
+  achievements?: StudentAchievement[];
 }
 
 export class Student {
@@ -76,6 +100,13 @@ export class Student {
   get id(): string | undefined {
     return this._props.id;
   }
+
+  get resumeScore(): number | undefined { return this._props.resumeScore; }
+  get resumeUrl(): string | undefined { return this._props.resumeUrl; }
+  get preferences(): StudentPreferences | undefined { return this._props.preferences; }
+  get softSkills(): string[] | undefined { return this._props.softSkills; }
+  get spokenLanguages(): StudentSpokenLanguage[] | undefined { return this._props.spokenLanguages; }
+  get achievements(): StudentAchievement[] | undefined { return this._props.achievements; }
 
   get appliedJobs(): string[] {
     return this._props.appliedJobs || [];

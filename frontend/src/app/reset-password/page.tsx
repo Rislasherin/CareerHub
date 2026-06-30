@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
                   required
                 />
 
-                <Button type="submit" fullWidth isLoading={isLoading} className="mt-2">
+                <Button type="submit" fullWidth isLoading={isLoading} disabled={!password || !confirmPassword || isLoading} className="mt-2 disabled:opacity-50">
                   Reset Password
                 </Button>
               </form>

@@ -653,7 +653,8 @@ export default function StudentDirectoryPage() {
                   <Button
                     type="submit"
                     isLoading={isProcessing}
-                    className="flex-1 rounded-xl h-12 text-xs font-black bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-xl shadow-emerald-500/20"
+                    disabled={!newStudent.firstName.trim() || !newStudent.lastName.trim() || !newStudent.email.trim() || !newStudent.rollNumber.trim() || !newStudent.department || isProcessing}
+                    className="flex-1 rounded-xl h-12 text-xs font-black bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-xl shadow-emerald-500/20 disabled:opacity-50"
                   >
                     Send Invite
                   </Button>
@@ -764,7 +765,8 @@ export default function StudentDirectoryPage() {
                   <Button
                     onClick={confirmReject}
                     isLoading={isProcessing}
-                    className="flex-1 rounded-xl h-12 text-xs font-black bg-rose-600 hover:bg-rose-700 border-none text-white shadow-xl shadow-rose-500/20"
+                    disabled={!rejectReason.trim() || isProcessing}
+                    className="flex-1 rounded-xl h-12 text-xs font-black bg-rose-600 hover:bg-rose-700 border-none text-white shadow-xl shadow-rose-500/20 disabled:opacity-50"
                   >
                     Reject Student
                   </Button>

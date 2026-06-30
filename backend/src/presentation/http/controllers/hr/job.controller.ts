@@ -4,13 +4,14 @@ import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { IPostJobUseCase } from "@application/usecases/hr/job-engine/PostJob.usecase";
-import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/GetHRJobs.usecase";
-import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/CloseJob.usecase";
-import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/DeleteJob.usecase";
-import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/GetHRCandidates.usecase";
-import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/UpdateJob.usecase";
+import { IPostJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IPostJob.usecase";;
+import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobs.usecase";;
+import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/interfaces/ICloseJob.usecase";;
+import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IDeleteJob.usecase";;
+import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRCandidates.usecase";;
+import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateJob.usecase";;
 import { JobStatus } from "@domain/enums/JobStatus.enum";
+import { IGetCandidateProfileUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetCandidateProfile.usecase";
 
 export class HRJobController {
   constructor(
@@ -19,8 +20,9 @@ export class HRJobController {
     private readonly _closeJobUseCase: ICloseJobUseCase,
     private readonly _deleteJobUseCase: IDeleteJobUseCase,
     private readonly _getHRCandidatesUseCase: IGetHRCandidatesUseCase,
-    private readonly _updateJobUseCase: IUpdateJobUseCase
-  ) { }
+    private readonly _updateJobUseCase: IUpdateJobUseCase,
+    private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
+  ) {}
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
@@ -94,4 +96,12 @@ export class HRJobController {
     const result = await this._updateJobUseCase.execute(jobId, companyId, req.body);
     sendSuccess(res, result.toJSON(), "Job updated successfully", HttpStatus.OK);
   });
+
+  getCandidateProfile = asyncHandler(async(req:Request,res:Response)=>{
+    const studentId = req.params.id;
+    const profile = await this._getCandidateProfileUseCase.execute(studentId)
+
+    sendSuccess(res,profile, "Candidate profile retrieved successfully")
+  })
+
 }

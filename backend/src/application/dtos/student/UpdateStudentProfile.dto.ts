@@ -131,6 +131,11 @@ export class UpdateStudentProfileDto {
   @Expose()
   @IsString()
   @IsOptional()
+  resumeUrl?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
   city?: string;
 
   @Expose()

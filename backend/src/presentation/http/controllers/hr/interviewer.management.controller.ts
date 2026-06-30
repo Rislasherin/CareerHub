@@ -1,17 +1,17 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
-import { IAddInterviewerUseCase } from "@application/usecases/hr/interviewer-management/AddInterviewer.usecase";
-import { IGetInterviewersUseCase } from "@application/usecases/hr/interviewer-management/GetInterviewers.usecase";
+import { IAddInterviewerUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IAddInterviewer.usecase";;
+import { IGetInterviewersUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IGetInterviewers.usecase";;
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-import { IToggleInterviewerStatusUseCase } from "@application/usecases/hr/interviewer-management/ToggleInterviewerStatus.usecase";
+import { IToggleInterviewerStatusUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IToggleInterviewerStatus.usecase";;
 import { IResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IResendInterviewerInvite.usecase";
-import { IUpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/UpdateInterviewer.usecase";
-import { IDeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/DeleteInterviewer.usecase";
-import { IRestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/RestoreInterviewer.usecase";
+import { IUpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IUpdateInterviewer.usecase";;
+import { IDeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IDeleteInterviewer.usecase";;
+import { IRestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IRestoreInterviewer.usecase";;
 
 export class InterviewerManagementController {
   constructor(

@@ -1,46 +1,9 @@
 import { UserStatus } from "@domain/enums/user.status.enum";
-import { Student } from "@domain/entities/student";
+import { Student, StudentProps } from "@domain/entities/student";
 import { StudentDocument } from "@infrastructure/database/models/student/student.model";
 
-interface RawStudentProps {
-  linkedinUrl?: string;
-  githubUrl?: string;
-  portfolioUrl?: string;
-  city?: string;
-  degree?: string;
-  branch?: string;
-  graduationYear?: number;
-  cgpa?: number;
-  tenthPercentage?: number;
-  twelfthPercentage?: number;
-  activeBacklogs?: number;
-  skills?: {
-    languages?: string[];
-    frameworks?: string[];
-    databases?: string[];
-    cloudDevops?: string[];
-    otherTools?: string[];
-    aiMl?: string[];
-  };
-  experience?: {
-    company: string;
-    role: string;
-    duration: string;
-    location: string;
-    summary: string;
-  }[];
-  projects?: {
-    name: string;
-    techStack?: string[];
-    github?: string;
-    liveDemo?: string;
-    description: string;
-  }[];
-  appliedJobs?: string[];
-}
-
 export const toStudentEntity = (doc: StudentDocument): Student => {
-  const rawDoc = doc as unknown as RawStudentProps;
+  const rawDoc = doc as unknown as Partial<StudentProps>;
   return Student.create({
     id: doc._id.toString(),
     firstName: doc.firstName,
@@ -98,7 +61,17 @@ export const toStudentEntity = (doc: StudentDocument): Student => {
       liveDemo: proj.liveDemo,
       description: proj.description
     })) : [],
-    appliedJobs: rawDoc.appliedJobs || []
+    achievements: rawDoc.achievements ? rawDoc.achievements.map(a => ({
+      title: a.title,
+      subtitle: a.subtitle,
+      type: a.type || 'other'
+    })) : [],
+    appliedJobs: rawDoc.appliedJobs || [],
+    resumeScore: rawDoc.resumeScore,
+    resumeUrl: rawDoc.resumeUrl,
+    preferences: rawDoc.preferences,
+    softSkills: rawDoc.softSkills || [],
+    spokenLanguages: rawDoc.spokenLanguages || []
   });
 };
 

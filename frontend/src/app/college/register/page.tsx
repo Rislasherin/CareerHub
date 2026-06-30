@@ -187,7 +187,8 @@ export default function CollegeRegistrationPage() {
               roleType="organizer" 
               fullWidth 
               isLoading={isLoading}
-              className="mt-4 bg-emerald-600 hover:bg-emerald-700"
+              disabled={!Object.values(formData).every(Boolean) || isLoading}
+              className="mt-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
             >
               Register Institution <ArrowRight size={18} className="ml-2" />
             </Button>
@@ -205,7 +206,8 @@ export default function CollegeRegistrationPage() {
               roleType="organizer"
               fullWidth 
               isLoading={isLoading} 
-              className="bg-emerald-600 hover:bg-emerald-700 font-bold h-14 rounded-2xl"
+              disabled={otp.length !== 6 || isLoading}
+              className="bg-emerald-600 hover:bg-emerald-700 font-bold h-14 rounded-2xl disabled:opacity-50"
             >
               Verify & Continue
             </Button>

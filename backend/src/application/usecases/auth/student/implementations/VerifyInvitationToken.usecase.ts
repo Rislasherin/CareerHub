@@ -4,14 +4,12 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-export interface IVerifyInvitationTokenUseCase {
-  execute(token: string): Promise<any>;
-}
+import { IVerifyInvitationTokenUseCase, VerifyTokenResponse } from "../interfaces/IVerifyInvitationToken.usecase";
 
 export class VerifyInvitationTokenUseCase implements IVerifyInvitationTokenUseCase {
   constructor(private readonly _studentRepository: IStudentRepository) { }
 
-  async execute(token: string): Promise<any> {
+  async execute(token: string): Promise<VerifyTokenResponse> {
     const student = await this._studentRepository.findByInvitationToken(token);
 
     if (!student) {

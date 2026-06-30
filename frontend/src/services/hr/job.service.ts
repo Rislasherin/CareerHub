@@ -1,7 +1,7 @@
 import { API_ROUTES } from '@/constants/api.routes';
 import { apiClient } from '@/services/api/api.client';
 
-import { Job, GetHRJobsResponse } from '@/types/job';
+import { Job, GetHRJobsResponse, CandidateProfile } from '@/types/job';
 import { ApiResponse } from '@/types/api';
 
 export const postJob = async (payload: Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Job> => {
@@ -37,5 +37,10 @@ export const deleteJob = async (jobId: string): Promise<Job> => {
   const response = (await apiClient.delete(`${API_ROUTES.HR.JOBS}/${jobId}`)) as ApiResponse<Job>;
   return response.data;
 };
+
+export const getCandidateProfile = async (studentId: string): Promise<CandidateProfile> => {
+  const response = (await apiClient.get(`${API_ROUTES.HR.CANDIDATES}/${studentId}`)) as ApiResponse<CandidateProfile>;
+  return response.data;
+}
 
 

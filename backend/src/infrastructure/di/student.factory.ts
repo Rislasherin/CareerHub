@@ -2,9 +2,9 @@ import { UploadStudentVerificationUseCase } from "@application/usecases/auth/stu
 import { studentRepository, jobRepository, companyRepository } from "@infrastructure/di/infra.container";
 import { StudentController } from "@presentation/http/controllers/student/student.controller";
 import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
-import { UpdateStudentProfileUseCase } from "@application/usecases/student/UpdateStudentProfile.usecase";
-import { GetStudentJobsUseCase } from "@application/usecases/student/GetStudentJobs.usecase";
-import { ApplyToJobUseCase } from "@application/usecases/student/ApplyToJob.usecase";
+import { UpdateStudentProfileUseCase } from "@application/usecases/student/implementations/UpdateStudentProfile.usecase";
+import { GetStudentJobsUseCase } from "@application/usecases/student/implementations/GetStudentJobs.usecase";
+import { ApplyToJobUseCase } from "@application/usecases/student/implementations/ApplyToJob.usecase";
 import { makeGetCollegeNoticeUseCase } from "./college.factory";
 
 export const makeUploadStudentVerificationUseCase = () => {

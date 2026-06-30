@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
-import { IForgotPasswordUseCase } from "@application/usecases/auth/shared/ForgotPassword.usecase";
+import { IForgotPasswordUseCase } from "@application/usecases/auth/shared/interfaces/IForgotPassword.usecase";;
 
-import { IResetPasswordUseCase } from "@application/usecases/auth/shared/ResetPassword.usecase";
+import { IResetPasswordUseCase } from "@application/usecases/auth/shared/interfaces/IResetPassword.usecase";;
 import { errorMonitor } from "events";
 import { logger } from "@infrastructure/logger/logger";
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
-import { IGetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/GetHRDashboardStats.usecase";
+import { IGetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/interfaces/IGetHRDashboardStats.usecase";;
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";

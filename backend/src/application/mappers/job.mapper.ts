@@ -1,24 +1,10 @@
-import { Job } from "@domain/entities/Job";
+import { Job, JobProps } from "@domain/entities/Job";
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { JobType } from "@domain/enums/JobType.enum";
 import { JobDocument } from "@infrastructure/database/models/company/job.model";
 
-interface RawJobProps {
-  eligibility?: {
-    minCGPA?: number;
-    allowedBacklogs?: number;
-    eligibleBranches?: string[];
-    passingYear?: number;
-    degreeType?: string;
-  };
-  approvedColleges?: string[];
-  rejectedColleges?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 export const toJobEntity = (doc: JobDocument): Job => {
-  const rawDoc = doc as unknown as RawJobProps;
+  const rawDoc = doc as unknown as Partial<JobProps>;
   return Job.create({
     id: doc._id.toString(),
     companyId: doc.companyId,

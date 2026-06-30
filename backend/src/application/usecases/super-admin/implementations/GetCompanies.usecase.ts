@@ -1,9 +1,6 @@
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-
-export interface IGetCompaniesUseCase {
-  execute(query: string, page: number, limit: number, status?: string): Promise<any>;
-}
+import { IGetCompaniesUseCase } from "../interfaces/IGetCompaniesUseCase.usecase";
 
 export class GetCompaniesUseCase implements IGetCompaniesUseCase {
   constructor(
@@ -44,3 +41,4 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
     };
   }
 }
+

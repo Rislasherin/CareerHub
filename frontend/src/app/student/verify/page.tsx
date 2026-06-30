@@ -285,7 +285,8 @@ export default function StudentVerifyPage() {
                 type="submit"
                 fullWidth
                 isLoading={isLoading}
-                className="h-16 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-slate-900/20 active:scale-[0.98] transition-all border-none"
+                disabled={!selectedFile || isLoading}
+                className="h-16 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-slate-900/20 active:scale-[0.98] transition-all border-none"
               >
                 Submit for Verification
               </Button>

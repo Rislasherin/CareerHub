@@ -11,7 +11,7 @@ import {
   crossRoleAuthService
 } from "@infrastructure/di/infra.container";
 import { StudentAuthController } from "@presentation/http/controllers/auth/student/student.auth.controller";
-import { ForgotPasswordUseCase } from "@application/usecases/auth/shared/ForgotPassword.usecase";
+import { ForgotPasswordUseCase } from "@application/usecases/auth/shared/implementations/ForgotPassword.usecase";;
 import { ForgotPasswordController } from "@presentation/http/controllers/auth/ForgotPassword.controller";
 import { EmailService } from "@infrastructure/services/email/email.service";
 
@@ -51,7 +51,7 @@ export const makeStudentAuthController = () => {
   );
 };
 
-import { ResetPasswordUseCase } from "@application/usecases/auth/shared/ResetPassword.usecase";
+import { ResetPasswordUseCase } from "@application/usecases/auth/shared/implementations/ResetPassword.usecase";;
 
 export const makeForgotPasswordController = () => {
   const emailService = new EmailService();

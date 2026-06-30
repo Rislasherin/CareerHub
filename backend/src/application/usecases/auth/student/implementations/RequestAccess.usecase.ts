@@ -6,9 +6,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Student } from "@domain/entities/student";
 
-export interface IRequestAccessUseCase {
-  execute(dto: RequestAccessDto): Promise<void>;
-}
+import { IRequestAccessUseCase } from "../interfaces/IRequestAccess.usecase";
 
 export class RequestAccessUseCase implements IRequestAccessUseCase {
   constructor(private readonly _studentRepository: IStudentRepository) {}

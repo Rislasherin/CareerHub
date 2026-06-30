@@ -9,7 +9,7 @@ import { env } from "@infrastructure/config/env.validator";
 
 export class InterviewerAuthController {
   constructor(
-    private readonly activateUseCase: IActivateInterviewerUseCase,
+    private readonly _activateUseCase: IActivateInterviewerUseCase,
     private readonly _loginUseCase: ILoginInterviewerUseCase,
     private readonly verifyTokenUseCase: IVerifyInterviewerTokenUseCase
   ) {}
@@ -25,7 +25,7 @@ export class InterviewerAuthController {
     const interviewerId = req.user.id;
     const { password } = req.body;
     const email = req.query.email as string;
-    const result = await this.activateUseCase.execute(interviewerId, password, email);
+    const result = await this._activateUseCase.execute(interviewerId, password, email);
     
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,

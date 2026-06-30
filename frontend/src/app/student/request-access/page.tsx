@@ -262,7 +262,8 @@ export default function RequestAccessPage() {
               type="submit"
               fullWidth
               isLoading={isLoading}
-              className="h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-indigo-500/20 mt-4 active:scale-[0.98] transition-all border-none"
+              disabled={!Object.values(formData).every(Boolean) || isLoading}
+              className="h-14 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-indigo-500/20 mt-4 active:scale-[0.98] transition-all border-none"
             >
               Submit Request
             </Button>

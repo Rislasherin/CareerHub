@@ -457,7 +457,7 @@ export default function InterviewersPage() {
                     >
                       Cancel
                     </button>
-                    <Button type="submit" isLoading={isAdding} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl">
+                    <Button type="submit" isLoading={isAdding} disabled={!Object.values(formData).every(Boolean) || isAdding} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl disabled:opacity-50">
                       Send Invite
                     </Button>
                   </div>
@@ -518,7 +518,7 @@ export default function InterviewersPage() {
                     >
                       Cancel
                     </button>
-                    <Button type="submit" isLoading={isUpdating} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl">
+                    <Button type="submit" isLoading={isUpdating} disabled={!editFormData.firstName || !editFormData.lastName || isUpdating} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl disabled:opacity-50">
                       Save Changes
                     </Button>
                   </div>

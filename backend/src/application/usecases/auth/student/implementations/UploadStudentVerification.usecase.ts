@@ -6,10 +6,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Student } from "@domain/entities/student";
 
 import { IStorageService } from "@application/interfaces/IStorageService";
-
-export interface IUploadStudentVerificationUseCase {
-  execute(studentId: string, file: any): Promise<Student>;
-}
+import { IUploadStudentVerificationUseCase } from "../interfaces/IUploadStudentVerification.usecase";
 
 export class UploadStudentVerificationUseCase implements IUploadStudentVerificationUseCase {
   constructor(
@@ -17,7 +14,7 @@ export class UploadStudentVerificationUseCase implements IUploadStudentVerificat
     private readonly _storageService: IStorageService
   ) { }
 
-  async execute(studentId: string, file: any): Promise<Student> {
+  async execute(studentId: string, file: unknown): Promise<Student> {
     const student = await this._studentRepository.findById(studentId);
     if (!student) {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.INTERNAL_ERROR);
@@ -27,7 +24,7 @@ export class UploadStudentVerificationUseCase implements IUploadStudentVerificat
       throw new AppError("Verification details cannot be uploaded at this stage", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
     }
 
-    const proofUrl = await this._storageService.uploadFile(file, `student-verifications/${studentId}`);
+    const proofUrl = await this._storageService.uploadFile(file as Buffer, `student-verifications/${studentId}`);
 
     const updatedStudent = Student.create({
       ...student.toJSON(),
@@ -39,3 +36,4 @@ export class UploadStudentVerificationUseCase implements IUploadStudentVerificat
     return updatedStudent;
   }
 }
+

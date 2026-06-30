@@ -91,7 +91,8 @@ export default function HROnboardingPage() {
   const [collegeInput, setCollegeInput] = useState('');
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<HRFormValues>({
+  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<HRFormValues>({
+    mode: 'onChange',
     resolver: zodResolver(
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :
@@ -363,33 +364,9 @@ export default function HROnboardingPage() {
                         </div>
 
                         <div className="space-y-3">
-                          <label className="text-sm font-bold text-slate-800 ml-1">Preferred Colleges (Optional)</label>
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <Input
-                                placeholder="Type college name and add..."
-                                value={collegeInput}
-                                onChange={(e: any) => setCollegeInput(e.target.value)}
-                                onKeyDown={(e: any) => e.key === 'Enter' && (e.preventDefault(), addCollege())}
-                                className="bg-slate-50/50 h-11"
-                              />
-                            </div>
-                            <Button type="button" onClick={addCollege} className="h-11 px-4 bg-indigo-50 text-indigo-600 border-none hover:bg-indigo-100 font-bold transition-all">
-                              + Add
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {preferredColleges.map(college => (
-                              <span key={college} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-                                {college}
-                                <button type="button" onClick={() => removeCollege(college)} className="text-slate-400 hover:text-rose-500 transition-colors">
-                                  <X size={14} />
-                                </button>
-                              </span>
-                            ))}
-                          </div>
+                        
+                         </div>
                         </div>
-                      </div>
 
                       <div className="lg:w-64 space-y-4">
                         <label className="text-sm font-bold text-slate-800 ml-1">Company Logo</label>
@@ -433,7 +410,8 @@ export default function HROnboardingPage() {
                 <Button
                   type="submit"
                   isLoading={isLoading}
-                  className="px-10 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black shadow-xl shadow-indigo-200/50 hover:shadow-indigo-300/50 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
+                  disabled={!isValid || isLoading}
+                  className="px-10 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 disabled:opacity-50 text-white font-black shadow-xl shadow-indigo-200/50 hover:shadow-indigo-300/50 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
                 >
                   {currentStep === steps.length ? "🚀 Complete Setup" : "Continue"} <ArrowRight size={18} />
                 </Button>

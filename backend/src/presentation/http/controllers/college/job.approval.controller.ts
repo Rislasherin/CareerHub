@@ -4,9 +4,9 @@ import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { IGetPendingJobsUseCase } from "@application/usecases/college/job-approvals/GetPendingJobs.usecase";
-import { IApproveJobUseCase } from "@application/usecases/college/job-approvals/ApproveJob.usecase";
-import { IRejectJobUseCase } from "@application/usecases/college/job-approvals/RejectJob.usecase";
+import { IGetPendingJobsUseCase } from "@application/usecases/college/job-approvals/interfaces/IGetPendingJobs.usecase";;
+import { IApproveJobUseCase } from "@application/usecases/college/job-approvals/interfaces/IApproveJob.usecase";;
+import { IRejectJobUseCase } from "@application/usecases/college/job-approvals/interfaces/IRejectJob.usecase";;
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 
 export class CollegeJobApprovalController {

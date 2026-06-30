@@ -348,7 +348,8 @@ function LoginContent() {
                 type="submit"
                 fullWidth
                 isLoading={isLoading}
-                className="h-16 mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all border-none"
+                disabled={!email || !password || isLoading}
+                className="h-16 mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all border-none"
               >
                 Sign In to Portal
               </Button>

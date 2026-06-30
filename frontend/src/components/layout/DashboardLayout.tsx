@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
-import { LogOut, User as UserIcon, Menu, X } from 'lucide-react';
+import { LogOut, User as UserIcon, Menu, X, Clock, ShieldCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { clearAuth } from '@/redux/slices/authSlice';
 import { clearStudentDetails } from '@/redux/slices/studentSlice';
@@ -132,7 +132,31 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         )}
 
         <main className="p-6 lg:p-10 flex-1 overflow-x-hidden overflow-y-auto">
-          {children}
+          {((role === 'hr' && hrDetails?.status === 'PENDING' && (hrDetails?.onboardingStep ?? 0) >= 3) ||
+            (role === 'college_admin' && (collegeAdminDetails as any)?.status === 'PENDING' && ((collegeAdminDetails as any)?.onboardingStep ?? 0) >= 3)) ? (
+            <div className="flex flex-col items-center justify-center h-full py-20 text-center space-y-6">
+              <div className="w-24 h-24 bg-amber-50 rounded-[2rem] flex items-center justify-center text-amber-500 shadow-inner">
+                <Clock size={48} strokeWidth={1.5} />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Pending Administrator Approval</h2>
+                <p className="text-slate-500 font-medium max-w-md mx-auto">
+                  Your account is currently under review by our administrators. You will be able to access all features once your account is verified and approved.
+                </p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-sm mt-4">
+                <div className="flex items-center gap-4 text-left">
+                  <ShieldCheck size={24} className="text-indigo-600 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Verification Process</h4>
+                    <p className="text-xs text-slate-500 mt-1">Usually takes 1-2 business days. We will notify you via email once approved.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
 
         <ConfirmModal

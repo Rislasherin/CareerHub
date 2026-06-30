@@ -3,9 +3,9 @@ import { makeInterviewerManagementController, makeHRDashboardController, makeHRJ
 import { authMiddleware } from "@infrastructure/di/infra.container";
 
 import { validateDto } from "@presentation/express/middlewares/validateDto";
-import { AddInterviewerDto } from "@application/dtos/hr/AddInterviewer.dto";
-import { UpdateInterviewerDto } from "@application/dtos/hr/UpdateInterviewer.dto";
-import { PostJobDto } from "@application/dtos/hr/PostJob.dto";
+import { AddInterviewerDto } from "@application/dtos/hr/Request/AddInterviewer.dto";
+import { UpdateInterviewerDto } from "@application/dtos/hr/Request/UpdateInterviewer.dto";
+import { PostJobDto } from "@application/dtos/hr/Request/PostJob.dto";
 
 const router = Router();
 const interviewerManagementController = makeInterviewerManagementController();
@@ -31,6 +31,8 @@ router.put("/jobs/:jobId", validateDto(PostJobDto), hrJobController.updateJob);
 router.patch("/jobs/:jobId/close", hrJobController.closeJob);
 router.delete("/jobs/:jobId", hrJobController.deleteJob);
 router.get("/candidates", hrJobController.getCandidates);
+
+router.get("/candidates/:id",hrJobController.getCandidateProfile);
 
 export default router;
 

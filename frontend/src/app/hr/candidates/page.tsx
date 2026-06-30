@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import {
   Users,
@@ -66,6 +65,7 @@ export default function CandidatesPage() {
 
   // Shortlisted Candidates State (mock action with local storage persistence)
   const [shortlistedIds, setShortlistedIds] = useState<string[]>([]);
+  const [rejectedIds, setRejectedIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   // Load global applications from local storage
   const [appliedApplications, setAppliedApplications] = useState<{ studentId: string; jobId: string }[]>([]);
@@ -76,6 +76,12 @@ export default function CandidatesPage() {
       if (stored) {
         try {
           setShortlistedIds(JSON.parse(stored));
+        } catch (e) { }
+      }
+      const storedRejected = localStorage.getItem('rejected_candidates');
+      if (storedRejected) {
+        try {
+          setRejectedIds(JSON.parse(storedRejected));
         } catch (e) { }
       }
       const storedApps = localStorage.getItem('global_applications');
@@ -140,9 +146,10 @@ export default function CandidatesPage() {
     fetchCandidates();
   }, []);
 
-  // Get only applied candidates
+  // Get only applied candidates, EXCLUDING rejected candidates
   const appliedCandidates = candidates.filter(c =>
-    c.hasApplied || appliedApplications.some(app => String(app.studentId) === String(c.id))
+    (c.hasApplied || appliedApplications.some(app => String(app.studentId) === String(c.id))) &&
+    !rejectedIds.includes(String(c.id))
   );
 
   // Compute unique roles & colleges for drop downs
@@ -270,14 +277,14 @@ export default function CandidatesPage() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-slate-100">
             {/* Left Filter Dropdowns & Status Tabs */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Role filter dropdown */}
+              {/* Job Post filter dropdown */}
               <div className="relative">
                 <select
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
                   className="appearance-none bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-xl pl-4 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all cursor-pointer shadow-sm"
                 >
-                  <option value="ALL">All Roles</option>
+                  <option value="ALL">All Job Posts</option>
                   {uniqueRoles.map((role, idx) => (
                     <option key={idx} value={role}>{role}</option>
                   ))}
@@ -285,20 +292,6 @@ export default function CandidatesPage() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
               </div>
 
-              {/* College filter dropdown */}
-              <div className="relative">
-                <select
-                  value={selectedCollege}
-                  onChange={(e) => setSelectedCollege(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-xl pl-4 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all cursor-pointer shadow-sm"
-                >
-                  <option value="ALL">All Colleges</option>
-                  {uniqueColleges.map((col, idx) => (
-                    <option key={idx} value={col}>{col}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-              </div>
 
               {/* Divider */}
               <div className="h-6 w-[1px] bg-slate-200 hidden sm:block mx-1" />
@@ -481,12 +474,12 @@ export default function CandidatesPage() {
                           'Shortlist'
                         )}
                       </button>
-                      <a
-                        href={`mailto:${candidate.email}`}
+                      <Link
+                        href={`/hr/candidates/${candidate.id}`}
                         className="h-11 border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-black uppercase tracking-wider text-slate-600 flex items-center justify-center gap-1 transition-all"
                       >
                         Profile <ArrowUpRight size={14} />
-                      </a>
+                      </Link>
                     </div>
                   </motion.div>
                 );

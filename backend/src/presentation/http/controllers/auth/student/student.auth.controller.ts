@@ -3,11 +3,10 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { ILoginStudentUsescase } from "@application/usecases/auth/student/interfaces/ILogin.student.usecase";
-import { IRequestAccessUseCase } from "@application/usecases/auth/student/implementations/RequestAccess.usecase";
-import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/implementations/GetStudentProfile.usecase";
-
-import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/implementations/VerifyInvitationToken.usecase";
-import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/implementations/SetupStudentPassword.usecase";
+import { IRequestAccessUseCase } from "@application/usecases/auth/student/interfaces/IRequestAccess.usecase";
+import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/interfaces/IGetStudentProfile.usecase";
+import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/interfaces/IVerifyInvitationToken.usecase";
+import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/interfaces/ISetupStudentPassword.usecase";
 import { env } from "@infrastructure/config/env.validator";
 
 export class StudentAuthController {

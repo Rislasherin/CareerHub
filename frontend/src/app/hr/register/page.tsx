@@ -207,7 +207,8 @@ export default function HRRegistrationPage() {
               type="submit"
               fullWidth
               isLoading={isLoading}
-              className="mt-4 bg-indigo-600 hover:bg-indigo-700 font-bold"
+              disabled={!Object.values(formData).every(Boolean) || isLoading}
+              className="mt-4 bg-indigo-600 hover:bg-indigo-700 font-bold disabled:opacity-50"
             >
               Create Account <ArrowRight size={18} className="ml-2" />
             </Button>
@@ -224,7 +225,8 @@ export default function HRRegistrationPage() {
               type="submit"
               fullWidth
               isLoading={isLoading}
-              className="bg-indigo-600 hover:bg-indigo-700 font-bold h-14 rounded-2xl"
+              disabled={otp.length !== 6 || isLoading}
+              className="bg-indigo-600 hover:bg-indigo-700 font-bold h-14 rounded-2xl disabled:opacity-50"
             >
               Verify & Continue
             </Button>
