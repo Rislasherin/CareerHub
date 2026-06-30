@@ -157,4 +157,32 @@ export class EmailService implements IEmailService {
       console.error("Nodemailer Failed to send student invitation email:", err);
     }
   }
+
+  async sendAccountApprovalEmail(email: string, name: string): Promise<void> {
+    try {
+      const replyTo = await this.getContactEmail();
+      await this._transporter.sendMail({
+        from: env.EMAIL_FROM,
+        replyTo,
+        to: email,
+        subject: "Your Account has been Approved - CareerHub",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Account Approved!</h2>
+            <p style="color: #334155; font-size: 16px;">
+              Hello ${name},
+            </p>
+            <p style="color: #334155; font-size: 16px;">
+              Great news! Your account has been reviewed and approved by our administrators. You can now log in and access all features of the platform.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${env.FRONTEND_URL}/login" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Go to Login</a>
+            </div>
+          </div>
+        `,
+      });
+    } catch (err) {
+      console.error("Nodemailer Failed to send approval email:", err);
+    }
+  }
 }

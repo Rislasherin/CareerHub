@@ -27,6 +27,9 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
       if (dto.yearEstablished) currentProps.yearEstablished = dto.yearEstablished;
       if (dto.website) currentProps.website = dto.website;
       if (dto.address) currentProps.address = dto.address;
+      if (dto.city) currentProps.city = dto.city;
+      if (dto.state) currentProps.state = dto.state;
+      if (dto.address) currentProps.address = dto.address;
       if (dto.naacGrade) currentProps.naacGrade = dto.naacGrade;
       if (dto.placementCellName) currentProps.placementCellName = dto.placementCellName;
       if (dto.placementContactEmail) currentProps.placementContactEmail = dto.placementContactEmail;

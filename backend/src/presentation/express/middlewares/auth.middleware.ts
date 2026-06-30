@@ -57,9 +57,13 @@ export class AuthMiddleware {
               if (companyJson.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
               }
-              // Check if company is pending approval
+              // Check if company is pending approval but trying to access restricted routes
+              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding'];
               if (companyJson.status === UserStatus.PENDING && companyJson.onboardingStep >= 3) {
-                throw new UnauthorizedError("Your company account is currently pending administrator approval.");
+                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
+                if (!isAllowed) {
+                  throw new UnauthorizedError("Your company account is currently pending administrator approval.");
+                }
               }
 
               user = { ...userJson, onboardingStep: companyJson.onboardingStep };
@@ -88,8 +92,12 @@ export class AuthMiddleware {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
               }
               // Check if organization is pending approval
+              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding'];
               if (orgJson.status === UserStatus.PENDING && orgJson.onboardingStep >= 3) {
-                throw new UnauthorizedError("Your institution account is currently pending administrator approval.");
+                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
+                if (!isAllowed) {
+                  throw new UnauthorizedError("Your institution account is currently pending administrator approval.");
+                }
               }
 
               user = { 

@@ -20,4 +20,8 @@ export class MockEmailService implements IEmailService {
     console.log(`[MockEmailService] Sending student invitation link to ${email}`);
     console.log(`[MockEmailService] Setup link: ${setupLink}`);
   }
+
+  async sendAccountApprovalEmail(email: string, name: string): Promise<void> {
+    console.log(`[MockEmailService] Account approval email sent to ${email} for user ${name}`);
+  }
 }

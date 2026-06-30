@@ -17,19 +17,19 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
       const userJson = user.toJSON();
       const companyProps = company?.toJSON();
 
-
-
       return {
-        id: userJson.id, // Use User ID for actions (blocking/deleting the person)
+        id: userJson.id,
         companyId: companyProps?.id,
         name: companyProps?.name || "N/A",
         contactName: `${userJson.firstName} ${userJson.lastName}`,
         contactEmail: userJson.email,
-        email: userJson.email, // for UI compatibility
-        status: userJson.status, // Use User Status
+        email: userJson.email,
+        status: userJson.status,
         industry: companyProps?.industry || "N/A",
         website: companyProps?.website,
-        location: companyProps?.location || companyProps?.headquarters || "N/A"
+        location: companyProps?.location || companyProps?.headquarters || "N/A",
+        description: companyProps?.description || "",
+        contactPhone: companyProps?.contactPhone || ""
       };
     }));
 
@@ -41,4 +41,3 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
     };
   }
 }
-

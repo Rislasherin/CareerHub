@@ -134,9 +134,12 @@ export default function CandidatesPage() {
           }
         }
       }
-    } catch (error) {
-      console.error('Failed to fetch candidates', error);
-      toast.error('Failed to load real candidates data');
+    } catch (error: any) {
+      const isPending = error?.error?.message?.toLowerCase().includes('pending') || error?.message?.toLowerCase().includes('pending');
+      if (!isPending) {
+        console.error('Failed to fetch candidates', error);
+        toast.error('Failed to load real candidates data');
+      }
     } finally {
       setLoading(false);
     }

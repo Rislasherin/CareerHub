@@ -60,8 +60,10 @@ import { GetPlatformSettingsUseCase } from "@application/usecases/super-admin/im
 import { UpdatePlatformSettingsDTO } from "@application/dtos/super-admin/Request/platformSettings.request.dto";
 import { UpdatePlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/UpdatePlatformSettings.usecase";
 
+import { EmailService } from "@infrastructure/services/email/email.service";
+
 export const makeUpdateUserStatusUseCase = () => {
-  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
+  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository, collegeAdminRepository, new EmailService());
 };
 
 export const makeDeleteUserUseCase = () => {

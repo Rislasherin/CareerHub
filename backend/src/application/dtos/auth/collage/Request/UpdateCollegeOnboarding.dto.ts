@@ -62,6 +62,16 @@ export class UpdateCollegeOnboardingDto {
   @Expose()
   @IsString()
   @IsOptional()
+  city?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  state?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
   @MaxLength(5, { message: "NAAC grade cannot exceed 5 characters" })
   @Matches(/^(?!.*\s\s)/, { message: "NAAC grade cannot have consecutive spaces" })
   @Matches(/^(?!.*\s$)/, { message: "NAAC grade cannot end with a space" })

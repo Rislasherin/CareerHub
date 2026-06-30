@@ -28,6 +28,8 @@ const step1Schema = z.object({
   yearEstablished: z.string().optional(),
   website: z.string().optional().or(z.literal('')),
   address: z.string().optional(),
+  city: z.string().min(2, 'City must be at least 2 characters'),
+  state: z.string().min(2, 'State must be at least 2 characters'),
   naacGrade: z.string().optional(),
   logoUrl: z.string().optional(),
 });
@@ -55,6 +57,8 @@ interface CollegeFormValues {
   yearEstablished: string;
   website: string;
   address: string;
+  city: string;
+  state: string;
   naacGrade: string;
   activeBranches: string[];
   currentAcademicYear: string;
@@ -92,6 +96,8 @@ export default function CollegeOnboardingPage() {
       yearEstablished: '',
       website: '',
       address: '',
+      city: '',
+      state: '',
       naacGrade: '',
       activeBranches: [] as string[],
       currentAcademicYear: '',
@@ -115,6 +121,21 @@ export default function CollegeOnboardingPage() {
     dispatch(clearAuth());
     dispatch(clearCollegeAdminDetails());
     window.location.href = '/college/register';
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('logoUrl', reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const addBranch = () => {
@@ -261,6 +282,23 @@ export default function CollegeOnboardingPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Input
+                              label="City"
+                              placeholder="e.g. Mumbai"
+                              {...register('city')}
+                              error={errors.city?.message as string}
+                              className="bg-slate-50/50 h-11"
+                            />
+                            <Input
+                              label="State"
+                              placeholder="e.g. Maharashtra"
+                              {...register('state')}
+                              error={errors.state?.message as string}
+                              className="bg-slate-50/50 h-11"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input
                               label="Full Address (Optional)"
                               placeholder="Powai, Mumbai - 400076"
                               icon={<MapPin size={16} />}
@@ -286,14 +324,21 @@ export default function CollegeOnboardingPage() {
                       {/* Right Side: Logo */}
                       <div className="lg:w-full space-y-4">
                         <label className="text-sm font-bold text-slate-800 ml-1">Institution Logo</label>
-                        <div className="aspect-square w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center p-6 text-center group hover:border-emerald-500 hover:bg-emerald-50/30 transition-all cursor-pointer">
-                          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <Upload size={24} />
-                          </div>
-                          <p className="text-[11px] font-bold text-slate-600 mb-1">
-                            Drag & drop or <span className="text-emerald-600">browse to upload</span>
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">PNG, JPG up to 2MB</p>
+                        <div className="relative aspect-square w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center p-6 text-center group hover:border-emerald-500 hover:bg-emerald-50/30 transition-all cursor-pointer overflow-hidden">
+                          <input type="file" accept="image/png, image/jpeg" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleLogoUpload} />
+                          {watch('logoUrl') ? (
+                            <img src={watch('logoUrl')} alt="Logo preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                          ) : (
+                            <>
+                              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Upload size={24} />
+                              </div>
+                              <p className="text-[11px] font-bold text-slate-600 mb-1">
+                                Drag & drop or <span className="text-emerald-600">browse to upload</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-medium">PNG, JPG up to 2MB</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

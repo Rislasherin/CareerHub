@@ -43,9 +43,7 @@ export class LoginHRUseCase implements ILoginHRUseCase {
       throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
     }
 
-    if (company?.status === UserStatus.PENDING && (company?.onboardingStep ?? 0) >= 3) {
-      throw new UnauthorizedError("Your account is currently pending administrator approval.");
-    }
+
 
     const payload = {
       id: hrUser.id!,

@@ -300,8 +300,12 @@ export default function CollegesManagement() {
                   <div className="p-6 md:p-8 flex flex-col gap-6">
                     <div className="flex justify-between items-start">
                       <div className="flex gap-4 items-center">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/5">
-                          <Building2 size={28} className="text-cyan-400" />
+                        <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/5 overflow-hidden">
+                          {viewedCollege.logoUrl ? (
+                            <img src={viewedCollege.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 size={28} className="text-cyan-400" />
+                          )}
                         </div>
                         <div>
                           <h2 className="text-2xl font-black text-white tracking-tight">{viewedCollege.name}</h2>

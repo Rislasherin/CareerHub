@@ -12,6 +12,7 @@ import studentRouter from "./student/student.router";
 import { makeStudentManagementController } from "@infrastructure/di/college.factory";
 import { ROUTES } from "@shared/constants/routes.constants";
 import { maintenanceMiddleware } from "../middlewares/maintenance.middleware";
+import skillRouter from "./skill.router";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/college", collegeRouter);
 router.use("/hr", hrRouter);
 router.use("/student", studentRouter);
 router.use("/super-admin", superAdminRouter);
+router.use("/skills", skillRouter);
 
 export default router;

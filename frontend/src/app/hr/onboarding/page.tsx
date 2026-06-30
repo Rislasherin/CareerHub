@@ -131,6 +131,21 @@ export default function HROnboardingPage() {
     window.location.href = '/hr/register';
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('logoUrl', reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const addCollege = () => {
     if (collegeInput.trim() && !preferredColleges.includes(collegeInput.trim())) {
       setValue('preferredColleges', [...preferredColleges, collegeInput.trim()], { shouldValidate: true });
@@ -370,14 +385,21 @@ export default function HROnboardingPage() {
 
                       <div className="lg:w-64 space-y-4">
                         <label className="text-sm font-bold text-slate-800 ml-1">Company Logo</label>
-                        <div className="aspect-square w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center p-6 text-center group hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer">
-                          <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <Upload size={24} />
-                          </div>
-                          <p className="text-[11px] font-bold text-slate-600 mb-1">
-                            Drag & drop or <span className="text-indigo-600">browse to upload</span>
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">PNG, JPG up to 2MB</p>
+                        <div className="relative aspect-square w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center p-6 text-center group hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer overflow-hidden">
+                          <input type="file" accept="image/png, image/jpeg" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleLogoUpload} />
+                          {watch('logoUrl') ? (
+                            <img src={watch('logoUrl')} alt="Logo preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                          ) : (
+                            <>
+                              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Upload size={24} />
+                              </div>
+                              <p className="text-[11px] font-bold text-slate-600 mb-1">
+                                Drag & drop or <span className="text-indigo-600">browse to upload</span>
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-medium">PNG, JPG up to 2MB</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

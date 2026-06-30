@@ -3,4 +3,5 @@ export interface IEmailService {
   sendInterviewerSetupEmail(email: string, setupLink: string): Promise<void>;
   sendPasswordResetEmail(email: string, resetLink: string): Promise<void>;
   sendStudentInvitationEmail(email: string, setupLink: string): Promise<void>;
+  sendAccountApprovalEmail(email: string, name: string): Promise<void>;
 }

@@ -84,7 +84,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
 
     // Step 3: Generate and save OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); // As requested by user
+    console.log(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); 
     await this._otpRepository.create(dto.email, otp);
 
     // Step 4: Send OTP Email

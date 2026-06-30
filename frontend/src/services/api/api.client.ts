@@ -95,7 +95,26 @@ apiClient.interceptors.response.use(
     if (errorMessage.toLowerCase().includes('blocked')) {
       toast.error(errorMessage || 'Your session has ended.');
       await performGlobalLogout('blocked');
-      return Promise.reject(error);
+      return new Promise(() => {});
+    }
+
+    // Intercept pending approval state to update Redux and trigger pending UI
+    if (errorMessage.toLowerCase().includes('pending administrator approval')) {
+      if (typeof window !== 'undefined') {
+        const { store } = await import('@/redux/store');
+        const currentState = store.getState();
+        
+        if (currentState.hr.details) {
+          const { setHRDetails } = await import('@/redux/slices/hrSlice');
+          store.dispatch(setHRDetails({ ...currentState.hr.details, status: 'PENDING' }));
+        }
+        
+        if (currentState.collegeAdmin.details) {
+          const { setCollegeAdminDetails } = await import('@/redux/slices/collegeAdminSlice');
+          store.dispatch(setCollegeAdminDetails({ ...currentState.collegeAdmin.details, status: 'PENDING' } as any));
+        }
+      }
+      return new Promise(() => {});
     }
 
     // Handle 401 Unauthorized (Token Expiration)
