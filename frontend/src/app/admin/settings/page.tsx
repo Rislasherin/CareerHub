@@ -7,6 +7,27 @@ import { superAdminService } from "@/services/super-admin/super-admin.service";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
+// Custom Toggle Component for a premium look
+const Toggle = ({ label, icon: Icon, description, checked, onChange }: any) => (
+  <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-all duration-300">
+    <div className="flex items-center gap-4">
+      <div className={`p-3 rounded-xl ${checked ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
+        <Icon size={24} />
+      </div>
+      <div>
+        <h3 className="font-semibold text-white">{label}</h3>
+        <p className="text-sm text-gray-400">{description}</p>
+      </div>
+    </div>
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${checked ? 'bg-blue-500' : 'bg-gray-600'}`}
+    >
+      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ${checked ? 'translate-x-8' : 'translate-x-1'}`} />
+    </button>
+  </div>
+);
+
 export default function PlatformSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -18,10 +39,6 @@ export default function PlatformSettingsPage() {
     requireApproval: true,
     contactEmail: "support@careerhub.com",
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -36,6 +53,10 @@ export default function PlatformSettingsPage() {
     }
   };
 
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -48,26 +69,6 @@ export default function PlatformSettingsPage() {
     }
   };
 
-  // Custom Toggle Component for a premium look
-  const Toggle = ({ label, icon: Icon, description, checked, onChange }: any) => (
-    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-all duration-300">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-xl ${checked ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
-          <Icon size={24} />
-        </div>
-        <div>
-          <h3 className="font-semibold text-white">{label}</h3>
-          <p className="text-sm text-gray-400">{description}</p>
-        </div>
-      </div>
-      <button
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${checked ? 'bg-blue-500' : 'bg-gray-600'}`}
-      >
-        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ${checked ? 'translate-x-8' : 'translate-x-1'}`} />
-      </button>
-    </div>
-  );
 
   if (isLoading) {
     return (
