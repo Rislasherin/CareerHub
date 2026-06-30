@@ -23,6 +23,27 @@ export interface StudentSkills {
   aiMl?: string[];
 }
 
+export interface StudentPreferences {
+  preferredRole?: string;
+  workMode?: string;
+  location?: string;
+  expectedCtc?: string;
+  noticePeriod?: string;
+  jobType?: string;
+  startDate?: string;
+}
+
+export interface SpokenLanguage {
+  language: string;
+  proficiency: string;
+}
+
+export interface StudentAchievement {
+  title: string;
+  subtitle?: string;
+  type?: 'award' | 'certification' | 'coding' | 'other';
+}
+
 export interface StudentProfile {
   id: string;
   firstName: string;
@@ -50,4 +71,10 @@ export interface StudentProfile {
   skills?: StudentSkills;
   experience?: StudentExperience[];
   projects?: StudentProject[];
+  softSkills?: string[];
+  spokenLanguages?: SpokenLanguage[];
+  achievements?: StudentAchievement[];
+  
+  // Preferences
+  preferences?: StudentPreferences;
 }

@@ -6,6 +6,7 @@ import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { Stepper } from '@/components/shared/Stepper';
+import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
 import {
   getHRJobs,
   postJob,
@@ -65,11 +66,12 @@ export default function HRJobsPage() {
   // Eligibility
   const [minCGPA, setMinCGPA] = useState('6.0');
   const [allowedBacklogs, setAllowedBacklogs] = useState('0');
-  const [passingYear, setPassingYear] = useState('2026');
-  const [degreeType, setDegreeType] = useState('');
+  const [passingYear, setPassingYear] = useState('');
+  const [degreeInput, setDegreeInput] = useState('');
+  const [degreeTypes, setDegreeTypes] = useState<string[]>([]);
+  const [allDegreesSelected, setAllDegreesSelected] = useState(false);
   const [branchInput, setBranchInput] = useState('');
   const [customBranchInput, setCustomBranchInput] = useState('');
-  const [customDegreeType, setCustomDegreeType] = useState('');
   const [branches, setBranches] = useState<string[]>([]);
   const [allBranchesSelected, setAllBranchesSelected] = useState(false);
 
@@ -79,7 +81,7 @@ export default function HRJobsPage() {
     { roundNumber: 2, name: 'Technical Round 1', type: 'technical', description: 'Core problem solving and CS fundamentals' }
   ]);
   const [newRoundName, setNewRoundName] = useState('');
-  const [newRoundType, setNewRoundType] = useState<'aptitude' | 'coding' | 'technical' | 'hr' | 'group_discussion'>('technical');
+  const [newRoundType, setNewRoundType] = useState<'aptitude' | 'coding' | 'technical' | 'hr' | 'group_discussion' | ''>('');
   const [newRoundDesc, setNewRoundDesc] = useState('');
 
   // Selected Job Details Modal
@@ -244,6 +246,17 @@ export default function HRJobsPage() {
     setSkills(skills.filter((s) => s !== skill));
   };
 
+  const handleAddDegree = () => {
+    if (degreeInput.trim() && !degreeTypes.includes(degreeInput.trim())) {
+      setDegreeTypes([...degreeTypes, degreeInput.trim()]);
+      setDegreeInput('');
+    }
+  };
+
+  const handleRemoveDegree = (degree: string) => {
+    setDegreeTypes(degreeTypes.filter((d) => d !== degree));
+  };
+
   const handleAddBranch = () => {
     const val = branchInput === 'custom' ? customBranchInput.trim() : branchInput.trim();
     if (val && !branches.includes(val)) {
@@ -258,11 +271,11 @@ export default function HRJobsPage() {
   };
 
   const handleAddRound = () => {
-    if (!newRoundName.trim()) return;
+    if (!newRoundName.trim() || !newRoundType) return;
     const newRound: InterviewRoundConfig = {
       roundNumber: rounds.length + 1,
       name: newRoundName.trim(),
-      type: newRoundType,
+      type: newRoundType as any,
       description: newRoundDesc.trim() || undefined
     };
     setRounds([...rounds, newRound]);
@@ -300,7 +313,14 @@ export default function HRJobsPage() {
     setMinCGPA(String(job.eligibility.minCGPA));
     setAllowedBacklogs(String(job.eligibility.allowedBacklogs));
     setPassingYear(String(job.eligibility.passingYear));
-    setDegreeType(job.eligibility.degreeType);
+    
+    // Parse old single degreeType string into array if needed
+    const degrees = job.eligibility.degreeType 
+      ? job.eligibility.degreeType.split(',').map(d => d.trim()).filter(d => d) 
+      : [];
+    setDegreeTypes(degrees);
+    setAllDegreesSelected(degrees.length === 0 || job.eligibility.degreeType === 'Any Degree');
+    
     setBranches(job.eligibility.eligibleBranches || []);
     setAllBranchesSelected(job.eligibility.eligibleBranches?.length === 0);
     setRounds(job.rounds || []);
@@ -328,7 +348,9 @@ export default function HRJobsPage() {
     setMinCGPA('6.0');
     setAllowedBacklogs('0');
     setPassingYear('2026');
-    setDegreeType('');
+    setDegreeInput('');
+    setDegreeTypes([]);
+    setAllDegreesSelected(false);
     setBranches([]);
     setAllBranchesSelected(false);
     setRounds([
@@ -341,109 +363,55 @@ export default function HRJobsPage() {
     setEditJobId(null);
   };
 
-  const handleContinue = () => {
+  const validateCurrentStep = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
     if (wizardStep === 1) {
-      if (!jobType) { toast.error('Job Type is required'); return; }
-      if (!title.trim()) {
-        toast.error('Job Title is required');
-        return;
-      }
-      if (!category.trim()) {
-        toast.error('Job Category is required');
-        return;
-      }
+      if (!title.trim()) errs.title = 'Job Title is required';
+      if (!category.trim()) errs.category = 'Job Category is required';
+      if (!jobType) errs.jobType = 'Job Type is required';
       if (!deadline) {
-        toast.error('Application Deadline is required');
-        return;
+        errs.deadline = 'Application Deadline is required';
+      } else {
+        const deadlineDate = new Date(deadline);
+        if (isNaN(deadlineDate.getTime())) errs.deadline = 'Invalid date';
+        else if (deadlineDate < new Date()) errs.deadline = 'Cannot be in the past';
       }
-      const deadlineDate = new Date(deadline);
-      if (isNaN(deadlineDate.getTime())) {
-        toast.error('Please select a valid deadline date');
-        return;
-      }
-      if (deadlineDate < new Date()) {
-        toast.error('Application deadline cannot be in the past');
-        return;
-      }
-    }
-
-    if (wizardStep === 2) {
+    } else if (wizardStep === 2) {
       const openingsNum = Number(openings);
-      if (isNaN(openingsNum) || openingsNum < 1) {
-        toast.error('Number of openings must be at least 1');
-        return;
-      }
-      if (!workMode) { toast.error('Work Mode is required'); return; }
-      if (!salaryType) { toast.error('Salary Type is required'); return; }
-      if (!interviewMode) { toast.error('Interview Mode is required'); return; }
-      if (!experienceLevel.trim()) {
-        toast.error('Experience level is required');
-        return;
-      }
-      if (!noticePeriod.trim()) {
-        toast.error('Notice period is required');
-        return;
-      }
-      if (workMode !== 'remote' && !location.trim()) {
-        toast.error('Office location is required for on-site/hybrid work modes');
-        return;
-      }
+      if (isNaN(openingsNum) || openingsNum < 1) errs.openings = 'Must be at least 1';
+      if (!experienceLevel.trim()) errs.experienceLevel = 'Experience level is required';
+      if (!noticePeriod.trim()) errs.noticePeriod = 'Notice period is required';
+      if (!workMode) errs.workMode = 'Work Mode is required';
+      if (workMode !== 'remote' && !location.trim()) errs.location = 'Office location is required for on-site/hybrid';
+      if (!salaryType) errs.salaryType = 'Salary Type is required';
+      if (!interviewMode) errs.interviewMode = 'Interview Mode is required';
+      
       const minSal = Number(minSalary);
       const maxSal = Number(maxSalary);
-      if (isNaN(minSal) || minSal <= 0) {
-        toast.error('Please enter a valid minimum salary greater than 0');
-        return;
-      }
-      if (isNaN(maxSal) || maxSal <= 0) {
-        toast.error('Please enter a valid maximum salary greater than 0');
-        return;
-      }
-      if (maxSal < minSal) {
-        toast.error('Maximum salary cannot be less than minimum salary');
-        return;
-      }
-    }
-
-    if (wizardStep === 3) {
+      if (!minSalary || isNaN(minSal) || minSal <= 0) errs.minSalary = 'Valid min salary required (> 0)';
+      if (!maxSalary || isNaN(maxSal) || maxSal <= 0) errs.maxSalary = 'Valid max salary required (> 0)';
+      if (maxSal < minSal) errs.maxSalary = 'Max salary cannot be < min salary';
+    } else if (wizardStep === 3) {
       const cgpa = Number(minCGPA);
-      if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
-        toast.error('Minimum CGPA must be between 0.0 and 10.0');
-        return;
-      }
+      if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) errs.minCGPA = 'Must be between 0.0 and 10.0';
       const backlogs = Number(allowedBacklogs);
-      if (isNaN(backlogs) || backlogs < 0) {
-        toast.error('Allowed backlogs must be a non-negative number');
-        return;
-      }
-      if (!passingYear.trim()) {
-        toast.error('Passing year is required');
-        return;
-      }
-      if (!degreeType.trim()) {
-        toast.error('Degree type is required');
-        return;
-      }
-      if (!allBranchesSelected && branches.length === 0) {
-        toast.error('Please add at least one eligible branch or select "Open to All Branches"');
-        return;
-      }
-      if (!noSkillsRequired && skills.length === 0) {
-        toast.error('Please add at least one required skill or select "No specific skills required"');
-        return;
-      }
-      if (!description.trim() || description.trim().length < 10) {
-        toast.error('Please provide a detailed job description (minimum 10 characters)');
-        return;
-      }
+      if (isNaN(backlogs) || backlogs < 0) errs.allowedBacklogs = 'Must be a non-negative number';
+      if (!passingYear.trim()) errs.passingYear = 'Passing year is required';
+      if (!allDegreesSelected && degreeTypes.length === 0) errs.degreeTypes = 'Add at least one degree or select "Open to All Degrees"';
+      if (!allBranchesSelected && branches.length === 0) errs.branches = 'Add at least one branch or select "Open to All"';
+      if (!noSkillsRequired && skills.length === 0) errs.skills = 'Add at least one skill or select "No specific skills"';
+      if (!description.trim() || description.trim().length < 10) errs.description = 'Description is required (min 10 chars)';
+    } else if (wizardStep === 4) {
+      if (rounds.length === 0) errs.rounds = 'Configure at least one selection stage';
     }
+    return errs;
+  };
 
-    if (wizardStep === 4) {
-      if (rounds.length === 0) {
-        toast.error('Please configure at least one selection stage/round');
-        return;
-      }
-    }
+  const currentErrors = validateCurrentStep();
+  const isStepValid = Object.keys(currentErrors).length === 0;
 
+  const handleContinue = () => {
+    if (!isStepValid) return;
     setWizardStep(wizardStep + 1);
   };
 
@@ -487,7 +455,7 @@ export default function HRJobsPage() {
         allowedBacklogs: Number(allowedBacklogs),
         eligibleBranches: allBranchesSelected ? [] : (branches.length > 0 ? branches : ['Computer Science', 'Information Technology']),
         passingYear: Number(passingYear),
-        degreeType
+        degreeType: allDegreesSelected ? 'Any Degree' : degreeTypes.join(', ')
       },
       rounds
     };
@@ -773,8 +741,8 @@ export default function HRJobsPage() {
                 {/* Step 1 */}
                 {wizardStep === 1 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input label="Job Title *" placeholder="e.g. Associate Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} />
-                    <Input label="Job Category *" placeholder="e.g. Engineering / Tech" value={category} onChange={(e) => setCategory(e.target.value)} />
+                    <Input label="Job Title *" placeholder="e.g. Associate Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} error={currentErrors.title} />
+                    <Input label="Job Category *" placeholder="e.g. Engineering / Tech" value={category} onChange={(e) => setCategory(e.target.value)} error={currentErrors.category} />
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Colleges *</label>
@@ -796,9 +764,10 @@ export default function HRJobsPage() {
                         <option value="part_time">Part-Time</option>
                         <option value="contract">Contractor</option>
                       </select>
+                      {currentErrors.jobType && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.jobType}</p>}
                     </div>
 
-                    <Input type="date" label="Application Deadline *" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+                    <Input type="date" label="Application Deadline *" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={currentErrors.deadline} />
                   </div>
                 )}
 
@@ -806,9 +775,39 @@ export default function HRJobsPage() {
                 {wizardStep === 2 && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Input type="number" label="Openings Available *" min={1} value={openings} onChange={(e) => setOpenings(e.target.value)} />
-                      <Input label="Experience Level *" placeholder="e.g. Entry-Level, 1-2 years" value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} />
-                      <Input label="Notice Period Needed *" placeholder="e.g. Immediate, 30 days" value={noticePeriod} onChange={(e) => setNoticePeriod(e.target.value)} />
+                      <Input type="number" label="Openings Available *" min={1} value={openings} onChange={(e) => setOpenings(e.target.value)} error={currentErrors.openings} />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Experience Level *</label>
+                        <select
+                          value={["Fresher", "0-1 years", "1-2 years", "2-3 years", "3-5 years", "5+ years", ""].includes(experienceLevel) ? experienceLevel : "Other"}
+                          onChange={(e) => {
+                             if(e.target.value !== "Other") setExperienceLevel(e.target.value);
+                             else setExperienceLevel("Custom");
+                          }}
+                          className={`bg-slate-50/50 border ${currentErrors.experienceLevel ? 'border-rose-500/50' : 'border-slate-200/80'} px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]`}
+                        >
+                          <option value="" disabled>Select Experience...</option>
+                          <option value="Fresher">Fresher (0 years)</option>
+                          <option value="0-1 years">0-1 years</option>
+                          <option value="1-2 years">1-2 years</option>
+                          <option value="2-3 years">2-3 years</option>
+                          <option value="3-5 years">3-5 years</option>
+                          <option value="5+ years">5+ years</option>
+                          <option value="Other">Other...</option>
+                        </select>
+                        
+                        {!["Fresher", "0-1 years", "1-2 years", "2-3 years", "3-5 years", "5+ years", ""].includes(experienceLevel) && (
+                          <input 
+                            type="text"
+                            value={experienceLevel === "Custom" ? "" : experienceLevel}
+                            onChange={(e) => setExperienceLevel(e.target.value)}
+                            placeholder="Type custom experience..."
+                            className="mt-1 bg-white border border-indigo-200 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
+                          />
+                        )}
+                        {currentErrors.experienceLevel && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.experienceLevel}</p>}
+                      </div>
+                      <Input label="Notice Period Needed *" placeholder="e.g. Immediate, 30 days" value={noticePeriod} onChange={(e) => setNoticePeriod(e.target.value)} error={currentErrors.noticePeriod} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -824,9 +823,10 @@ export default function HRJobsPage() {
                           <option value="remote">Fully Remote</option>
                           <option value="hybrid">Hybrid Mode</option>
                         </select>
+                        {currentErrors.workMode && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.workMode}</p>}
                       </div>
 
-                      <Input label="Office Location *" placeholder="e.g. Bangalore, KA" value={location} onChange={(e) => setLocation(e.target.value)} />
+                      <Input label="Office Location *" placeholder="e.g. Bangalore, KA" value={location} onChange={(e) => setLocation(e.target.value)} error={currentErrors.location} />
 
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary Type *</label>
@@ -839,12 +839,13 @@ export default function HRJobsPage() {
                           <option value="per_year">LPA (Per Annum)</option>
                           <option value="per_month">Monthly Stipend</option>
                         </select>
+                        {currentErrors.salaryType && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.salaryType}</p>}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Input type="number" label="Minimum Salary (INR) *" placeholder="e.g. 600000" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} />
-                      <Input type="number" label="Maximum Salary (INR) *" placeholder="e.g. 800000" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} />
+                      <Input type="number" label="Minimum Salary (INR) *" placeholder="e.g. 600000" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} error={currentErrors.minSalary} />
+                      <Input type="number" label="Maximum Salary (INR) *" placeholder="e.g. 800000" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} error={currentErrors.maxSalary} />
 
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Interview Format *</label>
@@ -853,10 +854,12 @@ export default function HRJobsPage() {
                           onChange={(e) => setInterviewMode(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
                         >
+                          <option value="" disabled>Select Interview Format...</option>
                           <option value="online">Online / VC rounds</option>
                           <option value="offline">In-person campus visit</option>
                           <option value="hybrid">Hybrid interviews</option>
                         </select>
+                        {currentErrors.interviewMode && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.interviewMode}</p>}
                       </div>
                     </div>
                   </div>
@@ -866,24 +869,60 @@ export default function HRJobsPage() {
                 {wizardStep === 3 && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <Input type="number" step="0.1" label="Minimum CGPA *" value={minCGPA} onChange={(e) => setMinCGPA(e.target.value)} />
-                      <Input type="number" label="Max Backlogs allowed *" value={allowedBacklogs} onChange={(e) => setAllowedBacklogs(e.target.value)} />
-                      <Input type="number" label="Passing Year *" value={passingYear} onChange={(e) => setPassingYear(e.target.value)} />
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Degree Type *</label>
-                        <input
-                          list="hr-degrees"
-                          className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
-                          placeholder="Type or select a degree..."
-                          value={degreeType}
-                          onChange={(e) => setDegreeType(e.target.value)}
-                        />
-                        <datalist id="hr-degrees">
-                          {PLATFORM_DEGREES.map((b) => (
-                            <option key={b} value={b}>{b}</option>
-                          ))}
-                        </datalist>
+                      <Input type="number" step="0.1" label="Minimum CGPA *" value={minCGPA} onChange={(e) => setMinCGPA(e.target.value)} error={currentErrors.minCGPA} />
+                      <Input type="number" label="Max Backlogs allowed *" value={allowedBacklogs} onChange={(e) => setAllowedBacklogs(e.target.value)} error={currentErrors.allowedBacklogs} />
+                      <Input type="number" label="Passing Year *" value={passingYear} onChange={(e) => setPassingYear(e.target.value)} error={currentErrors.passingYear} />
+                    </div>
+
+                    {/* Degree Types Tag Cloud Input */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Eligible Degrees *</label>
+                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={allDegreesSelected}
+                            onChange={(e) => {
+                              setAllDegreesSelected(e.target.checked);
+                              if (e.target.checked) setDegreeTypes([]);
+                            }}
+                            className="w-4 h-4 rounded text-company-primary focus:ring-company-primary border-slate-350 cursor-pointer"
+                          />
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Open to All Degrees</span>
+                        </label>
                       </div>
+
+                      {!allDegreesSelected ? (
+                        <>
+                          <div className="flex gap-2 w-full">
+                            <input
+                              list="hr-degrees"
+                              className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
+                              placeholder="Type or select a degree..."
+                              value={degreeInput}
+                              onChange={(e) => setDegreeInput(e.target.value)}
+                            />
+                            <datalist id="hr-degrees">
+                              {PLATFORM_DEGREES.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                            </datalist>
+                            <Button type="button" onClick={handleAddDegree} className="bg-slate-900 text-white rounded-2xl px-6 font-bold h-[50px]">Add</Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {degreeTypes.map((d) => (
+                              <span key={d} className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-slate-200">
+                                {d} <button onClick={() => handleRemoveDegree(d)} className="text-slate-400 hover:text-slate-950 font-bold">✕</button>
+                              </span>
+                            ))}
+                          </div>
+                          {currentErrors.degreeTypes && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.degreeTypes}</p>}
+                        </>
+                      ) : (
+                        <div className="p-3 bg-emerald-50/60 border border-emerald-100/50 rounded-2xl text-emerald-800 text-xs font-medium flex items-center gap-2">
+                          <span className="text-emerald-500 text-sm">✔</span> All academic degrees are eligible for this recruitment.
+                        </div>
+                      )}
                     </div>
 
                     {/* Branches Tag Cloud Input */}
@@ -939,6 +978,7 @@ export default function HRJobsPage() {
                               </span>
                             ))}
                           </div>
+                          {currentErrors.branches && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.branches}</p>}
                         </>
                       ) : (
                         <div className="p-3 bg-emerald-50/60 border border-emerald-100/50 rounded-2xl text-emerald-800 text-xs font-medium flex items-center gap-2">
@@ -968,8 +1008,14 @@ export default function HRJobsPage() {
                       {!noSkillsRequired ? (
                         <>
                           <div className="flex gap-2">
-                            <Input placeholder="e.g. React, Node.js, C++" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} className="w-full animate-none" />
-                            <Button type="button" onClick={handleAddSkill} className="bg-slate-900 text-white rounded-2xl px-6 font-bold h-[50px] mt-1">Add</Button>
+                            <SkillAutocomplete 
+                              placeholder="e.g. React, Node.js, C++"
+                              onSelect={(selectedSkill) => {
+                                if (selectedSkill.trim() && !skills.includes(selectedSkill.trim())) {
+                                  setSkills([...skills, selectedSkill.trim()]);
+                                }
+                              }}
+                            />
                           </div>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {skills.map((s) => (
@@ -978,6 +1024,7 @@ export default function HRJobsPage() {
                               </span>
                             ))}
                           </div>
+                          {currentErrors.skills && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.skills}</p>}
                         </>
                       ) : (
                         <div className="p-3 bg-emerald-50/60 border border-emerald-100/50 rounded-2xl text-emerald-800 text-xs font-medium flex items-center gap-2">
@@ -993,8 +1040,9 @@ export default function HRJobsPage() {
                         placeholder="Write detailed responsibilities, key tasks, and expectations..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner w-full"
+                        className={`bg-slate-50/50 border px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner w-full ${currentErrors.description ? 'border-rose-500' : 'border-slate-200/80'}`}
                       />
+                      {currentErrors.description && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.description}</p>}
                     </div>
                   </div>
                 )}
@@ -1024,6 +1072,7 @@ export default function HRJobsPage() {
                           </button>
                         </div>
                       ))}
+                      {currentErrors.rounds && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.rounds}</p>}
                     </div>
 
                     <div className="bg-slate-100/50 p-5 rounded-2xl border border-slate-200/30">
@@ -1037,6 +1086,7 @@ export default function HRJobsPage() {
                             onChange={(e) => setNewRoundType(e.target.value as any)}
                             className="bg-white border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] mt-1"
                           >
+                            <option value="" disabled>Select Round Type...</option>
                             <option value="aptitude">Aptitude Round</option>
                             <option value="coding">Coding Challenge</option>
                             <option value="technical">Technical Panel Interview</option>
@@ -1117,8 +1167,9 @@ export default function HRJobsPage() {
 
                 {wizardStep < 5 ? (
                   <Button
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl"
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleContinue}
+                    disabled={!isStepValid}
                   >
                     Continue
                   </Button>

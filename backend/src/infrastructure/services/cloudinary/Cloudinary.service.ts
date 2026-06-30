@@ -15,10 +15,13 @@ export class CloudinaryService implements IStorageService {
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
     return new Promise((resolve, reject) => {
+      const isPdf = file.mimetype === 'application/pdf' || file.originalname?.toLowerCase().endsWith('.pdf');
+      
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder,
           resource_type: 'auto',
+          format: isPdf ? 'pdf' : undefined,
         },
         (error, result) => {
           if (error) {

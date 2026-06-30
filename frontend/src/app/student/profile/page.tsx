@@ -15,6 +15,7 @@ import {
   StudentProject
 } from '@/types/student';
 import { toast } from 'sonner';
+import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
 
 export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -51,16 +52,15 @@ export default function StudentProfilePage() {
   const [aiMl, setAiMl] = useState<string[]>([]);
 
   // Input states for comma-separated skills
-  const [languagesInput, setLanguagesInput] = useState('');
-  const [frameworksInput, setFrameworksInput] = useState('');
-  const [databasesInput, setDatabasesInput] = useState('');
-  const [cloudDevopsInput, setCloudDevopsInput] = useState('');
-  const [otherToolsInput, setOtherToolsInput] = useState('');
-  const [aiMlInput, setAiMlInput] = useState('');
-
-  // Experiences & Projects lists
   const [experiences, setExperiences] = useState<StudentExperience[]>([]);
   const [projects, setProjects] = useState<StudentProject[]>([]);
+
+  // Preferences & Soft Skills
+  const [preferredRole, setPreferredRole] = useState('');
+  const [workMode, setWorkMode] = useState('');
+  const [expectedCtc, setExpectedCtc] = useState('');
+  const [noticePeriod, setNoticePeriod] = useState('');
+  const [softSkillsInput, setSoftSkillsInput] = useState('');
 
   // Profile completion score
   const [completionPercentage, setCompletionPercentage] = useState(85);
@@ -69,10 +69,11 @@ export default function StudentProfilePage() {
     let score = 30; // Base verified score
     if (profile.phoneNumber) score += 10;
     if (profile.linkedinUrl) score += 10;
-    if (profile.githubUrl) score += 10;
-    if (profile.portfolioUrl) score += 10;
+    if (profile.githubUrl || profile.portfolioUrl) score += 10;
     if (profile.skills && Object.values(profile.skills).some(arr => Array.isArray(arr) && arr.length > 0)) score += 15;
-    if (profile.experience && profile.experience.length > 0) score += 15;
+    if (profile.experience && profile.experience.length > 0) score += 10;
+    if (profile.softSkills && profile.softSkills.length > 0) score += 10;
+    if (profile.preferences && profile.preferences.preferredRole) score += 10;
     setCompletionPercentage(Math.min(score, 100));
   };
 
@@ -106,22 +107,11 @@ export default function StudentProfilePage() {
         // Map skills
         if (profile.skills) {
           setLanguages(profile.skills.languages || []);
-          setLanguagesInput((profile.skills.languages || []).join(', '));
-
           setFrameworks(profile.skills.frameworks || []);
-          setFrameworksInput((profile.skills.frameworks || []).join(', '));
-
           setDatabases(profile.skills.databases || []);
-          setDatabasesInput((profile.skills.databases || []).join(', '));
-
           setCloudDevops(profile.skills.cloudDevops || []);
-          setCloudDevopsInput((profile.skills.cloudDevops || []).join(', '));
-
           setOtherTools(profile.skills.otherTools || []);
-          setOtherToolsInput((profile.skills.otherTools || []).join(', '));
-
           setAiMl(profile.skills.aiMl || []);
-          setAiMlInput((profile.skills.aiMl || []).join(', '));
         }
 
         // Map experience & projects
@@ -143,6 +133,17 @@ export default function StudentProfilePage() {
             description: 'Multi-user real-time code editor with execution support. 500+ GitHub stars, featured on Product Hunt.'
           }
         ]);
+
+        // Map preferences & soft skills
+        if (profile.preferences) {
+          setPreferredRole(profile.preferences.preferredRole || '');
+          setWorkMode(profile.preferences.workMode || '');
+          setExpectedCtc(profile.preferences.expectedCtc || '');
+          setNoticePeriod(profile.preferences.noticePeriod || '');
+        }
+        if (profile.softSkills) {
+          setSoftSkillsInput(profile.softSkills.join(', '));
+        }
 
         // Calculate progress dynamically
         calculateProgress(profile);
@@ -225,12 +226,12 @@ export default function StudentProfilePage() {
     setSaving(true);
     try {
       const parsedSkills = {
-        languages: languagesInput.split(',').map(s => s.trim()).filter(Boolean),
-        frameworks: frameworksInput.split(',').map(s => s.trim()).filter(Boolean),
-        databases: databasesInput.split(',').map(s => s.trim()).filter(Boolean),
-        cloudDevops: cloudDevopsInput.split(',').map(s => s.trim()).filter(Boolean),
-        otherTools: otherToolsInput.split(',').map(s => s.trim()).filter(Boolean),
-        aiMl: aiMlInput.split(',').map(s => s.trim()).filter(Boolean)
+        languages,
+        frameworks,
+        databases,
+        cloudDevops,
+        otherTools,
+        aiMl
       };
 
       const payload: Partial<StudentProfile> = {
@@ -250,7 +251,14 @@ export default function StudentProfilePage() {
         activeBacklogs: activeBacklogs ? Number(activeBacklogs) : undefined,
         skills: parsedSkills,
         experience: experiences.filter(exp => exp.company.trim() && exp.role.trim()),
-        projects: projects.filter(proj => proj.name.trim() && proj.techStack.length > 0)
+        projects: projects.filter(proj => proj.name.trim() && proj.techStack.length > 0),
+        preferences: {
+          preferredRole: preferredRole.trim(),
+          workMode: workMode.trim(),
+          expectedCtc: expectedCtc.trim(),
+          noticePeriod: noticePeriod.trim()
+        },
+        softSkills: softSkillsInput.split(',').map(s => s.trim()).filter(Boolean)
       };
 
       const updated = await updateStudentProfile(payload);
@@ -404,16 +412,45 @@ export default function StudentProfilePage() {
               <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
                 <span>🔧</span> Technical Skills
               </h3>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Comma-separated lists</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50 px-3 py-1 rounded-lg">Auto-normalized</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Languages" placeholder="e.g. Python, JavaScript, Java" value={languagesInput} onChange={e => setLanguagesInput(e.target.value)} />
-              <Input label="Frameworks" placeholder="e.g. React, Node.js, Express" value={frameworksInput} onChange={e => setFrameworksInput(e.target.value)} />
-              <Input label="Databases" placeholder="e.g. PostgreSQL, MongoDB, Redis" value={databasesInput} onChange={e => setDatabasesInput(e.target.value)} />
-              <Input label="Cloud / DevOps" placeholder="e.g. AWS, GCP, Docker, Kubernetes" value={cloudDevopsInput} onChange={e => setCloudDevopsInput(e.target.value)} />
-              <Input label="Other Tools" placeholder="e.g. Git, Linux, Figma, TensorFlow" value={otherToolsInput} onChange={e => setOtherToolsInput(e.target.value)} />
-              <Input label="AI / ML" placeholder="e.g. PyTorch, HuggingFace, LangChain" value={aiMlInput} onChange={e => setAiMlInput(e.target.value)} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[
+                { label: 'Languages', state: languages, setter: setLanguages, placeholder: 'e.g. JavaScript, Python' },
+                { label: 'Frameworks', state: frameworks, setter: setFrameworks, placeholder: 'e.g. React, Next.js' },
+                { label: 'Databases', state: databases, setter: setDatabases, placeholder: 'e.g. PostgreSQL, MongoDB' },
+                { label: 'Cloud / DevOps', state: cloudDevops, setter: setCloudDevops, placeholder: 'e.g. AWS, Docker' },
+                { label: 'Other Tools', state: otherTools, setter: setOtherTools, placeholder: 'e.g. Git, Figma' },
+                { label: 'AI / ML', state: aiMl, setter: setAiMl, placeholder: 'e.g. PyTorch, LangChain' }
+              ].map(section => (
+                <div key={section.label} className="flex flex-col gap-3 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{section.label}</label>
+                  
+                  <div className="flex flex-wrap gap-2 min-h-[32px]">
+                    {section.state.map(skill => (
+                      <span key={skill} className="bg-white border border-slate-200 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm shadow-slate-200/50">
+                        {skill}
+                        <button type="button" onClick={() => section.setter(section.state.filter(s => s !== skill))} className="text-slate-300 hover:text-rose-500 transition-colors">
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    {section.state.length === 0 && <span className="text-xs text-slate-400 italic py-1.5">No skills added...</span>}
+                  </div>
+
+                  <div className="relative z-10 mt-2">
+                    <SkillAutocomplete
+                      placeholder={section.placeholder}
+                      onSelect={(skill) => {
+                        if (!section.state.includes(skill)) {
+                          section.setter([...section.state, skill]);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </GlassCard>
 
@@ -504,6 +541,57 @@ export default function StudentProfilePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </GlassCard>
+
+          {/* 6. Preferences & Soft Skills */}
+          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
+            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <span>🎯</span> Job Preferences & Soft Skills
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <Input label="Preferred Role" value={preferredRole} onChange={e => setPreferredRole(e.target.value)} placeholder="e.g. Full Stack Developer, Data Scientist" />
+              <Input label="Expected CTC" value={expectedCtc} onChange={e => setExpectedCtc(e.target.value)} placeholder="e.g. 12-15 LPA" />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Mode</label>
+                <select
+                  value={workMode}
+                  onChange={e => setWorkMode(e.target.value)}
+                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
+                >
+                  <option value="" disabled>Select Work Mode...</option>
+                  <option value="On-Site">On-Site Office</option>
+                  <option value="Remote">Fully Remote</option>
+                  <option value="Hybrid">Hybrid Mode</option>
+                  <option value="Any">Any Mode</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Availability / Notice Period</label>
+                <select
+                  value={noticePeriod}
+                  onChange={e => setNoticePeriod(e.target.value)}
+                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
+                >
+                  <option value="" disabled>Select Availability...</option>
+                  <option value="Immediate">Immediate Joiner</option>
+                  <option value="15 Days">15 Days</option>
+                  <option value="1 Month">1 Month</option>
+                  <option value="Post Graduation">After Graduation</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Soft Skills (Comma-Separated)</label>
+              <Input
+                placeholder="e.g. Leadership, Communication, Problem Solving"
+                value={softSkillsInput}
+                onChange={e => setSoftSkillsInput(e.target.value)}
+              />
             </div>
           </GlassCard>
 

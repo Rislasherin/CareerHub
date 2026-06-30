@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
+import axios from 'axios';
 import { apiClient } from '@/services/api/api.client';
 
 interface CanonicalSkill {
@@ -39,13 +40,19 @@ export function SkillAutocomplete({ onSelect, placeholder = 'Search for a skill.
         setIsLoading(true);
         try {
           // Adjust API endpoint based on your backend setup
-          const res: any = await apiClient.get(`/api/skills/search?q=${encodeURIComponent(query)}`);
+          const res: any = await apiClient.get(`/skills/search?q=${encodeURIComponent(query)}`);
           if (res.success && res.data) {
             setResults(res.data);
             setIsOpen(true);
           }
-        } catch (error) {
-          console.error("Failed to fetch skills", error);
+        } catch (error: unknown) {
+          if (axios.isAxiosError(error)) {
+            console.error("Failed to fetch skills:", error.response?.data?.message || error.message);
+          } else if (error instanceof Error) {
+            console.error("Failed to fetch skills:", error.message);
+          } else {
+            console.error("Failed to fetch skills:", error);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -64,13 +71,14 @@ export function SkillAutocomplete({ onSelect, placeholder = 'Search for a skill.
     
     // Resolve/Upsert skill in backend before passing to parent
     try {
-      const res: any = await apiClient.post('/api/skills/resolve', { skillName });
+      const res: any = await apiClient.post('/skills/resolve', { skillName });
       if (res.success && res.data) {
         onSelect(res.data.canonicalName);
       } else {
         onSelect(skillName); // fallback to raw string if error
       }
-    } catch {
+    } catch (error: unknown) {
+      console.error("Error resolving skill:", error instanceof Error ? error.message : String(error));
       onSelect(skillName);
     }
   };

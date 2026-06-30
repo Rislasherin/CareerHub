@@ -47,7 +47,39 @@ export default function StudentDirectoryPage() {
   // Add Student Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newStudent, setNewStudent] = useState({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [customDept, setCustomDept] = useState('');
+
+  // Continuous Validation
+  useEffect(() => {
+    if (!isAddModalOpen) return;
+    const errors: Record<string, string> = {};
+    
+    if (!newStudent.firstName.trim()) errors.firstName = 'Required';
+    if (!newStudent.lastName.trim()) errors.lastName = 'Required';
+    
+    const email = newStudent.email.trim();
+    if (!email) {
+      errors.email = 'Required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Invalid email format';
+    } else if (Array.isArray(studentsList) && studentsList.some(s => s?.email?.toLowerCase() === email.toLowerCase())) {
+      errors.email = 'Email already exists';
+    }
+
+    const rollNumber = newStudent.rollNumber.trim();
+    if (!rollNumber) {
+      errors.rollNumber = 'Required';
+    } else if (!/^[a-zA-Z0-9\-/]+$/.test(rollNumber)) {
+      errors.rollNumber = 'Invalid format (use letters, numbers, hyphens, slashes)';
+    } else if (Array.isArray(studentsList) && studentsList.some(s => s?.rollNumber?.toLowerCase() === rollNumber.toLowerCase())) {
+      errors.rollNumber = 'Roll number already exists';
+    }
+
+    if (!newStudent.department) errors.department = 'Required';
+
+    setFormErrors(errors);
+  }, [newStudent, studentsList, isAddModalOpen]);
 
   // Rejection Modal State
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -248,37 +280,14 @@ export default function StudentDirectoryPage() {
   const handleAddSingleStudent = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Trim and validate fields
+    if (Object.keys(formErrors).length > 0) return;
+
+    setIsProcessing(true);
     const firstName = newStudent.firstName.trim();
     const lastName = newStudent.lastName.trim();
     const email = newStudent.email.trim();
     const rollNumber = newStudent.rollNumber.trim();
     const department = newStudent.department;
-
-    if (!firstName || !lastName || !email || !rollNumber || !department) {
-      toast.error('All fields are required and cannot be empty or only spaces');
-      return;
-    }
-
-    // Email Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    // Roll Number Validation (Alphanumeric and formatted)
-    if (!/^[a-zA-Z0-9\-/]+$/.test(rollNumber)) {
-      toast.error('Roll number must contain only letters, numbers, hyphens, or slashes');
-      return;
-    }
-
-    // Existing Student Check (Local)
-    const existsLocally = Array.isArray(studentsList) && studentsList.some(s => s?.email?.toLowerCase() === email.toLowerCase());
-    if (existsLocally) {
-      toast.error('A student with this email already exists in the list');
-      return;
-    }
 
     setIsProcessing(true);
     try {
@@ -583,53 +592,57 @@ export default function StudentDirectoryPage() {
               <form noValidate onSubmit={handleAddSingleStudent} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name *</label>
                     <input
                       value={newStudent.firstName}
                       onChange={e => setNewStudent({ ...newStudent, firstName: e.target.value })}
-                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                      className={`w-full h-12 bg-slate-50 border ${formErrors.firstName ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
                       placeholder="John"
                     />
+                    {formErrors.firstName && <p className="text-rose-500 text-[10px] font-bold uppercase ml-1">{formErrors.firstName}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name *</label>
                     <input
                       value={newStudent.lastName}
                       onChange={e => setNewStudent({ ...newStudent, lastName: e.target.value })}
-                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                      className={`w-full h-12 bg-slate-50 border ${formErrors.lastName ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
                       placeholder="Doe"
                     />
+                    {formErrors.lastName && <p className="text-rose-500 text-[10px] font-bold uppercase ml-1">{formErrors.lastName}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address *</label>
                   <input
                     type="email"
                     value={newStudent.email}
                     onChange={e => setNewStudent({ ...newStudent, email: e.target.value })}
-                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                    className={`w-full h-12 bg-slate-50 border ${formErrors.email ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
                     placeholder="student@college.edu"
                   />
+                  {formErrors.email && <p className="text-rose-500 text-[10px] font-bold uppercase ml-1">{formErrors.email}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Roll Number</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Roll Number *</label>
                     <input
                       value={newStudent.rollNumber}
                       onChange={e => setNewStudent({ ...newStudent, rollNumber: e.target.value })}
-                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                      className={`w-full h-12 bg-slate-50 border ${formErrors.rollNumber ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
                       placeholder="CS-2024-001"
                     />
+                    {formErrors.rollNumber && <p className="text-rose-500 text-[10px] font-bold uppercase ml-1">{formErrors.rollNumber}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Department</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Department *</label>
                     <div className="relative">
                       <select
                         value={newStudent.department}
                         onChange={e => setNewStudent({ ...newStudent, department: e.target.value })}
-                        className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer"
+                        className={`w-full h-12 bg-slate-50 border ${formErrors.department ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer`}
                       >
                         <option value="" disabled>Select department...</option>
                         {collegeBranches.map(branch => (
@@ -638,6 +651,7 @@ export default function StudentDirectoryPage() {
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                     </div>
+                    {formErrors.department && <p className="text-rose-500 text-[10px] font-bold uppercase ml-1">{formErrors.department}</p>}
                   </div>
                 </div>
 
@@ -653,7 +667,7 @@ export default function StudentDirectoryPage() {
                   <Button
                     type="submit"
                     isLoading={isProcessing}
-                    disabled={!newStudent.firstName.trim() || !newStudent.lastName.trim() || !newStudent.email.trim() || !newStudent.rollNumber.trim() || !newStudent.department || isProcessing}
+                    disabled={Object.keys(formErrors).length > 0 || isProcessing}
                     className="flex-1 rounded-xl h-12 text-xs font-black bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-xl shadow-emerald-500/20 disabled:opacity-50"
                   >
                     Send Invite
@@ -689,10 +703,33 @@ export default function StudentDirectoryPage() {
               </div>
 
               <div className="flex-1 overflow-auto p-8 bg-slate-100/50 flex items-center justify-center">
-                {selectedProofUrl?.toLowerCase().endsWith('.pdf') ? (
-                  <iframe src={selectedProofUrl} className="w-full h-[600px] rounded-2xl border border-slate-200 shadow-inner" title="ID Proof PDF" />
+                {selectedProofUrl?.toLowerCase().includes('.pdf') ? (
+                  <div className="relative group">
+                    <img 
+                      src={selectedProofUrl.replace(/\.pdf$/i, '.png')} 
+                      alt="Student ID Proof" 
+                      className="max-w-full h-auto rounded-2xl shadow-2xl border-4 border-white object-contain max-h-[60vh]"
+                      onError={(e) => {
+                        // Fallback if Cloudinary image conversion fails
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.querySelector('.pdf-fallback')!.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="pdf-fallback hidden w-full h-[300px] flex flex-col items-center justify-center text-center space-y-4 bg-white rounded-2xl border border-slate-200">
+                      <p className="text-slate-500 font-medium px-4">Browser blocked preview.</p>
+                      <a 
+                        href={selectedProofUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
                 ) : (
-                  <img src={selectedProofUrl || ''} alt="Student ID Proof" className="max-w-full h-auto rounded-2xl shadow-2xl border-4 border-white" />
+                  <img src={selectedProofUrl || ''} alt="Student ID Proof" className="max-w-full h-auto rounded-2xl shadow-2xl border-4 border-white object-contain max-h-[60vh]" />
                 )}
               </div>
 

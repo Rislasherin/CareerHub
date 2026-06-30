@@ -3,6 +3,7 @@ import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { IGetPendingJobsUseCase } from "../interfaces/IGetPendingJobs.usecase";
+import { BranchMatcher } from "@shared/utils/branchMatcher.util";
 
 export class GetPendingJobsUseCase implements IGetPendingJobsUseCase {
   constructor(
@@ -26,11 +27,9 @@ export class GetPendingJobsUseCase implements IGetPendingJobsUseCase {
             return true;
           }
           // Check if there is an intersection between the job's eligible branches and college's active branches
-          const hasBranchOverlap = eligibleBranches.some((branch) => {
-            const hrBranch = branch.toLowerCase().trim();
-            return collegeBranches.some(cb => {
-              const colBranch = cb.toLowerCase().trim();
-              return hrBranch.includes(colBranch) || colBranch.includes(hrBranch);
+          const hasBranchOverlap = eligibleBranches.some((hrBranch) => {
+            return collegeBranches.some(colBranch => {
+              return BranchMatcher.isBranchMatch(hrBranch, colBranch);
             });
           });
           return hasBranchOverlap;

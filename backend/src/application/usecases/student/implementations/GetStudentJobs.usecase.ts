@@ -7,6 +7,7 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IGetStudentJobsUseCase } from "../interfaces/IGetStudentJobs.usecase";
+import { BranchMatcher } from "@shared/utils/branchMatcher.util";
 
 export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
   constructor(
@@ -88,16 +89,17 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
 
       const cgpaEligible = studentCGPA >= minCGPA;
       const backlogsEligible = studentBacklogs <= allowedBacklogs;
-      const branchEligible = eligibleBranches.length === 0 || eligibleBranches.includes('Any IT Branch') ||
-        eligibleBranches.some(b => {
-          const hrBranch = b.toLowerCase().trim();
-          const studBranch = studentBranch.toLowerCase().trim();
-          return hrBranch.includes(studBranch) || studBranch.includes(hrBranch);
-        });
+      const branchEligible = eligibleBranches.length === 0 || 
+        eligibleBranches.some(b => BranchMatcher.isBranchMatch(b, studentBranch));
 
-      const requiredDegree = job.eligibility?.degreeType || '';
-      const degreeEligible = !requiredDegree || requiredDegree === 'Any Degree' || 
-        (student.degree && student.degree.toLowerCase().trim() === requiredDegree.toLowerCase().trim());
+      const requiredDegreeStr = job.eligibility?.degreeType || '';
+      const requiredDegrees = requiredDegreeStr.split(',').map(d => d.trim().toLowerCase()).filter(d => d);
+      
+      const degreeEligible = requiredDegrees.length === 0 || requiredDegreeStr === 'Any Degree' || 
+        (student.degree && requiredDegrees.some(rd => {
+          const sd = student.degree!.toLowerCase().trim();
+          return rd === sd || rd.includes(sd) || sd.includes(rd);
+        }));
 
       const cgpaScore = cgpaEligible ? 15 : 0;
       const backlogsScore = backlogsEligible ? 15 : 0;

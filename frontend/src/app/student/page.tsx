@@ -42,13 +42,16 @@ export default function StudentDashboard() {
           let score = 30; // Base verified score
           if (profile.phoneNumber) score += 10;
           if (profile.linkedinUrl) score += 10;
-          if (profile.githubUrl) score += 10;
-          if (profile.portfolioUrl) score += 10;
+          if (profile.githubUrl || profile.portfolioUrl) score += 10;
           if (profile.skills && Object.values(profile.skills).some(arr => Array.isArray(arr) && arr.length > 0)) score += 15;
-          if (profile.experience && profile.experience.length > 0) score += 15;
+          if (profile.experience && profile.experience.length > 0) score += 10;
+          if (profile.softSkills && profile.softSkills.length > 0) score += 10;
+          if (profile.preferences && profile.preferences.preferredRole) score += 10;
           
-          // Only show reminder if score is strictly less than 100 (meaning they haven't finished the profile)
-          if (score < 100) {
+          const finalScore = Math.min(score, 100);
+          
+          // Only show reminder if score is strictly less than 100
+          if (finalScore < 100) {
             timer = setTimeout(() => setShowReminder(true), 1500);
           }
         } catch (error) {
