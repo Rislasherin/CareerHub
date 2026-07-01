@@ -3,6 +3,7 @@ import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { ILoginSuperAdminUseCase } from "@application/usecases/auth/superadmin/interfaces/ILoginSuperAdmin.usecase";
 import { env } from "@infrastructure/config/env.validator";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class SuperAdminAuthController {
   constructor(private readonly _loginUseCase: ILoginSuperAdminUseCase) {}
@@ -26,6 +27,6 @@ export class SuperAdminAuthController {
       });
     }
 
-    sendSuccess(res, result, "Login successful");
+    sendSuccess(res, result, MESSAGES.SUCCESS.LOGIN);
   });
 }

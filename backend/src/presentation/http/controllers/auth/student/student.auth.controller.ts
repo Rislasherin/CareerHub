@@ -8,6 +8,7 @@ import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/in
 import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/interfaces/IVerifyInvitationToken.usecase";
 import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/interfaces/ISetupStudentPassword.usecase";
 import { env } from "@infrastructure/config/env.validator";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class StudentAuthController {
   constructor(
@@ -22,7 +23,7 @@ export class StudentAuthController {
   verifyInvitationToken = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.params;
     const student = await this._verifyTokenUseCase.execute(token);
-    sendSuccess(res, student, "Token verified successfully");
+    sendSuccess(res, student, MESSAGES.SUCCESS.TOKEN_VERIFIED);
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -50,14 +51,14 @@ export class StudentAuthController {
         student: result.student,
         isFirstLogin: result.student.isFirstLogin,
       },
-      "student login successful"
+      MESSAGES.SUCCESS.LOGIN
     );
   });
 
   getMe = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;
     const student = await this._getProfileUseCase.execute(studentId as string);
-    sendSuccess(res, student, "Student profile retrieved successfully");
+    sendSuccess(res, student, MESSAGES.SUCCESS.PROFILE_RETRIEVED);
   });
 
   requestAccess = asyncHandler(async (req: Request, res: Response) => {
@@ -85,6 +86,6 @@ export class StudentAuthController {
       });
     }
 
-    sendSuccess(res, result, "Password set successfully. Profile activated.");
+    sendSuccess(res, result, MESSAGES.SUCCESS.PASSWORD_SETUP);
   });
 }

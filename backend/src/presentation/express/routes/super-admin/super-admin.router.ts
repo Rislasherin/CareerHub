@@ -24,4 +24,5 @@ router.delete("/management/:role/:id", superAdminController.deleteUser);
 router.get("/platform-settings", platformSettingsController.getSettings);
 router.patch("/platform-settings", platformSettingsController.updateSettings);
 
+
 export default router;

@@ -9,6 +9,7 @@ import { IGetInterviewersUseCase } from "@application/usecases/super-admin/inter
 import { IUpdateUserStatusUseCase } from "@application/usecases/super-admin/interfaces/IUpdateUserStatus.usecase";
 import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces/IDeleteUser.usecase";
 import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class SuperAdminController {
   constructor(
@@ -31,31 +32,32 @@ export class SuperAdminController {
 
   getStats = asyncHandler(async (req: Request, res: Response) => {
     const stats = await this._getStatsUseCase.execute();
-    sendSuccess(res, stats, "Dashboard stats retrieved successfully");
+    sendSuccess(res, stats, MESSAGES.SUCCESS.FETCHED);
   });
 
   getOrganizations = asyncHandler(async (req: Request, res: Response) => {
     const { query = "", page = 1, limit = 10, status } = req.query;
     const result = await this._getOrgsUseCase.execute(query as string, Number(page), Number(limit), status as string);
-    sendSuccess(res, result, "Organizations retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
+
 
   getStudents = asyncHandler(async (req: Request, res: Response) => {
     const { query = "", page = 1, limit = 10 } = req.query;
     const result = await this._getStudentsUseCase.execute(query as string, Number(page), Number(limit));
-    sendSuccess(res, result, "Students retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
   getCompanies = asyncHandler(async (req: Request, res: Response) => {
     const { query = "", page = 1, limit = 10, status } = req.query;
     const result = await this._getCompaniesUseCase.execute(query as string, Number(page), Number(limit), status as string);
-    sendSuccess(res, result, "Companies retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
   getInterviewers = asyncHandler(async (req: Request, res: Response) => {
     const { query = "", page = 1, limit = 10 } = req.query;
     const result = await this._getInterviewersUseCase.execute(query as string, Number(page), Number(limit));
-    sendSuccess(res, result, "Interviewers retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
   updateStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -69,6 +71,8 @@ export class SuperAdminController {
   deleteUser = asyncHandler(async (req: Request, res: Response) => {
     const { role, id } = req.params;
     await this._deleteUserUseCase.execute(role, id);
-    sendSuccess(res, null, "User deleted successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.DELETED);
   });
+
+
 }

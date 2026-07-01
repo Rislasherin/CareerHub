@@ -13,6 +13,7 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class StudentManagementController {
   constructor(
@@ -33,20 +34,20 @@ export class StudentManagementController {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const students = await this._getPendingUseCase.execute(orgId, status);
-    sendSuccess(res, students, "Pending students retrieved successfully");
+    sendSuccess(res, students, MESSAGES.SUCCESS.FETCHED);
   });
 
   approveStudent = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     await this._approveUseCase.execute(studentId);
-    sendSuccess(res, null, "Student approved successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   rejectStudent = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     const { reason } = req.body;
     await this._rejectUseCase.execute(studentId, reason);
-    sendSuccess(res, null, "Student rejected successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   bulkInvite = asyncHandler(async (req: Request, res: Response) => {
@@ -70,7 +71,7 @@ export class StudentManagementController {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const stats = await this._getDashboardStatsUseCase.execute(orgId);
-    sendSuccess(res, stats, "Dashboard stats retrieved successfully");
+    sendSuccess(res, stats, MESSAGES.SUCCESS.FETCHED);
   });
 
   getAllStudents = asyncHandler(async (req: Request, res: Response) => {
@@ -80,7 +81,7 @@ export class StudentManagementController {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const result = await this._getAllStudentsUseCase.execute(orgId, query as string, Number(page) || 1, Number(limit) || 10);
-    sendSuccess(res, result, "Students retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
   toggleStatus = asyncHandler(async (req: Request, res: Response) => {

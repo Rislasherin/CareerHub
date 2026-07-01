@@ -7,6 +7,7 @@ import { ILoginCollegeAdminUseCase } from "@application/usecases/auth/organizati
 import { IUpdateCollegeOnboardingUseCase } from "@application/usecases/auth/organization/interfaces/IUpdateCollegeOnboarding.usecase";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { env } from "@infrastructure/config/env.validator";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class CollegeAdminAuthController {
   constructor(
@@ -35,12 +36,12 @@ export class CollegeAdminAuthController {
       });
     }
 
-    sendSuccess(res, result, "Login successful");
+    sendSuccess(res, result, MESSAGES.SUCCESS.LOGIN);
   });
 
   register = asyncHandler(async (req: Request, res: Response) => {
     const result = await this._registerUseCase.execute(req.body);
-    sendSuccess(res, result, "OTP sent successfully", HttpStatus.CREATED);
+    sendSuccess(res, result, MESSAGES.SUCCESS.OTP_SENT, HttpStatus.CREATED);
   });
 
   verifyOtp = asyncHandler(async (req: Request, res: Response) => {
@@ -67,7 +68,7 @@ export class CollegeAdminAuthController {
       {
         collegeAdmin: result.collegeAdmin,
       },
-      "OTP verification successful",
+      MESSAGES.SUCCESS.OTP_VERIFIED,
       HttpStatus.OK
     );
   });
@@ -75,6 +76,6 @@ export class CollegeAdminAuthController {
   updateOnboarding = asyncHandler(async (req: Request, res: Response) => {
     const { orgId } = req.user as unknown as Record<string, unknown>; // From auth middleware
     const result = await this._updateOnboardingUseCase.execute(orgId as string, req.body);
-    sendSuccess(res, result, "Onboarding updated successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.ONBOARDING_UPDATED);
   });
 }

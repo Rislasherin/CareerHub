@@ -6,6 +6,7 @@ import { ILoginInterviewerUseCase } from "@application/usecases/auth/interviewer
 
 import { IVerifyInterviewerTokenUseCase } from "@application/usecases/auth/interviewer/implementations/VerifyInterviewerToken.usecase";
 import { env } from "@infrastructure/config/env.validator";
+import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class InterviewerAuthController {
   constructor(
@@ -17,7 +18,7 @@ export class InterviewerAuthController {
   verifyToken = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.params;
     const result = await this.verifyTokenUseCase.execute(token);
-    sendSuccess(res, result, "Token verified successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.TOKEN_VERIFIED);
   });
 
   activate = asyncHandler(async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ export class InterviewerAuthController {
       maxAge: env.COOKIE_MAX_AGE_MS, 
     });
 
-    sendSuccess(res, { user: result.user }, "Account activated successfully");
+    sendSuccess(res, { user: result.user }, MESSAGES.SUCCESS.PASSWORD_SETUP);
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -56,6 +57,6 @@ export class InterviewerAuthController {
       });
     }
 
-    sendSuccess(res, result, "Login successful");
+    sendSuccess(res, result, MESSAGES.SUCCESS.LOGIN);
   });
 }
