@@ -39,19 +39,8 @@ export default function StudentDashboard() {
       if (user && user.status === 'ACTIVE') {
         try {
           const profile = await getStudentProfile();
-          let score = 30; // Base verified score
-          if (profile.phoneNumber) score += 10;
-          if (profile.linkedinUrl) score += 10;
-          if (profile.githubUrl || profile.portfolioUrl) score += 10;
-          if (profile.skills && Object.values(profile.skills).some(arr => Array.isArray(arr) && arr.length > 0)) score += 15;
-          if (profile.experience && profile.experience.length > 0) score += 10;
-          if (profile.softSkills && profile.softSkills.length > 0) score += 10;
-          if (profile.preferences && profile.preferences.preferredRole) score += 10;
           
-          const finalScore = Math.min(score, 100);
-          
-          // Only show reminder if score is strictly less than 100
-          if (finalScore < 100) {
+          if (!profile.isProfileComplete) {
             timer = setTimeout(() => setShowReminder(true), 1500);
           }
         } catch (error) {

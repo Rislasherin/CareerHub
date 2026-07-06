@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { loginUser } from '@/services/auth/auth.service';
 import { UserRole } from '@/types/auth';
 import { toast } from 'sonner';
@@ -96,7 +97,25 @@ function LoginContent() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { errors, isValid, getCaptureProps, handleSubmit: handleFormSubmit } = useFormValidation(
+    { email, password },
+    (values) => {
+      try {
+        loginSchema.parse(values);
+        return {};
+      } catch (err) {
+        if (err instanceof z.ZodError) {
+          const fieldErrors: Record<string, string> = {};
+          err.issues.forEach((issue) => {
+            if (issue.path[0]) fieldErrors[issue.path[0] as string] = issue.message;
+          });
+          return fieldErrors;
+        }
+        return {};
+      }
+    }
+  );
 
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -124,24 +143,7 @@ function LoginContent() {
     }
   }, [searchParams]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-
-    // Validate
-    try {
-      loginSchema.parse({ email, password });
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        const fieldErrors: Record<string, string> = {};
-        err.issues.forEach((issue) => {
-          if (issue.path[0]) fieldErrors[issue.path[0] as string] = issue.message;
-        });
-        setErrors(fieldErrors);
-        return;
-      }
-    }
-
+  const handleLogin = async () => {
     setIsLoading(true);
     try {
       const { user, isFirstLogin } = await loginUser(activeRole, { email, password });
@@ -303,11 +305,12 @@ function LoginContent() {
               ))}
             </div>
 
-            <form noValidate onSubmit={handleLogin} className="space-y-6">
+            <form noValidate onSubmit={handleFormSubmit(handleLogin)} className="space-y-6" {...getCaptureProps()}>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
                 <Input
                   type="email"
+                  name="email"
                   icon={<Mail size={20} className="text-slate-400" />}
                   placeholder="name@company.com"
                   value={email}
@@ -326,6 +329,7 @@ function LoginContent() {
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     icon={<Lock size={20} className="text-slate-400" />}
                     placeholder="••••••••"
                     value={password}
@@ -348,7 +352,7 @@ function LoginContent() {
                 type="submit"
                 fullWidth
                 isLoading={isLoading}
-                disabled={!email || !password || isLoading}
+                disabled={!isValid || isLoading}
                 className="h-16 mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all border-none"
               >
                 Sign In to Portal

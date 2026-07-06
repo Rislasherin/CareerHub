@@ -233,7 +233,35 @@ export class Student {
     return this._props.updatedAt;
   }
 
-  toJSON(): StudentProps {
-    return { ...this._props };
+  get profileCompletionScore(): number {
+    let score = 30; // Base verified score
+    if (this.phoneNumber) score += 10;
+    if (this.linkedinUrl) score += 10;
+    if (this.githubUrl || this.portfolioUrl) score += 10;
+    
+    if (this.skills) {
+      const skills = this.skills as any;
+      if (Object.values(skills).some((arr: any) => Array.isArray(arr) && arr.length > 0)) {
+        score += 15;
+      }
+    }
+    
+    if (this.experience && this.experience.length > 0) score += 10;
+    if (this.softSkills && this.softSkills.length > 0) score += 10;
+    if (this.preferences && this.preferences.preferredRole) score += 10;
+
+    return Math.min(score, 100);
+  }
+
+  get isProfileComplete(): boolean {
+    return this.profileCompletionScore >= 100;
+  }
+
+  toJSON(): StudentProps & { profileCompletionScore: number; isProfileComplete: boolean } {
+    return { 
+      ...this._props,
+      profileCompletionScore: this.profileCompletionScore,
+      isProfileComplete: this.isProfileComplete
+    };
   }
 }

@@ -89,7 +89,7 @@ export default function CollegeOnboardingPage() {
         currentStep === 2 ? step2Schema :
           step3Schema
     ) as any,
-    mode: 'onChange',
+    mode: 'all',
     defaultValues: {
       name: '',
       shortName: '',

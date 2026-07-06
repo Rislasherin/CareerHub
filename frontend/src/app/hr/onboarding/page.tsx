@@ -92,7 +92,7 @@ export default function HROnboardingPage() {
   const router = useRouter();
 
   const { register, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<HRFormValues>({
-    mode: 'onChange',
+    mode: 'all',
     resolver: zodResolver(
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :

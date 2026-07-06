@@ -7,6 +7,7 @@ import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { Stepper } from '@/components/shared/Stepper';
 import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   getHRJobs,
   postJob,
@@ -326,6 +327,7 @@ export default function HRJobsPage() {
     setRounds(job.rounds || []);
     setWizardStep(1);
     setShowWizard(true);
+    resetValidation();
   };
 
   const resetWizard = () => {
@@ -361,6 +363,7 @@ export default function HRJobsPage() {
     setWizardStep(1);
     setShowWizard(false);
     setEditJobId(null);
+    resetValidation();
   };
 
   const validateCurrentStep = (): Record<string, string> => {
@@ -407,15 +410,23 @@ export default function HRJobsPage() {
     return errs;
   };
 
-  const currentErrors = validateCurrentStep();
-  const isStepValid = Object.keys(currentErrors).length === 0;
-
-  const handleContinue = () => {
-    if (!isStepValid) return;
-    setWizardStep(wizardStep + 1);
+  const formValues = {
+    title, category, jobType, deadline,
+    openings, experienceLevel, noticePeriod, workMode, location, salaryType, minSalary, maxSalary, interviewMode,
+    minCGPA, allowedBacklogs, passingYear, degreeTypes, branches, skills, description, rounds
   };
 
-  const handleSubmitJob = async () => {
+  const { errors: currentErrors, isValid: isStepValid, getCaptureProps, handleSubmit: handleFormSubmit, resetValidation } = useFormValidation(
+    formValues,
+    () => validateCurrentStep()
+  );
+
+  const handleContinue = handleFormSubmit(() => {
+    setWizardStep(wizardStep + 1);
+    resetValidation();
+  });
+
+  const handleSubmitJob = handleFormSubmit(async () => {
     if (!title || !category || !deadline || !minSalary || !maxSalary) {
       Swal.fire({
         title: 'Required Fields',
@@ -490,7 +501,7 @@ export default function HRJobsPage() {
         buttonsStyling: false
       });
     }
-  };
+  });
 
   const getStatusBadgeClass = (status: Job['status']) => {
     switch (status) {
@@ -737,12 +748,15 @@ export default function HRJobsPage() {
               />
 
               {/* Wizard Body */}
-              <div className="mt-8">
+              <div 
+                className="mt-8"
+                {...getCaptureProps()}
+              >
                 {/* Step 1 */}
                 {wizardStep === 1 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input label="Job Title *" placeholder="e.g. Associate Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} error={currentErrors.title} />
-                    <Input label="Job Category *" placeholder="e.g. Engineering / Tech" value={category} onChange={(e) => setCategory(e.target.value)} error={currentErrors.category} />
+                    <Input name="title" label="Job Title *" placeholder="e.g. Associate Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} error={currentErrors.title} />
+                    <Input name="category" label="Job Category *" placeholder="e.g. Engineering / Tech" value={category} onChange={(e) => setCategory(e.target.value)} error={currentErrors.category} />
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Colleges *</label>
@@ -754,6 +768,7 @@ export default function HRJobsPage() {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Job Type *</label>
                       <select
+                        name="jobType"
                         value={jobType}
                         onChange={(e) => setJobType(e.target.value)}
                         className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
@@ -767,7 +782,7 @@ export default function HRJobsPage() {
                       {currentErrors.jobType && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.jobType}</p>}
                     </div>
 
-                    <Input type="date" label="Application Deadline *" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={currentErrors.deadline} />
+                    <Input type="date" name="deadline" label="Application Deadline *" value={deadline} onChange={(e) => setDeadline(e.target.value)} error={currentErrors.deadline} />
                   </div>
                 )}
 
@@ -775,10 +790,11 @@ export default function HRJobsPage() {
                 {wizardStep === 2 && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Input type="number" label="Openings Available *" min={1} value={openings} onChange={(e) => setOpenings(e.target.value)} error={currentErrors.openings} />
+                      <Input type="number" name="openings" label="Openings Available *" min={1} value={openings} onChange={(e) => setOpenings(e.target.value)} error={currentErrors.openings} />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Experience Level *</label>
                         <select
+                          name="experienceLevel"
                           value={["Fresher", "0-1 years", "1-2 years", "2-3 years", "3-5 years", "5+ years", ""].includes(experienceLevel) ? experienceLevel : "Other"}
                           onChange={(e) => {
                              if(e.target.value !== "Other") setExperienceLevel(e.target.value);
@@ -799,6 +815,7 @@ export default function HRJobsPage() {
                         {!["Fresher", "0-1 years", "1-2 years", "2-3 years", "3-5 years", "5+ years", ""].includes(experienceLevel) && (
                           <input 
                             type="text"
+                            name="experienceLevel"
                             value={experienceLevel === "Custom" ? "" : experienceLevel}
                             onChange={(e) => setExperienceLevel(e.target.value)}
                             placeholder="Type custom experience..."
@@ -807,13 +824,14 @@ export default function HRJobsPage() {
                         )}
                         {currentErrors.experienceLevel && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.experienceLevel}</p>}
                       </div>
-                      <Input label="Notice Period Needed *" placeholder="e.g. Immediate, 30 days" value={noticePeriod} onChange={(e) => setNoticePeriod(e.target.value)} error={currentErrors.noticePeriod} />
+                      <Input name="noticePeriod" label="Notice Period Needed *" placeholder="e.g. Immediate, 30 days" value={noticePeriod} onChange={(e) => setNoticePeriod(e.target.value)} error={currentErrors.noticePeriod} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Work Mode *</label>
                         <select
+                          name="workMode"
                           value={workMode}
                           onChange={(e) => setWorkMode(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
@@ -826,11 +844,12 @@ export default function HRJobsPage() {
                         {currentErrors.workMode && <p className="text-rose-500 text-[10px] font-bold uppercase mt-1">{currentErrors.workMode}</p>}
                       </div>
 
-                      <Input label="Office Location *" placeholder="e.g. Bangalore, KA" value={location} onChange={(e) => setLocation(e.target.value)} error={currentErrors.location} />
+                      <Input name="location" label="Office Location *" placeholder="e.g. Bangalore, KA" value={location} onChange={(e) => setLocation(e.target.value)} error={currentErrors.location} />
 
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary Type *</label>
                         <select
+                          name="salaryType"
                           value={salaryType}
                           onChange={(e) => setSalaryType(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
@@ -844,12 +863,13 @@ export default function HRJobsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Input type="number" label="Minimum Salary (INR) *" placeholder="e.g. 600000" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} error={currentErrors.minSalary} />
-                      <Input type="number" label="Maximum Salary (INR) *" placeholder="e.g. 800000" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} error={currentErrors.maxSalary} />
+                      <Input type="number" name="minSalary" label="Minimum Salary (INR) *" placeholder="e.g. 600000" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} error={currentErrors.minSalary} />
+                      <Input type="number" name="maxSalary" label="Maximum Salary (INR) *" placeholder="e.g. 800000" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} error={currentErrors.maxSalary} />
 
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Interview Format *</label>
                         <select
+                          name="interviewMode"
                           value={interviewMode}
                           onChange={(e) => setInterviewMode(e.target.value as any)}
                           className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px]"
@@ -869,9 +889,9 @@ export default function HRJobsPage() {
                 {wizardStep === 3 && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <Input type="number" step="0.1" label="Minimum CGPA *" value={minCGPA} onChange={(e) => setMinCGPA(e.target.value)} error={currentErrors.minCGPA} />
-                      <Input type="number" label="Max Backlogs allowed *" value={allowedBacklogs} onChange={(e) => setAllowedBacklogs(e.target.value)} error={currentErrors.allowedBacklogs} />
-                      <Input type="number" label="Passing Year *" value={passingYear} onChange={(e) => setPassingYear(e.target.value)} error={currentErrors.passingYear} />
+                      <Input type="number" step="0.1" name="minCGPA" label="Minimum CGPA *" value={minCGPA} onChange={(e) => setMinCGPA(e.target.value)} error={currentErrors.minCGPA} />
+                      <Input type="number" name="allowedBacklogs" label="Max Backlogs allowed *" value={allowedBacklogs} onChange={(e) => setAllowedBacklogs(e.target.value)} error={currentErrors.allowedBacklogs} />
+                      <Input type="number" name="passingYear" label="Passing Year *" value={passingYear} onChange={(e) => setPassingYear(e.target.value)} error={currentErrors.passingYear} />
                     </div>
 
                     {/* Degree Types Tag Cloud Input */}
@@ -897,6 +917,7 @@ export default function HRJobsPage() {
                           <div className="flex gap-2 w-full">
                             <input
                               list="hr-degrees"
+                              name="degreeTypes"
                               className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full"
                               placeholder="Type or select a degree..."
                               value={degreeInput}
@@ -948,6 +969,7 @@ export default function HRJobsPage() {
                           <div className="flex flex-col gap-2 w-full">
                             <div className="flex gap-2">
                               <select
+                                name="branches"
                                 className="bg-slate-50/50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] w-full appearance-none cursor-pointer"
                                 value={branchInput}
                                 onChange={(e) => setBranchInput(e.target.value)}
@@ -1036,6 +1058,7 @@ export default function HRJobsPage() {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Job Description *</label>
                       <textarea
+                        name="description"
                         rows={4}
                         placeholder="Write detailed responsibilities, key tasks, and expectations..."
                         value={description}

@@ -77,4 +77,8 @@ export interface StudentProfile {
   
   // Preferences
   preferences?: StudentPreferences;
+
+  // Completion
+  profileCompletionScore?: number;
+  isProfileComplete?: boolean;
 }
