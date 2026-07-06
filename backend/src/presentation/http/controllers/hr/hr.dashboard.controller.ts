@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IGetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/interfaces/IGetHRDashboardStats.usecase";;
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -16,6 +17,6 @@ export class HRDashboardController {
     }
 
     const result = await this._getStatsUseCase.execute(companyId);
-    sendSuccess(res, result, "HR Dashboard stats retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 }

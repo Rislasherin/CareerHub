@@ -8,7 +8,8 @@ import {
   interviewerRepository,
   collegeAdminRepository,
   superAdminRepository,
-  crossRoleAuthService
+  crossRoleAuthService,
+  organizationRepository
 } from "@infrastructure/di/infra.container";
 import { StudentAuthController } from "@presentation/http/controllers/auth/student/student.auth.controller";
 import { ForgotPasswordUseCase } from "@application/usecases/auth/shared/implementations/ForgotPassword.usecase";;
@@ -74,4 +75,21 @@ export const makeForgotPasswordController = () => {
     superAdminRepository
   );
   return new ForgotPasswordController(forgotPasswordUseCase, resetPasswordUseCase);
+};
+
+import { RefreshTokenController } from "@presentation/http/controllers/auth/RefreshToken.controller";
+export const makeRefreshTokenController = () => {
+  return new RefreshTokenController(
+    jwtService,
+    studentRepository,
+    hrUserRepository,
+    interviewerRepository,
+    collegeAdminRepository,
+    superAdminRepository
+  );
+};
+
+import { PublicOrganizationController } from "@presentation/http/controllers/organization/public.organization.controller";
+export const makePublicOrganizationController = () => {
+  return new PublicOrganizationController(organizationRepository);
 };

@@ -236,7 +236,7 @@ export default function HROnboardingPage() {
 
           {/* Form Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
-            <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
+            <form noValidate onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
               <AnimatePresence mode="wait">
                 {currentStep === 1 ? (
                   <motion.div

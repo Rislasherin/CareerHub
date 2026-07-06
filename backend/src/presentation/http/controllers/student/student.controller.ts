@@ -3,24 +3,25 @@ import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IUploadStudentVerificationUseCase } from "@application/usecases/auth/student/interfaces/IUploadStudentVerification.usecase";
 import { IUpdateStudentProfileUseCase } from "@application/usecases/student/interfaces/IUpdateStudentProfile.usecase";
-import { IStudentRepository } from "@domain/repositories/IStudentRepository";
+
 import { IGetStudentJobsUseCase } from "@application/usecases/student/interfaces/IGetStudentJobs.usecase";
 import { IApplyToJobUseCase } from "@application/usecases/student/interfaces/IApplyToJob.usecase";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { organizationRepository } from "@infrastructure/di/infra.container";
 import { MESSAGES } from "@shared/constants/messages.constants";
-import { IGetCollegeNoticesUseCase } from "@application/usecases/college/notices/interfaces/IGetCollegeNotices.usecase";
+import { IGetStudentFullProfileUseCase } from "@application/usecases/student/interfaces/IGetStudentFullProfile.usecase";
+import { IGetStudentNoticesUseCase } from "@application/usecases/student/interfaces/IGetStudentNotices.usecase";
 
 export class StudentController {
   constructor(
     private readonly _uploadVerificationUseCase: IUploadStudentVerificationUseCase,
     private readonly _updateProfileUseCase: IUpdateStudentProfileUseCase,
-    private readonly _studentRepository: IStudentRepository,
+
     private readonly _getStudentJobsUseCase: IGetStudentJobsUseCase,
     private readonly _applyToJobUseCase: IApplyToJobUseCase,
-    private readonly _getCollegeNoticeUseCase:IGetCollegeNoticesUseCase
+    private readonly _getStudentFullProfileUseCase: IGetStudentFullProfileUseCase,
+    private readonly _getStudentNoticesUseCase: IGetStudentNoticesUseCase
   ) { }
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
@@ -44,7 +45,7 @@ export class StudentController {
       studentId,
       file || req.body.verificationDocument,
     );
-    sendSuccess(res, uploadedStudent.toJSON(), "Verification details uploaded successfully. Please wait for admin review.");
+    sendSuccess(res, uploadedStudent.toJSON(), MESSAGES.SUCCESS.CREATED);
   });
 
   getMe = asyncHandler(async (req: Request, res: Response) => {
@@ -56,21 +57,7 @@ export class StudentController {
     if (!studentId) {
       throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-    const student = await this._studentRepository.findById(studentId);
-    if (!student) {
-      throw new AppError(MESSAGES.ERROR.NOT_FOUND, HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
-    }
-
-    const studentData = student.toJSON() as unknown as Record<string, unknown>;
-    try {
-      if (student.collegeId) {
-        const org = await organizationRepository.findById(student.collegeId);
-        if (org) {
-          studentData.collegeName = org.name;
-        }
-      }
-    } catch (err) { }
-
+    const studentData = await this._getStudentFullProfileUseCase.execute(studentId);
     sendSuccess(res, studentData, MESSAGES.SUCCESS.FETCHED);
   });
 
@@ -81,16 +68,7 @@ export class StudentController {
     }
     const student = await this._updateProfileUseCase.execute(studentId, req.body);
 
-    const studentData = student.toJSON() as unknown as Record<string, unknown>;
-    try {
-      if (student.collegeId) {
-        const org = await organizationRepository.findById(student.collegeId);
-        if (org) {
-          studentData.collegeName = org.name;
-        }
-      }
-    } catch (err) { }
-
+    const studentData = await this._getStudentFullProfileUseCase.execute(studentId);
     sendSuccess(res, studentData, MESSAGES.SUCCESS.UPDATED);
   });
 
@@ -113,7 +91,7 @@ export class StudentController {
       throw new AppError("Job ID is required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
     await this._applyToJobUseCase.execute(studentId, jobId);
-    sendSuccess(res, null, "Applied to job successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   getNotices = asyncHandler(async(req:Request,res:Response)=>{
@@ -122,12 +100,8 @@ export class StudentController {
     if(!studentId){
       throw new AppError(MESSAGES.ERROR.UNAUTHORIZED,HttpStatus.UNAUTHORIZED,ErrorCode.UNAUTHORIZED);
     }
-      const student = await this._studentRepository.findById(studentId);
-      if(!student || !student?.collegeId){
-        throw new AppError("College not found for this student", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND)
-      }
-      const notices = await this._getCollegeNoticeUseCase.execute(student.collegeId.toString());
-      sendSuccess(res,notices,"Notices Retrieved Successfully")
+      const notices = await this._getStudentNoticesUseCase.execute(studentId);
+      sendSuccess(res, notices, MESSAGES.SUCCESS.FETCHED);
   })
 
 }

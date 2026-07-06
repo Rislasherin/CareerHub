@@ -234,7 +234,7 @@ export default function StudentVerifyPage() {
           <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-10 lg:p-14 border border-slate-50">
             <h3 className="text-3xl font-black text-slate-900 mb-8 tracking-tighter">Upload College ID</h3>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form noValidate onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-4">
                 <input
                   type="file"

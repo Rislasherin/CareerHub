@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { ILoginStudentUsescase } from "@application/usecases/auth/student/interfaces/ILogin.student.usecase";
 import { IRequestAccessUseCase } from "@application/usecases/auth/student/interfaces/IRequestAccess.usecase";
@@ -8,7 +9,7 @@ import { IGetStudentProfileUseCase } from "@application/usecases/auth/student/in
 import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/student/interfaces/IVerifyInvitationToken.usecase";
 import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/interfaces/ISetupStudentPassword.usecase";
 import { env } from "@infrastructure/config/env.validator";
-import { MESSAGES } from "@shared/constants/messages.constants";
+
 
 export class StudentAuthController {
   constructor(
@@ -63,7 +64,7 @@ export class StudentAuthController {
 
   requestAccess = asyncHandler(async (req: Request, res: Response) => {
     await this._requestAccessUseCase.execute(req.body);
-    sendSuccess(res, null, "Request submitted. Please wait for college admin review.", HttpStatus.CREATED);
+    sendSuccess(res, null, MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
   });
 
   setupPassword = asyncHandler(async (req: Request, res: Response) => {

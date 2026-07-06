@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
@@ -30,7 +31,7 @@ export class HRJobController {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const result = await this._postJobUseCase.execute(companyId, req.body);
-    sendSuccess(res, result.toJSON(), "Job post created and submitted for approval successfully", HttpStatus.CREATED);
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
   });
 
   getJobs = asyncHandler(async (req: Request, res: Response) => {
@@ -66,7 +67,7 @@ export class HRJobController {
     }
     const { jobId } = req.params;
     const result = await this._closeJobUseCase.execute(companyId, jobId);
-    sendSuccess(res, result.toJSON(), "Job closed successfully");
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED);
   });
 
   deleteJob = asyncHandler(async (req: Request, res: Response) => {
@@ -76,7 +77,7 @@ export class HRJobController {
     }
     const { jobId } = req.params;
     const result = await this._deleteJobUseCase.execute(companyId, jobId);
-    sendSuccess(res, result.toJSON(), "Job post deleted successfully");
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.DELETED);
   });
 
   getCandidates = asyncHandler(async (req: Request, res: Response) => {
@@ -85,7 +86,7 @@ export class HRJobController {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const candidates = await this._getHRCandidatesUseCase.execute(companyId);
-    sendSuccess(res, candidates, "Candidates list retrieved successfully");
+    sendSuccess(res, candidates, MESSAGES.SUCCESS.FETCHED);
   });
   updateJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
@@ -94,14 +95,14 @@ export class HRJobController {
     }
     const { jobId } = req.params;
     const result = await this._updateJobUseCase.execute(jobId, companyId, req.body);
-    sendSuccess(res, result.toJSON(), "Job updated successfully", HttpStatus.OK);
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED, HttpStatus.OK);
   });
 
   getCandidateProfile = asyncHandler(async(req:Request,res:Response)=>{
     const studentId = req.params.id;
     const profile = await this._getCandidateProfileUseCase.execute(studentId)
 
-    sendSuccess(res,profile, "Candidate profile retrieved successfully")
+    sendSuccess(res,profile, MESSAGES.SUCCESS.FETCHED)
   })
 
 }

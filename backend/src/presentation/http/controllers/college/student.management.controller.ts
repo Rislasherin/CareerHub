@@ -56,13 +56,13 @@ export class StudentManagementController {
       throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const result = await this._bulkInviteUseCase.execute(orgId, req.body);
-    sendSuccess(res, result, "Bulk invitation processed");
+    sendSuccess(res, result, MESSAGES.SUCCESS.CREATED);
   });
 
   approveAccessRequest = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     await this._approveAccessRequestUseCase.execute(studentId);
-    sendSuccess(res, null, "Access request approved and invitation sent");
+    sendSuccess(res, null, MESSAGES.SUCCESS.CREATED);
   });
 
   getDashboardStats = asyncHandler(async (req: Request, res: Response) => {

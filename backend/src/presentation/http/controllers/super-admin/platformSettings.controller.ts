@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { GetPlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/GetPlatformSettings.usecase";
 import { UpdatePlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/UpdatePlatformSettings.usecase";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
@@ -15,12 +16,12 @@ export class PlatformSettingsController {
     getSettings = asyncHandler(async (req: Request, res: Response) => {
         const settings = await this._getSettingsUseCase.execute();
 
-        sendSuccess(res, settings.toJSON(), "Platform settings fetched successfully");
+        sendSuccess(res, settings.toJSON(), MESSAGES.SUCCESS.FETCHED);
     })
 
     updateSettings = asyncHandler(async (req: Request, res: Response) => {
         const updatedSettings = await this._updateSettingsUseCase.execute(req.body);
 
-        sendSuccess(res, updatedSettings.toJSON(), "Platform settings updated successfully");
+        sendSuccess(res, updatedSettings.toJSON(), MESSAGES.SUCCESS.UPDATED);
     })
 }

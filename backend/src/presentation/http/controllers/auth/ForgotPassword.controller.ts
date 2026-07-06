@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IForgotPasswordUseCase } from "@application/usecases/auth/shared/interfaces/IForgotPassword.usecase";;
 
@@ -16,13 +17,13 @@ export class ForgotPasswordController {
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body;
     await this._forgotPasswordUseCase.execute(email);
-    sendSuccess(res, null, "If an account exists with that email, a password reset link has been sent.");
+    sendSuccess(res, null, MESSAGES.SUCCESS.PASSWORD_RESET_LINK_SENT);
   });
   
 
   resetPassword = asyncHandler(async (req: Request, res: Response) => {
     const { token, password } = req.body;
     await this._resetPasswordUseCase.execute(token, password);
-    sendSuccess(res, null, "Password reset successfully.")
+    sendSuccess(res, null, MESSAGES.SUCCESS.PASSWORD_RESET_SUCCESS)
   });
 }

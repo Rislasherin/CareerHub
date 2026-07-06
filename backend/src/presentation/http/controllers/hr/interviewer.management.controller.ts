@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IAddInterviewerUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IAddInterviewer.usecase";;
 import { IGetInterviewersUseCase } from "@application/usecases/hr/interviewer-management/interfaces/IGetInterviewers.usecase";;
@@ -31,7 +32,7 @@ export class InterviewerManagementController {
     }
     const { firstName, lastName, email } = req.body;
     await this._addUseCase.execute(companyId, firstName, lastName, email);
-    sendSuccess(res, null, "Interviewer added and setup email sent successfully", HttpStatus.CREATED);
+    sendSuccess(res, null, MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
   });
 
   getInterviewers = asyncHandler(async (req: Request, res: Response) => {
@@ -47,7 +48,7 @@ export class InterviewerManagementController {
       Number(limit),
       includeDeleted === "true"
     );
-    sendSuccess(res, result, "Interviewers retrieved successfully");
+    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
   toggleStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -57,13 +58,13 @@ export class InterviewerManagementController {
     }
     const { interviewerId } = req.params;
     await this._toggleUseCase.execute(interviewerId, companyId);
-    sendSuccess(res, null, "Interviewer status updated successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   resendInvite = asyncHandler(async (req: Request, res: Response) => {
     const { interviewerId } = req.params;
     await this._resendUseCase.execute(interviewerId);
-    sendSuccess(res, null, "Invitation link resent successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   updateInterviewer = asyncHandler(async (req: Request, res: Response) => {
@@ -79,7 +80,7 @@ export class InterviewerManagementController {
       designation,
       specialization,
     });
-    sendSuccess(res, null, "Interviewer updated successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   deleteInterviewer = asyncHandler(async (req: Request, res: Response) => {
@@ -89,7 +90,7 @@ export class InterviewerManagementController {
     }
     const { interviewerId } = req.params;
     await this._deleteUseCase.execute(companyId, interviewerId);
-    sendSuccess(res, null, "Interviewer removed successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.DELETED);
   });
 
   restoreInterviewer = asyncHandler(async (req: Request, res: Response) => {
@@ -99,6 +100,6 @@ export class InterviewerManagementController {
     }
     const { interviewerId } = req.params;
     await this._restoreUseCase.execute(companyId, interviewerId);
-    sendSuccess(res, null, "Interviewer restored successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 }

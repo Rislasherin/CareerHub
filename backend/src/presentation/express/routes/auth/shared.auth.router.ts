@@ -1,47 +1,19 @@
 import { Router } from "express";
-import {
-    jwtService,
-    studentRepository,
-    hrUserRepository,
-    interviewerRepository,
-    collegeAdminRepository,
-    superAdminRepository,
-    authMiddleware
-} from "@infrastructure/di/infra.container";
-import { RefreshTokenController } from "@presentation/http/controllers/auth/RefreshToken.controller";
-import { makeForgotPasswordController } from "@infrastructure/di/auth.factory";
+import { authMiddleware } from "@infrastructure/di/infra.container";
+import { 
+    makeForgotPasswordController, 
+    makeRefreshTokenController,
+    makePublicOrganizationController
+} from "@infrastructure/di/auth.factory";
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
 import { forgotPasswordSchema, resetPasswordSchema } from "@shared/validation";
-import { OrganizationModel } from "@infrastructure/database/models/organizer/organization.model";
-import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 const router = Router();
-const refreshTokenController = new RefreshTokenController(
-    jwtService,
-    studentRepository,
-    hrUserRepository,
-    interviewerRepository,
-    collegeAdminRepository,
-    superAdminRepository
-);
+const refreshTokenController = makeRefreshTokenController();
 const forgotPasswordController = makeForgotPasswordController();
+const publicOrganizationController = makePublicOrganizationController();
 
-router.get("/organizations/approved", async (req, res) => {
-    try {
-        const orgs = await OrganizationModel.find({ isDeleted: { $ne: true } });
-        res.json({
-            success: true,
-            data: orgs.map(org => ({
-                id: org._id.toString(),
-                name: org.name,
-                activeBranches: org.activeBranches || []
-            }))
-        });
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message });
-    }
-});
+router.get("/organizations/approved", publicOrganizationController.getApprovedOrganizations);
 
 router.get("/status", authMiddleware.protect, refreshTokenController.status);
 router.post("/refresh-token", refreshTokenController.refresh);

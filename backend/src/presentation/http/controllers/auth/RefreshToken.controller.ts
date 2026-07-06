@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IJwtService } from "@application/interfaces/IJwt.service";
 import { AppError } from "@application/errors/AppError";
@@ -98,18 +99,18 @@ export class RefreshTokenController {
       maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
     });
 
-    sendSuccess(res, null, "Token refreshed successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.TOKEN_REFRESHED);
   });
 
   status = asyncHandler(async (_req: Request, res: Response) => {
     // This is essentially a no-op that just returns success.
     // The actual status check happens in the AuthMiddleware that should protect this route.
-    sendSuccess(res, _req.user, "Account is active");
+    sendSuccess(res, _req.user, MESSAGES.SUCCESS.FETCHED);
   });
 
   logout = asyncHandler(async (_req: Request, res: Response) => {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
-    sendSuccess(res, null, "Logged out successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.LOGOUT);
   });
 }

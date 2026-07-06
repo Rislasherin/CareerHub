@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
@@ -23,7 +24,7 @@ export class CollegeJobApprovalController {
     }
     const status = req.query.status as JobStatus || JobStatus.PENDING_REVIEW;
     const result = await this._getPendingJobsUseCase.execute(orgId, status);
-    sendSuccess(res, result.map((job) => job.toJSON()), "Jobs retrieved successfully");
+    sendSuccess(res, result.map((job) => job.toJSON()), MESSAGES.SUCCESS.FETCHED);
   });
 
   approveJob = asyncHandler(async (req: Request, res: Response) => {
@@ -33,7 +34,7 @@ export class CollegeJobApprovalController {
     }
     const { jobId } = req.params;
     const result = await this._approveJobUseCase.execute(orgId, jobId);
-    sendSuccess(res, result.toJSON(), "Job approved successfully");
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED);
   });
 
   rejectJob = asyncHandler(async (req: Request, res: Response) => {
@@ -44,6 +45,6 @@ export class CollegeJobApprovalController {
     const { jobId } = req.params;
     const { reason } = req.body;
     const result = await this._rejectUseCase.execute(orgId, jobId, reason);
-    sendSuccess(res, result.toJSON(), "Job rejected successfully");
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED);
   });
 }

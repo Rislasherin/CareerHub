@@ -3,6 +3,7 @@ import { NoticeRequestDto } from "@application/dtos/college/Request/notice.reque
 import { ICreateNoticeUseCase } from "@application/usecases/college/notices/interfaces/ICreateNotice.usecase";
 import { IGetCollegeNoticesUseCase } from "@application/usecases/college/notices/interfaces/IGetCollegeNotices.usecase";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
+import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -28,7 +29,7 @@ export class NoticeController {
         const dto: NoticeRequestDto = req.body; // Fixed typo here (used to be '= NoticeRequestDto =')
         const notice = await this._createNoticeUseCase.execute(collegeId, dto);
 
-        sendSuccess(res, notice, "Notice Board Created Successfully"); // Pass 'notice' instead of 'null'
+        sendSuccess(res, notice, MESSAGES.SUCCESS.CREATED); // Pass 'notice' instead of 'null'
     });
 
     getNotices = asyncHandler(async (req: Request, res: Response) => {
@@ -40,7 +41,7 @@ export class NoticeController {
 
         const notices = await this._getCollegeNoticeUseCase.execute(collegeId);
 
-        sendSuccess(res, notices, "Notices Retrieved Successfully");
+        sendSuccess(res, notices, MESSAGES.SUCCESS.FETCHED);
     });
 
     updateNotice = asyncHandler(async(req: Request, res: Response) => {
@@ -52,7 +53,7 @@ export class NoticeController {
 
         const noticeId = req.params.id;
         const notice = await this._updateNoticeUseCase.execute(collegeId, noticeId, req.body);
-        sendSuccess(res, notice, "Notice Updated Successfully");
+        sendSuccess(res, notice, MESSAGES.SUCCESS.UPDATED);
     });
 
     deleteNotice = asyncHandler(async(req: Request, res: Response) => {
@@ -64,6 +65,6 @@ export class NoticeController {
 
         const noticeId = req.params.id;
         await this._deleteNoticeUseCase.execute(collegeId, noticeId);
-        sendSuccess(res, null, "Notice Deleted Successfully");
+        sendSuccess(res, null, MESSAGES.SUCCESS.DELETED);
     });
 }

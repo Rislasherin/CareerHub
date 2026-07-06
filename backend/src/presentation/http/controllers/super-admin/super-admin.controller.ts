@@ -27,7 +27,7 @@ export class SuperAdminController {
     const { id } = req.params;
     const { plan } = req.body;
     await this._updatePlanUseCase.execute(id, plan);
-    sendSuccess(res, null, `Organization subscription plan updated to ${plan}`);
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   getStats = asyncHandler(async (req: Request, res: Response) => {
@@ -65,7 +65,7 @@ export class SuperAdminController {
     const { status } = req.body;
     const adminRole = req.user?.role;
     await this._updateStatusUseCase.execute(role, id, status, adminRole);
-    sendSuccess(res, null, `User status updated to ${status}`);
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
   deleteUser = asyncHandler(async (req: Request, res: Response) => {
