@@ -6,6 +6,7 @@ import { uploadStudentResume, deleteStudentResume } from '@/services/student/pro
 import ResumeUploadDropzone from './ResumeUploadDropzone';
 import ResumeCard from './ResumeCard';
 import { GlassCard } from '@/components/shared/GlassCard';
+import { ConfirmModal } from '@/components/shared/ConfirmModal';
 
 interface Props {
   initialResume?: ResumeMetadata;
@@ -15,6 +16,7 @@ interface Props {
 export default function ResumeSection({ initialResume, onUpdate }: Props) {
   const [resume, setResume] = useState<ResumeMetadata | undefined>(initialResume);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Sync state if prop changes
   useEffect(() => {
@@ -36,7 +38,6 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete your resume?')) return;
     try {
       setIsUploading(true);
       await deleteStudentResume();
@@ -64,10 +65,25 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
       </div>
       
       {resume ? (
-        <ResumeCard resume={resume} onDelete={handleDelete} onReplace={handleUpload} isUploading={isUploading} />
+        <ResumeCard resume={resume} onDelete={() => setIsDeleteDialogOpen(true)} onReplace={handleUpload} isUploading={isUploading} />
       ) : (
         <ResumeUploadDropzone onUpload={handleUpload} isUploading={isUploading} />
       )}
+
+      <ConfirmModal
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={() => {
+          setIsDeleteDialogOpen(false);
+          handleDelete();
+        }}
+        title="Delete Resume"
+        message="Are you sure you want to permanently delete your resume? This action cannot be undone."
+        confirmText="Delete Resume"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isUploading}
+      />
     </GlassCard>
   );
 }
