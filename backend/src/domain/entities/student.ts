@@ -83,11 +83,20 @@ export interface StudentProps {
   projects?: StudentProject[];
   appliedJobs?: string[];
   resumeScore?: number;
-  resumeUrl?: string;
+  resume?: ResumeMetadata;
   preferences?: StudentPreferences;
   softSkills?: string[];
   spokenLanguages?: StudentSpokenLanguage[];
   achievements?: StudentAchievement[];
+}
+
+export interface ResumeMetadata {
+  url: string;
+  publicId: string;
+  fileName: string,
+  fileSize: number,
+  uploadDate: Date
+
 }
 
 export class Student {
@@ -102,7 +111,7 @@ export class Student {
   }
 
   get resumeScore(): number | undefined { return this._props.resumeScore; }
-  get resumeUrl(): string | undefined { return this._props.resumeUrl; }
+  get resume(): ResumeMetadata | undefined {return this._props.resume;}
   get preferences(): StudentPreferences | undefined { return this._props.preferences; }
   get softSkills(): string[] | undefined { return this._props.softSkills; }
   get spokenLanguages(): StudentSpokenLanguage[] | undefined { return this._props.spokenLanguages; }

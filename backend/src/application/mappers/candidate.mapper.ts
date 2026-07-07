@@ -17,7 +17,7 @@ export const toCandidateProfileDTO = (student: Student): CandidateProfileRespons
     experience: student.experience || [],
     projects: student.projects || [],
     resumeScore: student.resumeScore,
-    resumeUrl: student.resumeUrl,
+    resumeUrl: student.resume?.url,
     preferences: student.preferences || {},
     softSkills: student.softSkills || [],
     spokenLanguages: student.spokenLanguages || [],

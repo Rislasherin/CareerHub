@@ -1,6 +1,7 @@
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Student, StudentProps } from "@domain/entities/student";
 import { StudentDocument } from "@infrastructure/database/models/student/student.model";
+import { url } from "inspector";
 
 export const toStudentEntity = (doc: StudentDocument): Student => {
   const rawDoc = doc as unknown as Partial<StudentProps>;
@@ -68,10 +69,16 @@ export const toStudentEntity = (doc: StudentDocument): Student => {
     })) : [],
     appliedJobs: rawDoc.appliedJobs || [],
     resumeScore: rawDoc.resumeScore,
-    resumeUrl: rawDoc.resumeUrl,
     preferences: rawDoc.preferences,
     softSkills: rawDoc.softSkills || [],
-    spokenLanguages: rawDoc.spokenLanguages || []
+    spokenLanguages: rawDoc.spokenLanguages || [],
+    resume: rawDoc.resume && rawDoc.resume.url ? {
+      url: rawDoc.resume.url,
+      publicId: rawDoc.resume.publicId,
+      fileName: rawDoc.resume.fileName,
+      fileSize: rawDoc.resume.fileSize,
+      uploadDate: rawDoc.resume.uploadDate
+    } : undefined
   });
 };
 
@@ -110,6 +117,14 @@ export const toStudentPersistence = (entity: Student) => {
     skills: props.skills,
     experience: props.experience,
     projects: props.projects,
-    appliedJobs: props.appliedJobs
+    appliedJobs: props.appliedJobs,
+
+    resume: props.resume ? {
+      url: props.resume.url,
+      publicId: props.resume.publicId,
+      fileName: props.resume.fileName,
+      fileSize: props.resume.fileSize,
+      uploadDate: props.resume.uploadDate
+    } : null,
   };
 };

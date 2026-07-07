@@ -16,6 +16,8 @@ import {
 } from '@/types/student';
 import { toast } from 'sonner';
 import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
+import ResumeSection from './_components/ResumeSection';
+import { ResumeMetadata } from '@/types/student';
 
 export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,9 @@ export default function StudentProfilePage() {
   const [expectedCtc, setExpectedCtc] = useState('');
   const [noticePeriod, setNoticePeriod] = useState('');
   const [softSkillsInput, setSoftSkillsInput] = useState('');
+  
+  // Resume
+  const [resumeMetadata, setResumeMetadata] = useState<ResumeMetadata | undefined>(undefined);
 
   // Profile completion score
   const [completionPercentage, setCompletionPercentage] = useState(85);
@@ -143,6 +148,10 @@ export default function StudentProfilePage() {
         }
         if (profile.softSkills) {
           setSoftSkillsInput(profile.softSkills.join(', '));
+        }
+        
+        if (profile.resume) {
+          setResumeMetadata(profile.resume);
         }
 
         // Calculate progress dynamically
@@ -353,6 +362,14 @@ export default function StudentProfilePage() {
 
         {/* Sections */}
         <div className="space-y-8">
+        
+          {/* 0. Resume Section */}
+          <ResumeSection 
+            initialResume={resumeMetadata} 
+            onUpdate={() => {
+            }} 
+          />
+
 
           {/* 1. Personal Information */}
           <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">

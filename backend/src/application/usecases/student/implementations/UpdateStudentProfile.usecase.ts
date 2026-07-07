@@ -26,7 +26,7 @@ export class UpdateStudentProfileUseCase implements IUpdateStudentProfileUseCase
       linkedinUrl: dto.linkedinUrl !== undefined ? dto.linkedinUrl : currentProps.linkedinUrl,
       githubUrl: dto.githubUrl !== undefined ? dto.githubUrl : currentProps.githubUrl,
       portfolioUrl: dto.portfolioUrl !== undefined ? dto.portfolioUrl : currentProps.portfolioUrl,
-      resumeUrl: dto.resumeUrl !== undefined ? dto.resumeUrl : currentProps.resumeUrl,
+      resume: currentProps.resume,
       city: dto.city !== undefined ? dto.city : currentProps.city,
       degree: dto.degree !== undefined ? dto.degree : currentProps.degree,
       branch: dto.branch !== undefined ? dto.branch : currentProps.branch,

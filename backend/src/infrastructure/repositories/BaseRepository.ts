@@ -18,9 +18,24 @@ export abstract class BaseRepository<TEntity, TDocument> implements IBaseReposit
   }
 
   async update(id: string, entity: TEntity): Promise<TEntity> {
+    const updateData = this.toPersistence(entity);
+    const $unset: Record<string, 1> = {};
+    
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === null) {
+        $unset[key] = 1;
+        delete updateData[key];
+      }
+    });
+
+    const updateObj: Record<string, any> = { $set: updateData };
+    if (Object.keys($unset).length > 0) {
+      updateObj.$unset = $unset;
+    }
+
     const updated = await this.model.findByIdAndUpdate(
       id,
-      { $set: this.toPersistence(entity) },
+      updateObj,
       { new: true }
     );
     

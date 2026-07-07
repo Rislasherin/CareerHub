@@ -14,3 +14,17 @@ export const updateStudentProfile = async (payload: Partial<StudentProfile>): Pr
   return response.data;
 };
 
+export const uploadStudentResume = async (file: File): Promise<import('@/types/student').ResumeMetadata> => {
+  const formData = new FormData();
+  formData.append('resume', file);
+  
+  const response = (await apiClient.post(`${API_ROUTES.STUDENT.PROFILE}/resume`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })) as ApiResponse<import('@/types/student').ResumeMetadata>;
+  
+  return response.data;
+};
+
+export const deleteStudentResume = async (): Promise<void> => {
+  await apiClient.delete(`${API_ROUTES.STUDENT.PROFILE}/resume`);
+};

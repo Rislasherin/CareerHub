@@ -8,6 +8,8 @@ import { ApplyToJobUseCase } from "@application/usecases/student/implementations
 import { GetStudentFullProfileUseCase } from "@application/usecases/student/implementations/GetStudentFullProfile.usecase";
 import { GetStudentNoticesUseCase } from "@application/usecases/student/implementations/GetStudentNotices.usecase";
 import { makeGetCollegeNoticeUseCase } from "./college.factory";
+import { UploadResumeUseCase } from "@application/usecases/student/Resume/implementations/UploadResume.usecase";
+import { DeleteResumeUseCase } from "@application/usecases/student/Resume/implementations/DeleteResume.usecase";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -35,6 +37,12 @@ export const makeGetStudentNoticesUseCase = () => {
   return new GetStudentNoticesUseCase(studentRepository, makeGetCollegeNoticeUseCase());
 };
 
+export const makeUploadResumeUseCase = () => {
+  return new UploadResumeUseCase(studentRepository, new CloudinaryService());
+};
+export const makeDeleteResumeUseCase = () => {
+  return new DeleteResumeUseCase(studentRepository, new CloudinaryService());
+};
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
@@ -42,6 +50,8 @@ export const makeStudentController = () => {
     makeGetStudentJobsUseCase(),
     makeApplyToJobUseCase(),
     makeGetStudentFullProfileUseCase(),
-    makeGetStudentNoticesUseCase()
+    makeGetStudentNoticesUseCase(),
+    makeUploadResumeUseCase(),  
+    makeDeleteResumeUseCase() 
   );
 };

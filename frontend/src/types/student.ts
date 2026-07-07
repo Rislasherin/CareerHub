@@ -43,6 +43,13 @@ export interface StudentAchievement {
   subtitle?: string;
   type?: 'award' | 'certification' | 'coding' | 'other';
 }
+export interface ResumeMetadata {
+  url: string;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  uploadDate: string;
+}
 
 export interface StudentProfile {
   id: string;
@@ -81,4 +88,6 @@ export interface StudentProfile {
   // Completion
   profileCompletionScore?: number;
   isProfileComplete?: boolean;
+  
+  resume?: ResumeMetadata;
 }

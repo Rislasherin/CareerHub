@@ -1,5 +1,6 @@
 import { Schema } from "mongoose";
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { required } from "zod/v4-mini";
 
 export const studentSchema = new Schema(
   {
@@ -91,7 +92,14 @@ export const studentSchema = new Schema(
         liveDemo: { type: String, required: false },
         description: { type: String, required: false }
       }
-    ]
+    ],
+    resume:{
+      url:{type:String,required:false},
+      publicId: {type:String,required:false},
+      fileName: {type:String,required:false},
+      fileSize: {type:Number,required:false},
+      uploadDate: {type:Date,require:false},
+    },
   },
   { timestamps: true }
 );

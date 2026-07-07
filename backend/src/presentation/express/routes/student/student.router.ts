@@ -22,4 +22,14 @@ router.get("/jobs", studentController.getJobs);
 router.post("/jobs/:id/apply", studentController.applyJob);
 
 router.get("/notices",studentController.getNotices.bind(studentController));
+
+router.post(
+  '/profile/resume', 
+  upload.single('resume'), 
+  studentController.uploadResume.bind(studentController)
+);
+router.delete(
+  '/profile/resume', 
+  studentController.deleteResume.bind(studentController)
+);
 export default router;

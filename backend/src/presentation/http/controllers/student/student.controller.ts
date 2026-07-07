@@ -12,6 +12,8 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
 import { IGetStudentFullProfileUseCase } from "@application/usecases/student/interfaces/IGetStudentFullProfile.usecase";
 import { IGetStudentNoticesUseCase } from "@application/usecases/student/interfaces/IGetStudentNotices.usecase";
+import { IUploadResumeUseCase } from "@application/usecases/student/Resume/interfaces/IUploadResume.usecase";
+import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/interfaces/IDeleteResume.usecase";
 
 export class StudentController {
   constructor(
@@ -21,7 +23,10 @@ export class StudentController {
     private readonly _getStudentJobsUseCase: IGetStudentJobsUseCase,
     private readonly _applyToJobUseCase: IApplyToJobUseCase,
     private readonly _getStudentFullProfileUseCase: IGetStudentFullProfileUseCase,
-    private readonly _getStudentNoticesUseCase: IGetStudentNoticesUseCase
+    private readonly _getStudentNoticesUseCase: IGetStudentNoticesUseCase,
+
+    private readonly _uploadResumeUseCase: IUploadResumeUseCase,
+    private readonly _deleteResumeUsecase: IDeleteResumeUseCase,
   ) { }
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
@@ -94,14 +99,31 @@ export class StudentController {
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
-  getNotices = asyncHandler(async(req:Request,res:Response)=>{
+  getNotices = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id
 
-    if(!studentId){
-      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED,HttpStatus.UNAUTHORIZED,ErrorCode.UNAUTHORIZED);
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-      const notices = await this._getStudentNoticesUseCase.execute(studentId);
-      sendSuccess(res, notices, MESSAGES.SUCCESS.FETCHED);
+    const notices = await this._getStudentNoticesUseCase.execute(studentId);
+    sendSuccess(res, notices, MESSAGES.SUCCESS.FETCHED);
   })
+
+  uploadResume = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    if (!req.file) throw new AppError("No file uploaded", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+
+    const resume = await this._uploadResumeUseCase.execute(studentId, req.file as Express.Multer.File);
+    sendSuccess(res, resume, "Resume uploaded successfully")
+  })
+
+  deleteResume = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    await this._deleteResumeUsecase.execute(studentId)
+    sendSuccess(res, null, "Resume deleted successfully");
+  })
+
 
 }
