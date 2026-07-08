@@ -1,0 +1,54 @@
+import { IJobRepository } from "@domain/repositories/IJobRepository";
+import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
+import { IStudentRepository } from "@domain/repositories/IStudentRepository";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
+import { IGetHRJobApplicationsUseCase } from "../interfaces/IGetHRJobApplications.usecase";
+
+export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase {
+  constructor(
+    private readonly _jobRepository: IJobRepository,
+    private readonly _jobApplicationRepository: IJobApplicationRepository,
+    private readonly _studentRepository: IStudentRepository
+  ) {}
+
+  async execute(jobId: string, companyId: string): Promise<any[]> {
+    const job = await this._jobRepository.findById(jobId);
+    if (!job || job.companyId !== companyId) {
+      throw new AppError("Job not found or unauthorized", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
+    }
+
+    const applications = await this._jobApplicationRepository.findByJobId(jobId);
+    
+    const enrichedApplications = await Promise.all(
+      applications.map(async (app) => {
+        const appJson = app.toJSON();
+        let studentDetails = null;
+        
+        if (appJson.studentId) {
+          try {
+            const student = await this._studentRepository.findById(appJson.studentId);
+            if (student) {
+              studentDetails = student.toJSON();
+            }
+          } catch (e) {}
+        }
+        
+        return {
+          ...appJson,
+          student: studentDetails,
+        };
+      })
+    );
+
+    // Sort by appliedAt descending
+    enrichedApplications.sort((a, b) => {
+      const dateA = a.appliedAt ? new Date(a.appliedAt).getTime() : 0;
+      const dateB = b.appliedAt ? new Date(b.appliedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    return enrichedApplications;
+  }
+}

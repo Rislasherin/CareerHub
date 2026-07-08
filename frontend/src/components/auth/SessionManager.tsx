@@ -73,11 +73,7 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
         if (response.data) {
           switch (activeRole) {
             case 'student':
-              if (
-                response.data &&
-                (response.data.status !== studentDetails?.status ||
-                  (response.data.proofUrl && !studentDetails?.proofUrl))
-              ) {
+              if (response.data) {
                 dispatch(setStudentDetails(response.data));
               }
               break;

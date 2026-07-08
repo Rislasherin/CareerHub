@@ -12,8 +12,10 @@ import { GetHRJobsUseCase } from "@application/usecases/hr/job-engine/implementa
 import { CloseJobUseCase } from "@application/usecases/hr/job-engine/implementations/CloseJob.usecase";;
 import { DeleteJobUseCase } from "@application/usecases/hr/job-engine/implementations/DeleteJob.usecase";;
 import { HRJobController } from "@presentation/http/controllers/hr/job.controller";
-import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRCandidates.usecase";;
-import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository } from "@infrastructure/di/infra.container";
+import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRCandidates.usecase";
+import { GetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobApplications.usecase";
+import { UpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/implementations/UpdateApplicationStatus.usecase";
+import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository } from "@infrastructure/di/infra.container";
 import { HRAuthController } from "@presentation/http/controllers/auth/hr/hr.auth.controller";
 import { InterviewerManagementController } from "@presentation/http/controllers/hr/interviewer.management.controller";
 import { EmailService } from "@infrastructure/services/email/email.service";
@@ -127,6 +129,14 @@ export const makeGetCandidateProfileUseCase = () => {
   return new GetCandidateProfileUseCase(studentRepository)
 }
 
+export const makeGetHRJobApplicationsUseCase = () => {
+  return new GetHRJobApplicationsUseCase(jobRepository, jobApplicationRepository, studentRepository);
+};
+
+export const makeUpdateApplicationStatusUseCase = () => {
+  return new UpdateApplicationStatusUseCase(jobApplicationRepository);
+};
+
 export const makeHRJobController = () => {
   return new HRJobController(
     makePostJobUseCase(),
@@ -136,6 +146,8 @@ export const makeHRJobController = () => {
     makeGetHRCandidatesUseCase(),
     makeUpdateJobUseCase(),
     makeGetCandidateProfileUseCase(),
+    makeGetHRJobApplicationsUseCase(),
+    makeUpdateApplicationStatusUseCase()
   );
 };
 

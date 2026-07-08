@@ -135,6 +135,12 @@ export default function StudentJobsFeed() {
   }, []);
 
   const handleApply = async (jobId: string) => {
+    if (!user?.resume?.url) {
+      toast.error('You must upload a resume to your profile before applying to jobs.', { duration: 5000 });
+      router.push('/student/profile');
+      return;
+    }
+    
     setApplyingId(jobId);
     try {
       const idStr = String(jobId);
@@ -152,8 +158,9 @@ export default function StudentJobsFeed() {
           duration: 5000,
         });
       }
-    } catch (err) {
-      toast.error((err as { error?: { message?: string } })?.error?.message || (err as Error)?.message || 'Failed to submit application');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to submit application';
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setApplyingId(null);
     }

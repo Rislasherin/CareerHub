@@ -11,6 +11,7 @@ export const API_ROUTES = {
     PROFILE: '/student/profile',
     RESUME: '/student/resume',
     JOBS: '/student/jobs',
+    APPLICATIONS: '/student/applications',
     VERIFY: '/student/verify',
   },
   HR: {
@@ -18,6 +19,7 @@ export const API_ROUTES = {
     INTERVIEWERS: '/hr/interviewers',
     DASHBOARD_STATS: '/hr/dashboard/stats',
     CANDIDATES: '/hr/candidates',
+    APPLICATIONS: '/hr/applications',
   },
   COLLEGE: {
     JOBS: '/college/jobs',

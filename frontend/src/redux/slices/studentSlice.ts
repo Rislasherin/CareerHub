@@ -29,6 +29,13 @@ export interface StudentDetails {
     aiMl?: string[];
   };
   appliedJobs?: string[];
+  resume?: {
+    url: string;
+    publicId: string;
+    fileName: string;
+    fileSize: number;
+    uploadDate: string;
+  };
 }
 
 interface StudentState {

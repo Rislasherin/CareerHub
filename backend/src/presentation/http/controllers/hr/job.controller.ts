@@ -13,6 +13,9 @@ import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/int
 import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateJob.usecase";;
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IGetCandidateProfileUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetCandidateProfile.usecase";
+import { IGetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobApplications.usecase";
+import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateApplicationStatus.usecase";
+import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 
 export class HRJobController {
   constructor(
@@ -23,6 +26,8 @@ export class HRJobController {
     private readonly _getHRCandidatesUseCase: IGetHRCandidatesUseCase,
     private readonly _updateJobUseCase: IUpdateJobUseCase,
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
+    private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
+    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase
   ) {}
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
@@ -104,5 +109,29 @@ export class HRJobController {
 
     sendSuccess(res,profile, MESSAGES.SUCCESS.FETCHED)
   })
+
+  getJobApplications = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    
+    const { jobId } = req.params;
+    const applications = await this._getHRJobApplicationsUseCase.execute(jobId, companyId);
+    sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
+  });
+
+  updateApplicationStatus = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    
+    const { id } = req.params; // applicationId
+    const { status } = req.body;
+    
+    if (!status || !Object.values(JobApplicationStatus).includes(status)) {
+      throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
+    await this._updateApplicationStatusUseCase.execute(id, companyId, status);
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
+  });
 
 }

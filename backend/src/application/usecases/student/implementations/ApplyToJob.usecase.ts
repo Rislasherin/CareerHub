@@ -1,15 +1,19 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IJobRepository } from "@domain/repositories/IJobRepository";
+import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Student } from "@domain/entities/student";
+import { JobApplication } from "@domain/entities/JobApplication";
+import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 import { IApplyToJobUseCase } from "../interfaces/IApplyToJob.usecase";
 
 export class ApplyToJobUseCase implements IApplyToJobUseCase {
   constructor(
     private readonly _studentRepository: IStudentRepository,
-    private readonly _jobRepository: IJobRepository
+    private readonly _jobRepository: IJobRepository,
+    private readonly _jobApplicationRepository: IJobApplicationRepository
   ) {}
 
   async execute(studentId: string, jobId: string): Promise<void> {
@@ -23,38 +27,44 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
       throw new AppError("Job not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
-
-    
-
-    const appliedJobsList = student.appliedJobs;
-    if (appliedJobsList.includes(jobId)) {
+    // 1. Check if already applied
+    const existingApplication = await this._jobApplicationRepository.findByJobAndStudent(jobId, studentId);
+    if (existingApplication) {
       throw new AppError("Already applied to this job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    if((student.appliedJobs?.length) >= 3){
+    // 2. Enforce Daily Rate Limit (3 per day)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const applicationsToday = await this._jobApplicationRepository.countByStudentIdSince(studentId, twentyFourHoursAgo);
+    
+    if (applicationsToday >= 3) {
       throw new AppError(
-        'Maximum applications reached',
+        'You have reached your daily limit of 3 job applications. Please try again tomorrow.',
         HttpStatus.BAD_REQUEST,
-        ErrorCode.VALIDATION_ERROR,
-      )
+        ErrorCode.VALIDATION_ERROR
+      );
     }
 
-    
-
-
-
-    
-
-
-
-
-    const updatedApplied = [...appliedJobsList, jobId];
-    const updatedStudent = Student.create({
-      ...student.toJSON(),
-      appliedJobs: updatedApplied
+    // 3. Create the Job Application Bridge Entity
+    const jobApplication = JobApplication.create({
+      jobId,
+      studentId,
+      companyId: job.companyId,
+      resumeUrl: student.resume?.url,
+      resumeId: student.resume?.publicId,
+      status: JobApplicationStatus.APPLIED
     });
 
-    await this._studentRepository.update(studentId, updatedStudent);
+    await this._jobApplicationRepository.create(jobApplication);
+
+    // Keep backwards compatibility for existing queries if they rely on the array
+    const appliedJobsList = student.appliedJobs || [];
+    if (!appliedJobsList.includes(jobId)) {
+      const updatedStudent = Student.create({
+        ...student.toJSON(),
+        appliedJobs: [...appliedJobsList, jobId]
+      });
+      await this._studentRepository.update(studentId, updatedStudent);
+    }
   }
 }
-

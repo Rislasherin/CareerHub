@@ -18,8 +18,13 @@ import { toast } from 'sonner';
 import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
 import ResumeSection from './_components/ResumeSection';
 import { ResumeMetadata } from '@/types/student';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { setStudentDetails } from '@/redux/slices/studentSlice';
 
 export default function StudentProfilePage() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(state => state.student.details);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -273,6 +278,8 @@ export default function StudentProfilePage() {
       const updated = await updateStudentProfile(payload);
       toast.success('Profile successfully saved!');
       calculateProgress(updated);
+      
+      dispatch(setStudentDetails(updated as any));
     } catch (err: unknown) {
       toast.error((err as Error)?.message || 'Failed to save student profile');
     } finally {
@@ -366,7 +373,17 @@ export default function StudentProfilePage() {
           {/* 0. Resume Section */}
           <ResumeSection 
             initialResume={resumeMetadata} 
-            onUpdate={() => {
+            onUpdate={(newResume) => {
+              setResumeMetadata(newResume);
+              if (user && newResume) {
+                dispatch(setStudentDetails({
+                  ...user,
+                  resume: newResume
+                } as any));
+              } else if (user && !newResume) {
+                const { resume, ...rest } = user;
+                dispatch(setStudentDetails(rest as any));
+              }
             }} 
           />
 

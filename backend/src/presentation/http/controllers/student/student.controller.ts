@@ -14,6 +14,7 @@ import { IGetStudentFullProfileUseCase } from "@application/usecases/student/int
 import { IGetStudentNoticesUseCase } from "@application/usecases/student/interfaces/IGetStudentNotices.usecase";
 import { IUploadResumeUseCase } from "@application/usecases/student/Resume/interfaces/IUploadResume.usecase";
 import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/interfaces/IDeleteResume.usecase";
+import { IGetStudentApplicationsUseCase } from "@application/usecases/student/interfaces/IGetStudentApplications.usecase";
 
 export class StudentController {
   constructor(
@@ -27,6 +28,7 @@ export class StudentController {
 
     private readonly _uploadResumeUseCase: IUploadResumeUseCase,
     private readonly _deleteResumeUsecase: IDeleteResumeUseCase,
+    private readonly _getStudentApplicationsUseCase: IGetStudentApplicationsUseCase,
   ) { }
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
@@ -97,6 +99,15 @@ export class StudentController {
     }
     await this._applyToJobUseCase.execute(studentId, jobId);
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
+  });
+
+  getApplications = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const applications = await this._getStudentApplicationsUseCase.execute(studentId);
+    sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
   });
 
   getNotices = asyncHandler(async (req: Request, res: Response) => {

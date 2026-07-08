@@ -34,6 +34,9 @@ router.get("/candidates", hrJobController.getCandidates);
 
 router.get("/candidates/:id",hrJobController.getCandidateProfile);
 
+router.get("/jobs/:jobId/applications", hrJobController.getJobApplications);
+router.patch("/applications/:id/status", hrJobController.updateApplicationStatus);
+
 export default router;
 
 

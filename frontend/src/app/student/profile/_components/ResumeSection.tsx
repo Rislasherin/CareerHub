@@ -10,7 +10,7 @@ import { ConfirmModal } from '@/components/shared/ConfirmModal';
 
 interface Props {
   initialResume?: ResumeMetadata;
-  onUpdate: () => void;
+  onUpdate: (newResume?: ResumeMetadata) => void;
 }
 
 export default function ResumeSection({ initialResume, onUpdate }: Props) {
@@ -29,7 +29,7 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
       const newResume = await uploadStudentResume(file);
       setResume(newResume);
       toast.success('Resume uploaded successfully');
-      onUpdate();
+      onUpdate(newResume);
     } catch (error: any) {
       toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Failed to upload resume');
     } finally {
@@ -43,7 +43,7 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
       await deleteStudentResume();
       setResume(undefined);
       toast.success('Resume deleted successfully');
-      onUpdate();
+      onUpdate(undefined);
     } catch (error: any) {
       toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Failed to delete resume');
     } finally {
