@@ -12,6 +12,14 @@ export const InterviewFeedbackSchema = new Schema({
   recommendedAction: { type: String, enum: ['HIRE', 'REJECT', 'STRONG_HIRE', 'HOLD'] }
 }, { _id: false });
 
+export const RescheduleRequestSchema = new Schema({
+  reason: { type: String, required: true },
+  preferredDate: { type: Date, required: true },
+  preferredTime: { type: String, required: true },
+  noteToHr: { type: String },
+  requestedAt: { type: Date, default: Date.now }
+}, { _id: false });
+
 export const InterviewSchema = new Schema({
   jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
   applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true },
@@ -28,6 +36,7 @@ export const InterviewSchema = new Schema({
   meetingLink: { type: String },
   
   feedback: { type: InterviewFeedbackSchema, default: null },
+  rescheduleRequest: { type: RescheduleRequestSchema, default: null },
   isDeleted: { type: Boolean, default: false }
 }, {
   timestamps: true

@@ -23,6 +23,7 @@ import {
   FileText,
   MessageSquare,
   Target,
+  Clock,
   BarChart3,
   Settings,
 } from 'lucide-react';
@@ -99,6 +100,7 @@ const hrNav: NavCategory[] = [
       { label: 'Campus Drives', icon: Briefcase, href: '/hr/jobs' },
       { label: 'Post a Job', icon: Plus, href: '/hr/jobs?action=post-job' },
       { label: 'Interviewers', icon: Users, href: '/hr/interviewers' },
+      { label: 'Interviews', icon: Calendar, href: '/hr/interviews' },
     ]
   }
 ];
@@ -125,6 +127,7 @@ const interviewerNav: NavCategory[] = [
     title: 'NAVIGATION',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/interviewer' },
+      { label: 'My Interviews', icon: Calendar, href: '/interviewer/interviews' },
     ]
   }
 ];

@@ -1,50 +1,289 @@
 'use client';
 
-import React from 'react';
-import { Calendar, Users, ArrowRight } from 'lucide-react';
-import { GlassCard } from '@/components/shared/GlassCard';
+import React, { useEffect, useState } from 'react';
+import { Calendar, Clock, FileText, Bell, Search, Plus, Filter, UserCircle, BellRing, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import Link from 'next/link';
+import { apiClient } from '@/services/api/api.client';
+import { API_ROUTES } from '@/constants/api.routes';
+import { useRouter } from 'next/navigation';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 export default function InterviewsPage() {
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReschedule, setSelectedReschedule] = useState<any | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'TODAY' | 'FEEDBACK' | 'COMPLETED' | 'RESCHEDULES'>('ALL');
+  const router = useRouter();
+
+  const fetchInterviews = async () => {
+    try {
+      const res: any = await apiClient.get(API_ROUTES.HR.INTERVIEWS);
+      setInterviews(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch interviews", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInterviews();
+  }, []);
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'COMPLETED':
+        return <span className="px-3 py-1 bg-green-50 text-green-700 font-bold text-xs rounded-lg flex items-center gap-1"><CheckCircle2 size={12}/> Completed</span>;
+      case 'RESCHEDULE_REQUESTED':
+        return <span className="px-3 py-1 bg-orange-50 text-orange-700 font-bold text-xs rounded-lg flex items-center gap-1"><Clock size={12}/> Action Needed</span>;
+      case 'CANCELLED':
+        return <span className="px-3 py-1 bg-red-50 text-red-700 font-bold text-xs rounded-lg flex items-center gap-1"><XCircle size={12}/> Cancelled</span>;
+      case 'SCHEDULED':
+      default:
+        return <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-lg flex items-center gap-1"><Calendar size={12}/> Upcoming</span>;
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'UN';
+  };
+
+  const handleResolve = async (id: string, approve: boolean, newDate?: Date, newTime?: string) => {
+    try {
+      await apiClient.post(`${API_ROUTES.HR.INTERVIEWS}/${id}/resolve-reschedule`, {
+        approve,
+        newDate,
+        newTime
+      });
+      setSelectedReschedule(null);
+      fetchInterviews(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to resolve reschedule request", error);
+      alert("Failed to resolve the request.");
+    }
+  };
+
+  const colors = ["bg-orange-500", "bg-emerald-500", "bg-blue-500", "bg-purple-500", "bg-pink-500"];
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Interviews</h1>
-        <p className="text-slate-500 font-medium mt-1">Schedule and manage candidate interviews.</p>
+    <DashboardLayout>
+      <div className="p-8 max-w-[1400px] mx-auto space-y-6">
+        
+        {/* Header Area */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Interviews</h1>
+          <p className="text-slate-500 font-medium mt-1">Manage all scheduled rounds · Current Season</p>
+        </div>
+        <div className="flex gap-3">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 flex items-center gap-2">
+            <Calendar size={18} /> Schedule Interview
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <GlassCard className="p-8 flex flex-col items-center text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <Users size={32} />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-900">Manage Panel</h3>
-            <p className="text-slate-500 text-sm font-medium mt-2">
-              Add and manage your team of interviewers before scheduling.
-            </p>
-          </div>
-          <Link href="/hr/interviewers">
-            <Button className="bg-indigo-600 hover:bg-indigo-700 font-bold px-8 group">
-              Go to Interviewers <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </GlassCard>
-
-        <GlassCard className="p-8 flex flex-col items-center text-center space-y-4 opacity-60">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
-            <Calendar size={32} />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-900">Schedule Interview</h3>
-            <p className="text-slate-500 text-sm font-medium mt-2">
-              Interview scheduling will be available soon.
-            </p>
-          </div>
-
-        </GlassCard>
+      {/* Banner */}
+      <div className="bg-[#F8FAFC] border border-blue-100 rounded-xl p-4 flex items-center gap-3">
+        <FileText className="text-orange-400" size={20} />
+        <p className="text-sm font-bold text-slate-700">
+          <span className="text-blue-600">Today's Agenda:</span> Check upcoming rounds and pending feedback. Ensure all interviewers are reminded.
+        </p>
       </div>
-    </div>
+
+      {/* Filters */}
+      <div className="flex gap-2">
+        <button 
+          onClick={() => setActiveFilter('ALL')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors ${activeFilter === 'ALL' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          All ({(interviews || []).length})
+        </button>
+        <button 
+          onClick={() => setActiveFilter('RESCHEDULES')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'RESCHEDULES' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          <Clock size={14} /> Reschedule Requests ({(interviews || []).filter((i: any) => i.status === 'RESCHEDULE_REQUESTED').length})
+        </button>
+        <button 
+          onClick={() => setActiveFilter('TODAY')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'TODAY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          <Calendar size={14} /> Today
+        </button>
+        <button 
+          onClick={() => setActiveFilter('FEEDBACK')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'FEEDBACK' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          <Bell size={14} /> Feedback Due
+        </button>
+        <button 
+          onClick={() => setActiveFilter('COMPLETED')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          <CheckCircle2 size={14} /> Completed
+        </button>
+      </div>
+
+      {/* Data Table */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/50">
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Candidate</th>
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Round</th>
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Interviewer</th>
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Date & Time</th>
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-slate-400 font-medium">Loading interviews...</td>
+                </tr>
+              ) : (interviews || []).length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-slate-500 font-bold">No interviews scheduled yet.</td>
+                </tr>
+              ) : (
+                (interviews || []).filter((interview) => {
+                  if (activeFilter === 'ALL') return true;
+                  if (activeFilter === 'RESCHEDULES') return interview.status === 'RESCHEDULE_REQUESTED';
+                  if (activeFilter === 'COMPLETED') return interview.status === 'COMPLETED';
+                  if (activeFilter === 'TODAY') {
+                    const today = new Date().toDateString();
+                    return new Date(interview.scheduledAt).toDateString() === today;
+                  }
+                  if (activeFilter === 'FEEDBACK') {
+                    // For mock purposes, assuming feedback is due if it's completed but has no feedback yet
+                    // Since we don't have this explicitly in this view, let's just show none or logic for it.
+                    return false;
+                  }
+                  return true;
+                }).map((interview, index) => {
+                  const isRescheduleReq = interview.status === 'RESCHEDULE_REQUESTED';
+                  return (
+                    <tr key={interview.id} className={`hover:bg-slate-50 transition-colors ${isRescheduleReq ? 'bg-[#FFFBF5]' : ''}`}>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl text-white font-black flex items-center justify-center text-sm ${colors[index % colors.length]}`}>
+                            {getInitials(interview.candidate.name)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{interview.candidate.name}</p>
+                            <p className="text-xs font-medium text-slate-500">{interview.candidate.college}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="font-bold text-slate-900">{interview.title}</p>
+                        <p className="text-xs font-medium text-slate-500">{interview.type.replace('_', ' ')}</p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="font-bold text-slate-900">{interview.interviewer.name}</p>
+                        <p className="text-xs font-medium text-slate-500">{interview.interviewer.role}</p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="font-bold text-slate-900">{new Date(interview.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {new Date(interview.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p>
+                        {isRescheduleReq && (
+                          <p className="text-xs font-bold text-orange-600 mt-1">Requested {new Date(interview.rescheduleRequest?.preferredDate).toLocaleDateString()} at {interview.rescheduleRequest?.preferredTime}</p>
+                        )}
+                      </td>
+                      <td className="py-4 px-6">
+                        {getStatusBadge(interview.status)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          {isRescheduleReq ? (
+                            <button onClick={() => setSelectedReschedule(interview)} className="px-3 py-1.5 border border-orange-200 text-orange-600 hover:bg-orange-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                              <RefreshCw size={12} /> Review
+                            </button>
+                          ) : interview.status === 'COMPLETED' ? (
+                            <button className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                              <FileText size={12} /> View Feedback
+                            </button>
+                          ) : interview.status === 'SCHEDULED' ? (
+                            <button className="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                              <RefreshCw size={12} /> Reschedule
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Reschedule Modal */}
+      {selectedReschedule && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative">
+            <button 
+              onClick={() => setSelectedReschedule(null)}
+              className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+              <Clock size={32} />
+            </div>
+
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Review Reschedule Request</h2>
+            <p className="text-slate-500 font-medium mb-6">
+              {selectedReschedule.interviewer.name} has requested a new time for {selectedReschedule.candidate.name}'s interview.
+            </p>
+
+            <div className="bg-orange-50 border border-orange-100 rounded-xl p-5 mb-8">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Requested Date</p>
+                  <p className="font-bold text-slate-900">{new Date(selectedReschedule.rescheduleRequest?.preferredDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Requested Time</p>
+                  <p className="font-bold text-slate-900">{selectedReschedule.rescheduleRequest?.preferredTime}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Reason: {selectedReschedule.rescheduleRequest?.reason}</p>
+                <p className="text-sm font-medium text-slate-700 italic">"{selectedReschedule.rescheduleRequest?.noteToHr || 'No additional note provided.'}"</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => handleResolve(selectedReschedule.id, false)}
+                className="flex-1 py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+              >
+                Reject
+              </button>
+              <button 
+                onClick={() => {
+                  const newDate = new Date(selectedReschedule.rescheduleRequest.preferredDate);
+                  const [hours, minutes] = selectedReschedule.rescheduleRequest.preferredTime.split(':');
+                  newDate.setHours(parseInt(hours), parseInt(minutes), 0);
+                  handleResolve(selectedReschedule.id, true, newDate);
+                }}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition-colors"
+              >
+                Approve & Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    </DashboardLayout>
   );
 }
+
+// Add these lucide icons missing from the import at the top
+import { CheckCircle2, XCircle, X } from 'lucide-react';

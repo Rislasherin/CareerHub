@@ -20,6 +20,8 @@ export const API_ROUTES = {
     DASHBOARD_STATS: '/hr/dashboard/stats',
     CANDIDATES: '/hr/candidates',
     APPLICATIONS: '/hr/applications',
+    INTERVIEWS: '/hr/interviews',
+    RESCHEDULE_REQUESTS: '/hr/interviews/reschedule-requests'
   },
   COLLEGE: {
     JOBS: '/college/jobs',
@@ -31,6 +33,9 @@ export const API_ROUTES = {
   },
   INTERVIEWER: {
     ACTIVATE: '/auth/interviewer/activate',
+    DASHBOARD: '/interviewer/dashboard',
+    INTERVIEWS: '/interviewer/interviews',
+    RESCHEDULE: '/interviewer/interviews' // usage: /interviewer/interviews/:id/reschedule
   },
   AUTH: {
     ORGANIZATIONS_APPROVED: '/auth/organizations/approved',

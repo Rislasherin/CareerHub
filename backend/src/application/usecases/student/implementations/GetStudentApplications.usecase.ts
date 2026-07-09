@@ -2,12 +2,15 @@ import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationR
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IGetStudentApplicationsUseCase } from "../interfaces/IGetStudentApplications.usecase";
+import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
+import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 
 export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUseCase {
   constructor(
     private readonly _jobApplicationRepository: IJobApplicationRepository,
     private readonly _jobRepository: IJobRepository,
-    private readonly _companyRepository: ICompanyRepository
+    private readonly _companyRepository: ICompanyRepository,
+    private readonly _interviewRepository:IInterviewRepository
   ) {}
 
   async execute(studentId: string): Promise<any[]> {
@@ -50,9 +53,28 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
         }
       }
 
+      let interviewData = null;
+      if (appJson.status === JobApplicationStatus.INTERVIEWING) {
+        try {
+          const interviews = await this._interviewRepository.findByApplicationId(appJson.id!);
+          if (interviews && interviews.length > 0) {
+            // Get the most recent interview
+            const latestInterview = interviews[interviews.length - 1];
+            interviewData = {
+              title: latestInterview.title,
+              scheduledAt: latestInterview.scheduledAt,
+              meetingLink: latestInterview.meetingLink
+            };
+          }
+        } catch (e) {
+          console.error("Error fetching interview for student app", e);
+        }
+      }
+
       return {
         ...appJson,
-        job: jobDetails
+        job: jobDetails,
+        interview: interviewData
       };
     }));
 

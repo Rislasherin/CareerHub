@@ -58,15 +58,20 @@ export default function StudentProfilePage() {
   const [otherTools, setOtherTools] = useState<string[]>([]);
   const [aiMl, setAiMl] = useState<string[]>([]);
 
-  // Input states for comma-separated skills
+  // Input states for arrays
   const [experiences, setExperiences] = useState<StudentExperience[]>([]);
   const [projects, setProjects] = useState<StudentProject[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [spokenLanguages, setSpokenLanguages] = useState<any[]>([]);
 
   // Preferences & Soft Skills
   const [preferredRole, setPreferredRole] = useState('');
   const [workMode, setWorkMode] = useState('');
   const [expectedCtc, setExpectedCtc] = useState('');
   const [noticePeriod, setNoticePeriod] = useState('');
+  const [jobType, setJobType] = useState('');
+  const [preferenceLocation, setPreferenceLocation] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [softSkillsInput, setSoftSkillsInput] = useState('');
   
   // Resume
@@ -125,24 +130,10 @@ export default function StudentProfilePage() {
         }
 
         // Map experience & projects
-        setExperiences(profile.experience || [
-          {
-            company: 'Flipkart',
-            role: 'SWE Intern',
-            duration: 'May 2024 - Jul 2024',
-            location: 'Bangalore (Remote)',
-            summary: 'Built real-time recommendation engine using collaborative filtering. Deployed on AWS Lambda. Improved CTR by 23%.'
-          }
-        ]);
-        setProjects(profile.projects || [
-          {
-            name: 'CodeCollab - Real-time Code Editor',
-            techStack: ['React', 'Node.js', 'WebSocket', 'Redis'],
-            github: 'github.com/antypea/codecollab',
-            liveDemo: 'codecollab.vercel.app',
-            description: 'Multi-user real-time code editor with execution support. 500+ GitHub stars, featured on Product Hunt.'
-          }
-        ]);
+        setExperiences(profile.experience || []);
+        setProjects(profile.projects || []);
+        setAchievements(profile.achievements || []);
+        setSpokenLanguages(profile.spokenLanguages || []);
 
         // Map preferences & soft skills
         if (profile.preferences) {
@@ -150,6 +141,9 @@ export default function StudentProfilePage() {
           setWorkMode(profile.preferences.workMode || '');
           setExpectedCtc(profile.preferences.expectedCtc || '');
           setNoticePeriod(profile.preferences.noticePeriod || '');
+          setJobType(profile.preferences.jobType || '');
+          setPreferenceLocation(profile.preferences.location || '');
+          setStartDate(profile.preferences.startDate || '');
         }
         if (profile.softSkills) {
           setSoftSkillsInput(profile.softSkills.join(', '));
@@ -204,6 +198,26 @@ export default function StudentProfilePage() {
 
   const handleRemoveProject = (index: number) => {
     setProjects(projects.filter((_, i) => i !== index));
+  };
+
+  const handleAddAchievement = () => {
+    setAchievements([...achievements, { title: '', subtitle: '', type: 'award' }]);
+  };
+
+  const handleUpdateAchievement = (index: number, field: string, value: string) => {
+    const updated = [...achievements];
+    updated[index] = { ...updated[index], [field]: value };
+    setAchievements(updated);
+  };
+
+  const handleAddSpokenLanguage = () => {
+    setSpokenLanguages([...spokenLanguages, { language: '', proficiency: 'Professional' }]);
+  };
+
+  const handleUpdateSpokenLanguage = (index: number, field: string, value: string) => {
+    const updated = [...spokenLanguages];
+    updated[index] = { ...updated[index], [field]: value };
+    setSpokenLanguages(updated);
   };
 
   const handleSave = async () => {
@@ -266,11 +280,16 @@ export default function StudentProfilePage() {
         skills: parsedSkills,
         experience: experiences.filter(exp => exp.company.trim() && exp.role.trim()),
         projects: projects.filter(proj => proj.name.trim() && proj.techStack.length > 0),
+        achievements: achievements.filter(ach => ach.title.trim()),
+        spokenLanguages: spokenLanguages.filter(lang => lang.language.trim()),
         preferences: {
           preferredRole: preferredRole.trim(),
           workMode: workMode.trim(),
           expectedCtc: expectedCtc.trim(),
-          noticePeriod: noticePeriod.trim()
+          noticePeriod: noticePeriod.trim(),
+          jobType: jobType.trim(),
+          location: preferenceLocation.trim(),
+          startDate: startDate.trim()
         },
         softSkills: softSkillsInput.split(',').map(s => s.trim()).filter(Boolean)
       };
@@ -589,6 +608,7 @@ export default function StudentProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <Input label="Preferred Role" value={preferredRole} onChange={e => setPreferredRole(e.target.value)} placeholder="e.g. Full Stack Developer, Data Scientist" />
               <Input label="Expected CTC" value={expectedCtc} onChange={e => setExpectedCtc(e.target.value)} placeholder="e.g. 12-15 LPA" />
+              
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Mode</label>
                 <select
@@ -603,6 +623,7 @@ export default function StudentProfilePage() {
                   <option value="Any">Any Mode</option>
                 </select>
               </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Availability / Notice Period</label>
                 <select
@@ -617,15 +638,107 @@ export default function StudentProfilePage() {
                   <option value="Post Graduation">After Graduation</option>
                 </select>
               </div>
+
+              <Input label="Preferred Location" value={preferenceLocation} onChange={e => setPreferenceLocation(e.target.value)} placeholder="e.g. Bangalore, India" />
+              
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Job Type</label>
+                <select
+                  value={jobType}
+                  onChange={e => setJobType(e.target.value)}
+                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
+                >
+                  <option value="" disabled>Select Job Type...</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Part-time">Part-time</option>
+                </select>
+              </div>
+
+              <Input label="Available Start Date" value={startDate} onChange={e => setStartDate(e.target.value)} placeholder="e.g. June 2025" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 mb-6">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Soft Skills (Comma-Separated)</label>
               <Input
                 placeholder="e.g. Leadership, Communication, Problem Solving"
                 value={softSkillsInput}
                 onChange={e => setSoftSkillsInput(e.target.value)}
               />
+            </div>
+
+            <div className="flex justify-between items-center mb-4 pb-4">
+              <h3 className="text-sm font-bold text-slate-700">Spoken Languages</h3>
+              <Button type="button" onClick={handleAddSpokenLanguage} className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1 px-3 rounded-xl text-[10px] uppercase tracking-wider">
+                + Add Language
+              </Button>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              {spokenLanguages.map((lang, idx) => (
+                <div key={idx} className="flex gap-4 items-center">
+                  <div className="flex-1">
+                    <Input placeholder="Language (e.g. English)" value={lang.language} onChange={e => handleUpdateSpokenLanguage(idx, 'language', e.target.value)} />
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      value={lang.proficiency}
+                      onChange={e => handleUpdateSpokenLanguage(idx, 'proficiency', e.target.value)}
+                      className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px] w-full"
+                    >
+                      <option value="Native">Native/Bilingual</option>
+                      <option value="Fluent">Fluent</option>
+                      <option value="Professional">Professional</option>
+                      <option value="Conversational">Conversational</option>
+                    </select>
+                  </div>
+                  <button type="button" onClick={() => setSpokenLanguages(spokenLanguages.filter((_, i) => i !== idx))} className="text-rose-500 bg-rose-50 p-3 rounded-xl hover:bg-rose-100">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center mb-4 border-t border-slate-100 pt-8 pb-4">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <span>🏆</span> Achievements & Certifications
+              </h3>
+              <Button type="button" onClick={handleAddAchievement} className="bg-purple-50 hover:bg-purple-100 border border-purple-100 text-purple-700 font-bold py-1.5 px-4 rounded-xl text-xs">
+                + Add Achievement
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              {achievements.map((ach, idx) => (
+                <div key={idx} className="p-6 rounded-[2rem] border border-slate-100 bg-slate-50/50 relative">
+                  <button
+                    onClick={() => setAchievements(achievements.filter((_, i) => i !== idx))}
+                    className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-100"
+                  >
+                    Remove
+                  </button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Input label="Title *" value={ach.title} onChange={e => handleUpdateAchievement(idx, 'title', e.target.value)} />
+                    <Input label="Subtitle (e.g. Issued by AWS)" value={ach.subtitle || ''} onChange={e => handleUpdateAchievement(idx, 'subtitle', e.target.value)} />
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Type</label>
+                      <select
+                        value={ach.type}
+                        onChange={e => handleUpdateAchievement(idx, 'type', e.target.value)}
+                        className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px] w-full"
+                      >
+                        <option value="award">Award</option>
+                        <option value="certification">Certification</option>
+                        <option value="coding">Coding Competition</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </GlassCard>
 

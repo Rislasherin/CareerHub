@@ -32,15 +32,27 @@ export default function JobApplicantsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('applied');
-  
+
   // Drawer state
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [interviewers, setInterviewers] = useState<any[]>([]);
+  const [interviewForm, setInterviewForm] = useState({
+    interviewerId: '',
+    title: '',
+    type: 'TECHNICAL',
+    scheduledAt: '',
+    durationMinutes: 60,
+    meetingLink: ''
+  });
+
 
   useEffect(() => {
     if (jobId) {
       fetchApplications();
+      fetchInterviewers();
     }
   }, [jobId]);
 
@@ -55,6 +67,52 @@ export default function JobApplicantsPage() {
       toast.error('Failed to retrieve applications');
     } finally {
       setLoading(false);
+    }
+  };
+  const fetchInterviewers = async () => {
+    try {
+      const response = await apiClient.get(API_ROUTES.HR.INTERVIEWERS) as ApiResponse<any[]>;
+      if (response.success) {
+        setInterviewers(response.data || []);
+      }
+    } catch (err) {
+      toast.error('Failed to load interviewers');
+    }
+  };
+
+  const handleScheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedApp) return;
+
+    setUpdating(true);
+    try {
+      const payload = {
+        applicationId: selectedApp.id,
+        ...interviewForm,
+        durationMinutes: Number(interviewForm.durationMinutes)
+      };
+
+      const response = await apiClient.post(API_ROUTES.HR.INTERVIEWS, payload) as ApiResponse<any>;
+
+      if (response.success) {
+        toast.success('Interview scheduled successfully');
+        setShowInterviewModal(false);
+        setApplications(apps => apps.map(app =>
+          app.id === selectedApp.id ? { ...app, status: 'INTERVIEWING' } : app
+        ));
+
+        if (selectedApp) {
+          setSelectedApp({ ...selectedApp, status: 'INTERVIEWING' });
+        }
+
+        setInterviewForm({
+          interviewerId: '', title: '', type: 'TECHNICAL', scheduledAt: '', durationMinutes: 60, meetingLink: ''
+        });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to schedule interview');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -125,11 +183,10 @@ export default function JobApplicantsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all ${
-                  isActive 
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' 
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all ${isActive
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
                     : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'
-                }`}
+                  }`}
               >
                 <Icon size={14} />
                 <span className="capitalize">{tab.label}</span>
@@ -161,7 +218,7 @@ export default function JobApplicantsPage() {
 
               return (
                 <motion.div layout key={app.id}>
-                  <GlassCard 
+                  <GlassCard
                     className="p-5 flex flex-col justify-between h-full rounded-[1.5rem] bg-white border-slate-100/50 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/5 transition-all cursor-pointer group"
                     onClick={() => {
                       setSelectedApp(app);
@@ -171,7 +228,7 @@ export default function JobApplicantsPage() {
                     <div>
                       <div className="flex justify-between items-start">
                         <div className="flex gap-3">
-                          <img 
+                          <img
                             src={student.profileImage || `https://ui-avatars.com/api/?name=${student.firstName}+${student.lastName}&background=4f46e5&color=fff`}
                             alt="Profile"
                             className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm"
@@ -224,7 +281,7 @@ export default function JobApplicantsPage() {
           {showDetails && selectedApp && (() => {
             const student = selectedApp.student || {};
             const skills = student.skills || {};
-            
+
             return (
               <div className="fixed inset-0 z-[100] flex justify-end bg-slate-900/20 backdrop-blur-sm">
                 <motion.div
@@ -237,7 +294,7 @@ export default function JobApplicantsPage() {
                   {/* Drawer Header */}
                   <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <h2 className="text-lg font-black text-slate-900">Candidate Profile</h2>
-                    <button 
+                    <button
                       onClick={() => setShowDetails(false)}
                       className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
                     >
@@ -247,10 +304,10 @@ export default function JobApplicantsPage() {
 
                   {/* Drawer Scrollable Content */}
                   <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-                    
+
                     {/* Basic Info Header */}
                     <div className="flex gap-5">
-                      <img 
+                      <img
                         src={student.profileImage || `https://ui-avatars.com/api/?name=${student.firstName}+${student.lastName}&background=4f46e5&color=fff`}
                         alt="Profile"
                         className="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-sm"
@@ -289,9 +346,9 @@ export default function JobApplicantsPage() {
                     <div>
                       <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-3">Resume Snapshot</h4>
                       {selectedApp.resumeUrl ? (
-                        <a 
-                          href={selectedApp.resumeUrl} 
-                          target="_blank" 
+                        <a
+                          href={selectedApp.resumeUrl}
+                          target="_blank"
                           rel="noreferrer"
                           className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-100 rounded-xl group hover:bg-indigo-100 transition-colors"
                         >
@@ -334,7 +391,7 @@ export default function JobApplicantsPage() {
                   <div className="p-6 border-t border-slate-100 bg-white">
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Update Pipeline Status</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Button 
+                      <Button
                         isLoading={updating}
                         onClick={() => updateStatus(selectedApp.id, 'shortlisted')}
                         disabled={selectedApp.status === 'shortlisted'}
@@ -342,15 +399,18 @@ export default function JobApplicantsPage() {
                       >
                         Shortlist
                       </Button>
-                      <Button 
+                      <Button
                         isLoading={updating}
-                        onClick={() => updateStatus(selectedApp.id, 'interviewing')}
+                        onClick={() => {
+                          setSelectedApp(selectedApp);
+                          setShowInterviewModal(true);
+                        }}
                         disabled={selectedApp.status === 'interviewing'}
                         className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 font-bold text-xs"
                       >
                         Move to Interview
                       </Button>
-                      <Button 
+                      <Button
                         isLoading={updating}
                         onClick={() => updateStatus(selectedApp.id, 'offered')}
                         disabled={selectedApp.status === 'offered'}
@@ -358,7 +418,7 @@ export default function JobApplicantsPage() {
                       >
                         Rollout Offer
                       </Button>
-                      <Button 
+                      <Button
                         isLoading={updating}
                         onClick={() => updateStatus(selectedApp.id, 'rejected')}
                         disabled={selectedApp.status === 'rejected'}
@@ -372,6 +432,108 @@ export default function JobApplicantsPage() {
               </div>
             );
           })()}
+        </AnimatePresence>
+
+        {/* Schedule Interview Modal */}
+        <AnimatePresence>
+          {showInterviewModal && selectedApp && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                onClick={() => setShowInterviewModal(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-10"
+              >
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-800">Schedule Interview</h2>
+                    <p className="text-sm text-slate-500">For {selectedApp.student?.firstName} {selectedApp.student?.lastName}</p>
+                  </div>
+                  <button onClick={() => setShowInterviewModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Interview Title</label>
+                    <input
+                      type="text" required placeholder="e.g., Round 1: Technical Discussion"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      value={interviewForm.title} onChange={e => setInterviewForm({ ...interviewForm, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Interview Type</label>
+                      <select
+                        required
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        value={interviewForm.type} onChange={e => setInterviewForm({ ...interviewForm, type: e.target.value })}
+                      >
+                        <option value="TECHNICAL">Technical</option>
+                        <option value="HR">HR</option>
+                        <option value="BEHAVIORAL">Behavioral</option>
+                        <option value="MACHINE_CODING">Machine Coding</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Assign Interviewer</label>
+                      <select
+                        required
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        value={interviewForm.interviewerId} onChange={e => setInterviewForm({ ...interviewForm, interviewerId: e.target.value })}
+                      >
+                        <option value="" disabled>Select...</option>
+                        {interviewers.map(inv => (
+                          <option key={inv.id} value={inv.id}>{inv.name || inv.firstName + ' ' + inv.lastName} ({inv.email})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
+                      <input
+                        type="datetime-local" required
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        value={interviewForm.scheduledAt} onChange={e => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Duration (Mins)</label>
+                      <input
+                        type="number" min="15" step="15" required
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        value={interviewForm.durationMinutes} onChange={e => setInterviewForm({ ...interviewForm, durationMinutes: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Meeting Link (Optional)</label>
+                    <input
+                      type="url" placeholder="https://meet.google.com/..."
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      value={interviewForm.meetingLink} onChange={e => setInterviewForm({ ...interviewForm, meetingLink: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <Button variant="secondary" onClick={() => setShowInterviewModal(false)} type="button">Cancel</Button>
+                    <Button type="submit" disabled={updating}>
+                      {updating ? 'Scheduling...' : 'Schedule Interview'}
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
 
       </div>

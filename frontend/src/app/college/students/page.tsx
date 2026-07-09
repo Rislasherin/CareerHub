@@ -3,6 +3,7 @@ import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   Users,
   Search,
@@ -47,18 +48,20 @@ export default function StudentDirectoryPage() {
   // Add Student Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newStudent, setNewStudent] = useState({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [customDept, setCustomDept] = useState('');
 
-  // Continuous Validation
-  useEffect(() => {
-    if (!isAddModalOpen) return;
+  const {
+    errors: formErrors,
+    isValid: isFormValid,
+    getCaptureProps,
+    handleSubmit: wrapSubmit,
+    resetValidation
+  } = useFormValidation(newStudent, (values) => {
     const errors: Record<string, string> = {};
+    if (!values.firstName.trim()) errors.firstName = 'Required';
+    if (!values.lastName.trim()) errors.lastName = 'Required';
     
-    if (!newStudent.firstName.trim()) errors.firstName = 'Required';
-    if (!newStudent.lastName.trim()) errors.lastName = 'Required';
-    
-    const email = newStudent.email.trim();
+    const email = values.email.trim();
     if (!email) {
       errors.email = 'Required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -67,7 +70,7 @@ export default function StudentDirectoryPage() {
       errors.email = 'Email already exists';
     }
 
-    const rollNumber = newStudent.rollNumber.trim();
+    const rollNumber = values.rollNumber.trim();
     if (!rollNumber) {
       errors.rollNumber = 'Required';
     } else if (!/^[a-zA-Z0-9\-/]+$/.test(rollNumber)) {
@@ -76,10 +79,10 @@ export default function StudentDirectoryPage() {
       errors.rollNumber = 'Roll number already exists';
     }
 
-    if (!newStudent.department) errors.department = 'Required';
-
-    setFormErrors(errors);
-  }, [newStudent, studentsList, isAddModalOpen]);
+    if (!values.department) errors.department = 'Required';
+    
+    return errors;
+  });
 
   // Rejection Modal State
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -277,10 +280,8 @@ export default function StudentDirectoryPage() {
     }
   };
 
-  const handleAddSingleStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (Object.keys(formErrors).length > 0) return;
+  const handleAddSingleStudent = async () => {
+    if (!isFormValid) return;
 
     setIsProcessing(true);
     const firstName = newStudent.firstName.trim();
@@ -299,6 +300,7 @@ export default function StudentDirectoryPage() {
           toast.success('Student invited successfully!');
           setIsAddModalOpen(false);
           setNewStudent({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
+          resetValidation();
           fetchStudents();
         } else if (skipped > 0) {
           toast.warning('A student with this email already exists.');
@@ -355,7 +357,10 @@ export default function StudentDirectoryPage() {
             </Button>
 
             <Button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => {
+                resetValidation();
+                setIsAddModalOpen(true);
+              }}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 h-10 px-4 text-xs font-black gap-2 shadow-sm border-none"
             >
               <Plus size={16} /> Add Student
@@ -582,18 +587,22 @@ export default function StudentDirectoryPage() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Add Student</h3>
                 <button
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    resetValidation();
+                  }}
                   className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
                 >
                   <XCircle size={20} />
                 </button>
               </div>
 
-              <form noValidate onSubmit={handleAddSingleStudent} className="space-y-4">
+              <form noValidate onSubmit={wrapSubmit(handleAddSingleStudent)} {...getCaptureProps()} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name *</label>
                     <input
+                      name="firstName"
                       value={newStudent.firstName}
                       onChange={e => setNewStudent({ ...newStudent, firstName: e.target.value })}
                       className={`w-full h-12 bg-slate-50 border ${formErrors.firstName ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
@@ -604,6 +613,7 @@ export default function StudentDirectoryPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name *</label>
                     <input
+                      name="lastName"
                       value={newStudent.lastName}
                       onChange={e => setNewStudent({ ...newStudent, lastName: e.target.value })}
                       className={`w-full h-12 bg-slate-50 border ${formErrors.lastName ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
@@ -617,6 +627,7 @@ export default function StudentDirectoryPage() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address *</label>
                   <input
                     type="email"
+                    name="email"
                     value={newStudent.email}
                     onChange={e => setNewStudent({ ...newStudent, email: e.target.value })}
                     className={`w-full h-12 bg-slate-50 border ${formErrors.email ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
@@ -629,6 +640,7 @@ export default function StudentDirectoryPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Roll Number *</label>
                     <input
+                      name="rollNumber"
                       value={newStudent.rollNumber}
                       onChange={e => setNewStudent({ ...newStudent, rollNumber: e.target.value })}
                       className={`w-full h-12 bg-slate-50 border ${formErrors.rollNumber ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none`}
@@ -640,6 +652,7 @@ export default function StudentDirectoryPage() {
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Department *</label>
                     <div className="relative">
                       <select
+                        name="department"
                         value={newStudent.department}
                         onChange={e => setNewStudent({ ...newStudent, department: e.target.value })}
                         className={`w-full h-12 bg-slate-50 border ${formErrors.department ? 'border-rose-500' : 'border-slate-100'} rounded-xl px-4 text-sm font-medium focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer`}
@@ -658,7 +671,10 @@ export default function StudentDirectoryPage() {
                 <div className="pt-4 flex gap-3">
                   <Button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
+                    onClick={() => {
+                      setIsAddModalOpen(false);
+                      resetValidation();
+                    }}
                     variant="outline"
                     className="flex-1 rounded-xl h-12 text-xs font-black border-slate-200"
                   >
@@ -667,7 +683,7 @@ export default function StudentDirectoryPage() {
                   <Button
                     type="submit"
                     isLoading={isProcessing}
-                    disabled={Object.keys(formErrors).length > 0 || isProcessing}
+                    disabled={!isFormValid || isProcessing}
                     className="flex-1 rounded-xl h-12 text-xs font-black bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-xl shadow-emerald-500/20 disabled:opacity-50"
                   >
                     Send Invite

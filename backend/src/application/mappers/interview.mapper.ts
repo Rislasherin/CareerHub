@@ -17,6 +17,7 @@ export const toInterviewEntity = (doc: any): Interview => {
     durationMinutes: doc.durationMinutes,
     meetingLink: doc.meetingLink,
     feedback: doc.feedback,
+    rescheduleRequest: doc.rescheduleRequest,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
   });
@@ -37,5 +38,6 @@ export const toInterviewPersistence = (entity: Interview): Record<string, unknow
     durationMinutes: props.durationMinutes,
     meetingLink: props.meetingLink,
     feedback: props.feedback,
+    rescheduleRequest: props.rescheduleRequest,
   };
 };

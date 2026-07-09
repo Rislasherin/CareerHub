@@ -1,14 +1,14 @@
 import { Student } from "@domain/entities/student";
 import { CandidateProfileResponseDTO } from "../dtos/hr/Response/CandidateProfile.response.dto";
 
-export const toCandidateProfileDTO = (student: Student): CandidateProfileResponseDTO => {
+export const toCandidateProfileDTO = (student: Student, collegeName?: string): CandidateProfileResponseDTO => {
   return {
     id: student.id as string,
     firstName: student.firstName,
     lastName: student.lastName,
     email: student.email,
     phone: student.phoneNumber || "", 
-    collegeName: student.collegeId && student.collegeId.length !== 24 ? student.collegeId.toString() : "Unknown College",
+    collegeName: collegeName || (student.collegeId && student.collegeId.length !== 24 ? student.collegeId.toString() : "Unknown College"),
     degree: student.degree || "",
     branch: student.branch || "",
     graduationYear: student.graduationYear?.toString() || "",

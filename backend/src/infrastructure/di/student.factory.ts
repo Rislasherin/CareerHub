@@ -1,5 +1,5 @@
 import { UploadStudentVerificationUseCase } from "@application/usecases/auth/student/implementations/UploadStudentVerification.usecase";
-import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository } from "@infrastructure/di/infra.container";
+import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository, interviewRepository } from "@infrastructure/di/infra.container";
 import { StudentController } from "@presentation/http/controllers/student/student.controller";
 import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
 import { UpdateStudentProfileUseCase } from "@application/usecases/student/implementations/UpdateStudentProfile.usecase";
@@ -46,7 +46,7 @@ export const makeDeleteResumeUseCase = () => {
 };
 
 export const makeGetStudentApplicationsUseCase = () => {
-  return new GetStudentApplicationsUseCase(jobApplicationRepository, jobRepository, companyRepository);
+  return new GetStudentApplicationsUseCase(jobApplicationRepository, jobRepository, companyRepository, interviewRepository);
 };
 
 export const makeStudentController = () => {

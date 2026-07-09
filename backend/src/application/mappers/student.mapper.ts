@@ -118,6 +118,10 @@ export const toStudentPersistence = (entity: Student) => {
     experience: props.experience,
     projects: props.projects,
     appliedJobs: props.appliedJobs,
+    preferences: props.preferences,
+    softSkills: props.softSkills,
+    spokenLanguages: props.spokenLanguages,
+    achievements: props.achievements,
 
     resume: props.resume ? {
       url: props.resume.url,

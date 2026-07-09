@@ -16,6 +16,7 @@ import { IGetCandidateProfileUseCase } from "@application/usecases/hr/job-engine
 import { IGetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobApplications.usecase";
 import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateApplicationStatus.usecase";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
+import { ScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/implementations/ScheduleInterview.usecase";
 
 export class HRJobController {
   constructor(
@@ -27,8 +28,9 @@ export class HRJobController {
     private readonly _updateJobUseCase: IUpdateJobUseCase,
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
     private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
-    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase
-  ) {}
+    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase,
+    private readonly _sheduleInterviewUseCase: ScheduleInterviewUseCase
+  ) { }
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
@@ -103,17 +105,17 @@ export class HRJobController {
     sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED, HttpStatus.OK);
   });
 
-  getCandidateProfile = asyncHandler(async(req:Request,res:Response)=>{
+  getCandidateProfile = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.params.id;
     const profile = await this._getCandidateProfileUseCase.execute(studentId)
 
-    sendSuccess(res,profile, MESSAGES.SUCCESS.FETCHED)
+    sendSuccess(res, profile, MESSAGES.SUCCESS.FETCHED)
   })
 
   getJobApplications = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-    
+
     const { jobId } = req.params;
     const applications = await this._getHRJobApplicationsUseCase.execute(jobId, companyId);
     sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
@@ -122,10 +124,10 @@ export class HRJobController {
   updateApplicationStatus = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-    
+
     const { id } = req.params; // applicationId
     const { status } = req.body;
-    
+
     if (!status || !Object.values(JobApplicationStatus).includes(status)) {
       throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
@@ -133,5 +135,15 @@ export class HRJobController {
     await this._updateApplicationStatusUseCase.execute(id, companyId, status);
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
+
+  sheduleInterview = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+
+    const interview = await this._sheduleInterviewUseCase.execute(companyId, req.body);
+    sendSuccess(res, interview.toJSON(), "Interview scheduled successfully", HttpStatus.CREATED);
+  })
 
 }

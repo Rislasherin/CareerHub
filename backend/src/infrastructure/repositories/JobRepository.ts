@@ -5,7 +5,6 @@ import { JobDocument, JobModel } from "@infrastructure/database/models/company/j
 import { toJobEntity, toJobPersistence } from "@application/mappers/job.mapper";
 import { FilterQuery } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
-import { UserStatus } from "@domain/enums/user.status.enum";
 
 export class JobRepository extends BaseRepository<Job, JobDocument> implements IJobRepository {
   constructor() {

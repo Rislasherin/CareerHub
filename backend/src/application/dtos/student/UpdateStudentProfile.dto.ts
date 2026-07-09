@@ -97,6 +97,68 @@ class StudentProjectDto {
   description?: string;
 }
 
+class StudentSpokenLanguageDto {
+  @Expose()
+  @IsString()
+  language!: string;
+
+  @Expose()
+  @IsString()
+  proficiency!: string;
+}
+
+class StudentAchievementDto {
+  @Expose()
+  @IsString()
+  title!: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  subtitle?: string;
+
+  @Expose()
+  @IsString()
+  type!: 'award' | 'certification' | 'coding' | 'other';
+}
+
+class StudentPreferencesDto {
+  @Expose()
+  @IsString()
+  @IsOptional()
+  preferredRole?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  workMode?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  location?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  expectedCtc?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  noticePeriod?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  jobType?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+}
+
 export class UpdateStudentProfileDto {
   @Expose()
   @IsString()
@@ -153,6 +215,33 @@ export class UpdateStudentProfileDto {
   @Type(() => StudentProjectDto)
   @IsOptional()
   projects?: StudentProjectDto[];
+
+  @Expose()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => StudentPreferencesDto)
+  @IsOptional()
+  preferences?: StudentPreferencesDto;
+
+  @Expose()
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  softSkills?: string[];
+
+  @Expose()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudentSpokenLanguageDto)
+  @IsOptional()
+  spokenLanguages?: StudentSpokenLanguageDto[];
+
+  @Expose()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudentAchievementDto)
+  @IsOptional()
+  achievements?: StudentAchievementDto[];
 
   @Expose()
   @IsString()

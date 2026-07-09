@@ -15,7 +15,7 @@ import { HRJobController } from "@presentation/http/controllers/hr/job.controlle
 import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRCandidates.usecase";
 import { GetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobApplications.usecase";
 import { UpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/implementations/UpdateApplicationStatus.usecase";
-import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository } from "@infrastructure/di/infra.container";
+import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository, interviewRepository, organizationRepository } from "@infrastructure/di/infra.container";
 import { HRAuthController } from "@presentation/http/controllers/auth/hr/hr.auth.controller";
 import { InterviewerManagementController } from "@presentation/http/controllers/hr/interviewer.management.controller";
 import { EmailService } from "@infrastructure/services/email/email.service";
@@ -25,6 +25,13 @@ import { DeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-m
 import { RestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/implementations/RestoreInterviewer.usecase";;
 import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
 import { GetCandidateProfileUseCase } from "@application/usecases/hr/job-engine/implementations/GetCandidateProfile.usecase";
+import { JobApplicationRepository } from "@infrastructure/repositories/jobApplication.repository";
+import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
+import { ScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/implementations/ScheduleInterview.usecase";
+import { GetRescheduleRequestsUseCase } from "@application/usecases/hr/interview-management/implementations/GetRescheduleRequests.usecase";
+import { ResolveRescheduleUseCase } from "@application/usecases/hr/interview-management/implementations/ResolveReschedule.usecase";
+import { GetHRInterviewsUseCase } from "@application/usecases/hr/interview-management/implementations/GetHRInterviews.usecase";
+import { HRInterviewController } from "@presentation/http/controllers/hr/hr.interview.controller";
 
 const emailService = new EmailService();
 
@@ -126,7 +133,7 @@ export const makeUpdateJobUseCase = () => {
 };
 
 export const makeGetCandidateProfileUseCase = () => {
-  return new GetCandidateProfileUseCase(studentRepository)
+  return new GetCandidateProfileUseCase(studentRepository, organizationRepository)
 }
 
 export const makeGetHRJobApplicationsUseCase = () => {
@@ -136,6 +143,10 @@ export const makeGetHRJobApplicationsUseCase = () => {
 export const makeUpdateApplicationStatusUseCase = () => {
   return new UpdateApplicationStatusUseCase(jobApplicationRepository);
 };
+
+export const makeSheduleInterviewUseCase = () => {
+  return new ScheduleInterviewUseCase(interviewRepository,jobApplicationRepository)
+}
 
 export const makeHRJobController = () => {
   return new HRJobController(
@@ -147,8 +158,16 @@ export const makeHRJobController = () => {
     makeUpdateJobUseCase(),
     makeGetCandidateProfileUseCase(),
     makeGetHRJobApplicationsUseCase(),
-    makeUpdateApplicationStatusUseCase()
+    makeUpdateApplicationStatusUseCase(),
+    makeSheduleInterviewUseCase(),
   );
 };
 
+export const makeHRInterviewController = () => {
+  return new HRInterviewController(
+    new GetHRInterviewsUseCase(interviewRepository, studentRepository, interviewerRepository),
+    new GetRescheduleRequestsUseCase(interviewRepository),
+    new ResolveRescheduleUseCase(interviewRepository)
+  );
+};
 

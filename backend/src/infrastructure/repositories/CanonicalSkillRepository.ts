@@ -17,7 +17,8 @@ export class CanonicalSkillRepository implements ICanonicalSkillRepository {
 
   async search(query: string, limit: number = 10): Promise<CanonicalSkill[]> {
     // Basic regex search for autocomplete. In a larger system, use Atlas Search or ElasticSearch
-    const regex = new RegExp(`^${query}`, 'i'); 
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`^${escapedQuery}`, 'i'); 
     const docs = await CanonicalSkillModel.find({
       $or: [
         { normalizedName: { $regex: regex } },

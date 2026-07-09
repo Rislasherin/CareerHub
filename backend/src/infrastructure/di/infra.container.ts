@@ -13,6 +13,7 @@ import { AuthMiddleware } from "@presentation/express/middlewares/auth.middlewar
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
 import { NoticeRepository } from "@infrastructure/repositories/NoticeRepository";
 import { JobApplicationRepository } from "@infrastructure/repositories/jobApplication.repository";
+import { InterviewRepository } from "@infrastructure/repositories/interview.repository";
 
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
@@ -44,3 +45,5 @@ export const crossRoleAuthService = new CrossRoleAuthService(
     collegeAdminRepository,
     superAdminRepository
 );
+
+export const interviewRepository = new InterviewRepository();

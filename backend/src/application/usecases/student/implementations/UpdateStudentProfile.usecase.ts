@@ -62,7 +62,12 @@ export class UpdateStudentProfileUseCase implements IUpdateStudentProfileUseCase
         github: proj.github,
         liveDemo: proj.liveDemo,
         description: proj.description
-      })) : currentProps.projects
+      })) : currentProps.projects,
+
+      preferences: dto.preferences !== undefined ? dto.preferences : currentProps.preferences,
+      softSkills: dto.softSkills !== undefined ? dto.softSkills : currentProps.softSkills,
+      spokenLanguages: dto.spokenLanguages !== undefined ? dto.spokenLanguages : currentProps.spokenLanguages,
+      achievements: dto.achievements !== undefined ? dto.achievements : currentProps.achievements
     };
 
     const updatedStudent = Student.create(updatedProps);

@@ -1,4 +1,5 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
+import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { IGetCandidateProfileUseCase } from "../interfaces/IGetCandidateProfile.usecase";
 import { CandidateProfileResponseDTO } from "@application/dtos/hr/Response/CandidateProfile.response.dto";
 import { AppError } from "@application/errors/AppError";
@@ -8,7 +9,8 @@ import { toCandidateProfileDTO } from "@application/mappers/candidate.mapper";
 
 export class GetCandidateProfileUseCase implements IGetCandidateProfileUseCase {
     constructor(
-        private readonly _studentRepository: IStudentRepository
+        private readonly _studentRepository: IStudentRepository,
+        private readonly _organizationRepository: IOrganizationRepository
     ){}
 
     async execute(studentId: string): Promise<CandidateProfileResponseDTO> {
@@ -18,6 +20,12 @@ export class GetCandidateProfileUseCase implements IGetCandidateProfileUseCase {
             throw new AppError("Candidate not found",HttpStatus.NOT_FOUND,ErrorCode.NOT_FOUND)
         }
 
-        return toCandidateProfileDTO(student)
+        let collegeName = "Unknown College";
+        if (student.collegeId) {
+            const college = await this._organizationRepository.findById(student.collegeId);
+            if (college) collegeName = college.name;
+        }
+
+        return toCandidateProfileDTO(student, collegeName)
     }
 }

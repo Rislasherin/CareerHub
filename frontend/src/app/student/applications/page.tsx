@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
-import { Briefcase, Building2, MapPin, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Eye, Search, Trophy } from 'lucide-react';
+import { Briefcase, Building2, MapPin, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Eye, Search, Trophy, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppSelector } from '@/redux/hooks';
 import { apiClient } from '@/services/api/api.client';
@@ -155,6 +155,30 @@ export default function StudentApplicationsPage() {
                       <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
                         <Calendar size={10} /> Applied on {formattedDate}
                       </div>
+
+                      {/* Interview Details (If Interviewing) */}
+                      {status === 'interviewing' && app.interview && (
+                        <div className="mt-2 p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl relative overflow-hidden group-hover:border-indigo-200 transition-colors">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-bl-full"></div>
+                          <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                            <Clock size={10} /> Upcoming Interview
+                          </p>
+                          <p className="font-bold text-slate-800 text-xs mb-0.5">{app.interview.title || 'Technical Discussion'}</p>
+                          <p className="font-black text-indigo-700 text-xs">
+                            {new Date(app.interview.scheduledAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </p>
+                          {app.interview.meetingLink && (
+                            <a 
+                              href={app.interview.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+                            >
+                              <ExternalLink size={12} /> Join Meeting
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Footer Actions */}

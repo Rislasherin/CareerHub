@@ -14,6 +14,7 @@ export interface InterviewDocument extends Document {
   durationMinutes: number;
   meetingLink?: string;
   feedback?: Record<string, any>;
+  rescheduleRequest?: Record<string, any>;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;

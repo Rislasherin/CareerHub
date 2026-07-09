@@ -11,6 +11,14 @@ export interface InterviewFeedback {
   recommendedAction?: 'HIRE' | 'NEXT_ROUND' | 'HOLD' | 'REJECT';
 }
 
+export interface RescheduleRequest {
+  reason: string;
+  preferredDate: Date;
+  preferredTime: string;
+  noteToHr?: string;
+  requestedAt: Date;
+}
+
 export interface InterviewProps {
   id?: string;
   jobId: string;
@@ -25,6 +33,7 @@ export interface InterviewProps {
   durationMinutes: number;
   meetingLink?: string;
   feedback?: InterviewFeedback;
+  rescheduleRequest?: RescheduleRequest;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -49,6 +58,7 @@ export class Interview {
   get durationMinutes(): number { return this._props.durationMinutes; }
   get meetingLink(): string | undefined { return this._props.meetingLink; }
   get feedback(): InterviewFeedback | undefined { return this._props.feedback; }
+  get rescheduleRequest(): RescheduleRequest | undefined { return this._props.rescheduleRequest; }
   get createdAt(): Date | undefined { return this._props.createdAt; }
   get updatedAt(): Date | undefined { return this._props.updatedAt; }
 
@@ -58,6 +68,33 @@ export class Interview {
     }
     this._props.feedback = feedback;
     this._props.status = InterviewStatus.COMPLETED;
+  }
+
+  requestReschedule(request: Omit<RescheduleRequest, 'requestedAt'>): void {
+    this._props.rescheduleRequest = {
+      ...request,
+      requestedAt: new Date()
+    };
+    this._props.status = InterviewStatus.RESCHEDULE_REQUESTED;
+  }
+
+  resolveReschedule(approve: boolean, newDate?: Date, newTime?: string): void {
+    if (this._props.status !== InterviewStatus.RESCHEDULE_REQUESTED) {
+      throw new Error("No pending reschedule request found.");
+    }
+    
+    if (approve) {
+      if (!newDate) throw new Error("New date must be provided when approving a reschedule.");
+      this._props.scheduledAt = newDate;
+      this._props.status = InterviewStatus.SCHEDULED;
+    } else {
+      // If rejected, it stays at the old scheduled date, or gets cancelled based on HR action
+      // Standard behavior: returns to SCHEDULED at old time, HR handles communication
+      this._props.status = InterviewStatus.SCHEDULED;
+    }
+    
+    // Clear the request after resolving
+    this._props.rescheduleRequest = undefined;
   }
 
   cancel(): void {
