@@ -13,6 +13,7 @@ export const API_ROUTES = {
     JOBS: '/student/jobs',
     APPLICATIONS: '/student/applications',
     VERIFY: '/student/verify',
+    INTERVIEWS:  '/student/interviews',
   },
   HR: {
     JOBS: '/hr/jobs',

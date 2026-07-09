@@ -15,6 +15,7 @@ import { IGetStudentNoticesUseCase } from "@application/usecases/student/interfa
 import { IUploadResumeUseCase } from "@application/usecases/student/Resume/interfaces/IUploadResume.usecase";
 import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/interfaces/IDeleteResume.usecase";
 import { IGetStudentApplicationsUseCase } from "@application/usecases/student/interfaces/IGetStudentApplications.usecase";
+import { IGetStudentInterviewsUseCase } from "@application/usecases/student/interfaces/IGetStudentInterviews.usecase";
 
 export class StudentController {
   constructor(
@@ -29,6 +30,7 @@ export class StudentController {
     private readonly _uploadResumeUseCase: IUploadResumeUseCase,
     private readonly _deleteResumeUsecase: IDeleteResumeUseCase,
     private readonly _getStudentApplicationsUseCase: IGetStudentApplicationsUseCase,
+    private readonly _getStudentInterviewsUseCase: IGetStudentInterviewsUseCase
   ) { }
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
@@ -134,6 +136,17 @@ export class StudentController {
     if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     await this._deleteResumeUsecase.execute(studentId)
     sendSuccess(res, null, "Resume deleted successfully");
+  })
+
+  getInterviews = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id
+    if (!studentId) {
+      throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+
+    const interviews = await this._getStudentInterviewsUseCase.execute(studentId)
+    sendSuccess(res, interviews, "Interviews retrieved successfully");
+
   })
 
 

@@ -1,5 +1,5 @@
 import { UploadStudentVerificationUseCase } from "@application/usecases/auth/student/implementations/UploadStudentVerification.usecase";
-import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository, interviewRepository } from "@infrastructure/di/infra.container";
+import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository, interviewRepository, interviewerRepository } from "@infrastructure/di/infra.container";
 import { StudentController } from "@presentation/http/controllers/student/student.controller";
 import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
 import { UpdateStudentProfileUseCase } from "@application/usecases/student/implementations/UpdateStudentProfile.usecase";
@@ -11,6 +11,7 @@ import { makeGetCollegeNoticeUseCase } from "./college.factory";
 import { UploadResumeUseCase } from "@application/usecases/student/Resume/implementations/UploadResume.usecase";
 import { DeleteResumeUseCase } from "@application/usecases/student/Resume/implementations/DeleteResume.usecase";
 import { GetStudentApplicationsUseCase } from "@application/usecases/student/implementations/GetStudentApplications.usecase";
+import { GetStudentInterviewsUseCase } from "@application/usecases/student/implementations/GetStudentInterviews.usecase";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -49,6 +50,10 @@ export const makeGetStudentApplicationsUseCase = () => {
   return new GetStudentApplicationsUseCase(jobApplicationRepository, jobRepository, companyRepository, interviewRepository);
 };
 
+export const makeGetStudentInterviewsUseCase = () => {
+  return new GetStudentInterviewsUseCase(interviewRepository,companyRepository,interviewerRepository)
+}
+
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
@@ -59,6 +64,7 @@ export const makeStudentController = () => {
     makeGetStudentNoticesUseCase(),
     makeUploadResumeUseCase(),  
     makeDeleteResumeUseCase(),
-    makeGetStudentApplicationsUseCase()
+    makeGetStudentApplicationsUseCase(),
+    makeGetStudentInterviewsUseCase()
   );
 };

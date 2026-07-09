@@ -34,4 +34,6 @@ router.delete(
   '/profile/resume', 
   studentController.deleteResume.bind(studentController)
 );
+
+router.get("/interviews", studentController.getInterviews.bind(studentController));
 export default router;

@@ -45,7 +45,6 @@ export class InterviewRepository extends BaseRepository<Interview, InterviewDocu
     }
     async findByStudentId(studentId: string): Promise<Interview[]> {
         const docs = await this.model.find({ studentId, isDeleted: { $ne: true } }).sort({ scheduledAt: 1 })
-
         return docs.map(doc => this.toEntity(doc as InterviewDocument))
     }
 

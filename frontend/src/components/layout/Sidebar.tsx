@@ -117,7 +117,9 @@ const studentNav: NavCategory[] = [
   {
     title: 'CAREER',
     items: [
-      { label: 'Notice Board', icon: Megaphone, href: '/student/notices' }
+      { label: 'Notice Board', icon: Megaphone, href: '/student/notices' },
+      { label: 'My Applications', icon: Calendar, href: '/student/applications'},
+      { label: 'My Interviews', icon: Calendar, href: '/student/interviews'}
     ]
   }
 ];
