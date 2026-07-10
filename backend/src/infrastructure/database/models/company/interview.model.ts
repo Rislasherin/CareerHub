@@ -1,5 +1,7 @@
 import { model, Document } from "mongoose";
 import { InterviewSchema } from "../../schema/company/interview.schema";
+import { RecommendationEnum } from "@domain/enums/Recommendation.enum";
+import { InterviewFeedback } from "@domain/entities/Interview";
 
 export interface InterviewDocument extends Document {
   jobId: string;
@@ -13,7 +15,7 @@ export interface InterviewDocument extends Document {
   scheduledAt: Date;
   durationMinutes: number;
   meetingLink?: string;
-  feedback?: Record<string, any>;
+  feedback?: InterviewFeedback;
   rescheduleRequest?: Record<string, any>;
   isDeleted: boolean;
   createdAt: Date;

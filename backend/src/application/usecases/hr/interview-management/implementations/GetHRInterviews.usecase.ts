@@ -52,13 +52,17 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
 
             return {
                 id: inv.id,
+                jobId: inv.jobId,
                 title: inv.title,
                 type: inv.type,
                 status: inv.status,
                 scheduledAt: inv.scheduledAt,
                 durationMinutes: inv.durationMinutes,
                 rescheduleRequest: inv.rescheduleRequest,
+                feedback: inv.feedback,
                 candidate: {
+                    id: inv.studentId,
+                    applicationId: inv.applicationId,
                     name: studentName,
                     college: studentCollege
                 },

@@ -122,6 +122,9 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
       }
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if(dateB === dateA) {
+        return b.matchScore - a.matchScore
+      }
       return dateB - dateA;
     });
 

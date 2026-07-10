@@ -203,7 +203,13 @@ export const CandidateBriefModal: React.FC<CandidateBriefModalProps> = ({ isOpen
               Close
             </button>
             {needsFeedback && (
-              <button className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm">
+              <button 
+                onClick={() => {
+                  onClose();
+                  window.location.href = `/interviewer/interviews/${interview.id}/feedback`;
+                }}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
+              >
                 <FileBadge size={16} /> Open Feedback Form
               </button>
             )}

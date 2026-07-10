@@ -17,25 +17,27 @@ import {
 import { useAppSelector } from '@/redux/hooks';
 import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
+import { useRouter } from 'next/navigation';
 
 export default function InterviewerDashboard() {
+  const router = useRouter();
   const interviewer = useAppSelector(state => state.interviewer.details);
   const [interviews, setInterviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch real schedule from our new backend endpoint!
   useEffect(() => {
-    const fetchSchedule = async () => {
+    const fetchDashboard = async () => {
       try {
         const response: any = await apiClient.get(API_ROUTES.INTERVIEWER.DASHBOARD);
         setInterviews(response.data);
       } catch (error) {
-        console.error('Failed to fetch schedule:', error);
+        console.error('Failed to fetch dashboard data', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchSchedule();
+    fetchDashboard();
   }, []);
 
   const upcomingInterviews = interviews.filter(i => i.status === 'SCHEDULED');
@@ -99,7 +101,7 @@ export default function InterviewerDashboard() {
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Upcoming Schedule</h3>
              <div className="grid gap-4">
                 {upcomingInterviews.map((interview) => (
-                  <InterviewCard key={interview.id} interview={interview} isUpcoming={true} />
+                  <InterviewCard key={interview.id} interview={interview} isUpcoming={true} onOpenFeedback={() => router.push(`/interviewer/interviews/${interview.id}/feedback`)} />
                 ))}
              </div>
           </div>
@@ -124,10 +126,21 @@ export default function InterviewerDashboard() {
 }
 
 // Brand new component to render the scheduled candidates!
-function InterviewCard({ interview, isUpcoming }: { interview: any; isUpcoming: boolean }) {
+function InterviewCard({ interview, isUpcoming, onOpenFeedback }: { interview: any; isUpcoming: boolean, onOpenFeedback: () => void }) {
+  // 1. Precise Time Calculations
   const dateObj = new Date(interview.scheduledAt);
+  const now = new Date();
+  
+  // Calculate exact End Time: Start Time + durationMinutes
+  const endTime = new Date(dateObj.getTime() + interview.durationMinutes * 60000);
+
   const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // 2. Semantic States for the Button
+  // The feedback button is disabled (isPending) until the current time passes the END time.
+  const isPending = now < endTime;
+  const isCompleted = interview.status === 'COMPLETED' || !!interview.feedback;
 
   return (
     <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 group">
@@ -182,9 +195,29 @@ function InterviewCard({ interview, isUpcoming }: { interview: any; isUpcoming: 
           </button>
         ) : null}
         
-        <button className="flex items-center justify-center gap-2 w-full bg-white border-2 border-slate-100 hover:border-slate-200 text-slate-700 text-sm font-bold py-3 px-4 rounded-xl shadow-sm transition-all group-hover:bg-slate-50">
-          Submit Feedback
-        </button>
+        {/* 3. Dynamic Feedback Button based on Exact Time */}
+        {isCompleted ? (
+          <button 
+            disabled
+            className="flex items-center justify-center gap-2 w-full bg-emerald-50 border-2 border-emerald-100 text-emerald-600 text-sm font-bold py-3 px-4 rounded-xl shadow-sm cursor-not-allowed"
+          >
+            <CheckCircle2 size={16} /> Feedback Submitted
+          </button>
+        ) : isPending ? (
+          <button 
+            disabled
+            className="flex items-center justify-center gap-2 w-full bg-slate-50 border-2 border-slate-100 text-slate-400 text-sm font-bold py-3 px-4 rounded-xl shadow-sm cursor-not-allowed"
+          >
+            <Clock size={16} /> In Progress / Scheduled
+          </button>
+        ) : (
+          <button 
+            onClick={onOpenFeedback}
+            className="flex items-center justify-center gap-2 w-full bg-white border-2 border-indigo-100 hover:border-indigo-200 text-indigo-600 text-sm font-bold py-3 px-4 rounded-xl shadow-sm transition-all hover:bg-indigo-50"
+          >
+            <FileText size={16} /> Submit Feedback
+          </button>
+        )}
       </div>
     </div>
   );

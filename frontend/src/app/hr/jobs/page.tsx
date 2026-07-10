@@ -662,6 +662,16 @@ export default function HRJobsPage() {
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
+                    className="w-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.location.href = `/hr/jobs/${job.id}/applicants`;
+                    }}
+                  >
+                    Manage Pipeline
+                  </Button>
+                  <Button
+                    variant="ghost"
                     className="w-full bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs"
                     onClick={(e) => {
                       e.stopPropagation();

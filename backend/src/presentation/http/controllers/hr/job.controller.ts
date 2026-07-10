@@ -128,7 +128,10 @@ export class HRJobController {
     const { id } = req.params; // applicationId
     const { status } = req.body;
 
+    console.log(`[DEBUG] HR Attempting to update application ${id} to status: ${status}`);
+
     if (!status || !Object.values(JobApplicationStatus).includes(status)) {
+      console.log(`[DEBUG] Invalid status provided: ${status}`);
       throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 

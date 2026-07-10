@@ -38,6 +38,7 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
             interviewerId: dto.interviewerId,
             title: dto.title,
             type: dto.type,
+            roundNumber: dto.roundNumber,
             status: InterviewStatus.SCHEDULED,
             scheduledAt: new Date(dto.scheduledAt),
             durationMinutes: dto.durationMinutes,

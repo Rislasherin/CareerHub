@@ -24,6 +24,11 @@ export class SheduleInterviewDto {
     type!: InterviewType;
 
     @Expose()
+    @IsNumber()
+    @IsNotEmpty()
+    roundNumber!: number;
+
+    @Expose()
     @IsDateString()
     @IsNotEmpty()
     scheduledAt!: string;

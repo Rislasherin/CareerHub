@@ -9,6 +9,7 @@ export interface IJobApplicationDocument extends Document {
   resumeId?: string;
   status: JobApplicationStatus;
   hrNotes?: string;
+  currentRoundNumber?: number;
   appliedAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,7 @@ const JobApplicationSchema = new Schema<IJobApplicationDocument>(
       default: JobApplicationStatus.APPLIED,
     },
     hrNotes: { type: String },
+    currentRoundNumber: { type: Number, default: 1 },
   },
   { timestamps: { createdAt: "appliedAt", updatedAt: "updatedAt" } }
 );

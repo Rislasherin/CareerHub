@@ -18,8 +18,11 @@ import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
 import { CandidateBriefModal } from '../CandidateBriefModal';
 import { RescheduleModal } from '../RescheduleModal';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function MyInterviewsPage() {
+  const router = useRouter();
   const [interviews, setInterviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
@@ -87,6 +90,7 @@ export default function MyInterviewsPage() {
                 interview={interview} 
                 onOpenBrief={() => setSelectedBrief(interview)}
                 onReschedule={() => setSelectedReschedule(interview)}
+                onOpenFeedback={() => router.push(`/interviewer/interviews/${interview.id}/feedback`)}
               />
             ))}
           </div>
@@ -127,10 +131,18 @@ function CalendarIcon() {
 }
 
 // Interview Card Component (Matches the design's specific colored borders)
-function InterviewCard({ interview, onOpenBrief, onReschedule }: { interview: any, onOpenBrief: () => void, onReschedule: () => void }) {
-  const isPast = new Date(interview.scheduledAt) <= new Date();
+function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }: { interview: any, onOpenBrief: () => void, onReschedule: () => void, onOpenFeedback: () => void }) {
+  // 1. Calculate precise end time
+  const dateObj = new Date(interview.scheduledAt);
+  const now = new Date();
+  const endTime = new Date(dateObj.getTime() + (interview.durationMinutes || 60) * 60000);
+
+  // 2. State logic
+  const isPast = endTime <= now; // True ONLY if the whole duration has finished
+  const isPending = now < endTime; // Meeting hasn't ended yet
+  
+  const isCompleted = interview.status === 'COMPLETED' || !!interview.feedback;
   const needsFeedback = interview.status === 'SCHEDULED' && isPast;
-  const isCompleted = interview.status === 'COMPLETED';
   const isRescheduleRequested = interview.status === 'RESCHEDULE_REQUESTED';
 
   let cardStyle = "border-slate-300"; // Default (Upcoming)
@@ -138,7 +150,6 @@ function InterviewCard({ interview, onOpenBrief, onReschedule }: { interview: an
   if (isCompleted) cardStyle = "border-slate-300"; // Completed (Grey outline, green inner)
   if (isRescheduleRequested) cardStyle = "border-orange-300 ring-1 ring-orange-300"; // Reschedule Pending
 
-  const dateObj = new Date(interview.scheduledAt);
   const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
@@ -198,11 +209,15 @@ function InterviewCard({ interview, onOpenBrief, onReschedule }: { interview: an
 
         {/* Action Buttons - Candidate & Resume appear on EVERY card */}
         <div className="flex flex-wrap gap-3">
-          {needsFeedback && (
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
+          {needsFeedback ? (
+            <button onClick={onOpenFeedback} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
               <FileBadge size={16} /> Open Feedback Form
             </button>
-          )}
+          ) : isPending && !isCompleted && !isRescheduleRequested ? (
+            <button disabled className="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+              <Clock size={16} /> Pending Completion
+            </button>
+          ) : null}
 
           <button onClick={onOpenBrief} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
             <User size={16} className="text-slate-400" /> Candidate Brief

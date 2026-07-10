@@ -16,12 +16,12 @@ export class UpdateApplicationStatusUseCase implements IUpdateApplicationStatusU
       throw new AppError("Application not found or unauthorized", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
-    const updatedApplication = JobApplication.create({
-      ...application.toJSON(),
-      status,
-      updatedAt: new Date()
-    });
+    if (status === JobApplicationStatus.NEXT_ROUND) {
+      application.advanceRound();
+    } else {
+      application.updateStatus(status);
+    }
 
-    await this._jobApplicationRepository.update(applicationId, updatedApplication);
+    await this._jobApplicationRepository.update(applicationId, application);
   }
 }

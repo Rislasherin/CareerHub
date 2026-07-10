@@ -37,6 +37,7 @@ export class GetInterviewerScheduleUseCase implements IGetInterviewerScheduleUse
                 durationMinutes: interview.durationMinutes,
                 meetingLink: interview.meetingLink,
                 rescheduleRequest: interview.rescheduleRequest,
+                feedback: interview.feedback,
                 candidate: {
                     id: student?.id,
                     name: `${student?.firstName} ${student?.lastName}`,

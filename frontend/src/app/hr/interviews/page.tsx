@@ -8,11 +8,13 @@ import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { toast } from 'sonner';
 
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReschedule, setSelectedReschedule] = useState<any | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'TODAY' | 'FEEDBACK' | 'COMPLETED' | 'RESCHEDULES'>('ALL');
   const router = useRouter();
 
@@ -202,11 +204,11 @@ export default function InterviewsPage() {
                               <RefreshCw size={12} /> Review
                             </button>
                           ) : interview.status === 'COMPLETED' ? (
-                            <button className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                            <button onClick={() => setSelectedFeedback(interview)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
                               <FileText size={12} /> View Feedback
                             </button>
                           ) : interview.status === 'SCHEDULED' ? (
-                            <button className="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                            <button onClick={() => toast.info('HR direct reschedule is coming soon!')} className="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
                               <RefreshCw size={12} /> Reschedule
                             </button>
                           ) : null}
@@ -277,6 +279,93 @@ export default function InterviewsPage() {
                 Approve & Update
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Feedback Modal */}
+      {selectedFeedback && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setSelectedFeedback(null)}
+              className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+              <FileText size={32} />
+            </div>
+
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Interview Feedback</h2>
+            <p className="text-slate-500 font-medium mb-6">
+              Feedback from {selectedFeedback.interviewer.name} for {selectedFeedback.candidate.name}'s interview.
+            </p>
+
+            {selectedFeedback.feedback ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">DSA</p>
+                    <p className="font-bold text-slate-900 text-xl">{selectedFeedback.feedback.dsaScore || '-'}/10</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Coding</p>
+                    <p className="font-bold text-slate-900 text-xl">{selectedFeedback.feedback.codingScore || '-'}/10</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">System Design</p>
+                    <p className="font-bold text-slate-900 text-xl">{selectedFeedback.feedback.systemDesignScore || '-'}/10</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Problem Solving</p>
+                    <p className="font-bold text-slate-900 text-xl">{selectedFeedback.feedback.problemSolvingScore || '-'}/10</p>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Strengths</h4>
+                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{selectedFeedback.feedback.strengths || 'Not provided'}</p>
+                  </div>
+                  <div className="h-px bg-blue-100 w-full" />
+                  <div>
+                    <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Weaknesses</h4>
+                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{selectedFeedback.feedback.weaknesses || 'Not provided'}</p>
+                  </div>
+                  <div className="h-px bg-blue-100 w-full" />
+                  <div>
+                    <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Overall Remarks</h4>
+                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{selectedFeedback.feedback.hrNotes || 'Not provided'}</p>
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-xl border font-bold flex justify-between items-center ${
+                  selectedFeedback.feedback.recommendedAction === 'HIRE' || selectedFeedback.feedback.recommendedAction === 'STRONG_HIRE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                  selectedFeedback.feedback.recommendedAction === 'REJECT' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
+                  <span className="uppercase text-xs tracking-wider">Recommended Action:</span>
+                  <span className="text-lg">{selectedFeedback.feedback.recommendedAction?.replace('_', ' ') || 'NONE'}</span>
+                </div>
+                
+                {selectedFeedback.jobId && (
+                  <div className="pt-4 border-t border-slate-100 flex justify-end">
+                    <Button 
+                      onClick={() => router.push(`/hr/jobs/${selectedFeedback.jobId}/applicants?applicant=${selectedFeedback.candidate.applicationId}`)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                    >
+                      Go to Applicant Pipeline
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-100">
+                <p className="text-slate-500 font-bold mb-2">No feedback submitted yet.</p>
+                <p className="text-xs text-slate-400">The interviewer has not provided any feedback.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

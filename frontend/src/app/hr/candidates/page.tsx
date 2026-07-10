@@ -59,7 +59,7 @@ export default function CandidatesPage() {
   // Filters and Sorting
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [selectedCollege, setSelectedCollege] = useState('ALL');
-  const [activeTab, setActiveTab] = useState<'ALL' | 'APPLIED' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'APPLIED' | 'SAVED_PROFILES' | 'INTERVIEW' | 'OFFERED'>('ALL');
   const [sortBy, setSortBy] = useState<'AI_MATCH' | 'CGPA' | 'DATE_APPLIED'>('AI_MATCH');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
@@ -101,7 +101,7 @@ export default function CandidatesPage() {
       toast.success('Candidate removed from shortlist');
     } else {
       nextIds = [...shortlistedIds, idStr];
-      toast.success('Candidate shortlisted successfully!');
+      toast.success('Candidate saved successfully!');
     }
     setShortlistedIds(nextIds);
     localStorage.setItem('shortlisted_candidates', JSON.stringify(nextIds));
@@ -177,7 +177,7 @@ export default function CandidatesPage() {
       // Status Tab Filter
       const isShortlisted = shortlistedIds.includes(String(c.id));
       let matchesTab = true;
-      if (activeTab === 'SHORTLISTED') {
+      if (activeTab === 'SAVED_PROFILES') {
         matchesTab = isShortlisted;
       } else if (activeTab === 'APPLIED') {
         matchesTab = !isShortlisted;
@@ -304,7 +304,7 @@ export default function CandidatesPage() {
                 {[
                   { id: 'ALL', label: 'All', count: appliedCandidates.length },
                   { id: 'APPLIED', label: 'Applied', count: appliedCandidates.filter(c => !shortlistedIds.includes(String(c.id))).length },
-                  { id: 'SHORTLISTED', label: 'Shortlisted', count: appliedCandidates.filter(c => shortlistedIds.includes(String(c.id))).length },
+                  { id: 'SAVED_PROFILES', label: 'Saved Profiles', count: appliedCandidates.filter(c => shortlistedIds.includes(String(c.id))).length },
                   { id: 'INTERVIEW', label: 'Interview', count: appliedCandidates.filter(c => c.matchScore >= 90).length },
                   { id: 'OFFERED', label: 'Offered', count: 0 }
                 ].map((tab) => (
@@ -471,10 +471,10 @@ export default function CandidatesPage() {
                       >
                         {isShortlisted ? (
                           <>
-                            <Check size={14} strokeWidth={3} /> Shortlisted
+                            <Check size={14} strokeWidth={3} /> Saved
                           </>
                         ) : (
-                          'Shortlist'
+                          'Save Profile'
                         )}
                       </button>
                       <Link

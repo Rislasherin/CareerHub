@@ -36,7 +36,8 @@ export const API_ROUTES = {
     ACTIVATE: '/auth/interviewer/activate',
     DASHBOARD: '/interviewer/dashboard',
     INTERVIEWS: '/interviewer/interviews',
-    RESCHEDULE: '/interviewer/interviews' // usage: /interviewer/interviews/:id/reschedule
+    RESCHEDULE: '/interviewer/interviews', // usage: /interviewer/interviews/:id/reschedule
+    SUBMIT_FEEDBACK: '/interviewer/interviews/:id/feedback'
   },
   AUTH: {
     ORGANIZATIONS_APPROVED: '/auth/organizations/approved',

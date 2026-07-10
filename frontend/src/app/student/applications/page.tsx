@@ -12,16 +12,18 @@ import { toast } from 'sonner';
 import { ApiResponse } from '@/types/api';
 
 const columnConfig: Record<string, { label: string, color: string, border: string, statuses: string[] }> = {
-  APPLIED: { label: 'APPLIED', color: 'text-slate-500', border: 'border-slate-300', statuses: ['applied', 'under_review', 'shortlisted'] },
-  INTERVIEW: { label: 'INTERVIEW', color: 'text-amber-500', border: 'border-amber-400', statuses: ['interviewing'] },
+  APPLIED: { label: 'APPLIED', color: 'text-slate-500', border: 'border-slate-300', statuses: ['applied'] },
+  SHORTLISTED: { label: 'SHORTLISTED', color: 'text-indigo-500', border: 'border-indigo-400', statuses: ['shortlisted'] },
+  INTERVIEW: { label: 'INTERVIEW', color: 'text-amber-500', border: 'border-amber-400', statuses: ['interviewing', 'next_round'] },
   OFFER: { label: 'OFFER', color: 'text-teal-500', border: 'border-teal-400', statuses: ['offered', 'hired'] },
   REJECTED: { label: 'REJECTED', color: 'text-rose-500', border: 'border-rose-400', statuses: ['rejected'] },
 };
 
+
 export default function StudentApplicationsPage() {
   const router = useRouter();
   const user = useAppSelector((state) => state.student.details);
-  
+
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,11 +75,13 @@ export default function StudentApplicationsPage() {
 
   const stats = {
     total: applications.length,
-    inProcess: applications.filter(app => ['applied', 'under_review', 'shortlisted'].includes(app.status?.toLowerCase() || 'applied')).length,
-    interview: applications.filter(app => app.status?.toLowerCase() === 'interviewing').length,
+    inProcess: applications.filter(app => ['applied', 'shortlisted'].includes(app.status?.toLowerCase() || 'applied')).length,
+    shortlisted: applications.filter(app => app.status?.toLowerCase() === 'shortlisted').length,
+    interview: applications.filter(app => ['interviewing', 'next_round'].includes(app.status?.toLowerCase())).length,
     offer: applications.filter(app => ['offered', 'hired'].includes(app.status?.toLowerCase())).length,
     rejected: applications.filter(app => app.status?.toLowerCase() === 'rejected').length,
   };
+
 
   return (
     <DashboardLayout>
@@ -124,7 +128,7 @@ export default function StudentApplicationsPage() {
             <p className="text-3xl font-black text-slate-800">{stats.total}</p>
             <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-1">Total</p>
           </GlassCard>
-          
+
           <GlassCard className="p-4 text-center border-t-4 border-t-blue-400 bg-white rounded-xl shadow-sm border-x-0 border-b-0">
             <p className="text-3xl font-black text-blue-500">{stats.inProcess}</p>
             <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-1">In Process</p>
@@ -152,7 +156,7 @@ export default function StudentApplicationsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-4">
             {Object.keys(columnConfig).map((colKey) => {
               const config = columnConfig[colKey];
               const colApps = getColumnData(colKey);
@@ -172,7 +176,7 @@ export default function StudentApplicationsPage() {
                       {colApps.map((app) => {
                         const date = app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently';
                         const matchScore = getMatchScore(app.job?.companyName || 'Company');
-                        
+
                         return (
                           <motion.div
                             key={app.id}
@@ -184,7 +188,7 @@ export default function StudentApplicationsPage() {
                             <GlassCard className={`p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group`}>
                               {/* Top accent border */}
                               <div className={`absolute top-0 left-0 w-full h-1 ${config.border.replace('border-', 'bg-')} bg-opacity-80`}></div>
-                              
+
                               <div className="mt-1">
                                 <h4 className="font-extrabold text-slate-900 text-base leading-tight">
                                   {app.job?.companyName || 'Company'}
@@ -194,14 +198,24 @@ export default function StudentApplicationsPage() {
                                 </p>
                               </div>
 
+                              {/* Inside the GlassCard */}
                               <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
-                                <span className="text-xs font-bold text-slate-400">
-                                  {date}
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs font-bold text-slate-400">
+                                    {date}
+                                  </span>
+                                  {/* Dynamic Round Badge */}
+                                  {(app.status?.toLowerCase() === 'interviewing' || app.status?.toLowerCase() === 'next_round') && app.currentRoundNumber > 0 && (
+                                    <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                      Round {app.currentRoundNumber}
+                                    </span>
+                                  )}
+                                </div>
                                 <span className={`text-xs font-black ${matchScore > 85 ? 'text-teal-500' : matchScore > 75 ? 'text-blue-500' : 'text-amber-500'}`}>
-                                  {matchScore}%
+                                  {matchScore}% Match
                                 </span>
                               </div>
+
                             </GlassCard>
                           </motion.div>
                         );

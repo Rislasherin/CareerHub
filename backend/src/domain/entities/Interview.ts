@@ -1,14 +1,20 @@
 import { InterviewStatus } from "../enums/InterviewStatus.enum";
 import { InterviewType } from "../enums/InterviewType.enum";
+import { RecommendationEnum } from "@domain/enums/Recommendation.enum";
 
 export interface InterviewFeedback {
-  technicalScore?: number;
-  communicationScore?: number;
+  dsaScore?: number;
+  dsaNotes?: string;
+  codingScore?: number;
+  codingNotes?: string;
+  systemDesignScore?: number;
+  systemDesignNotes?: string;
   problemSolvingScore?: number;
-  strengths?: string[];
-  weaknesses?: string[];
-  finalRemarks?: string;
-  recommendedAction?: 'HIRE' | 'NEXT_ROUND' | 'HOLD' | 'REJECT';
+  problemSolvingNotes?: string;
+  strengths?: string;
+  weaknesses?: string;
+  hrNotes?: string;
+  recommendedAction?: RecommendationEnum;
 }
 
 export interface RescheduleRequest {
@@ -28,6 +34,7 @@ export interface InterviewProps {
   interviewerId: string;
   title: string;
   type: InterviewType;
+  roundNumber: number;
   status: InterviewStatus;
   scheduledAt: Date;
   durationMinutes: number;
@@ -37,6 +44,7 @@ export interface InterviewProps {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
 
 export class Interview {
   constructor(private readonly _props: InterviewProps) {}
@@ -53,6 +61,7 @@ export class Interview {
   get interviewerId(): string { return this._props.interviewerId; }
   get title(): string { return this._props.title; }
   get type(): InterviewType { return this._props.type; }
+  get roundNumber(): number { return this._props.roundNumber; }
   get status(): InterviewStatus { return this._props.status; }
   get scheduledAt(): Date { return this._props.scheduledAt; }
   get durationMinutes(): number { return this._props.durationMinutes; }
@@ -61,6 +70,8 @@ export class Interview {
   get rescheduleRequest(): RescheduleRequest | undefined { return this._props.rescheduleRequest; }
   get createdAt(): Date | undefined { return this._props.createdAt; }
   get updatedAt(): Date | undefined { return this._props.updatedAt; }
+
+  
 
   submitFeedback(feedback: InterviewFeedback): void {
     if (this._props.status !== InterviewStatus.SCHEDULED) {

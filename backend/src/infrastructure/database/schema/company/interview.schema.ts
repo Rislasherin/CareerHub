@@ -1,15 +1,21 @@
 import { Schema } from "mongoose";
 import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { InterviewType } from "@domain/enums/InterviewType.enum";
+import { RecommendationEnum } from "@domain/enums/Recommendation.enum";
 
 export const InterviewFeedbackSchema = new Schema({
-  technicalScore: { type: Number, min: 0, max: 10 },
-  communicationScore: { type: Number, min: 0, max: 10 },
-  problemSolvingScore: { type: Number, min: 0, max: 10 },
-  strengths: [{ type: String }],
-  weaknesses: [{ type: String }],
-  finalRemarks: { type: String },
-  recommendedAction: { type: String, enum: ['HIRE', 'REJECT', 'STRONG_HIRE', 'HOLD'] }
+  dsaScore: { type: Number, min: 1, max: 5 },
+  dsaNotes: { type: String },
+  codingScore: { type: Number, min: 1, max: 5 },
+  codingNotes: { type: String },
+  systemDesignScore: { type: Number, min: 1, max: 5 },
+  systemDesignNotes: { type: String },
+  problemSolvingScore: { type: Number, min: 1, max: 5 },
+  problemSolvingNotes: { type: String },
+  strengths: { type: String },
+  weaknesses: { type: String },
+  hrNotes: { type: String },
+  recommendedAction: { type: String, enum: Object.values(RecommendationEnum) }
 }, { _id: false });
 
 export const RescheduleRequestSchema = new Schema({
@@ -29,6 +35,7 @@ export const InterviewSchema = new Schema({
   
   title: { type: String, required: true },
   type: { type: String, enum: Object.values(InterviewType), required: true },
+  roundNumber: { type: Number, required: true },
   status: { type: String, enum: Object.values(InterviewStatus), default: InterviewStatus.SCHEDULED },
   
   scheduledAt: { type: Date, required: true },

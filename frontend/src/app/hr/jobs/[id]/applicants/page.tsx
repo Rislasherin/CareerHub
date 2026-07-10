@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
@@ -14,24 +14,26 @@ import { toast } from 'sonner';
 import { ApiResponse } from '@/types/api';
 
 const statusTabs = [
-  { id: 'applied', label: 'Applied', icon: Clock },
-  { id: 'under_review', label: 'Under Review', icon: Eye },
-  { id: 'shortlisted', label: 'Shortlisted', icon: CheckCircle2 },
-  { id: 'interviewing', label: 'Interviewing', icon: Calendar },
-  { id: 'offered', label: 'Offered', icon: Trophy },
-  { id: 'hired', label: 'Hired', icon: CheckCircle2 },
-  { id: 'rejected', label: 'Rejected', icon: XCircle }
+  { id: 'APPLIED', label: 'Applied', icon: Clock },
+  { id: 'SHORTLISTED', label: 'Shortlisted', icon: CheckCircle2 },
+  { id: 'NEXT_ROUND', label: 'Next Round', icon: CheckCircle2 },
+  { id: 'INTERVIEWING', label: 'Interviewing', icon: Calendar },
+  { id: 'OFFERED', label: 'Offered', icon: Trophy },
+  { id: 'HIRED', label: 'Hired', icon: CheckCircle2 },
+  { id: 'REJECTED', label: 'Rejected', icon: XCircle }
 ];
 
 export default function JobApplicantsPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const jobId = params.id as string;
+  const targetApplicantId = searchParams.get('applicant');
 
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('applied');
+  const [activeTab, setActiveTab] = useState('APPLIED');
 
   // Drawer state
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
@@ -43,6 +45,7 @@ export default function JobApplicantsPage() {
     interviewerId: '',
     title: '',
     type: 'TECHNICAL',
+    roundNumber: 1,
     scheduledAt: '',
     durationMinutes: 60,
     meetingLink: ''
@@ -62,6 +65,16 @@ export default function JobApplicantsPage() {
       const response = await apiClient.get(`${API_ROUTES.HR.JOBS}/${jobId}/applications`) as ApiResponse<any[]>;
       if (response.success) {
         setApplications(response.data || []);
+        
+        // Auto-select applicant if passed in query string
+        if (targetApplicantId && response.data) {
+          const targetApp = response.data.find((a: any) => a.id === targetApplicantId);
+          if (targetApp) {
+            setSelectedApp(targetApp);
+            setShowDetails(true);
+            setActiveTab(targetApp.status || 'APPLIED');
+          }
+        }
       }
     } catch (err) {
       toast.error('Failed to retrieve applications');
@@ -71,9 +84,9 @@ export default function JobApplicantsPage() {
   };
   const fetchInterviewers = async () => {
     try {
-      const response = await apiClient.get(API_ROUTES.HR.INTERVIEWERS) as ApiResponse<any[]>;
+      const response = await apiClient.get(API_ROUTES.HR.INTERVIEWERS) as ApiResponse<any>;
       if (response.success) {
-        setInterviewers(response.data || []);
+        setInterviewers(response.data?.interviewers || []);
       }
     } catch (err) {
       toast.error('Failed to load interviewers');
@@ -89,6 +102,7 @@ export default function JobApplicantsPage() {
       const payload = {
         applicationId: selectedApp.id,
         ...interviewForm,
+        roundNumber: Number(interviewForm.roundNumber),
         durationMinutes: Number(interviewForm.durationMinutes)
       };
 
@@ -106,7 +120,7 @@ export default function JobApplicantsPage() {
         }
 
         setInterviewForm({
-          interviewerId: '', title: '', type: 'TECHNICAL', scheduledAt: '', durationMinutes: 60, meetingLink: ''
+          interviewerId: '', title: '', type: 'TECHNICAL', roundNumber: 1, scheduledAt: '', durationMinutes: 60, meetingLink: ''
         });
       }
     } catch (err: any) {
@@ -137,7 +151,7 @@ export default function JobApplicantsPage() {
 
   const filteredApps = applications.filter(app => {
     const student = app.student || {};
-    const matchesTab = (app.status || 'applied') === activeTab;
+    const matchesTab = (app.status || 'APPLIED') === activeTab;
     const searchString = `${student.firstName} ${student.lastName} ${student.email} ${student.skills?.languages?.join(' ')}`.toLowerCase();
     const matchesSearch = searchString.includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
@@ -176,7 +190,7 @@ export default function JobApplicantsPage() {
         {/* Pipeline Tabs */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 border-b border-slate-100">
           {statusTabs.map(tab => {
-            const count = applications.filter(a => (a.status || 'applied') === tab.id).length;
+            const count = applications.filter(a => (a.status || 'APPLIED') === tab.id).length;
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
             return (
@@ -391,41 +405,78 @@ export default function JobApplicantsPage() {
                   <div className="p-6 border-t border-slate-100 bg-white">
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Update Pipeline Status</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        isLoading={updating}
-                        onClick={() => updateStatus(selectedApp.id, 'shortlisted')}
-                        disabled={selectedApp.status === 'shortlisted'}
-                        className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 font-bold text-xs"
-                      >
-                        Shortlist
-                      </Button>
-                      <Button
-                        isLoading={updating}
-                        onClick={() => {
-                          setSelectedApp(selectedApp);
-                          setShowInterviewModal(true);
-                        }}
-                        disabled={selectedApp.status === 'interviewing'}
-                        className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 font-bold text-xs"
-                      >
-                        Move to Interview
-                      </Button>
-                      <Button
-                        isLoading={updating}
-                        onClick={() => updateStatus(selectedApp.id, 'offered')}
-                        disabled={selectedApp.status === 'offered'}
-                        className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
-                      >
-                        Rollout Offer
-                      </Button>
-                      <Button
-                        isLoading={updating}
-                        onClick={() => updateStatus(selectedApp.id, 'rejected')}
-                        disabled={selectedApp.status === 'rejected'}
-                        className="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold text-xs ml-auto"
-                      >
-                        Reject
-                      </Button>
+                      {selectedApp.status === 'REJECTED' ? (
+                        <span className="text-rose-500 font-bold text-xs bg-rose-50 border border-rose-100 px-4 py-2 rounded-xl flex items-center gap-2">
+                          <XCircle size={14} /> Candidate Rejected
+                        </span>
+                      ) : selectedApp.status === 'HIRED' ? (
+                        <span className="text-emerald-500 font-bold text-xs bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-xl flex items-center gap-2">
+                          <Trophy size={14} /> Candidate Hired
+                        </span>
+                      ) : (
+                        <>
+                          {selectedApp.status === 'APPLIED' && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'SHORTLISTED')}
+                              className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 font-bold text-xs"
+                            >
+                              Shortlist Candidate
+                            </Button>
+                          )}
+
+                          {(selectedApp.status === 'SHORTLISTED' || selectedApp.status === 'NEXT_ROUND' || selectedApp.status === 'INTERVIEWING') && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => {
+                                setSelectedApp(selectedApp);
+                                setShowInterviewModal(true);
+                              }}
+                              className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 font-bold text-xs"
+                            >
+                              Schedule {selectedApp.status === 'INTERVIEWING' ? 'Next ' : ''}Interview
+                            </Button>
+                          )}
+
+                          {selectedApp.status === 'INTERVIEWING' && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'NEXT_ROUND')}
+                              className="bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 font-bold text-xs"
+                            >
+                              Move to Next Round
+                            </Button>
+                          )}
+
+                          {(selectedApp.status === 'INTERVIEWING' || selectedApp.status === 'NEXT_ROUND') && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'OFFERED')}
+                              className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
+                            >
+                              Rollout Offer
+                            </Button>
+                          )}
+
+                          {selectedApp.status === 'OFFERED' && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'HIRED')}
+                              className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
+                            >
+                              Mark as Hired
+                            </Button>
+                          )}
+
+                          <Button
+                            isLoading={updating}
+                            onClick={() => updateStatus(selectedApp.id, 'REJECTED')}
+                            className="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold text-xs ml-auto"
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -467,7 +518,15 @@ export default function JobApplicantsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Round Number</label>
+                      <input
+                        type="number" min="1" required
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        value={interviewForm.roundNumber} onChange={e => setInterviewForm({ ...interviewForm, roundNumber: Number(e.target.value) })}
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Interview Type</label>
                       <select

@@ -24,6 +24,7 @@ export class JobApplicationRepository
       hrNotes: doc.hrNotes,
       appliedAt: doc.appliedAt,
       updatedAt: doc.updatedAt,
+      currentRoundNumber: doc.currentRoundNumber,
     });
   }
 
@@ -37,6 +38,7 @@ export class JobApplicationRepository
       resumeId: props.resumeId,
       status: props.status,
       hrNotes: props.hrNotes,
+      currentRoundNumber: props.currentRoundNumber,
     };
   }
 

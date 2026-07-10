@@ -11,6 +11,7 @@ export interface JobApplicationProps {
   hrNotes?: string;
   appliedAt?: Date;
   updatedAt?: Date;
+  currentRoundNumber?: number;
 }
 
 export class JobApplication {
@@ -34,12 +35,23 @@ export class JobApplication {
   get hrNotes(): string | undefined { return this.props.hrNotes; }
   get appliedAt(): Date | undefined { return this.props.appliedAt; }
   get updatedAt(): Date | undefined { return this.props.updatedAt; }
+  get currentRoundNumber(): number | undefined { return this.props.currentRoundNumber; }
 
   updateStatus(newStatus: JobApplicationStatus, hrNotes?: string): void {
     this.props.status = newStatus;
     if (hrNotes) {
       this.props.hrNotes = hrNotes;
     }
+    this.props.updatedAt = new Date();
+  }
+
+  advanceRound(): void {
+    if (!this.props.currentRoundNumber) {
+      this.props.currentRoundNumber = 1;
+    } else {
+      this.props.currentRoundNumber++;
+    }
+    this.props.status = JobApplicationStatus.NEXT_ROUND;
     this.props.updatedAt = new Date();
   }
 

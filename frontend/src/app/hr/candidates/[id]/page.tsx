@@ -34,6 +34,7 @@ export default function CandidateProfilePage() {
       interviewerId: '',
       title: '',
       type: 'TECHNICAL',
+      roundNumber: 1,
       scheduledAt: '',
       durationMinutes: 60,
       meetingLink: ''
@@ -79,6 +80,7 @@ export default function CandidateProfilePage() {
          const payload = {
             applicationId: id, // Fallback
             ...interviewForm,
+            roundNumber: Number(interviewForm.roundNumber),
             durationMinutes: Number(interviewForm.durationMinutes)
          };
          
@@ -579,7 +581,15 @@ export default function CandidateProfilePage() {
                            />
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
+                           <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Round Number</label>
+                              <input 
+                                 type="number" min="1" required
+                                 className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                                 value={interviewForm.roundNumber} onChange={e => setInterviewForm({...interviewForm, roundNumber: Number(e.target.value)})}
+                              />
+                           </div>
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Interview Type</label>
                               <select 

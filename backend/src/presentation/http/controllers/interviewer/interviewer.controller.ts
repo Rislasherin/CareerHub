@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { request, Request, Response } from "express";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -6,11 +6,15 @@ import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { IGetInterviewerScheduleUseCase } from "@application/usecases/interviewer/interfaces/IGetInterviewerSchedule.usecase";
 import { IRequestInterviewRescheduleUseCase } from "@application/usecases/interviewer/interfaces/IRequestInterviewReschedule.usecase";
+import { MESSAGES } from "@shared/constants/messages.constants";
+import { SubmitFeedbackDto } from "@application/dtos/interviewer/SubmitFeedback.dto";
+import { ISubmitInterviewFeedbackUseCase } from "@application/usecases/interviewer/interfaces/ISubmitInterviewFeedback.usecase";
 
 export class InterviewerController  {
     constructor(
         private readonly _getSheduleUseCase: IGetInterviewerScheduleUseCase,
-        private readonly _requestRescheduleUseCase: IRequestInterviewRescheduleUseCase
+        private readonly _requestRescheduleUseCase: IRequestInterviewRescheduleUseCase,
+        private readonly __submitInterviewFeedbackUseCase: ISubmitInterviewFeedbackUseCase
     ){}
 
     getDashboard = asyncHandler(async (req:Request,res:Response) => {
@@ -43,4 +47,17 @@ export class InterviewerController  {
 
         sendSuccess(res, null, "Reschedule request submitted successfully to HR");
     });
+
+    submitFeedback = asyncHandler(async(req:Request, res:Response) => {
+        const interviewerId = req.user?.id;
+        const interviewId = req.params.id;
+
+        if(!interviewerId) {
+            throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+        }
+
+        const data: SubmitFeedbackDto = req.body;
+        const interview = await this.__submitInterviewFeedbackUseCase.execute(interviewerId, interviewId, data);
+        sendSuccess(res, interview, "Feedback submitted successfully. HR has been notified.");
+    })
 }
