@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
+import { Pagination } from '@/components/shared/Pagination';
 import {
   Briefcase,
   Calendar,
@@ -66,6 +67,13 @@ export default function StudentJobsFeed() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'BEST_MATCH' | 'NEW_TODAY' | 'SAVED'>('ALL');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [packageFilter, setPackageFilter] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab, roleFilter, packageFilter]);
 
   // Details Modal
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
@@ -220,6 +228,9 @@ export default function StudentJobsFeed() {
     return matchesSearch && matchesTab && matchesRole && matchesPackage;
   });
 
+  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
     <DashboardLayout>
       <div className="max-w-[1400px] mx-auto flex flex-col gap-8 pb-12">
@@ -320,9 +331,10 @@ export default function StudentJobsFeed() {
             <p className="text-slate-400 text-xs max-w-sm mx-auto">There are no approved job posts matching your filter criteria at this time.</p>
           </GlassCard>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredJobs.map((job) => {
-              const hasApplied = appliedJobs.includes(job.id);
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {paginatedJobs.map((job) => {
+                const hasApplied = appliedJobs.includes(job.id);
               const isEligible = job.isEligible !== undefined ? job.isEligible : true;
 
               // Overlap check for skill match representation (e.g., "Skill match (3/5)")
@@ -493,6 +505,16 @@ export default function StudentJobsFeed() {
                 </motion.div>
               );
             })}
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination 
+                  currentPage={currentPage} 
+                  totalPages={totalPages} 
+                  onPageChange={setCurrentPage} 
+                />
+              </div>
+            )}
           </div>
         )}
 

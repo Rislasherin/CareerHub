@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/shared/Button';
+import { Pagination } from '@/components/shared/Pagination';
 import { Search, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { NoticeResponse } from '@/types/notice';
@@ -45,6 +46,12 @@ export default function StudentNoticeBoardPage() {
   const [activeTab, setActiveTab] = useState('All');
   const [notices, setNotices] = useState<NoticeResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   // NOTE: This uses dummy data for the design. Replace with your actual StudentService API call!
   useEffect(() => {
@@ -67,6 +74,9 @@ export default function StudentNoticeBoardPage() {
   const filteredNotices = activeTab === 'All'
     ? notices
     : notices.filter(n => n.priority === activeTab);
+
+  const totalPages = Math.ceil(filteredNotices.length / ITEMS_PER_PAGE);
+  const paginatedNotices = filteredNotices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <DashboardLayout>
@@ -122,7 +132,7 @@ export default function StudentNoticeBoardPage() {
 
           {/* Notices List */}
           <div className="flex flex-col gap-4">
-            {filteredNotices.map((notice) => {
+            {paginatedNotices.map((notice) => {
               const styles = getPriorityStyles(notice.priority);
 
               return (
@@ -158,9 +168,20 @@ export default function StudentNoticeBoardPage() {
               );
             })}
             
+            
             {filteredNotices.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-slate-500 font-medium">No notices found in this category.</p>
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="mt-4">
+                <Pagination 
+                  currentPage={currentPage} 
+                  totalPages={totalPages} 
+                  onPageChange={setCurrentPage} 
+                />
               </div>
             )}
           </div>

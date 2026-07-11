@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
+import { Pagination } from '@/components/shared/Pagination';
 import { Search, Lightbulb, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppSelector } from '@/redux/hooks';
@@ -27,6 +28,12 @@ export default function StudentApplicationsPage() {
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (user) {
@@ -61,8 +68,11 @@ export default function StudentApplicationsPage() {
     return jobTitle.includes(searchQuery.toLowerCase()) || companyName.includes(searchQuery.toLowerCase());
   });
 
+  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+  const paginatedApplications = filteredApplications.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const getColumnData = (colKey: string) => {
-    return filteredApplications.filter(app => columnConfig[colKey].statuses.includes(app.status?.toLowerCase() || 'applied'));
+    return paginatedApplications.filter(app => columnConfig[colKey].statuses.includes(app.status?.toLowerCase() || 'applied'));
   };
 
   const getMatchScore = (companyName: string) => {
@@ -225,6 +235,16 @@ export default function StudentApplicationsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && totalPages > 1 && (
+          <div className="mt-8">
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           </div>
         )}
       </div>

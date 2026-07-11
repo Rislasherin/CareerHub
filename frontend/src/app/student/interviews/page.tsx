@@ -3,6 +3,7 @@ import { API_ROUTES } from '@/constants/api.routes';
 import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
+import { Pagination } from '@/components/shared/Pagination';
 import { Calendar, Search, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/services/api/api.client';
@@ -15,6 +16,8 @@ export default function StudentInterviewsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -29,6 +32,10 @@ export default function StudentInterviewsPage() {
     };
     fetchInterviews();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab]);
 
   // Filter logic
   const filteredInterviews = interviews.filter((inv) => {
@@ -47,7 +54,22 @@ export default function StudentInterviewsPage() {
     }
 
     return matchesSearch && matchesTab;
+  }).sort((a: any, b: any) => {
+    const timeA = new Date(a.scheduledAt).getTime();
+    const timeB = new Date(b.scheduledAt).getTime();
+    if (timeA === timeB) {
+      // Secondary sort by ID if dates are identical
+      return (b.id || '').localeCompare(a.id || '');
+    }
+    return timeA - timeB;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredInterviews.length / itemsPerPage);
+  const paginatedInterviews = filteredInterviews.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const stats = {
     all: interviews.length,
@@ -133,9 +155,12 @@ export default function StudentInterviewsPage() {
             </GlassCard>
           ) : (
             <AnimatePresence mode="popLayout">
-              {filteredInterviews.map((inv) => {
-                const isUpcoming = inv.status === 'SCHEDULED' || inv.status === 'RESCHEDULED';
+              {paginatedInterviews.map((inv) => {
                 const dateObj = new Date(inv.scheduledAt);
+                const isPast = dateObj.getTime() < new Date().getTime();
+                const isUpcomingStatus = inv.status === 'SCHEDULED' || inv.status === 'RESCHEDULE_REQUESTED' || inv.status === 'CANCELLATION_REQUESTED';
+                const isUpcoming = isUpcomingStatus && !isPast;
+                const isPendingReview = isUpcomingStatus && isPast;
                 
                 return (
                   <motion.div
@@ -146,7 +171,7 @@ export default function StudentInterviewsPage() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <GlassCard className={`p-6 bg-white rounded-2xl border-l-4 ${isUpcoming ? 'border-l-rose-500' : 'border-l-slate-300'} border-y-slate-100 border-r-slate-100 shadow-sm hover:shadow-md transition-shadow relative`}>
+                    <GlassCard className={`p-6 bg-white rounded-2xl border-l-4 ${isUpcoming ? 'border-l-rose-500' : isPendingReview ? 'border-l-blue-500' : 'border-l-slate-300'} border-y-slate-100 border-r-slate-100 shadow-sm hover:shadow-md transition-shadow relative`}>
                       
                       {/* Card Header */}
                       <div className="flex items-center justify-between mb-6">
@@ -163,6 +188,10 @@ export default function StudentInterviewsPage() {
                         {isUpcoming ? (
                           <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider">
                             Upcoming
+                          </span>
+                        ) : isPendingReview ? (
+                          <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider">
+                            Under Review
                           </span>
                         ) : inv.status === 'COMPLETED' ? (
                           <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
@@ -219,6 +248,17 @@ export default function StudentInterviewsPage() {
                 );
               })}
             </AnimatePresence>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPageChange={setCurrentPage} 
+              />
+            </div>
           )}
         </div>
       </div>
