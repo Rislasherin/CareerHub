@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { IBcryptService } from "@application/interfaces/IBcryptService";
@@ -43,7 +44,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
       if (existingUser.status === UserStatus.PENDING) {
         // Handle Resend OTP: User exists but not verified
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`[OTP RE-GENERATED] Email: ${dto.email}, OTP: ${otp}`);
+        logger.info(`[OTP RE-GENERATED] Email: ${dto.email}, OTP: ${otp}`);
         await this._otpRepository.deleteByEmail(dto.email);
         await this._otpRepository.create(dto.email, otp);
         await this._emailService.sendOTP(dto.email, otp, "New Company");
@@ -84,7 +85,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
 
     // Step 3: Generate and save OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); 
+    logger.info(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); 
     await this._otpRepository.create(dto.email, otp);
 
     // Step 4: Send OTP Email

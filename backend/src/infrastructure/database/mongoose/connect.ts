@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import mongoose from "mongoose";
 import { env } from "@infrastructure/config/env.validator";
 
@@ -13,11 +14,11 @@ export const connectDB = async (): Promise<void> => {
         const hasOldIndex = indexes.some(idx => idx.name === "rollNumber_1_orgId_1");
         if (hasOldIndex) {
           await studentCollection.dropIndex("rollNumber_1_orgId_1");
-          console.log("Successfully dropped legacy index rollNumber_1_orgId_1 from students collection");
+          logger.info("Successfully dropped legacy index rollNumber_1_orgId_1 from students collection");
         }
       }
     }
   } catch (error) {
-    console.error("Error checking/dropping legacy students index:", error);
+    logger.error("Error checking/dropping legacy students index:", error);
   }
 };

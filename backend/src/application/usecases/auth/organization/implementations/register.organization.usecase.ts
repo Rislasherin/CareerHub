@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { RegisterCollegeRequestDto } from "@application/dtos/auth/collage/Request/register.collage.request.dto";
 import { RegisterCollegeResponseDto } from "@application/dtos/auth/collage/Response/register.college.response.sto";
 import { IRegisterOrganizationUseCase } from "../interfaces/IRegister.organization.usecase";
@@ -46,7 +47,7 @@ export class RegisterOrganizationUseCase implements IRegisterOrganizationUseCase
             if (existingAdmin.status === UserStatus.PENDING) {
                 // Handle Resend OTP: User exists but not verified
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                console.log(`[OTP RE-GENERATED] College Admin Email: ${email}, OTP: ${otp}`);
+                logger.info(`[OTP RE-GENERATED] College Admin Email: ${email}, OTP: ${otp}`);
                 await this.otpRepository.deleteByEmail(email);
                 await this.otpRepository.create(email, otp);
                 await this.emailService.sendOTP(email, otp, "your institution");
@@ -91,7 +92,7 @@ export class RegisterOrganizationUseCase implements IRegisterOrganizationUseCase
         
         // Generate and save OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`[OTP GENERATED] College Admin Email: ${dto.email}, OTP: ${otp}`);
+        logger.info(`[OTP GENERATED] College Admin Email: ${dto.email}, OTP: ${otp}`);
         await this.otpRepository.create(dto.email, otp);
 
         // Send OTP Email

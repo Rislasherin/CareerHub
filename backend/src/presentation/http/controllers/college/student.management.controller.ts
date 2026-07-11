@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
@@ -88,7 +89,7 @@ export class StudentManagementController {
     const { studentId } = req.params;
     const { status } = req.body;
     const adminRole = req.user?.role;
-    console.log(`Toggling status for student ${studentId} to ${status} by ${adminRole}`);
+    logger.info(`Toggling status for student ${studentId} to ${status} by ${adminRole}`);
     await this._toggleStatusUseCase.execute(studentId, status, adminRole);
     sendSuccess(res, null, `Student status updated to ${status}`);
   });

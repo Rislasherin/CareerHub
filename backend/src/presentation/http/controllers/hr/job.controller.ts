@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { Request, Response } from "express";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { MESSAGES } from "@shared/constants/messages.constants";
@@ -18,6 +19,8 @@ import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-en
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 import { ScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/implementations/ScheduleInterview.usecase";
 
+import { IGetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRHireRequests.usecase";
+
 export class HRJobController {
   constructor(
     private readonly _postJobUseCase: IPostJobUseCase,
@@ -28,6 +31,7 @@ export class HRJobController {
     private readonly _updateJobUseCase: IUpdateJobUseCase,
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
     private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
+    private readonly _getHRHireRequestsUseCase: any,
     private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase,
     private readonly _sheduleInterviewUseCase: ScheduleInterviewUseCase
   ) { }
@@ -121,6 +125,16 @@ export class HRJobController {
     sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
   });
 
+  getHireRequests = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+
+    const applications = await this._getHRHireRequestsUseCase.execute(companyId);
+    sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED, HttpStatus.OK);
+  });
+
   updateApplicationStatus = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
@@ -128,10 +142,10 @@ export class HRJobController {
     const { id } = req.params; // applicationId
     const { status } = req.body;
 
-    console.log(`[DEBUG] HR Attempting to update application ${id} to status: ${status}`);
+    logger.info(`[DEBUG] HR Attempting to update application ${id} to status: ${status}`);
 
     if (!status || !Object.values(JobApplicationStatus).includes(status)) {
-      console.log(`[DEBUG] Invalid status provided: ${status}`);
+      logger.info(`[DEBUG] Invalid status provided: ${status}`);
       throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
@@ -146,7 +160,7 @@ export class HRJobController {
     }
 
     const interview = await this._sheduleInterviewUseCase.execute(companyId, req.body);
-    sendSuccess(res, interview.toJSON(), "Interview scheduled successfully", HttpStatus.CREATED);
+    sendSuccess(res, interview.toJSON(), MESSAGES.SUCCESS.INTERVIEW_SCHEDULED, HttpStatus.CREATED);
   })
 
 }

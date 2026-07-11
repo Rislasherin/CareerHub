@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { InvalidCredentialsError, UnauthorizedError } from "@application/errors/AuthError";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
@@ -19,9 +20,9 @@ export class LoginInterviewerUseCase implements ILoginInterviewerUseCase {
   ) { }
 
   async execute(dto: { email: string; password: string; [key: string]: unknown }) {
-    console.log(`[LOGIN] Attempting login for interviewer: ${dto.email}`);
+    logger.info(`[LOGIN] Attempting login for interviewer: ${dto.email}`);
     const interviewer = await this._interviewerRepository.findByEmail(dto.email);
-    console.log(`[LOGIN] Interviewer lookup result: ${interviewer ? 'Found' : 'Not Found'}`);
+    logger.info(`[LOGIN] Interviewer lookup result: ${interviewer ? 'Found' : 'Not Found'}`);
 
     if (!interviewer) {
       const globalCheck = await this._crossRoleAuthService.isEmailInUse(dto.email);

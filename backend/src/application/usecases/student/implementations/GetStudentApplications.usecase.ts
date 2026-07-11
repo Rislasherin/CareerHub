@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
@@ -13,11 +14,11 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
     private readonly _interviewRepository:IInterviewRepository
   ) {}
 
-  async execute(studentId: string): Promise<any[]> {
+  async execute(studentId: string): Promise<Record<string, unknown>[]> {
     const applications = await this._jobApplicationRepository.findByStudentId(studentId);
     
     const companyCache = new Map<string, string>();
-    const jobCache = new Map<string, any>();
+    const jobCache = new Map<string, Record<string, unknown>>();
 
     const enrichedApplications = await Promise.all(applications.map(async (app) => {
       const appJson = app.toJSON();
@@ -67,7 +68,7 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
             };
           }
         } catch (e) {
-          console.error("Error fetching interview for student app", e);
+          logger.error("Error fetching interview for student app", e);
         }
       }
 

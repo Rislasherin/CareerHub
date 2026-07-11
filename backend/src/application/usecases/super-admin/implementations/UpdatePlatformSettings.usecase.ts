@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 
 import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 import { IUpdatePlatformSettingsUseCase } from "../interfaces/IUpdatePlatformSettings.usecase";
@@ -12,7 +13,7 @@ export class UpdatePlatformSettingsUseCase implements IUpdatePlatformSettingsUse
         let settings = await this._platformSettingsRepository.getSettings();
         if(!settings || !settings.id) throw new Error("Settings not found");
 
-        console.log("RECEIVED DTO:", dto);
+        logger.info("RECEIVED DTO:", dto);
 
         // Update Entity
         if (dto.maintenanceMode !== undefined) settings.maintenanceMode = dto.maintenanceMode;

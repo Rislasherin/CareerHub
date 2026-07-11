@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
 import { Student } from "@domain/entities/student";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
@@ -15,10 +16,10 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
     ) {}
 
     async execute(companyId: string): Promise<any[]> {
-        console.log(`[DEBUG HR] Fetching interviews for companyId:`, companyId);
+        logger.info(`[DEBUG HR] Fetching interviews for companyId:`, companyId);
         let interviews = await this._interviewRepository.findByCompanyId(companyId);
 
-        console.log(`[DEBUG HR] Found ${interviews.length} interviews`);
+        logger.info(`[DEBUG HR] Found ${interviews.length} interviews`);
         
         return Promise.all(interviews.map(async (inv) => {
             let studentName = "Unknown Candidate";

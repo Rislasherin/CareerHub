@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import nodemailer from "nodemailer";
 import { env } from "@infrastructure/config/env.validator";
 import { IEmailService } from "@application/services/IEmailService";
@@ -54,7 +55,7 @@ export class EmailService implements IEmailService {
 
       return true;
     } catch (err) {
-      console.error("Nodemailer Failed to send OTP email:", err);
+      logger.error("Nodemailer Failed to send OTP email:", err);
       return false;
     }
   }
@@ -87,7 +88,7 @@ export class EmailService implements IEmailService {
         `,
       });
     } catch (err) {
-      console.error("Nodemailer Failed to send invite email:", err);
+      logger.error("Nodemailer Failed to send invite email:", err);
     }
   }
 
@@ -119,7 +120,7 @@ export class EmailService implements IEmailService {
         `,
       });
     } catch (err) {
-      console.error("Nodemailer Failed to send reset email:", err);
+      logger.error("Nodemailer Failed to send reset email:", err);
     }
   }
 
@@ -154,7 +155,7 @@ export class EmailService implements IEmailService {
         `,
       });
     } catch (err) {
-      console.error("Nodemailer Failed to send student invitation email:", err);
+      logger.error("Nodemailer Failed to send student invitation email:", err);
     }
   }
 
@@ -182,7 +183,38 @@ export class EmailService implements IEmailService {
         `,
       });
     } catch (err) {
-      console.error("Nodemailer Failed to send approval email:", err);
+      logger.error("Nodemailer Failed to send approval email:", err);
+    }
+  }
+
+  async sendOfferEmail(email: string, candidateName: string, role: string, companyName: string): Promise<void> {
+    try {
+      const replyTo = await this.getContactEmail();
+      await this._transporter.sendMail({
+        from: env.EMAIL_FROM,
+        replyTo,
+        to: email,
+        subject: `Offer Letter from ${companyName} - CareerHub`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Congratulations ${candidateName}!</h2>
+            <p style="color: #334155; font-size: 16px;">
+              We are thrilled to extend an offer for the position of <strong>${role}</strong> at <strong>${companyName}</strong>.
+            </p>
+            <p style="color: #334155; font-size: 16px;">
+              Please log in to your CareerHub Student Portal to review your official offer letter and accept or reject the offer.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${env.FRONTEND_URL}/login" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Offer in Portal</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">
+              A PDF copy of this offer will be available in your portal upon acceptance.
+            </p>
+          </div>
+        `,
+      });
+    } catch (err) {
+      logger.error("Nodemailer Failed to send offer email:", err);
     }
   }
 }

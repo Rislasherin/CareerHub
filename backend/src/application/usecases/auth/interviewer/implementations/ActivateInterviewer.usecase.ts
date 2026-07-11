@@ -1,3 +1,4 @@
+import { logger } from "@infrastructure/logger/logger";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 import { IBcryptService } from "@application/interfaces/IBcryptService";
 import { UserStatus } from "@domain/enums/user.status.enum";
@@ -19,25 +20,25 @@ export class ActivateInterviewerUseCase implements IActivateInterviewerUseCase {
   ) { }
 
   async execute(interviewerId: string, password: string, emailFromQuery?: string) {
-    console.log(`[ACTIVATE] Attempting to activate interviewer. ID: ${interviewerId}, Email: ${emailFromQuery}`);
+    logger.info(`[ACTIVATE] Attempting to activate interviewer. ID: ${interviewerId}, Email: ${emailFromQuery}`);
 
     let interviewer = await this._interviewerRepository.findById(interviewerId);
 
     if (interviewer) {
-      console.log(`[ACTIVATE] Found interviewer by ID: ${interviewer.email}`);
+      logger.info(`[ACTIVATE] Found interviewer by ID: ${interviewer.email}`);
     }
 
     // Backup: Search by email if ID lookup fails
     if (!interviewer && emailFromQuery) {
-      console.log(`[ACTIVATE] ID lookup failed, searching by email: ${emailFromQuery}`);
+      logger.info(`[ACTIVATE] ID lookup failed, searching by email: ${emailFromQuery}`);
       interviewer = await this._interviewerRepository.findByEmail(emailFromQuery);
       if (interviewer) {
-        console.log(`[ACTIVATE] Found interviewer by fallback email: ${interviewer.id}`);
+        logger.info(`[ACTIVATE] Found interviewer by fallback email: ${interviewer.id}`);
       }
     }
 
     if (!interviewer) {
-      console.error(`[ACTIVATE] Interviewer not found. Received ID: ${interviewerId}, Received Email Query: ${emailFromQuery}`);
+      logger.error(`[ACTIVATE] Interviewer not found. Received ID: ${interviewerId}, Received Email Query: ${emailFromQuery}`);
       const identifier = emailFromQuery || interviewerId;
       throw new AppError(`Interviewer (${identifier}) not found. Please ask your admin to resend the invite.`, HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND);
     }
