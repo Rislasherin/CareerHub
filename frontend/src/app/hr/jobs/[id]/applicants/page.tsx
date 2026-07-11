@@ -5,13 +5,14 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
-import { Search, MapPin, Star, GraduationCap, Calendar, Mail, Phone, Clock, FileText, ChevronRight, X, ExternalLink, CheckCircle2, Eye, Trophy, XCircle } from 'lucide-react';
+import { Search, MapPin, Star, GraduationCap, Calendar, Mail, Phone, Clock, FileText, ChevronRight, X, ExternalLink, CheckCircle2, Eye, Trophy, XCircle, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppSelector } from '@/redux/hooks';
+import { GenerateOfferModal } from '@/components/modals/GenerateOfferModal';
 import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
 import { toast } from 'sonner';
 import { ApiResponse } from '@/types/api';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const statusTabs = [
   { id: 'APPLIED', label: 'Applied', icon: Clock },
@@ -40,6 +41,7 @@ export default function JobApplicantsPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
   const [interviewers, setInterviewers] = useState<any[]>([]);
   const [interviewForm, setInterviewForm] = useState({
     interviewerId: '',
@@ -49,6 +51,15 @@ export default function JobApplicantsPage() {
     scheduledAt: '',
     durationMinutes: 60,
     meetingLink: ''
+  });
+
+  const { errors, isValid, handleSubmit, getCaptureProps } = useFormValidation(interviewForm, (values) => {
+    const errs: Record<string, string> = {};
+    if (!values.interviewerId) errs.interviewerId = "Interviewer is required";
+    if (!values.title?.trim()) errs.title = "Title is required";
+    if (!values.scheduledAt) errs.scheduledAt = "Schedule time is required";
+    else if (new Date(values.scheduledAt) < new Date()) errs.scheduledAt = "Cannot schedule in the past";
+    return errs;
   });
 
 
@@ -93,8 +104,7 @@ export default function JobApplicantsPage() {
     }
   };
 
-  const handleScheduleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitSchedule = async () => {
     if (!selectedApp) return;
 
     setUpdating(true);
@@ -129,6 +139,7 @@ export default function JobApplicantsPage() {
       setUpdating(false);
     }
   };
+  const handleScheduleSubmit = handleSubmit(submitSchedule);
 
   const updateStatus = async (applicationId: string, newStatus: string) => {
     setUpdating(true);
@@ -174,6 +185,9 @@ export default function JobApplicantsPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={() => router.back()} className="h-10 px-4 bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors hidden md:flex items-center gap-2">
+              <ArrowLeft size={16} /> Go Back
+            </Button>
             <div className="relative w-64">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -425,7 +439,7 @@ export default function JobApplicantsPage() {
                             </Button>
                           )}
 
-                          {(selectedApp.status === 'SHORTLISTED' || selectedApp.status === 'NEXT_ROUND' || selectedApp.status === 'INTERVIEWING') && (
+                          {(selectedApp.status === 'SHORTLISTED' || selectedApp.status === 'UNDER_REVIEW' || selectedApp.status === 'NEXT_ROUND') && (
                             <Button
                               isLoading={updating}
                               onClick={() => {
@@ -434,38 +448,27 @@ export default function JobApplicantsPage() {
                               }}
                               className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 font-bold text-xs"
                             >
-                              Schedule {selectedApp.status === 'INTERVIEWING' ? 'Next ' : ''}Interview
+                              {selectedApp.status === 'SHORTLISTED' ? 'Schedule Interview' : 'Schedule Next Round'}
                             </Button>
                           )}
 
-                          {selectedApp.status === 'INTERVIEWING' && (
+                          {selectedApp.status === 'UNDER_REVIEW' && (
                             <Button
                               isLoading={updating}
-                              onClick={() => updateStatus(selectedApp.id, 'NEXT_ROUND')}
-                              className="bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 font-bold text-xs"
-                            >
-                              Move to Next Round
-                            </Button>
-                          )}
-
-                          {(selectedApp.status === 'INTERVIEWING' || selectedApp.status === 'NEXT_ROUND') && (
-                            <Button
-                              isLoading={updating}
-                              onClick={() => updateStatus(selectedApp.id, 'OFFERED')}
+                              onClick={() => {
+                                setSelectedApp(selectedApp);
+                                setShowOfferModal(true);
+                              }}
                               className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
                             >
-                              Rollout Offer
+                              Hire
                             </Button>
                           )}
 
                           {selectedApp.status === 'OFFERED' && (
-                            <Button
-                              isLoading={updating}
-                              onClick={() => updateStatus(selectedApp.id, 'HIRED')}
-                              className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
-                            >
-                              Mark as Hired
-                            </Button>
+                            <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-emerald-100">
+                              <CheckCircle2 size={16} /> Offer Pending Acceptance
+                            </div>
                           )}
 
                           <Button
@@ -508,14 +511,16 @@ export default function JobApplicantsPage() {
                   </button>
                 </div>
 
-                <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4" {...getCaptureProps()}>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Interview Title</label>
                     <input
                       type="text" required placeholder="e.g., Round 1: Technical Discussion"
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      name="title"
+                      className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.title ? 'border-red-500' : 'border-slate-200'}`}
                       value={interviewForm.title} onChange={e => setInterviewForm({ ...interviewForm, title: e.target.value })}
                     />
+                    {errors.title && <p className="text-red-500 text-[10px] mt-1">{errors.title}</p>}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
@@ -534,24 +539,27 @@ export default function JobApplicantsPage() {
                         className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                         value={interviewForm.type} onChange={e => setInterviewForm({ ...interviewForm, type: e.target.value })}
                       >
-                        <option value="TECHNICAL">Technical</option>
-                        <option value="HR">HR</option>
-                        <option value="BEHAVIORAL">Behavioral</option>
-                        <option value="MACHINE_CODING">Machine Coding</option>
+                        <option value="APTITUDE">Aptitude Test</option>
+                        <option value="CODING">Coding Challenge</option>
+                        <option value="TECHNICAL">Technical Panel Interview</option>
+                        <option value="HR">HR Panel Interview</option>
+                        <option value="GROUP_DISCUSSION">Group Discussion (GD)</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Assign Interviewer</label>
                       <select
+                        name="interviewerId"
                         required
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.interviewerId ? 'border-red-500' : 'border-slate-200'}`}
                         value={interviewForm.interviewerId} onChange={e => setInterviewForm({ ...interviewForm, interviewerId: e.target.value })}
                       >
                         <option value="" disabled>Select...</option>
                         {interviewers.map(inv => (
-                          <option key={inv.id} value={inv.id}>{inv.name || inv.firstName + ' ' + inv.lastName} ({inv.email})</option>
+                          <option key={inv.id} value={inv.id}>{inv.firstName} {inv.lastName} ({inv.designation || 'Interviewer'})</option>
                         ))}
                       </select>
+                      {errors.interviewerId && <p className="text-red-500 text-[10px] mt-1">{errors.interviewerId}</p>}
                     </div>
                   </div>
 
@@ -560,9 +568,11 @@ export default function JobApplicantsPage() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
                       <input
                         type="datetime-local" required
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                        name="scheduledAt"
+                        className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.scheduledAt ? 'border-red-500' : 'border-slate-200'}`}
                         value={interviewForm.scheduledAt} onChange={e => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
                       />
+                      {errors.scheduledAt && <p className="text-red-500 text-[10px] mt-1">{errors.scheduledAt}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Duration (Mins)</label>
@@ -585,7 +595,7 @@ export default function JobApplicantsPage() {
 
                   <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
                     <Button variant="secondary" onClick={() => setShowInterviewModal(false)} type="button">Cancel</Button>
-                    <Button type="submit" disabled={updating}>
+                    <Button type="submit" disabled={!isValid || updating}>
                       {updating ? 'Scheduling...' : 'Schedule Interview'}
                     </Button>
                   </div>
@@ -594,6 +604,19 @@ export default function JobApplicantsPage() {
             </div>
           )}
         </AnimatePresence>
+
+        {/* Generate Offer Modal */}
+        <GenerateOfferModal 
+          isOpen={showOfferModal}
+          onClose={() => {
+            setShowOfferModal(false);
+            setSelectedApp(null);
+          }}
+          application={selectedApp}
+          onSuccess={() => {
+            fetchApplications();
+          }}
+        />
 
       </div>
     </DashboardLayout>
