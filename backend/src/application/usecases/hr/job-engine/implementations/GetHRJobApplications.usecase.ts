@@ -6,11 +6,15 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IGetHRJobApplicationsUseCase } from "../interfaces/IGetHRJobApplications.usecase";
 
+import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
+import { InterviewProps } from "@domain/entities/Interview";
+
 export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase {
   constructor(
     private readonly _jobRepository: IJobRepository,
     private readonly _jobApplicationRepository: IJobApplicationRepository,
-    private readonly _studentRepository: IStudentRepository
+    private readonly _studentRepository: IStudentRepository,
+    private readonly _interviewRepository: IInterviewRepository
   ) {}
 
   async execute(jobId: string, companyId: string): Promise<any[]> {
@@ -35,9 +39,18 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
           } catch (e) {}
         }
         
+        let interviews: InterviewProps[] = [];
+        if (appJson.id) {
+          try {
+            const rawInterviews = await this._interviewRepository.findByApplicationId(appJson.id);
+            interviews = rawInterviews.map(i => i.toJSON());
+          } catch (e) {}
+        }
+        
         return {
           ...appJson,
           student: studentDetails,
+          interviews
         };
       })
     );

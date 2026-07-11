@@ -25,7 +25,7 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
         countOfStudents: studentCount,
         email: admin?.email || 'No email',
         placementContactEmail: admin?.email || 'No email',
-        placementContactPhone: (admin as any)?.phoneNumber || 'No phone'
+        placementContactPhone: (admin as unknown as { phoneNumber?: string })?.phoneNumber || 'No phone'
       };
     }));
 

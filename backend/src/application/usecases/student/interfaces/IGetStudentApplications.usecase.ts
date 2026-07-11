@@ -1,3 +1,3 @@
 export interface IGetStudentApplicationsUseCase {
-  execute(studentId: string): Promise<any[]>;
+  execute(studentId: string): Promise<Record<string, unknown>[]>;
 }

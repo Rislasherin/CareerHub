@@ -8,12 +8,16 @@ import { Student } from "@domain/entities/student";
 import { JobApplication } from "@domain/entities/JobApplication";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 import { IApplyToJobUseCase } from "../interfaces/IApplyToJob.usecase";
+import { ICreateSystemNotificationUseCase } from "@application/usecases/common/notifications/interfaces/ICreateSystemNotification.usecase";
+import { NotificationRole } from "@domain/enums/NotificationRole.enum";
+import { NotificationType } from "@domain/enums/NotificationType.enum";
 
 export class ApplyToJobUseCase implements IApplyToJobUseCase {
   constructor(
     private readonly _studentRepository: IStudentRepository,
     private readonly _jobRepository: IJobRepository,
-    private readonly _jobApplicationRepository: IJobApplicationRepository
+    private readonly _jobApplicationRepository: IJobApplicationRepository,
+    private readonly _createSystemNotificationUseCase: ICreateSystemNotificationUseCase
   ) {}
 
   async execute(studentId: string, jobId: string): Promise<void> {
@@ -56,6 +60,16 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
     });
 
     await this._jobApplicationRepository.create(jobApplication);
+
+    // Notify Student — application submitted
+    await this._createSystemNotificationUseCase.execute({
+      recipientId: studentId,
+      role: NotificationRole.STUDENT,
+      title: "Application Submitted!",
+      message: `Your application for the job has been submitted successfully. Good luck!`,
+      type: NotificationType.SUCCESS,
+      link: "/student/applications"
+    });
 
     // Keep backwards compatibility for existing queries if they rely on the array
     const appliedJobsList = student.appliedJobs || [];

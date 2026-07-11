@@ -35,7 +35,7 @@ export const toJobEntity = (doc: JobDocument): Job => {
     rounds: doc.rounds.map((round: { roundNumber: number; name: string; type: string; description?: string | null }) => ({
       roundNumber: round.roundNumber,
       name: round.name,
-      type: round.type as "aptitude" | "coding" | "technical" | "hr" | "group_discussion",
+      type: round.type as "APTITUDE" | "CODING" | "TECHNICAL" | "HR" | "GROUP_DISCUSSION",
       description: round.description ?? undefined
     })),
     status: doc.status as JobStatus,

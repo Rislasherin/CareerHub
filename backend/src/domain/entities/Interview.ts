@@ -41,6 +41,7 @@ export interface InterviewProps {
   meetingLink?: string;
   feedback?: InterviewFeedback;
   rescheduleRequest?: RescheduleRequest;
+  cancellationReason?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -68,6 +69,7 @@ export class Interview {
   get meetingLink(): string | undefined { return this._props.meetingLink; }
   get feedback(): InterviewFeedback | undefined { return this._props.feedback; }
   get rescheduleRequest(): RescheduleRequest | undefined { return this._props.rescheduleRequest; }
+  get cancellationReason(): string | undefined { return this._props.cancellationReason; }
   get createdAt(): Date | undefined { return this._props.createdAt; }
   get updatedAt(): Date | undefined { return this._props.updatedAt; }
 
@@ -108,7 +110,17 @@ export class Interview {
     this._props.rescheduleRequest = undefined;
   }
 
-  cancel(): void {
+  // Interviewer requests cancellation — goes to HR for approval
+  requestCancellation(reason: string): void {
+    if (this._props.status !== InterviewStatus.SCHEDULED) {
+      throw new Error("Only scheduled interviews can request cancellation.");
+    }
+    this._props.status = InterviewStatus.CANCELLATION_REQUESTED;
+    this._props.cancellationReason = reason;
+  }
+
+  // HR approves the cancellation
+  approveCancellation(): void {
     this._props.status = InterviewStatus.CANCELLED;
   }
 

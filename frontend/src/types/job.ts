@@ -1,7 +1,7 @@
 export interface InterviewRoundConfig {
   roundNumber: number;
   name: string;
-  type: "aptitude" | "coding" | "technical" | "hr" | "group_discussion";
+  type: "APTITUDE" | "CODING" | "TECHNICAL" | "HR" | "GROUP_DISCUSSION";
   description?: string;
 }
 

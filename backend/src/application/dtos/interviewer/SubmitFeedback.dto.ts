@@ -4,10 +4,11 @@ import { RecommendationEnum } from '@domain/enums/Recommendation.enum';
 
 export class SubmitFeedbackDto {
   @Expose()
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(5)
-  dsaScore!: number;
+  dsaScore?: number;
 
   @Expose()
   @IsString()
@@ -15,10 +16,11 @@ export class SubmitFeedbackDto {
   dsaNotes?: string;
 
   @Expose()
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(5)
-  codingScore!: number;
+  codingScore?: number;
 
   @Expose()
   @IsString()
@@ -26,10 +28,11 @@ export class SubmitFeedbackDto {
   codingNotes?: string;
 
   @Expose()
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(5)
-  systemDesignScore!: number;
+  systemDesignScore?: number;
 
   @Expose()
   @IsString()
@@ -37,10 +40,11 @@ export class SubmitFeedbackDto {
   systemDesignNotes?: string;
 
   @Expose()
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(5)
-  problemSolvingScore!: number;
+  problemSolvingScore?: number;
 
   @Expose()
   @IsString()

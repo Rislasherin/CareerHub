@@ -18,7 +18,7 @@ export class GetInterviewersUseCase implements IGetInterviewersUseCase {
           designation: json.designation,
           status: json.status,
           createdAt: json.createdAt,
-          isDeleted: (json as any).isDeleted || false,
+          isDeleted: (json as unknown as { isDeleted?: boolean }).isDeleted || false,
         };
       }),
       total,

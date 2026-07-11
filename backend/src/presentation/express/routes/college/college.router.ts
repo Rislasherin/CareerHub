@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { makeStudentManagementController, makeCollegeJobApprovalController, makeNoticeController } from "@infrastructure/di/college.factory";
+import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { InviteStudentsDto } from "@application/dtos/auth/student/Request/InviteStudents.dto";
@@ -10,8 +11,10 @@ const collegeJobApprovalController = makeCollegeJobApprovalController();
 const noticeController = makeNoticeController();
 
 router.get("/test", (req, res) => res.json({ success: true, message: "College router is active" }));
+
 // Use authMiddleware.protect for all routes in this router
 router.use(authMiddleware.protect);
+
 router.patch("/status-toggle/:studentId", studentManagementController.toggleStatus);
 router.get("/students/pending", studentManagementController.getPendingStudents);
 router.post("/students/bulk-invite", validateDto(InviteStudentsDto), studentManagementController.bulkInvite);
@@ -27,7 +30,11 @@ router.patch("/jobs/:jobId/reject", collegeJobApprovalController.rejectJob);
 
 router.post("/notices", noticeController.createNotice);
 router.get("/notices", noticeController.getNotices);
-router.patch("/notices/:id",noticeController.updateNotice.bind(noticeController));
-router.delete("/notices/:id",noticeController.deleteNotice.bind(noticeController));
+router.patch("/notices/:id", noticeController.updateNotice.bind(noticeController));
+router.delete("/notices/:id", noticeController.deleteNotice.bind(noticeController));
+
+router.get("/notifications", notificationController.getMyNotifications);
+router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
+router.patch("/notifications/:id/read", notificationController.markAsRead);
 
 export default router;

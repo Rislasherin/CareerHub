@@ -19,6 +19,7 @@ import {
 import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
 import { toast } from 'sonner';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const StarRating = ({ value, onChange }: { value: number, onChange: (v: number) => void }) => {
   const labels = ["Poor", "Below Avg", "Average", "Good", "Excellent"];
@@ -68,6 +69,14 @@ export default function InterviewFeedbackPage() {
     recommendedAction: '' as 'HIRE' | 'NEXT_ROUND' | 'HOLD' | 'REJECT' | ''
   });
 
+  const { errors, isValid, handleSubmit, getCaptureProps } = useFormValidation(formData, (values) => {
+    const errs: Record<string, string> = {};
+    if (!values.strengths?.trim()) errs.strengths = "Strengths are required";
+    if (!values.weaknesses?.trim()) errs.weaknesses = "Weaknesses are required";
+    if (!values.recommendedAction) errs.recommendedAction = "Recommendation is required";
+    return errs;
+  });
+
   useEffect(() => {
     const fetchInterview = async () => {
       try {
@@ -103,17 +112,20 @@ export default function InterviewFeedbackPage() {
     if (params.id) fetchInterview();
   }, [params.id]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.recommendedAction) {
-      toast.error("Please select a recommendation before submitting.");
-      return;
-    }
-    
+  const submitFeedback = async () => {
     setIsSubmitting(true);
     try {
       const url = API_ROUTES.INTERVIEWER.SUBMIT_FEEDBACK.replace(':id', params.id as string);
-      await apiClient.post(url, formData);
+      
+      const payload: any = { ...formData };
+      
+      // Clean up technical scores if they are 0 (not filled out) or if it's an HR interview
+      if (payload.dsaScore === 0 || !['TECHNICAL', 'MACHINE_CODING'].includes(interview.type)) delete payload.dsaScore;
+      if (payload.codingScore === 0 || !['TECHNICAL', 'MACHINE_CODING'].includes(interview.type)) delete payload.codingScore;
+      if (payload.systemDesignScore === 0 || !['TECHNICAL', 'MACHINE_CODING'].includes(interview.type)) delete payload.systemDesignScore;
+      if (payload.problemSolvingScore === 0 || !['TECHNICAL', 'MACHINE_CODING'].includes(interview.type)) delete payload.problemSolvingScore;
+
+      await apiClient.post(url, payload);
       toast.success('Feedback submitted successfully!');
       router.push('/interviewer/interviews');
     } catch (error) {
@@ -122,6 +134,8 @@ export default function InterviewFeedbackPage() {
       setIsSubmitting(false);
     }
   };
+
+  const onSubmit = handleSubmit(submitFeedback);
 
 
   if (loading) return <DashboardLayout><div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div></DashboardLayout>;
@@ -255,183 +269,196 @@ export default function InterviewFeedbackPage() {
         </div>
 
         {/* Main Feedback Form */}
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
-          
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 text-amber-800">
-            <div className="bg-amber-200/50 p-2 rounded-lg">
-              <Star size={20} className="text-amber-600" />
-            </div>
-            <p className="text-sm font-bold">
-              <span className="font-black">{interview.type} Round {interview.roundNumber || 1} Form</span> — Configured by HR. Focus: {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'DSA, Coding, System Design.' : 'Behavioral, Culture fit, Soft skills.'} Questions adapted for this round type.
-            </p>
-          </div>
-
-          {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) && (
-            <div>
-              <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">Section A — Technical Knowledge</h3>
+          <form onSubmit={onSubmit} className="flex flex-col lg:flex-row gap-8" {...getCaptureProps()}>
             
-            <div className="space-y-6">
-              {/* DSA */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-1">1. Data Structures & Algorithms</h4>
-                <p className="text-xs font-medium text-slate-500 mb-6">How well did the candidate handle DSA problems? Speed, correctness, time complexity?</p>
-                <StarRating value={formData.dsaScore} onChange={(v) => setFormData({...formData, dsaScore: v})} />
-                <textarea 
-                  value={formData.dsaNotes}
-                  onChange={(e) => setFormData({...formData, dsaNotes: e.target.value})}
-                  className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Solved 2/3. Used brute force initially, then optimised LRU Cache with O(1)..."
-                />
+            {/* Left Column: Form Inputs */}
+            <div className="flex-1 space-y-8">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 text-amber-800">
+                <div className="bg-amber-200/50 p-2 rounded-lg">
+                  <Star size={20} className="text-amber-600" />
+                </div>
+                <p className="text-sm font-bold">
+                  <span className="font-black">{interview.type} Round {interview.roundNumber || 1} Form</span> — Configured by HR. Focus: {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'DSA, Coding, System Design.' : 'Behavioral, Culture fit, Soft skills.'} Questions adapted for this round type.
+                </p>
               </div>
 
-              {/* Coding */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-1">2. Coding Ability (Live)</h4>
-                <p className="text-xs font-medium text-slate-500 mb-6">Code quality, readability, edge cases, debugging — how was the live coding session?</p>
-                <StarRating value={formData.codingScore} onChange={(v) => setFormData({...formData, codingScore: v})} />
-                <textarea 
-                  value={formData.codingNotes}
-                  onChange={(e) => setFormData({...formData, codingNotes: e.target.value})}
-                  className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Clean code, good variable naming. Missed null checks. Fixed when prompted..."
-                />
+              {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) && (
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">Section A — Technical Knowledge</h3>
+                
+                <div className="space-y-6">
+                  {/* DSA */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-black text-slate-900 mb-1">1. Data Structures & Algorithms</h4>
+                    <p className="text-xs font-medium text-slate-500 mb-6">How well did the candidate handle DSA problems? Speed, correctness, time complexity?</p>
+                    <StarRating value={formData.dsaScore} onChange={(v) => setFormData({...formData, dsaScore: v})} />
+                    <textarea 
+                      value={formData.dsaNotes}
+                      onChange={(e) => setFormData({...formData, dsaNotes: e.target.value})}
+                      className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
+                      placeholder="e.g. Solved 2/3. Used brute force initially, then optimised LRU Cache with O(1)..."
+                    />
+                  </div>
+
+                  {/* Coding */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-black text-slate-900 mb-1">2. Coding Ability (Live)</h4>
+                    <p className="text-xs font-medium text-slate-500 mb-6">Code quality, readability, edge cases, debugging — how was the live coding session?</p>
+                    <StarRating value={formData.codingScore} onChange={(v) => setFormData({...formData, codingScore: v})} />
+                    <textarea 
+                      value={formData.codingNotes}
+                      onChange={(e) => setFormData({...formData, codingNotes: e.target.value})}
+                      className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
+                      placeholder="e.g. Clean code, good variable naming. Missed null checks. Fixed when prompted..."
+                    />
+                  </div>
+
+                  {/* System Design */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-black text-slate-900 mb-1">3. System Design</h4>
+                    <p className="text-xs font-medium text-slate-500 mb-6">Can the candidate design scalable systems? Databases, APIs, caching, load balancing?</p>
+                    <StarRating value={formData.systemDesignScore} onChange={(v) => setFormData({...formData, systemDesignScore: v})} />
+                    <textarea 
+                      value={formData.systemDesignNotes}
+                      onChange={(e) => setFormData({...formData, systemDesignNotes: e.target.value})}
+                      className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
+                      placeholder="e.g. Could not explain horizontal scaling. Understood basic REST..."
+                    />
+                  </div>
+
+                  {/* Problem Solving */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-black text-slate-900 mb-1">4. Problem-Solving Approach</h4>
+                    <p className="text-xs font-medium text-slate-500 mb-6">Did the candidate think aloud, break down the problem, ask clarifying questions?</p>
+                    <StarRating value={formData.problemSolvingScore} onChange={(v) => setFormData({...formData, problemSolvingScore: v})} />
+                    <textarea 
+                      value={formData.problemSolvingNotes}
+                      onChange={(e) => setFormData({...formData, problemSolvingNotes: e.target.value})}
+                      className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
+                      placeholder="e.g. Good structured thinking. Asked clarifying questions..."
+                    />
+                  </div>
+                </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">
+                  {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'Section B' : 'Section A'} — Notes
+                </h3>
+                <div className="space-y-6">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block">Key Strengths</label>
+                    <textarea
+                      name="strengths"
+                      className={`w-full p-4 bg-slate-50 border rounded-xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none h-28 resize-none ${errors.strengths ? 'border-red-500' : 'border-slate-200'}`}
+                      placeholder="What did the candidate do well?"
+                      value={formData.strengths}
+                      onChange={(e) => setFormData({ ...formData, strengths: e.target.value })}
+                    />
+                    {errors.strengths && <p className="text-red-500 text-[10px] mt-1">{errors.strengths}</p>}
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block">Areas for Improvement / Weaknesses</label>
+                    <textarea
+                      name="weaknesses"
+                      className={`w-full p-4 bg-slate-50 border rounded-xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none h-28 resize-none ${errors.weaknesses ? 'border-red-500' : 'border-slate-200'}`}
+                      placeholder="Where did the candidate struggle?"
+                      value={formData.weaknesses}
+                      onChange={(e) => setFormData({ ...formData, weaknesses: e.target.value })}
+                    />
+                    {errors.weaknesses && <p className="text-red-500 text-[10px] mt-1">{errors.weaknesses}</p>}
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-black text-slate-900 mb-1">7. Notes for HR (private)</h4>
+                    <p className="text-xs font-medium text-slate-500 mb-4">This goes to HR only. Your feedback directly drives the hire decision.</p>
+                    <textarea 
+                      value={formData.hrNotes}
+                      onChange={(e) => setFormData({...formData, hrNotes: e.target.value})}
+                      className="w-full h-24 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
+                      placeholder="e.g. Strong profile overall. Recommend moving to Round 2..."
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* System Design */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-1">3. System Design</h4>
-                <p className="text-xs font-medium text-slate-500 mb-6">Can the candidate design scalable systems? Databases, APIs, caching, load balancing?</p>
-                <StarRating value={formData.systemDesignScore} onChange={(v) => setFormData({...formData, systemDesignScore: v})} />
-                <textarea 
-                  value={formData.systemDesignNotes}
-                  onChange={(e) => setFormData({...formData, systemDesignNotes: e.target.value})}
-                  className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Could not explain horizontal scaling. Understood basic REST..."
-                />
-              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">
+                  {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'Section C' : 'Section B'} — Your Recommendation
+                </h3>
+                <p className="text-xs font-medium text-slate-500 mb-6">Your recommendation is seen by HR Admin only. HR will use this to make the final hiring decision.</p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'HIRE' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:border-emerald-200'}`}>
+                    <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'HIRE'} onChange={() => setFormData({...formData, recommendedAction: 'HIRE'})} />
+                    <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'HIRE' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <div>
+                      <h4 className={`font-black ${formData.recommendedAction === 'HIRE' ? 'text-emerald-700' : 'text-slate-900'}`}>Hire</h4>
+                      <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'HIRE' ? 'text-emerald-600' : 'text-slate-500'}`}>Strong candidate, recommend immediately</p>
+                    </div>
+                  </label>
 
-              {/* Problem Solving */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-1">4. Problem-Solving Approach</h4>
-                <p className="text-xs font-medium text-slate-500 mb-6">Did the candidate think aloud, break down the problem, ask clarifying questions?</p>
-                <StarRating value={formData.problemSolvingScore} onChange={(v) => setFormData({...formData, problemSolvingScore: v})} />
-                <textarea 
-                  value={formData.problemSolvingNotes}
-                  onChange={(e) => setFormData({...formData, problemSolvingNotes: e.target.value})}
-                  className="w-full h-24 p-4 mt-6 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Good structured thinking. Asked clarifying questions..."
-                />
+                  <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'NEXT_ROUND' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+                    <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'NEXT_ROUND'} onChange={() => setFormData({...formData, recommendedAction: 'NEXT_ROUND'})} />
+                    <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'NEXT_ROUND' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      <ArrowRight size={16} />
+                    </div>
+                    <div>
+                      <h4 className={`font-black ${formData.recommendedAction === 'NEXT_ROUND' ? 'text-blue-700' : 'text-slate-900'}`}>Next Round</h4>
+                      <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'NEXT_ROUND' ? 'text-blue-600' : 'text-slate-500'}`}>Good but needs further evaluation</p>
+                    </div>
+                  </label>
+
+                  <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'HOLD' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-white hover:border-amber-200'}`}>
+                    <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'HOLD'} onChange={() => setFormData({...formData, recommendedAction: 'HOLD'})} />
+                    <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'HOLD' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      <Pause size={16} />
+                    </div>
+                    <div>
+                      <h4 className={`font-black ${formData.recommendedAction === 'HOLD' ? 'text-amber-700' : 'text-slate-900'}`}>On Hold</h4>
+                      <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'HOLD' ? 'text-amber-600' : 'text-slate-500'}`}>Not sure — HR should decide</p>
+                    </div>
+                  </label>
+
+                  <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'REJECT' ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-white hover:border-rose-200'}`}>
+                    <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'REJECT'} onChange={() => setFormData({...formData, recommendedAction: 'REJECT'})} />
+                    <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'REJECT' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      <X size={16} />
+                    </div>
+                    <div>
+                      <h4 className={`font-black ${formData.recommendedAction === 'REJECT' ? 'text-rose-700' : 'text-slate-900'}`}>No Hire</h4>
+                      <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'REJECT' ? 'text-rose-600' : 'text-slate-500'}`}>Does not meet the bar for this role</p>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
+
+            {/* Sidebar Sticky Submit */}
+            <div className="lg:w-80 shrink-0">
+                <div className="sticky top-8 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                  <h3 className="font-black text-slate-900 mb-2">Final Review</h3>
+                  <p className="text-xs text-slate-500 mb-6">Ensure all sections are filled before submitting. You cannot edit this feedback once submitted.</p>
+                  
+                  {errors.recommendedAction && <p className="text-red-500 text-[10px] mb-4 font-bold">{errors.recommendedAction}</p>}
+                  {!isValid && <p className="text-amber-600 text-[10px] mb-4 font-bold">Please complete all required fields.</p>}
+                  
+                  <div className="mt-auto pt-8 flex gap-3">
+                    <button type="button" onClick={() => router.push('/interviewer/interviews')} className="flex-1 px-6 py-4 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={isSubmitting || !!interview.feedback || !isValid}
+                      className="flex-1 px-6 py-4 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center justify-center"
+                    >
+                      {isSubmitting ? 'Submitting...' : interview.feedback ? 'Already Submitted' : 'Submit Evaluation'}
+                    </button>
+                  </div>
+                </div>
             </div>
-          )}
-
-          <div>
-            <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">
-              {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'Section B' : 'Section A'} — Notes
-            </h3>
-            <div className="space-y-6">
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-4">5. Strengths Observed</h4>
-                <textarea 
-                  value={formData.strengths}
-                  onChange={(e) => setFormData({...formData, strengths: e.target.value})}
-                  className="w-full h-24 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Strong in React and Node. Excellent problem decomposition..."
-                />
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-4">6. Areas of Concern</h4>
-                <textarea 
-                  value={formData.weaknesses}
-                  onChange={(e) => setFormData({...formData, weaknesses: e.target.value})}
-                  className="w-full h-24 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. System design needs work. Not comfortable with Docker..."
-                />
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h4 className="font-black text-slate-900 mb-1">7. Notes for HR (private)</h4>
-                <p className="text-xs font-medium text-slate-500 mb-4">This goes to HR only. Your feedback directly drives the hire decision.</p>
-                <textarea 
-                  value={formData.hrNotes}
-                  onChange={(e) => setFormData({...formData, hrNotes: e.target.value})}
-                  className="w-full h-24 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none resize-none"
-                  placeholder="e.g. Strong profile overall. Recommend moving to Round 2..."
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-black text-slate-900 border-l-4 border-blue-600 pl-3 mb-6">
-              {['TECHNICAL', 'MACHINE_CODING'].includes(interview.type) ? 'Section C' : 'Section B'} — Your Recommendation
-            </h3>
-            <p className="text-xs font-medium text-slate-500 mb-6">Your recommendation is seen by HR Admin only. HR will use this to make the final hiring decision.</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'HIRE' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:border-emerald-200'}`}>
-                <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'HIRE'} onChange={() => setFormData({...formData, recommendedAction: 'HIRE'})} />
-                <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'HIRE' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                  <CheckCircle2 size={16} />
-                </div>
-                <div>
-                  <h4 className={`font-black ${formData.recommendedAction === 'HIRE' ? 'text-emerald-700' : 'text-slate-900'}`}>Hire</h4>
-                  <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'HIRE' ? 'text-emerald-600' : 'text-slate-500'}`}>Strong candidate, recommend immediately</p>
-                </div>
-              </label>
-
-              <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'NEXT_ROUND' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
-                <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'NEXT_ROUND'} onChange={() => setFormData({...formData, recommendedAction: 'NEXT_ROUND'})} />
-                <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'NEXT_ROUND' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                  <ArrowRight size={16} />
-                </div>
-                <div>
-                  <h4 className={`font-black ${formData.recommendedAction === 'NEXT_ROUND' ? 'text-blue-700' : 'text-slate-900'}`}>Next Round</h4>
-                  <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'NEXT_ROUND' ? 'text-blue-600' : 'text-slate-500'}`}>Good but needs further evaluation</p>
-                </div>
-              </label>
-
-              <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'HOLD' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-white hover:border-amber-200'}`}>
-                <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'HOLD'} onChange={() => setFormData({...formData, recommendedAction: 'HOLD'})} />
-                <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'HOLD' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                  <Pause size={16} />
-                </div>
-                <div>
-                  <h4 className={`font-black ${formData.recommendedAction === 'HOLD' ? 'text-amber-700' : 'text-slate-900'}`}>On Hold</h4>
-                  <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'HOLD' ? 'text-amber-600' : 'text-slate-500'}`}>Not sure — HR should decide</p>
-                </div>
-              </label>
-
-              <label className={`cursor-pointer rounded-2xl border-2 p-6 transition-all flex items-start gap-4 ${formData.recommendedAction === 'REJECT' ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-white hover:border-rose-200'}`}>
-                <input type="radio" name="recommendation" className="sr-only" checked={formData.recommendedAction === 'REJECT'} onChange={() => setFormData({...formData, recommendedAction: 'REJECT'})} />
-                <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.recommendedAction === 'REJECT' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                  <X size={16} />
-                </div>
-                <div>
-                  <h4 className={`font-black ${formData.recommendedAction === 'REJECT' ? 'text-rose-700' : 'text-slate-900'}`}>No Hire</h4>
-                  <p className={`text-xs font-semibold mt-1 ${formData.recommendedAction === 'REJECT' ? 'text-rose-600' : 'text-slate-500'}`}>Does not meet the bar for this role</p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-slate-200 flex justify-end gap-4">
-            <button 
-              type="button" 
-              onClick={() => router.push('/interviewer/interviews')}
-              className="px-8 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 flex items-center gap-2"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Final Feedback'}
-            </button>
-          </div>
 
         </form>
       </div>

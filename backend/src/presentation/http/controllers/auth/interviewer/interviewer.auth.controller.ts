@@ -12,18 +12,17 @@ export class InterviewerAuthController {
   constructor(
     private readonly _activateUseCase: IActivateInterviewerUseCase,
     private readonly _loginUseCase: ILoginInterviewerUseCase,
-    private readonly verifyTokenUseCase: IVerifyInterviewerTokenUseCase
+    private readonly _verifyTokenUseCase: IVerifyInterviewerTokenUseCase
   ) {}
 
   verifyToken = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.params;
-    const result = await this.verifyTokenUseCase.execute(token);
+    const result = await this._verifyTokenUseCase.execute(token);
     sendSuccess(res, result, MESSAGES.SUCCESS.TOKEN_VERIFIED);
   });
 
   activate = asyncHandler(async (req: Request, res: Response) => {
-    // @ts-ignore
-    const interviewerId = req.user.id;
+    const interviewerId = (req as Request & { user: { id: string } }).user.id;
     const { password } = req.body;
     const email = req.query.email as string;
     const result = await this._activateUseCase.execute(interviewerId, password, email);

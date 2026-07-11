@@ -36,23 +36,23 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
 
     switch (role) {
       case 'student':
-        await this.studentRepo.update(id, { password: hashedPassword } as any);
+        await this.studentRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
       case 'hr':
-        await this.hrRepo.update(id, { password: hashedPassword } as any);
+        await this.hrRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
       case 'interviewer':
-        await this.interviewerRepo.update(id, { password: hashedPassword } as any);
+        await this.interviewerRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
       case 'college_admin':
-        await this.collegeAdminRepo.update(id, { password: hashedPassword } as any);
+        await this.collegeAdminRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
       case 'super_admin':
-        await this.superAdminRepo.update(id, { password: hashedPassword } as any);
+        await this.superAdminRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
     }

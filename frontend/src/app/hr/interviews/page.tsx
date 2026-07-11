@@ -15,7 +15,11 @@ export default function InterviewsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedReschedule, setSelectedReschedule] = useState<any | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
+  const [selectedReassign, setSelectedReassign] = useState<any | null>(null);
+  const [interviewers, setInterviewers] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'TODAY' | 'FEEDBACK' | 'COMPLETED' | 'RESCHEDULES'>('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const router = useRouter();
 
   const fetchInterviews = async () => {
@@ -29,8 +33,18 @@ export default function InterviewsPage() {
     }
   };
 
+  const fetchInterviewers = async () => {
+    try {
+      const res: any = await apiClient.get(API_ROUTES.HR.INTERVIEWERS);
+      setInterviewers(res.data?.interviewers || res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch interviewers", error);
+    }
+  };
+
   useEffect(() => {
     fetchInterviews();
+    fetchInterviewers();
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -39,6 +53,8 @@ export default function InterviewsPage() {
         return <span className="px-3 py-1 bg-green-50 text-green-700 font-bold text-xs rounded-lg flex items-center gap-1"><CheckCircle2 size={12}/> Completed</span>;
       case 'RESCHEDULE_REQUESTED':
         return <span className="px-3 py-1 bg-orange-50 text-orange-700 font-bold text-xs rounded-lg flex items-center gap-1"><Clock size={12}/> Action Needed</span>;
+      case 'CANCELLATION_REQUESTED':
+        return <span className="px-3 py-1 bg-red-100 text-red-700 font-bold text-xs rounded-lg flex items-center gap-1"><AlertTriangle size={12}/> Pending Cancel</span>;
       case 'CANCELLED':
         return <span className="px-3 py-1 bg-red-50 text-red-700 font-bold text-xs rounded-lg flex items-center gap-1"><XCircle size={12}/> Cancelled</span>;
       case 'SCHEDULED':
@@ -62,11 +78,66 @@ export default function InterviewsPage() {
       fetchInterviews(); // Refresh the list
     } catch (error) {
       console.error("Failed to resolve reschedule request", error);
-      alert("Failed to resolve the request.");
+      toast.error("Failed to resolve the request.");
+    }
+  };
+
+  const handleApproveCancel = async (id: string) => {
+    if (confirm("Are you sure you want to approve this cancellation? The student will be notified.")) {
+      try {
+        await apiClient.post(`${API_ROUTES.HR.INTERVIEWS}/${id}/approve-cancellation`);
+        toast.success("Cancellation approved");
+        fetchInterviews();
+      } catch (error) {
+        console.error("Failed to approve cancellation", error);
+        toast.error("Failed to approve cancellation");
+      }
+    }
+  };
+
+  const handleReassignSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newInterviewerId = formData.get('interviewerId') as string;
+    
+    if (!newInterviewerId) {
+      toast.error("Please select a new interviewer");
+      return;
+    }
+
+    try {
+      await apiClient.post(`${API_ROUTES.HR.INTERVIEWS}/${selectedReassign.id}/reassign`, {
+        newInterviewerId
+      });
+      toast.success("Interview reassigned successfully");
+      setSelectedReassign(null);
+      fetchInterviews();
+    } catch (error) {
+      console.error("Failed to reassign interview", error);
+      toast.error("Failed to reassign interview");
     }
   };
 
   const colors = ["bg-orange-500", "bg-emerald-500", "bg-blue-500", "bg-purple-500", "bg-pink-500"];
+
+  const filteredAndSortedInterviews = (interviews || [])
+    .filter((interview: any) => {
+      if (activeFilter === 'ALL') return true;
+      if (activeFilter === 'RESCHEDULES') return interview.status === 'RESCHEDULE_REQUESTED';
+      if (activeFilter === 'COMPLETED') return interview.status === 'COMPLETED';
+      if (activeFilter === 'TODAY') {
+        const today = new Date().toDateString();
+        return new Date(interview.scheduledAt).toDateString() === today;
+      }
+      if (activeFilter === 'FEEDBACK') {
+        return false;
+      }
+      return true;
+    })
+    .sort((a: any, b: any) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+
+  const totalPages = Math.ceil(filteredAndSortedInterviews.length / itemsPerPage);
+  const paginatedInterviews = filteredAndSortedInterviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <DashboardLayout>
@@ -146,26 +217,12 @@ export default function InterviewsPage() {
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-slate-400 font-medium">Loading interviews...</td>
                 </tr>
-              ) : (interviews || []).length === 0 ? (
+              ) : paginatedInterviews.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500 font-bold">No interviews scheduled yet.</td>
+                  <td colSpan={6} className="text-center py-12 text-slate-500 font-bold">No interviews found for this filter.</td>
                 </tr>
               ) : (
-                (interviews || []).filter((interview) => {
-                  if (activeFilter === 'ALL') return true;
-                  if (activeFilter === 'RESCHEDULES') return interview.status === 'RESCHEDULE_REQUESTED';
-                  if (activeFilter === 'COMPLETED') return interview.status === 'COMPLETED';
-                  if (activeFilter === 'TODAY') {
-                    const today = new Date().toDateString();
-                    return new Date(interview.scheduledAt).toDateString() === today;
-                  }
-                  if (activeFilter === 'FEEDBACK') {
-                    // For mock purposes, assuming feedback is due if it's completed but has no feedback yet
-                    // Since we don't have this explicitly in this view, let's just show none or logic for it.
-                    return false;
-                  }
-                  return true;
-                }).map((interview, index) => {
+                paginatedInterviews.map((interview, index) => {
                   const isRescheduleReq = interview.status === 'RESCHEDULE_REQUESTED';
                   return (
                     <tr key={interview.id} className={`hover:bg-slate-50 transition-colors ${isRescheduleReq ? 'bg-[#FFFBF5]' : ''}`}>
@@ -193,6 +250,9 @@ export default function InterviewsPage() {
                         {isRescheduleReq && (
                           <p className="text-xs font-bold text-orange-600 mt-1">Requested {new Date(interview.rescheduleRequest?.preferredDate).toLocaleDateString()} at {interview.rescheduleRequest?.preferredTime}</p>
                         )}
+                        {interview.status === 'CANCELLED' && interview.cancellationReason && (
+                          <p className="text-xs font-bold text-red-600 mt-1">Reason: {interview.cancellationReason}</p>
+                        )}
                       </td>
                       <td className="py-4 px-6">
                         {getStatusBadge(interview.status)}
@@ -202,6 +262,19 @@ export default function InterviewsPage() {
                           {isRescheduleReq ? (
                             <button onClick={() => setSelectedReschedule(interview)} className="px-3 py-1.5 border border-orange-200 text-orange-600 hover:bg-orange-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
                               <RefreshCw size={12} /> Review
+                            </button>
+                          ) : interview.status === 'CANCELLATION_REQUESTED' ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleApproveCancel(interview.id)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                                <AlertTriangle size={12} /> Approve Cancel
+                              </button>
+                              <button onClick={() => setSelectedReassign(interview)} className="px-3 py-1.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                                <UserCircle size={12} /> Reassign
+                              </button>
+                            </div>
+                          ) : interview.status === 'CANCELLED' ? (
+                            <button onClick={() => setSelectedReassign(interview)} className="px-3 py-1.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                              <UserCircle size={12} /> Reassign
                             </button>
                           ) : interview.status === 'COMPLETED' ? (
                             <button onClick={() => setSelectedFeedback(interview)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
@@ -220,6 +293,7 @@ export default function InterviewsPage() {
               )}
             </tbody>
           </table>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       </div>
 
@@ -369,10 +443,70 @@ export default function InterviewsPage() {
           </div>
         </div>
       )}
+
+      {/* Reassign Modal */}
+      {selectedReassign && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative">
+            <button 
+              onClick={() => setSelectedReassign(null)}
+              className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+              <UserCircle size={32} />
+            </div>
+
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Reassign Interview</h2>
+            <p className="text-slate-500 font-medium mb-6">
+              Assign a new interviewer for {selectedReassign.candidate.name}'s interview.
+            </p>
+
+            <form onSubmit={handleReassignSubmit}>
+              <div className="mb-6">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Select New Interviewer <span className="text-red-500">*</span></label>
+                <select 
+                  name="interviewerId"
+                  defaultValue=""
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  required
+                >
+                  <option value="" disabled>Select an interviewer...</option>
+                  {interviewers.map(inv => (
+                    <option key={inv.id} value={inv.id} disabled={inv.id === selectedReassign.interviewerId}>
+                      {inv.firstName || (inv.user?.firstName)} {inv.lastName || (inv.user?.lastName)} ({inv.designation || inv.department}) {inv.id === selectedReassign.interviewerId ? '- Current' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setSelectedReassign(null)}
+                  className="flex-1 py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-colors"
+                >
+                  Confirm Reassignment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       </div>
     </DashboardLayout>
   );
 }
 
 // Add these lucide icons missing from the import at the top
-import { CheckCircle2, XCircle, X } from 'lucide-react';
+import { CheckCircle2, XCircle, X, AlertTriangle } from 'lucide-react';
+import { Pagination } from '@/components/shared/Pagination';

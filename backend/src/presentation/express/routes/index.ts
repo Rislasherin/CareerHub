@@ -9,7 +9,6 @@ import collegeRouter from "./college/college.router";
 import hrRouter from "./hr/hr.router";
 import superAdminRouter from "./super-admin/super-admin.router";
 import studentRouter from "./student/student.router";
-import { makeStudentManagementController } from "@infrastructure/di/college.factory";
 import { ROUTES } from "@shared/constants/routes.constants";
 import { maintenanceMiddleware } from "../middlewares/maintenance.middleware";
 import skillRouter from "./skill.router";

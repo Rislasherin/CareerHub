@@ -8,5 +8,5 @@ import { Student } from "@domain/entities/student";
 import { IStorageService } from "@application/interfaces/IStorageService";
 
 export interface IUploadStudentVerificationUseCase {
-  execute(studentId: string, file: any): Promise<Student>;
+  execute(studentId: string, file: unknown): Promise<Student>;
 }

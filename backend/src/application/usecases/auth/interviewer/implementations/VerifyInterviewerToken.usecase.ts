@@ -6,7 +6,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IJwtService } from "@application/interfaces/IJwt.service";
 
 export interface IVerifyInterviewerTokenUseCase {
-  execute(token: string): Promise<any>;
+  execute(token: string): Promise<Record<string, string>>;
 }
 
 export class VerifyInterviewerTokenUseCase implements IVerifyInterviewerTokenUseCase {
@@ -15,9 +15,9 @@ export class VerifyInterviewerTokenUseCase implements IVerifyInterviewerTokenUse
     private readonly _jwtService: IJwtService
   ) { }
 
-  async execute(token: string): Promise<any> {
+  async execute(token: string): Promise<Record<string, string>> {
     try {
-      const decoded = this._jwtService.verifyAccessToken(token) as any;
+      const decoded = this._jwtService.verifyAccessToken(token) as unknown as { type?: string, email: string, id: string };
       if (decoded.type !== "SETUP") {
         throw new AppError("Invalid token type", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
       }

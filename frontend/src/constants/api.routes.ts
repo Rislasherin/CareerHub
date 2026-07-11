@@ -57,5 +57,12 @@ export const API_ROUTES = {
     STUDENT_REQUEST_ACCESS: '/auth/student/request-access',
     INTERVIEWER_VERIFY_TOKEN: '/auth/interviewer/verify-token',
     INTERVIEWER_ACTIVATE: '/auth/interviewer/activate',
+  },
+  NOTIFICATIONS: {
+    STUDENT:    '/student/notifications',
+    HR:         '/hr/notifications',
+    INTERVIEWER: '/interviewer/notifications',
+    COLLEGE:    '/college/notifications',
+    SUPER_ADMIN: '/super-admin/notifications',
   }
 };

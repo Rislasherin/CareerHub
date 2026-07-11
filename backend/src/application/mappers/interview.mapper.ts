@@ -19,6 +19,7 @@ export const toInterviewEntity = (doc: any): Interview => {
     meetingLink: doc.meetingLink,
     feedback: doc.feedback,
     rescheduleRequest: doc.rescheduleRequest,
+    cancellationReason: doc.cancellationReason,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
   });
@@ -41,5 +42,6 @@ export const toInterviewPersistence = (entity: Interview): Record<string, unknow
     meetingLink: props.meetingLink,
     feedback: props.feedback,
     rescheduleRequest: props.rescheduleRequest,
+    cancellationReason: props.cancellationReason,
   };
 };

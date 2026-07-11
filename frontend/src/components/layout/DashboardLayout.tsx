@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { NotificationBell } from '../shared/NotificationBell';
 import { LogOut, User as UserIcon, Menu, X, Clock, ShieldCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { clearAuth } from '@/redux/slices/authSlice';
@@ -92,16 +93,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
             {role === 'student' && <span className="font-black text-slate-800 text-sm lg:hidden absolute left-1/2 -translate-x-1/2">CareerHub</span>}
 
-            <div className={`items-center gap-6 ml-auto ${role === 'student' ? 'hidden' : 'flex'}`}>
+            <div className={`items-center gap-3 ml-auto ${role === 'student' ? 'hidden' : 'flex'}`}>
+              {role && (
+                <NotificationBell role={role as 'student' | 'hr' | 'interviewer' | 'college_admin' | 'super_admin'} />
+              )}
+
+              <div className="w-px h-6 bg-slate-100 hidden sm:block"></div>
+
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 overflow-hidden">
                   {user ? (
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as any).collegeName || 'User'}`} alt="avatar" className="w-full h-full object-cover" />
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || (user as { collegeName?: string }).collegeName || 'User'}`} alt="avatar" className="w-full h-full object-cover" />
                   ) : <UserIcon size={18} />}
                 </div>
                 <div className="hidden sm:flex flex-col">
                   <span className="text-xs font-black text-slate-900 truncate max-w-[120px]">
-                    {user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).collegeName) : 'Account'}
+                    {user ? (user.firstName ? `${user.firstName} ${user.lastName}` : (user as { collegeName?: string }).collegeName) : 'Account'}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{role?.replace('_', ' ')}</span>
                 </div>

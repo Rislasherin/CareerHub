@@ -14,8 +14,9 @@ import { DeleteJobUseCase } from "@application/usecases/hr/job-engine/implementa
 import { HRJobController } from "@presentation/http/controllers/hr/job.controller";
 import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRCandidates.usecase";
 import { GetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobApplications.usecase";
+import { GetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRHireRequests.usecase";
 import { UpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/implementations/UpdateApplicationStatus.usecase";
-import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository, interviewRepository, organizationRepository } from "@infrastructure/di/infra.container";
+import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository, interviewRepository, organizationRepository, createSystemNotificationUseCase } from "@infrastructure/di/infra.container";
 import { HRAuthController } from "@presentation/http/controllers/auth/hr/hr.auth.controller";
 import { InterviewerManagementController } from "@presentation/http/controllers/hr/interviewer.management.controller";
 import { EmailService } from "@infrastructure/services/email/email.service";
@@ -32,6 +33,12 @@ import { GetRescheduleRequestsUseCase } from "@application/usecases/hr/interview
 import { ResolveRescheduleUseCase } from "@application/usecases/hr/interview-management/implementations/ResolveReschedule.usecase";
 import { GetHRInterviewsUseCase } from "@application/usecases/hr/interview-management/implementations/GetHRInterviews.usecase";
 import { HRInterviewController } from "@presentation/http/controllers/hr/hr.interview.controller";
+import { offerRepository } from "@infrastructure/di/infra.container";
+import { HROfferController } from "@presentation/http/controllers/hr/hr.offer.controller";
+import { GenerateOfferUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOffer.usecase";
+import { GetHROffersUseCase } from "@application/usecases/hr/offer-engine/implementations/GetHROffers.usecase";
+import { ResendOfferEmailUseCase } from "@application/usecases/hr/offer-engine/implementations/ResendOfferEmail.usecase";
+import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOfferPdf.usecase";
 
 const emailService = new EmailService();
 
@@ -137,15 +144,19 @@ export const makeGetCandidateProfileUseCase = () => {
 }
 
 export const makeGetHRJobApplicationsUseCase = () => {
-  return new GetHRJobApplicationsUseCase(jobRepository, jobApplicationRepository, studentRepository);
+  return new GetHRJobApplicationsUseCase(jobRepository, jobApplicationRepository, studentRepository, interviewRepository);
+};
+
+export const makeGetHRHireRequestsUseCase = () => {
+  return new GetHRHireRequestsUseCase(jobRepository, jobApplicationRepository, studentRepository);
 };
 
 export const makeUpdateApplicationStatusUseCase = () => {
-  return new UpdateApplicationStatusUseCase(jobApplicationRepository);
+  return new UpdateApplicationStatusUseCase(jobApplicationRepository, createSystemNotificationUseCase);
 };
 
 export const makeSheduleInterviewUseCase = () => {
-  return new ScheduleInterviewUseCase(interviewRepository,jobApplicationRepository)
+  return new ScheduleInterviewUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase)
 }
 
 export const makeHRJobController = () => {
@@ -158,16 +169,31 @@ export const makeHRJobController = () => {
     makeUpdateJobUseCase(),
     makeGetCandidateProfileUseCase(),
     makeGetHRJobApplicationsUseCase(),
+    makeGetHRHireRequestsUseCase(),
     makeUpdateApplicationStatusUseCase(),
     makeSheduleInterviewUseCase(),
   );
 };
 
+import { ApproveCancellationUseCase } from "@application/usecases/hr/interview-management/implementations/ApproveCancellation.usecase";
+import { ReassignInterviewerUseCase } from "@application/usecases/hr/interview-management/implementations/ReassignInterviewer.usecase";
+
 export const makeHRInterviewController = () => {
   return new HRInterviewController(
     new GetHRInterviewsUseCase(interviewRepository, studentRepository, interviewerRepository),
     new GetRescheduleRequestsUseCase(interviewRepository),
-    new ResolveRescheduleUseCase(interviewRepository)
+    new ResolveRescheduleUseCase(interviewRepository),
+    new ApproveCancellationUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase),
+    new ReassignInterviewerUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase)
+  );
+};
+
+export const makeHROfferController = () => {
+  return new HROfferController(
+    new GenerateOfferUseCase(offerRepository, jobApplicationRepository, createSystemNotificationUseCase, interviewRepository),
+    new GetHROffersUseCase(offerRepository),
+    new ResendOfferEmailUseCase(offerRepository, studentRepository, companyRepository, emailService),
+    new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository)
   );
 };
 

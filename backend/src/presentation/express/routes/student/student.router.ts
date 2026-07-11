@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { makeStudentController } from "@infrastructure/di/student.factory";
+import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { UpdateStudentProfileDto } from "@application/dtos/student/UpdateStudentProfile.dto";
@@ -22,18 +23,19 @@ router.get("/jobs", studentController.getJobs);
 router.post("/jobs/:id/apply", studentController.applyJob);
 
 router.get("/applications", studentController.getApplications.bind(studentController));
+router.get("/offers", studentController.getOffers.bind(studentController));
+router.patch("/offers/:id/respond", studentController.respondToOffer.bind(studentController));
+router.get("/offers/:id/pdf", studentController.downloadOfferPdf.bind(studentController));
 
-router.get("/notices",studentController.getNotices.bind(studentController));
+router.get("/notices", studentController.getNotices.bind(studentController));
 
-router.post(
-  '/profile/resume', 
-  upload.single('resume'), 
-  studentController.uploadResume.bind(studentController)
-);
-router.delete(
-  '/profile/resume', 
-  studentController.deleteResume.bind(studentController)
-);
+router.post('/profile/resume', upload.single('resume'), studentController.uploadResume.bind(studentController));
+router.delete('/profile/resume', studentController.deleteResume.bind(studentController));
 
 router.get("/interviews", studentController.getInterviews.bind(studentController));
+
+router.get("/notifications", notificationController.getMyNotifications);
+router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
+router.patch("/notifications/:id/read", notificationController.markAsRead);
+
 export default router;

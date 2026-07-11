@@ -22,7 +22,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
 
   async execute(email: string): Promise<void> {
     // 1. Find user in type of the repositories
-    let user: any = null;
+    let user: unknown = null;
     let role: string = '';
 
     user = await this.studentRepo.findByEmail(email);
@@ -52,9 +52,10 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     if (!user) return;
 
     // 3. Generate a reset token (short-lived)
+    const u = user as { id?: string, _id?: string, email: string };
     const resetToken = this.jwtService.generateResetToken({
-      id: user.id || user._id,
-      email: user.email,
+      id: u.id || u._id!,
+      email: u.email,
       role
     });
 

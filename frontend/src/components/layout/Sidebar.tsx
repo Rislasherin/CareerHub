@@ -101,6 +101,8 @@ const hrNav: NavCategory[] = [
       { label: 'Post a Job', icon: Plus, href: '/hr/jobs?action=post-job' },
       { label: 'Interviewers', icon: Users, href: '/hr/interviewers' },
       { label: 'Interviews', icon: Calendar, href: '/hr/interviews' },
+      { label: 'Hire Requests', icon: FileCheck, href: '/hr/hire-requests' },
+      { label: 'Offer Letters', icon: FileText, href: '/hr/offers' },
     ]
   }
 ];
@@ -119,7 +121,8 @@ const studentNav: NavCategory[] = [
     items: [
       { label: 'Notice Board', icon: Megaphone, href: '/student/notices' },
       { label: 'My Applications', icon: Calendar, href: '/student/applications'},
-      { label: 'My Interviews', icon: Calendar, href: '/student/interviews'}
+      { label: 'My Interviews', icon: Calendar, href: '/student/interviews'},
+      { label: 'My Offers', icon: FileText, href: '/student/offers' }
     ]
   }
 ];

@@ -16,6 +16,7 @@ import { API_ROUTES } from '@/constants/api.routes';
 import { toast } from 'sonner';
 import { Button } from '@/components/shared/Button';
 import { ApiResponse } from '@/types/api';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 export default function CandidateProfilePage() {
    const params = useParams();
@@ -71,9 +72,22 @@ export default function CandidateProfilePage() {
       }
    }, [id])
 
-   const handleScheduleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      
+   const validateInterviewForm = (): Record<string, string> => {
+      const errs: Record<string, string> = {};
+      if (!interviewForm.title.trim()) errs.title = 'Title is required';
+      if (!interviewForm.interviewerId) errs.interviewerId = 'Interviewer is required';
+      if (!interviewForm.scheduledAt) errs.scheduledAt = 'Date & Time is required';
+      const duration = Number(interviewForm.durationMinutes);
+      if (isNaN(duration) || duration < 15) errs.durationMinutes = 'Must be at least 15 mins';
+      return errs;
+   };
+
+   const { errors: currentErrors, getCaptureProps, handleSubmit: handleFormSubmit, resetValidation } = useFormValidation(
+      interviewForm,
+      validateInterviewForm
+   );
+
+   const handleScheduleSubmit = handleFormSubmit(async () => {
       setUpdating(true);
       try {
          // Note: Scheduling requires an applicationId. Since this page might not have it contextually, we pass a dummy or inform the user.
@@ -94,7 +108,7 @@ export default function CandidateProfilePage() {
       } finally {
          setUpdating(false);
       }
-   };
+   });
 
    if (loading) {
       return (
@@ -571,14 +585,16 @@ export default function CandidateProfilePage() {
                         </button>
                      </div>
 
-                     <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4">
+                     <form {...getCaptureProps()} onSubmit={(e) => { e.preventDefault(); handleScheduleSubmit(e); }} className="p-6 space-y-4">
                         <div>
                            <label className="block text-sm font-medium text-slate-700 mb-1">Interview Title</label>
                            <input 
                               type="text" required placeholder="e.g., Round 1: Technical Discussion"
+                              name="title"
                               className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                               value={interviewForm.title} onChange={e => setInterviewForm({...interviewForm, title: e.target.value})}
                            />
+                           {currentErrors.title && <p className="text-rose-500 text-xs mt-1">{currentErrors.title}</p>}
                         </div>
                         
                         <div className="grid grid-cols-3 gap-4">
@@ -597,15 +613,17 @@ export default function CandidateProfilePage() {
                                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                                  value={interviewForm.type} onChange={e => setInterviewForm({...interviewForm, type: e.target.value})}
                               >
-                                 <option value="TECHNICAL">Technical</option>
-                                 <option value="HR">HR</option>
-                                 <option value="BEHAVIORAL">Behavioral</option>
-                                 <option value="MACHINE_CODING">Machine Coding</option>
+                                 <option value="APTITUDE">Aptitude Test</option>
+                                 <option value="CODING">Coding Challenge</option>
+                                 <option value="TECHNICAL">Technical Panel Interview</option>
+                                 <option value="HR">HR Panel Interview</option>
+                                 <option value="GROUP_DISCUSSION">Group Discussion (GD)</option>
                               </select>
                            </div>
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Assign Interviewer</label>
                               <select 
+                                 name="interviewerId"
                                  required
                                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                                  value={interviewForm.interviewerId} onChange={e => setInterviewForm({...interviewForm, interviewerId: e.target.value})}
@@ -615,6 +633,7 @@ export default function CandidateProfilePage() {
                                     <option key={inv.id} value={inv.id}>{inv.name || inv.firstName + ' ' + inv.lastName} ({inv.email})</option>
                                  ))}
                               </select>
+                              {currentErrors.interviewerId && <p className="text-rose-500 text-xs mt-1">{currentErrors.interviewerId}</p>}
                            </div>
                         </div>
 
@@ -622,18 +641,22 @@ export default function CandidateProfilePage() {
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
                               <input 
+                                 name="scheduledAt"
                                  type="datetime-local" required
                                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                                  value={interviewForm.scheduledAt} onChange={e => setInterviewForm({...interviewForm, scheduledAt: e.target.value})}
                               />
+                              {currentErrors.scheduledAt && <p className="text-rose-500 text-xs mt-1">{currentErrors.scheduledAt}</p>}
                            </div>
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Duration (Mins)</label>
                               <input 
+                                 name="durationMinutes"
                                  type="number" min="15" step="15" required
                                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                                  value={interviewForm.durationMinutes} onChange={e => setInterviewForm({...interviewForm, durationMinutes: Number(e.target.value)})}
                               />
+                              {currentErrors.durationMinutes && <p className="text-rose-500 text-xs mt-1">{currentErrors.durationMinutes}</p>}
                            </div>
                         </div>
 

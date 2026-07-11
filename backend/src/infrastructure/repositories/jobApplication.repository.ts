@@ -2,6 +2,7 @@ import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationR
 import { JobApplication, JobApplicationProps } from "@domain/entities/JobApplication";
 import { BaseRepository } from "./BaseRepository";
 import { JobApplicationModel, IJobApplicationDocument } from "../database/models/jobApplication.model";
+import { Types } from "mongoose";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 
 export class JobApplicationRepository
@@ -31,9 +32,9 @@ export class JobApplicationRepository
   protected toPersistence(entity: JobApplication): Partial<IJobApplicationDocument> {
     const props = entity.toJSON();
     return {
-      jobId: props.jobId as any,
-      studentId: props.studentId as any,
-      companyId: props.companyId as any,
+      jobId: props.jobId as unknown as Types.ObjectId,
+      studentId: props.studentId as unknown as Types.ObjectId,
+      companyId: props.companyId as unknown as Types.ObjectId,
       resumeUrl: props.resumeUrl,
       resumeId: props.resumeId,
       status: props.status,

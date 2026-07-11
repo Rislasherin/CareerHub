@@ -1,5 +1,5 @@
 import { UploadStudentVerificationUseCase } from "@application/usecases/auth/student/implementations/UploadStudentVerification.usecase";
-import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository, interviewRepository, interviewerRepository } from "@infrastructure/di/infra.container";
+import { studentRepository, jobRepository, companyRepository, organizationRepository, jobApplicationRepository, interviewRepository, interviewerRepository, offerRepository, createSystemNotificationUseCase } from "@infrastructure/di/infra.container";
 import { StudentController } from "@presentation/http/controllers/student/student.controller";
 import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
 import { UpdateStudentProfileUseCase } from "@application/usecases/student/implementations/UpdateStudentProfile.usecase";
@@ -12,6 +12,9 @@ import { UploadResumeUseCase } from "@application/usecases/student/Resume/implem
 import { DeleteResumeUseCase } from "@application/usecases/student/Resume/implementations/DeleteResume.usecase";
 import { GetStudentApplicationsUseCase } from "@application/usecases/student/implementations/GetStudentApplications.usecase";
 import { GetStudentInterviewsUseCase } from "@application/usecases/student/implementations/GetStudentInterviews.usecase";
+import { GetStudentOffersUseCase } from "@application/usecases/student/implementations/GetStudentOffers.usecase";
+import { RespondToOfferUseCase } from "@application/usecases/student/implementations/RespondToOffer.usecase";
+import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOfferPdf.usecase";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -27,7 +30,7 @@ export const makeGetStudentJobsUseCase = () => {
 };
 
 export const makeApplyToJobUseCase = () => {
-  return new ApplyToJobUseCase(studentRepository, jobRepository, jobApplicationRepository);
+  return new ApplyToJobUseCase(studentRepository, jobRepository, jobApplicationRepository, createSystemNotificationUseCase);
 };
 
 
@@ -54,6 +57,14 @@ export const makeGetStudentInterviewsUseCase = () => {
   return new GetStudentInterviewsUseCase(interviewRepository,companyRepository,interviewerRepository)
 }
 
+export const makeGetStudentOffersUseCase = () => {
+  return new GetStudentOffersUseCase(offerRepository);
+};
+
+export const makeRespondToOfferUseCase = () => {
+  return new RespondToOfferUseCase(offerRepository, jobApplicationRepository, createSystemNotificationUseCase);
+};
+
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
@@ -65,6 +76,9 @@ export const makeStudentController = () => {
     makeUploadResumeUseCase(),  
     makeDeleteResumeUseCase(),
     makeGetStudentApplicationsUseCase(),
-    makeGetStudentInterviewsUseCase()
+    makeGetStudentInterviewsUseCase(),
+    makeGetStudentOffersUseCase(),
+    makeRespondToOfferUseCase(),
+    new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository)
   );
 };

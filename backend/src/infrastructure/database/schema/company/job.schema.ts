@@ -26,7 +26,7 @@ export const JobSchema = new Schema(
         name: { type: String, required: true },
         type: {
           type: String,
-          enum: ["aptitude", "coding", "technical", "hr", "group_discussion"],
+          enum: ["APTITUDE", "CODING", "TECHNICAL", "HR", "GROUP_DISCUSSION"],
           required: true
         },
         description: { type: String }

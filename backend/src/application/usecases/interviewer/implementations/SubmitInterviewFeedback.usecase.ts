@@ -10,11 +10,15 @@ import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
 import { JobApplication } from "@domain/entities/JobApplication";
+import { ICreateSystemNotificationUseCase } from "@application/usecases/common/notifications/interfaces/ICreateSystemNotification.usecase";
+import { NotificationRole } from "@domain/enums/NotificationRole.enum";
+import { NotificationType } from "@domain/enums/NotificationType.enum";
 
 export class SubmitInterviewFeedbackUseCase implements ISubmitInterviewFeedbackUseCase {
   constructor(
     private readonly _interviewRepository: IInterviewRepository,
-    private readonly _jobApplicationRepository: IJobApplicationRepository
+    private readonly _jobApplicationRepository: IJobApplicationRepository,
+    private readonly _createSystemNotificationUseCase: ICreateSystemNotificationUseCase
   ) {}
 
   async execute(interviewerId: string, interviewId: string, data: SubmitFeedbackDto): Promise<Interview> {
@@ -60,6 +64,26 @@ export class SubmitInterviewFeedbackUseCase implements ISubmitInterviewFeedbackU
       if (application) {
         application.updateStatus(JobApplicationStatus.UNDER_REVIEW);
         await this._jobApplicationRepository.update(updatedInterview.applicationId, application);
+
+        // Notify Student — interview completed
+        await this._createSystemNotificationUseCase.execute({
+          recipientId: application.studentId,
+          role: NotificationRole.STUDENT,
+          title: "Interview Completed",
+          message: `Your interview has been completed. HR will review the feedback and get back to you shortly.`,
+          type: NotificationType.INFO,
+          link: "/student/interviews"
+        });
+
+        // Notify HR — candidate ready for review
+        await this._createSystemNotificationUseCase.execute({
+          recipientId: application.companyId,
+          role: NotificationRole.HR,
+          title: "Candidate Ready for Review",
+          message: `Interview feedback has been submitted. A candidate is now ready for your final review.`,
+          type: NotificationType.INFO,
+          link: "/hr/hire-requests"
+        });
       }
     }
 

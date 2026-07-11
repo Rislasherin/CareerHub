@@ -14,7 +14,14 @@ import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService
 import { NoticeRepository } from "@infrastructure/repositories/NoticeRepository";
 import { JobApplicationRepository } from "@infrastructure/repositories/jobApplication.repository";
 import { InterviewRepository } from "@infrastructure/repositories/interview.repository";
+import { OfferRepository } from "@infrastructure/repositories/offer.repository";
 
+import { NotificationModel } from "@infrastructure/database/models/common/notification.model";
+import { NotificationRepository } from "@infrastructure/repositories/notification.repository";
+import { CreateSystemNotificationUseCase } from "@application/usecases/common/notifications/implementations/CreateSystemNotification.usecase";
+
+export const notificationRepository = new NotificationRepository(NotificationModel);
+export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
 export const companyRepository = new CompanyRepository();
@@ -28,6 +35,7 @@ export const jobRepository = new JobRepository();
 export const jobApplicationRepository = new JobApplicationRepository();
 export const jwtService = new JwtService();
 export const bcryptService = new BcryptService();
+export const offerRepository = new OfferRepository();
 export const authMiddleware = new AuthMiddleware(
     jwtService,
     studentRepository,

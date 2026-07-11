@@ -51,8 +51,8 @@ export class InterviewRoundConfigDto {
   name: string;
 
   @Expose()
-  @IsEnum(["aptitude", "coding", "technical", "hr", "group_discussion"])
-  type: "aptitude" | "coding" | "technical" | "hr" | "group_discussion";
+  @IsEnum(["APTITUDE", "CODING", "TECHNICAL", "HR", "GROUP_DISCUSSION"])
+  type: "APTITUDE" | "CODING" | "TECHNICAL" | "HR" | "GROUP_DISCUSSION";
 
   @Expose()
   @IsOptional()

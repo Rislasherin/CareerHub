@@ -1,5 +1,5 @@
 import { ActivateInterviewerUseCase } from "@application/usecases/auth/interviewer/implementations/ActivateInterviewer.usecase";
-import { interviewerRepository, companyRepository, bcryptService, jwtService, crossRoleAuthService, studentRepository, jobRepository, interviewRepository, jobApplicationRepository } from "@infrastructure/di/infra.container";
+import { interviewerRepository, companyRepository, bcryptService, jwtService, crossRoleAuthService, studentRepository, jobRepository, interviewRepository, jobApplicationRepository, createSystemNotificationUseCase } from "@infrastructure/di/infra.container";
 import { InterviewerAuthController } from "@presentation/http/controllers/auth/interviewer/interviewer.auth.controller";
 
 import { LoginInterviewerUseCase } from "@application/usecases/auth/interviewer/implementations/LoginInterviewer.usecase";
@@ -23,8 +23,10 @@ export const makeVerifyInterviewerTokenUseCase = () => {
   return new VerifyInterviewerTokenUseCase(interviewerRepository, jwtService);
 };
 export const makeSubmitInterviewFeedbackUseCase = () => {
-  return new SubmitInterviewFeedbackUseCase(interviewRepository,jobApplicationRepository);
+  return new SubmitInterviewFeedbackUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase);
 }
+
+import { CancelInterviewUseCase } from "@application/usecases/interviewer/implementations/CancelInterview.usecase";
 
 export const makeInterviewerController = () => {
   const getScheduleUseCase = new GetInterviewerScheduleUseCase(
@@ -35,7 +37,12 @@ export const makeInterviewerController = () => {
   const requestRescheduleUseCase = new RequestInterviewRescheduleUseCase(
     interviewRepository
   )
-  return new InterviewerController(getScheduleUseCase, requestRescheduleUseCase, makeSubmitInterviewFeedbackUseCase())
+  const cancelInterviewUseCase = new CancelInterviewUseCase(
+    interviewRepository,
+    jobApplicationRepository,
+    createSystemNotificationUseCase
+  )
+  return new InterviewerController(getScheduleUseCase, requestRescheduleUseCase, makeSubmitInterviewFeedbackUseCase(), cancelInterviewUseCase)
 }
 
 

@@ -16,6 +16,7 @@ import { IUploadResumeUseCase } from "@application/usecases/student/Resume/inter
 import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/interfaces/IDeleteResume.usecase";
 import { IGetStudentApplicationsUseCase } from "@application/usecases/student/interfaces/IGetStudentApplications.usecase";
 import { IGetStudentInterviewsUseCase } from "@application/usecases/student/interfaces/IGetStudentInterviews.usecase";
+import { IGenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/interfaces/IGenerateOfferPdf.usecase";
 
 export class StudentController {
   constructor(
@@ -30,7 +31,10 @@ export class StudentController {
     private readonly _uploadResumeUseCase: IUploadResumeUseCase,
     private readonly _deleteResumeUsecase: IDeleteResumeUseCase,
     private readonly _getStudentApplicationsUseCase: IGetStudentApplicationsUseCase,
-    private readonly _getStudentInterviewsUseCase: IGetStudentInterviewsUseCase
+    private readonly _getStudentInterviewsUseCase: IGetStudentInterviewsUseCase,
+    private readonly _getStudentOffersUseCase: any,
+    private readonly _respondToOfferUseCase: any,
+    private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase
   ) { }
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
@@ -128,14 +132,14 @@ export class StudentController {
     if (!req.file) throw new AppError("No file uploaded", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
 
     const resume = await this._uploadResumeUseCase.execute(studentId, req.file as Express.Multer.File);
-    sendSuccess(res, resume, "Resume uploaded successfully")
+    sendSuccess(res, resume, MESSAGES.SUCCESS.RESUME_UPLOADED)
   })
 
   deleteResume = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;
     if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     await this._deleteResumeUsecase.execute(studentId)
-    sendSuccess(res, null, "Resume deleted successfully");
+    sendSuccess(res, null, MESSAGES.SUCCESS.RESUME_DELETED);
   })
 
   getInterviews = asyncHandler(async (req: Request, res: Response) => {
@@ -145,9 +149,48 @@ export class StudentController {
     }
 
     const interviews = await this._getStudentInterviewsUseCase.execute(studentId)
-    sendSuccess(res, interviews, "Interviews retrieved successfully");
-
+    sendSuccess(res, interviews, MESSAGES.SUCCESS.INTERVIEWS_RETRIEVED);
   })
 
+  getOffers = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const offers = await this._getStudentOffersUseCase.execute(studentId);
+    sendSuccess(res, offers, MESSAGES.SUCCESS.OFFERS_RETRIEVED);
+  });
 
+  respondToOffer = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!['ACCEPTED', 'REJECTED'].includes(status)) {
+      throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
+    const offer = await this._respondToOfferUseCase.execute(studentId, id, status);
+    sendSuccess(res, offer, `Offer ${status.toLowerCase()} successfully`);
+  });
+
+  downloadOfferPdf = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { id } = req.params;
+    const pdfBuffer = await this._generateOfferPdfUseCase.execute(id);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': pdfBuffer.length,
+      'Content-Disposition': `inline; filename="offer_${id}.pdf"`
+    });
+
+    res.send(pdfBuffer);
+  });
 }

@@ -44,6 +44,7 @@ export const InterviewSchema = new Schema({
   
   feedback: { type: InterviewFeedbackSchema, default: null },
   rescheduleRequest: { type: RescheduleRequestSchema, default: null },
+  cancellationReason: { type: String, default: null },
   isDeleted: { type: Boolean, default: false }
 }, {
   timestamps: true
