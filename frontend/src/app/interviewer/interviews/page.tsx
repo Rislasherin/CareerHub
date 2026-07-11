@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   RefreshCw,
   X,
+  XCircle,
   FileBadge,
   Eye,
   Clock,
@@ -18,21 +19,57 @@ import { apiClient } from '@/services/api/api.client';
 import { API_ROUTES } from '@/constants/api.routes';
 import { CandidateBriefModal } from '../CandidateBriefModal';
 import { RescheduleModal } from '../RescheduleModal';
+import { CancelModal } from '../CancelModal';
+import { Pagination } from '@/components/shared/Pagination';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+interface InterviewCandidate {
+  name: string;
+  college?: string;
+  resumeUrl?: string;
+}
+
+interface RescheduleRequest {
+  preferredDate?: string;
+  preferredTime?: string;
+}
+
+interface InterviewData {
+  id: string;
+  status: string;
+  scheduledAt: string;
+  durationMinutes?: number;
+  feedback?: Record<string, unknown>;
+  candidate: InterviewCandidate;
+  rescheduleRequest?: RescheduleRequest;
+  cancellationReason?: string;
+}
+
+interface TabButtonProps {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  icon?: React.ReactNode;
+  isPrimary?: boolean;
+}
+
 export default function MyInterviewsPage() {
   const router = useRouter();
-  const [interviews, setInterviews] = useState<any[]>([]);
+  const [interviews, setInterviews] = useState<InterviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
-  const [selectedBrief, setSelectedBrief] = useState<any>(null);
-  const [selectedReschedule, setSelectedReschedule] = useState<any>(null);
+  const [selectedBrief, setSelectedBrief] = useState<InterviewData | null>(null);
+  const [selectedReschedule, setSelectedReschedule] = useState<InterviewData | null>(null);
+  const [selectedCancel, setSelectedCancel] = useState<InterviewData | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        const response: any = await apiClient.get(API_ROUTES.INTERVIEWER.DASHBOARD);
+        const response = await apiClient.get(API_ROUTES.INTERVIEWER.DASHBOARD) as { data: InterviewData[] };
         setInterviews(response.data);
       } catch (error) {
         console.error('Failed to fetch interviews:', error);
@@ -58,7 +95,10 @@ export default function MyInterviewsPage() {
     }
   };
 
-  const filteredInterviews = getFilteredInterviews();
+  const filteredInterviews = getFilteredInterviews().sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+  
+  const totalPages = Math.ceil(filteredInterviews.length / itemsPerPage);
+  const paginatedInterviews = filteredInterviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <DashboardLayout>
@@ -70,11 +110,11 @@ export default function MyInterviewsPage() {
 
         {/* Filter Tabs matching the Figma design */}
         <div className="flex flex-wrap items-center gap-3 mb-8">
-          <TabButton active={activeTab === 'All'} onClick={() => setActiveTab('All')} label={`All (${interviews.length})`} isPrimary />
-          <TabButton active={activeTab === 'Today'} onClick={() => setActiveTab('Today')} label={`Today (${todayCount})`} icon={<div className="w-2 h-2 rounded-full bg-red-500"></div>} />
-          <TabButton active={activeTab === 'Upcoming'} onClick={() => setActiveTab('Upcoming')} label={`Upcoming (${upcomingCount})`} icon={<CalendarIcon />} />
-          <TabButton active={activeTab === 'Pending Feedback'} onClick={() => setActiveTab('Pending Feedback')} label={`Pending Feedback (${pendingCount})`} icon={<AlertTriangle size={14} className="text-amber-500" />} />
-          <TabButton active={activeTab === 'Completed'} onClick={() => setActiveTab('Completed')} label={`Completed (${completedCount})`} icon={<CheckCircle2 size={14} className="text-emerald-500" />} />
+          <TabButton active={activeTab === 'All'} onClick={() => { setActiveTab('All'); setCurrentPage(1); }} label={`All (${interviews.length})`} isPrimary />
+          <TabButton active={activeTab === 'Today'} onClick={() => { setActiveTab('Today'); setCurrentPage(1); }} label={`Today (${todayCount})`} icon={<div className="w-2 h-2 rounded-full bg-red-500"></div>} />
+          <TabButton active={activeTab === 'Upcoming'} onClick={() => { setActiveTab('Upcoming'); setCurrentPage(1); }} label={`Upcoming (${upcomingCount})`} icon={<CalendarIcon />} />
+          <TabButton active={activeTab === 'Pending Feedback'} onClick={() => { setActiveTab('Pending Feedback'); setCurrentPage(1); }} label={`Pending Feedback (${pendingCount})`} icon={<AlertTriangle size={14} className="text-amber-500" />} />
+          <TabButton active={activeTab === 'Completed'} onClick={() => { setActiveTab('Completed'); setCurrentPage(1); }} label={`Completed (${completedCount})`} icon={<CheckCircle2 size={14} className="text-emerald-500" />} />
         </div>
 
         {/* Interview Cards */}
@@ -83,17 +123,23 @@ export default function MyInterviewsPage() {
         ) : filteredInterviews.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500">No interviews found in this category.</div>
         ) : (
-          <div className="space-y-4">
-            {filteredInterviews.map((interview) => (
-              <InterviewCard 
-                key={interview.id} 
-                interview={interview} 
-                onOpenBrief={() => setSelectedBrief(interview)}
-                onReschedule={() => setSelectedReschedule(interview)}
-                onOpenFeedback={() => router.push(`/interviewer/interviews/${interview.id}/feedback`)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-4">
+              {paginatedInterviews.map((interview) => (
+                <InterviewCard 
+                  key={interview.id} 
+                  interview={interview} 
+                  onOpenBrief={() => setSelectedBrief(interview)}
+                  onReschedule={() => setSelectedReschedule(interview)}
+                  onCancel={() => setSelectedCancel(interview)}
+                  onOpenFeedback={() => router.push(`/interviewer/interviews/${interview.id}/feedback`)}
+                />
+              ))}
+            </div>
+            <div className="mt-6 border border-slate-200 rounded-xl overflow-hidden">
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </div>
+          </>
         )}
       </div>
 
@@ -108,12 +154,18 @@ export default function MyInterviewsPage() {
          onClose={() => setSelectedReschedule(null)}
          interview={selectedReschedule}
       />
+
+      <CancelModal
+         isOpen={!!selectedCancel}
+         onClose={() => setSelectedCancel(null)}
+         interview={selectedCancel}
+      />
     </DashboardLayout>
   );
 }
 
 // Reusable Tab Button Component
-function TabButton({ active, onClick, label, icon, isPrimary = false }: any) {
+function TabButton({ active, onClick, label, icon, isPrimary = false }: TabButtonProps) {
   return (
     <button onClick={onClick} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border transition-colors
       ${active && isPrimary ? 'bg-blue-600 text-white border-blue-600' : ''}
@@ -131,7 +183,7 @@ function CalendarIcon() {
 }
 
 // Interview Card Component (Matches the design's specific colored borders)
-function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }: { interview: any, onOpenBrief: () => void, onReschedule: () => void, onOpenFeedback: () => void }) {
+function InterviewCard({ interview, onOpenBrief, onReschedule, onCancel, onOpenFeedback }: { interview: InterviewData, onOpenBrief: () => void, onReschedule: () => void, onCancel: () => void, onOpenFeedback: () => void }) {
   // 1. Calculate precise end time
   const dateObj = new Date(interview.scheduledAt);
   const now = new Date();
@@ -144,11 +196,15 @@ function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }:
   const isCompleted = interview.status === 'COMPLETED' || !!interview.feedback;
   const needsFeedback = interview.status === 'SCHEDULED' && isPast;
   const isRescheduleRequested = interview.status === 'RESCHEDULE_REQUESTED';
+  const isCancellationRequested = interview.status === 'CANCELLATION_REQUESTED';
+  const isCancelled = interview.status === 'CANCELLED';
 
   let cardStyle = "border-slate-300"; // Default (Upcoming)
   if (needsFeedback) cardStyle = "border-amber-400 ring-1 ring-amber-400"; // Pending Feedback (Yellow)
   if (isCompleted) cardStyle = "border-slate-300"; // Completed (Grey outline, green inner)
   if (isRescheduleRequested) cardStyle = "border-orange-300 ring-1 ring-orange-300"; // Reschedule Pending
+  if (isCancellationRequested) cardStyle = "border-red-300 ring-1 ring-red-300"; // Cancellation Pending
+  if (isCancelled) cardStyle = "border-slate-200 opacity-75 bg-slate-50"; // Fully cancelled
 
   const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -177,18 +233,26 @@ function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }:
         </div>
       )}
 
+      {/* Alert Banner for Cancellation Requested */}
+      {isCancellationRequested && (
+        <div className="bg-red-50/50 border-b border-red-200 px-6 py-3 flex items-center gap-2">
+          <AlertTriangle size={16} className="text-red-600" />
+          <p className="text-xs font-bold text-red-800">Cancellation Pending HR Approval. Reason: {interview.cancellationReason}</p>
+        </div>
+      )}
+
       <div className="p-6">
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-lg ${needsFeedback ? 'bg-blue-600' : isCompleted ? 'bg-emerald-600' : 'bg-teal-600'}`}>
-              {interview.candidate.name.split(' ').map((n: string) => n[0]).join('').substring(0,2)}
+              {interview.candidate.name.split(' ').map((n) => n[0]).join('').substring(0,2)}
             </div>
             <div>
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-black text-slate-900">{interview.candidate.name}</h3>
                 {needsFeedback && <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1">Today {formattedTime}</span>}
-                {!needsFeedback && !isRescheduleRequested && <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{formattedDate} • {formattedTime}</span>}
-                {isRescheduleRequested && <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full line-through">{formattedDate} • {formattedTime}</span>}
+                {!needsFeedback && !isRescheduleRequested && !isCancellationRequested && <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{formattedDate} • {formattedTime}</span>}
+                {(isRescheduleRequested || isCancellationRequested) && <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full line-through">{formattedDate} • {formattedTime}</span>}
                 
                 {needsFeedback && <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 flex items-center gap-1"><Clock size={10}/> Feedback Due</span>}
               </div>
@@ -209,40 +273,49 @@ function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }:
 
         {/* Action Buttons - Candidate & Resume appear on EVERY card */}
         <div className="flex flex-wrap gap-3">
-          {needsFeedback ? (
-            <button onClick={onOpenFeedback} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
-              <FileBadge size={16} /> Open Feedback Form
+          {isCancelled ? (
+            <button disabled className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+              <XCircle size={16} /> Cancelled
             </button>
-          ) : isPending && !isCompleted && !isRescheduleRequested ? (
-            <button disabled className="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed">
-              <Clock size={16} /> Pending Completion
-            </button>
-          ) : null}
+          ) : (
+            <>
+              {needsFeedback ? (
+                <button onClick={onOpenFeedback} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
+                  <FileBadge size={16} /> Open Feedback Form
+                </button>
+              ) : isPending && !isCompleted && !isRescheduleRequested && !isCancellationRequested ? (
+                <button disabled className="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+                  <Clock size={16} /> Pending Completion
+                </button>
+              ) : null}
 
-          <button onClick={onOpenBrief} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
-            <User size={16} className="text-slate-400" /> Candidate Brief
-          </button>
-          
-          <a href={interview.candidate.resumeUrl} target="_blank" rel="noreferrer" className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
-            <Download size={16} className="text-slate-400" /> Resume
-          </a>
+              <button onClick={onOpenBrief} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+                <User size={16} className="text-slate-400" /> Candidate Brief
+              </button>
+              
+              <a href={interview.candidate.resumeUrl} target="_blank" rel="noreferrer" className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+                <Download size={16} className="text-slate-400" /> Resume
+              </a>
 
-          {!isCompleted && !isRescheduleRequested && (
-            <button onClick={onReschedule} className="px-4 py-2 bg-white border border-amber-200 text-amber-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-amber-50 transition-colors">
-              <RefreshCw size={16} className="text-amber-500" /> Reschedule
-            </button>
-          )}
+              {!isPast && !isCompleted && !isRescheduleRequested && !isCancellationRequested && (
+                <button onClick={onCancel} className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-50 transition-colors">
+                  <X size={16} className="text-red-500" /> Cancel
+                </button>
+              )}
 
-          {!isCompleted && isRescheduleRequested && (
-            <button onClick={onReschedule} className="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-50 transition-colors">
-              <RefreshCw size={16} className="text-orange-500" /> Update Request
-            </button>
-          )}
+              {/* Reschedule button – hide if pending cancellation */}
+              {!isPast && !isCompleted && !isRescheduleRequested && !isCancellationRequested && (
+                <button onClick={onReschedule} className="px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-50 transition-colors">
+                  <RefreshCw size={16} className="text-blue-500" /> Reschedule
+                </button>
+              )}
 
-          {!isPast && !isCompleted && !isRescheduleRequested && (
-            <button className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-50 transition-colors">
-              <X size={16} className="text-red-500" /> Cancel
-            </button>
+              {!isCompleted && isRescheduleRequested && (
+                <button onClick={onReschedule} className="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-50 transition-colors">
+                  <RefreshCw size={16} className="text-orange-500" /> Update Request
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -260,7 +333,7 @@ function InterviewCard({ interview, onOpenBrief, onReschedule, onOpenFeedback }:
       {/* Grey bottom footer for completed feedback */}
       {isCompleted && (
          <div className="bg-slate-50 border-t border-slate-200 px-6 py-2">
-            <button className="text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-700"><Eye size={14}/> View Submitted Feedback</button>
+            <button onClick={onOpenFeedback} className="text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-700"><Eye size={14}/> View Submitted Feedback</button>
          </div>
       )}
     </div>
