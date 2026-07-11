@@ -16,7 +16,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
     private readonly _companyRepository: ICompanyRepository
   ) { }
 
-  async execute(studentId: string, page: number = 1, limit: number = 10): Promise<{ jobs: Record<string, unknown>[], total: number }> {
+  async execute(studentId: string): Promise<any[]> {
     const student = await this._studentRepository.findById(studentId);
     if (!student) {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -89,13 +89,13 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
 
       const cgpaEligible = studentCGPA >= minCGPA;
       const backlogsEligible = studentBacklogs <= allowedBacklogs;
-      const branchEligible = eligibleBranches.length === 0 || 
+      const branchEligible = eligibleBranches.length === 0 ||
         eligibleBranches.some(b => BranchMatcher.isBranchMatch(b, studentBranch));
 
       const requiredDegreeStr = job.eligibility?.degreeType || '';
       const requiredDegrees = requiredDegreeStr.split(',').map(d => d.trim().toLowerCase()).filter(d => d);
-      
-      const degreeEligible = requiredDegrees.length === 0 || requiredDegreeStr === 'Any Degree' || 
+
+      const degreeEligible = requiredDegrees.length === 0 || requiredDegreeStr === 'Any Degree' ||
         (student.degree && requiredDegrees.some(rd => {
           const sd = student.degree!.toLowerCase().trim();
           return rd === sd || rd.includes(sd) || sd.includes(rd);
@@ -122,20 +122,13 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
       }
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      if(dateB === dateA) {
+      if (dateB === dateA) {
         return b.matchScore - a.matchScore
       }
       return dateB - dateA;
     });
 
-    const total = enrichedJobs.length;
-    const startIndex = (page - 1) * limit;
-    const paginatedJobs = enrichedJobs.slice(startIndex, startIndex + limit);
-
-    return {
-      jobs: paginatedJobs,
-      total
-    };
+    return enrichedJobs;
   }
 }
 

@@ -11,18 +11,18 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
     private readonly _jobApplicationRepository: IJobApplicationRepository,
     private readonly _jobRepository: IJobRepository,
     private readonly _companyRepository: ICompanyRepository,
-    private readonly _interviewRepository:IInterviewRepository
-  ) {}
+    private readonly _interviewRepository: IInterviewRepository
+  ) { }
 
-  async execute(studentId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
+  async execute(studentId: string): Promise<Record<string, unknown>[]> {
     const applications = await this._jobApplicationRepository.findByStudentId(studentId);
-    
+
     const companyCache = new Map<string, string>();
     const jobCache = new Map<string, Record<string, unknown>>();
 
     const enrichedApplications = await Promise.all(applications.map(async (app) => {
       const appJson = app.toJSON();
-      
+
       let jobDetails = null;
       if (appJson.jobId) {
         if (jobCache.has(appJson.jobId)) {
@@ -50,7 +50,7 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
               };
               jobCache.set(appJson.jobId, jobDetails);
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
@@ -86,13 +86,6 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
       return dateB - dateA;
     });
 
-    const total = enrichedApplications.length;
-    const startIndex = (page - 1) * limit;
-    const paginatedApplications = enrichedApplications.slice(startIndex, startIndex + limit);
-
-    return {
-      applications: paginatedApplications,
-      total
-    };
+    return enrichedApplications;
   }
 }

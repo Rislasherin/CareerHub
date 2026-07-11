@@ -90,10 +90,8 @@ export class StudentController {
     if (!studentId) {
       throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const result = await this._getStudentJobsUseCase.execute(studentId, page, limit);
-    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
+    const jobs = await this._getStudentJobsUseCase.execute(studentId);
+    sendSuccess(res, jobs, MESSAGES.SUCCESS.FETCHED);
   });
 
   applyJob = asyncHandler(async (req: Request, res: Response) => {
@@ -114,10 +112,8 @@ export class StudentController {
     if (!studentId) {
       throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const result = await this._getStudentApplicationsUseCase.execute(studentId, page, limit);
-    sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
+    const applications = await this._getStudentApplicationsUseCase.execute(studentId);
+    sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
   });
 
   getNotices = asyncHandler(async (req: Request, res: Response) => {
@@ -152,9 +148,7 @@ export class StudentController {
       throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
 
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const interviews = await this._getStudentInterviewsUseCase.execute(studentId, page, limit)
+    const interviews = await this._getStudentInterviewsUseCase.execute(studentId)
     sendSuccess(res, interviews, MESSAGES.SUCCESS.INTERVIEWS_RETRIEVED);
   })
 
@@ -163,9 +157,7 @@ export class StudentController {
     if (!studentId) {
       throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offers = await this._getStudentOffersUseCase.execute(studentId, page, limit);
+    const offers = await this._getStudentOffersUseCase.execute(studentId);
     sendSuccess(res, offers, MESSAGES.SUCCESS.OFFERS_RETRIEVED);
   });
 
@@ -176,7 +168,7 @@ export class StudentController {
     }
     const { id } = req.params;
     const { status } = req.body;
-    
+
     if (!['ACCEPTED', 'REJECTED'].includes(status)) {
       throw new AppError("Invalid status", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }

@@ -15,7 +15,7 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
     private readonly _jobApplicationRepository: IJobApplicationRepository,
     private readonly _studentRepository: IStudentRepository,
     private readonly _interviewRepository: IInterviewRepository
-  ) {}
+  ) { }
 
   async execute(jobId: string, companyId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     const job = await this._jobRepository.findById(jobId);
@@ -24,29 +24,29 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
     }
 
     const applications = await this._jobApplicationRepository.findByJobId(jobId);
-    
+
     const enrichedApplications = await Promise.all(
       applications.map(async (app) => {
         const appJson = app.toJSON();
         let studentDetails = null;
-        
+
         if (appJson.studentId) {
           try {
             const student = await this._studentRepository.findById(appJson.studentId);
             if (student) {
               studentDetails = student.toJSON();
             }
-          } catch (e) {}
+          } catch (e) { }
         }
-        
+
         let interviews: InterviewProps[] = [];
         if (appJson.id) {
           try {
             const rawInterviews = await this._interviewRepository.findByApplicationId(appJson.id);
             interviews = rawInterviews.map(i => i.toJSON());
-          } catch (e) {}
+          } catch (e) { }
         }
-        
+
         return {
           ...appJson,
           student: studentDetails,

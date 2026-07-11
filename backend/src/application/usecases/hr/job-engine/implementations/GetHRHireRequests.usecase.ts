@@ -7,13 +7,13 @@ export class GetHRHireRequestsUseCase {
     private readonly _jobRepository: IJobRepository,
     private readonly _jobApplicationRepository: IJobApplicationRepository,
     private readonly _studentRepository: IStudentRepository
-  ) {}
+  ) { }
 
   async execute(companyId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     // 1. Get all jobs for company
     const jobs = await this._jobRepository.findByCompanyId(companyId);
     if (!jobs.length) return { applications: [], total: 0 };
-    
+
     const jobIds = jobs.map(j => j.id!);
 
     // 2. Fetch applications with status SELECTED
@@ -32,9 +32,9 @@ export class GetHRHireRequestsUseCase {
           try {
             const student = await this._studentRepository.findById(appJson.studentId);
             if (student) studentDetails = student.toJSON();
-          } catch(e) {}
+          } catch (e) { }
         }
-        
+
         const job = jobs.find(j => j.id === appJson.jobId);
 
         return {

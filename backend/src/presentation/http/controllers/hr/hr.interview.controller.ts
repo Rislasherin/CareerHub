@@ -18,7 +18,7 @@ export class HRInterviewController {
         private readonly _resolveRescheduleUseCase: IResolveRescheduleUseCase,
         private readonly _approveCancellationUseCase: IApproveCancellationUseCase,
         private readonly _reassignInterviewerUseCase: IReassignInterviewerUseCase
-    ) {}
+    ) { }
 
     getInterviews = asyncHandler(async (req: Request, res: Response) => {
         const companyId = req.user?.companyId;
@@ -27,9 +27,7 @@ export class HRInterviewController {
             throw new AppError("Company ID not found", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
         }
 
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const interviews = await this._getHRInterviewsUseCase.execute(companyId, page, limit);
+        const interviews = await this._getHRInterviewsUseCase.execute(companyId);
         sendSuccess(res, interviews, MESSAGES.SUCCESS.INTERVIEWS_RETRIEVED);
     });
 

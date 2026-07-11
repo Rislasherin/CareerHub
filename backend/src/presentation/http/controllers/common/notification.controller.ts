@@ -9,7 +9,7 @@ export class NotificationController {
     constructor(
         private readonly _getMyNotificationsUseCase: IGetMyNotificationsUseCase,
         private readonly _markNotificationReadUseCase: IMarkNotificationReadUseCase
-    ) {}
+    ) { }
 
     public getMyNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
@@ -31,9 +31,7 @@ export class NotificationController {
                 role = NotificationRole.SUPER_ADMIN;
             }
 
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const data = await this._getMyNotificationsUseCase.execute(userId, role, page, limit);
+            const data = await this._getMyNotificationsUseCase.execute(userId, role);
             sendSuccess(res, data, MESSAGES.SUCCESS.FETCHED);
         } catch (error) {
             next(error);
