@@ -78,11 +78,11 @@ export default function HRJobsPage() {
 
   // Interview Rounds configuration
   const [rounds, setRounds] = useState<InterviewRoundConfig[]>([
-    { roundNumber: 1, name: 'Aptitude Test', type: 'aptitude', description: 'Basic cognitive and quantitative analysis' },
-    { roundNumber: 2, name: 'Technical Round 1', type: 'technical', description: 'Core problem solving and CS fundamentals' }
+    { roundNumber: 1, name: 'Aptitude Test', type: 'APTITUDE', description: 'Basic cognitive and quantitative analysis' },
+    { roundNumber: 2, name: 'Technical Round 1', type: 'TECHNICAL', description: 'Core problem solving and CS fundamentals' }
   ]);
   const [newRoundName, setNewRoundName] = useState('');
-  const [newRoundType, setNewRoundType] = useState<'aptitude' | 'coding' | 'technical' | 'hr' | 'group_discussion' | ''>('');
+  const [newRoundType, setNewRoundType] = useState<'APTITUDE' | 'CODING' | 'TECHNICAL' | 'HR' | 'GROUP_DISCUSSION' | ''>('');
   const [newRoundDesc, setNewRoundDesc] = useState('');
 
   // Selected Job Details Modal
@@ -356,8 +356,8 @@ export default function HRJobsPage() {
     setBranches([]);
     setAllBranchesSelected(false);
     setRounds([
-      { roundNumber: 1, name: 'Aptitude Test', type: 'aptitude', description: 'Basic cognitive and quantitative analysis' },
-      { roundNumber: 2, name: 'Technical Round 1', type: 'technical', description: 'Core problem solving and CS fundamentals' }
+      { roundNumber: 1, name: 'Aptitude Test', type: 'APTITUDE', description: 'Basic cognitive and quantitative analysis' },
+      { roundNumber: 2, name: 'Technical Round 1', type: 'TECHNICAL', description: 'Core problem solving and CS fundamentals' }
     ]);
     setSelectedOrgId('ALL');
     setWizardStep(1);
@@ -375,9 +375,14 @@ export default function HRJobsPage() {
       if (!deadline) {
         errs.deadline = 'Application Deadline is required';
       } else {
-        const deadlineDate = new Date(deadline);
-        if (isNaN(deadlineDate.getTime())) errs.deadline = 'Invalid date';
-        else if (deadlineDate < new Date()) errs.deadline = 'Cannot be in the past';
+        const [y, m, d] = deadline.split('-');
+        const localDeadline = new Date(Number(y), Number(m) - 1, Number(d));
+        localDeadline.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (isNaN(localDeadline.getTime())) errs.deadline = 'Invalid date';
+        else if (localDeadline < today) errs.deadline = 'Cannot be in the past';
       }
     } else if (wizardStep === 2) {
       const openingsNum = Number(openings);
@@ -659,7 +664,7 @@ export default function HRJobsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 mt-4">
                   <Button
                     variant="ghost"
                     className="w-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs"
@@ -670,49 +675,52 @@ export default function HRJobsPage() {
                   >
                     Manage Pipeline
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedJob(job);
-                      setShowDetailsModal(true);
-                    }}
-                  >
-                    View Details
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditJob(job);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  {job.status === 'approved' && (
+                  
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="ghost"
-                      className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 px-3 rounded-xl text-xs whitespace-nowrap"
+                      className="flex-1 bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-[11px]"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCloseJob(job.id);
+                        setSelectedJob(job);
+                        setShowDetailsModal(true);
                       }}
                     >
-                      Close
+                      Details
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    className="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-3 rounded-xl text-xs whitespace-nowrap border-none"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteJob(job.id);
-                    }}
-                  >
-                    Delete
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      className="flex-1 bg-slate-50 border border-slate-100 hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-[11px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditJob(job);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    {job.status === 'approved' && (
+                      <Button
+                        variant="ghost"
+                        className="flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-100 text-amber-600 font-bold py-2 px-2 rounded-xl text-[11px] whitespace-nowrap"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCloseJob(job.id);
+                        }}
+                      >
+                        Close
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      className="flex-1 bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-600 font-bold py-2 px-2 rounded-xl text-[11px] whitespace-nowrap"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteJob(job.id);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </GlassCard>
             ))}
@@ -1120,11 +1128,11 @@ export default function HRJobsPage() {
                             className="bg-white border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner h-[50px] mt-1"
                           >
                             <option value="" disabled>Select Round Type...</option>
-                            <option value="aptitude">Aptitude Round</option>
-                            <option value="coding">Coding Challenge</option>
-                            <option value="technical">Technical Panel Interview</option>
-                            <option value="hr">HR Panel Interview</option>
-                            <option value="group_discussion">Group Discussion (GD)</option>
+                            <option value="APTITUDE">Aptitude Round</option>
+                            <option value="CODING">Coding Challenge</option>
+                            <option value="TECHNICAL">Technical Panel Interview</option>
+                            <option value="HR">HR Panel Interview</option>
+                            <option value="GROUP_DISCUSSION">Group Discussion (GD)</option>
                           </select>
                         </div>
                       </div>
