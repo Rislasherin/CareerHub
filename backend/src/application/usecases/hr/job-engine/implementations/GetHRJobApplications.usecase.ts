@@ -17,7 +17,7 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
     private readonly _interviewRepository: IInterviewRepository
   ) {}
 
-  async execute(jobId: string, companyId: string): Promise<any[]> {
+  async execute(jobId: string, companyId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     const job = await this._jobRepository.findById(jobId);
     if (!job || job.companyId !== companyId) {
       throw new AppError("Job not found or unauthorized", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -62,6 +62,13 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
       return dateB - dateA;
     });
 
-    return enrichedApplications;
+    const total = enrichedApplications.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedApplications = enrichedApplications.slice(startIndex, startIndex + limit);
+
+    return {
+      applications: paginatedApplications,
+      total
+    };
   }
 }

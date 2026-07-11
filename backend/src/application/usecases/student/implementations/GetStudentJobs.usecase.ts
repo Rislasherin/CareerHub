@@ -16,7 +16,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
     private readonly _companyRepository: ICompanyRepository
   ) { }
 
-  async execute(studentId: string): Promise<any[]> {
+  async execute(studentId: string, page: number = 1, limit: number = 10): Promise<{ jobs: Record<string, unknown>[], total: number }> {
     const student = await this._studentRepository.findById(studentId);
     if (!student) {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -128,7 +128,14 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
       return dateB - dateA;
     });
 
-    return enrichedJobs;
+    const total = enrichedJobs.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedJobs = enrichedJobs.slice(startIndex, startIndex + limit);
+
+    return {
+      jobs: paginatedJobs,
+      total
+    };
   }
 }
 

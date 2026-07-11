@@ -5,7 +5,7 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
 
 export interface IGetHRInterviewsUseCase {
-    execute(companyId: string): Promise<any[]>;
+    execute(companyId: string, page: number, limit: number): Promise<{ interviews: Record<string, unknown>[], total: number }>;
 }
 
 export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
@@ -15,13 +15,17 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
         private readonly _interviewerRepository: IInterviewerRepository
     ) {}
 
-    async execute(companyId: string): Promise<any[]> {
+    async execute(companyId: string, page: number = 1, limit: number = 10): Promise<{ interviews: Record<string, unknown>[], total: number }> {
         logger.info(`[DEBUG HR] Fetching interviews for companyId:`, companyId);
         let interviews = await this._interviewRepository.findByCompanyId(companyId);
 
         logger.info(`[DEBUG HR] Found ${interviews.length} interviews`);
         
-        return Promise.all(interviews.map(async (inv) => {
+        const total = interviews.length;
+        const startIndex = (page - 1) * limit;
+        const paginatedInterviews = interviews.slice(startIndex, startIndex + limit);
+
+        const formatted = await Promise.all(paginatedInterviews.map(async (inv) => {
             let studentName = "Unknown Candidate";
             let studentCollege = "";
             let interviewerName = "Unknown Interviewer";
@@ -73,5 +77,7 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
                 }
             };
         }));
+        
+        return { interviews: formatted, total };
     }
 }

@@ -9,10 +9,10 @@ export class GetHRHireRequestsUseCase {
     private readonly _studentRepository: IStudentRepository
   ) {}
 
-  async execute(companyId: string): Promise<any[]> {
+  async execute(companyId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     // 1. Get all jobs for company
     const jobs = await this._jobRepository.findByCompanyId(companyId);
-    if (!jobs.length) return [];
+    if (!jobs.length) return { applications: [], total: 0 };
     
     const jobIds = jobs.map(j => j.id!);
 
@@ -45,6 +45,13 @@ export class GetHRHireRequestsUseCase {
       })
     );
 
-    return results;
+    const total = results.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedResults = results.slice(startIndex, startIndex + limit);
+
+    return {
+      applications: paginatedResults,
+      total
+    };
   }
 }

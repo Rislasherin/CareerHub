@@ -31,7 +31,9 @@ export class NotificationController {
                 role = NotificationRole.SUPER_ADMIN;
             }
 
-            const data = await this._getMyNotificationsUseCase.execute(userId, role);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const data = await this._getMyNotificationsUseCase.execute(userId, role, page, limit);
             sendSuccess(res, data, MESSAGES.SUCCESS.FETCHED);
         } catch (error) {
             next(error);

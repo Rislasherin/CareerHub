@@ -11,9 +11,13 @@ export class GetStudentInterviewsUseCase implements IGetStudentInterviewsUseCase
         private readonly _interviewerRepository: IInterviewerRepository
     ) { }
 
-    async execute(studentId: string): Promise<any[]> {
+    async execute(studentId: string, page: number = 1, limit: number = 10): Promise<{ interviews: Record<string, unknown>[], total: number }> {
         const interview = await this._interviewRepository.findByStudentId(studentId);
-        return Promise.all(interview.map(async (inv) => {
+        const total = interview.length;
+        const startIndex = (page - 1) * limit;
+        const paginatedInterviews = interview.slice(startIndex, startIndex + limit);
+
+        const formatted = await Promise.all(paginatedInterviews.map(async (inv) => {
             let companyName = "Company";
             let interviewerName = "Pending Assignment"
             if (inv.companyId) {
@@ -47,5 +51,7 @@ export class GetStudentInterviewsUseCase implements IGetStudentInterviewsUseCase
                 interviewerName
             };
         }));
+
+        return { interviews: formatted, total };
     }
 }

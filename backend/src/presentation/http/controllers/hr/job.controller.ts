@@ -121,7 +121,9 @@ export class HRJobController {
     if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
 
     const { jobId } = req.params;
-    const applications = await this._getHRJobApplicationsUseCase.execute(jobId, companyId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const applications = await this._getHRJobApplicationsUseCase.execute(jobId, companyId, page, limit);
     sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED);
   });
 
@@ -131,7 +133,9 @@ export class HRJobController {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
 
-    const applications = await this._getHRHireRequestsUseCase.execute(companyId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const applications = await this._getHRHireRequestsUseCase.execute(companyId, page, limit);
     sendSuccess(res, applications, MESSAGES.SUCCESS.FETCHED, HttpStatus.OK);
   });
 

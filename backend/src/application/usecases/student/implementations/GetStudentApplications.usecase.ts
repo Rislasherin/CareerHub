@@ -14,7 +14,7 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
     private readonly _interviewRepository:IInterviewRepository
   ) {}
 
-  async execute(studentId: string): Promise<Record<string, unknown>[]> {
+  async execute(studentId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     const applications = await this._jobApplicationRepository.findByStudentId(studentId);
     
     const companyCache = new Map<string, string>();
@@ -86,6 +86,13 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
       return dateB - dateA;
     });
 
-    return enrichedApplications;
+    const total = enrichedApplications.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedApplications = enrichedApplications.slice(startIndex, startIndex + limit);
+
+    return {
+      applications: paginatedApplications,
+      total
+    };
   }
 }

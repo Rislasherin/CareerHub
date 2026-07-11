@@ -8,5 +8,5 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export interface IGetStudentJobsUseCase {
-  execute(studentId: string): Promise<any[]>;
+  execute(studentId: string, page: number, limit: number): Promise<{ jobs: Record<string, unknown>[], total: number }>;
 }
