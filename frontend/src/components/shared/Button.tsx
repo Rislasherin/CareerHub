@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -26,12 +29,15 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const pathname = usePathname();
+  const effectiveRoleType = roleType === 'default' && pathname?.startsWith('/hr') ? 'hr' : roleType;
+
   const getRoleStyles = () => {
     if (variant === 'secondary') {
       return '';
     }
     if (variant === 'outline' || variant === 'ghost') {
-      switch (roleType) {
+      switch (effectiveRoleType) {
         case 'student': return 'border-student-primary text-student-primary hover:bg-student-primary/5';
         case 'hr': return 'border-company-primary text-company-primary hover:bg-company-primary/5';
         case 'organizer': return 'border-organizer-primary text-organizer-primary hover:bg-organizer-primary/5';
@@ -40,9 +46,9 @@ export const Button: React.FC<ButtonProps> = ({
       }
     }
 
-    switch (roleType) {
+    switch (effectiveRoleType) {
       case 'student': return 'bg-student-primary hover:opacity-90';
-      case 'hr': return 'bg-company-primary hover:opacity-90';
+      case 'hr': return 'bg-[#1b1430] hover:bg-[#2d244a] text-white border-transparent';
       case 'organizer': return 'bg-organizer-primary hover:opacity-90';
       case 'admin': return 'bg-slate-800 hover:bg-slate-900';
       default: return 'bg-indigo-600 hover:bg-indigo-700';

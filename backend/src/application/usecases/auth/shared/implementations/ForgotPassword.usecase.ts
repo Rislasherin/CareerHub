@@ -20,8 +20,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     private readonly superAdminRepo: ISuperAdminRepository
   ) { }
 
-  async execute(email: string): Promise<void> {
-    // 1. Find user in type of the repositories
+  async execute(email: string): Promise<void> {
     let user: unknown = null;
     let role: string = '';
 
@@ -46,23 +45,15 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     if (!user) {
       user = await this.superAdminRepo.findByEmail(email);
       if (user) role = 'super_admin';
-    }
-
-    // 2. If user doesn't exist, we still return success to prevent email enumeration
-    if (!user) return;
-
-    // 3. Generate a reset token (short-lived)
+    }
+    if (!user) return;
     const u = user as { id?: string, _id?: string, email: string };
     const resetToken = this.jwtService.generateResetToken({
       id: u.id || u._id!,
       email: u.email,
       role
-    });
-
-    // 4. Create reset link
-    const resetLink = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
-    // 5. Send email
+    });
+    const resetLink = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     await this.emailService.sendPasswordResetEmail(email, resetLink);
   }
 }

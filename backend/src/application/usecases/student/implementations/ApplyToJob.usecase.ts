@@ -31,13 +31,11 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
       throw new AppError("Job not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
-    // 1. Check if already applied
     const existingApplication = await this._jobApplicationRepository.findByJobAndStudent(jobId, studentId);
     if (existingApplication) {
       throw new AppError("Already applied to this job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    // 2. Enforce Daily Rate Limit (3 per day)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const applicationsToday = await this._jobApplicationRepository.countByStudentIdSince(studentId, twentyFourHoursAgo);
     
@@ -49,7 +47,6 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
       );
     }
 
-    // 3. Create the Job Application Bridge Entity
     const jobApplication = JobApplication.create({
       jobId,
       studentId,

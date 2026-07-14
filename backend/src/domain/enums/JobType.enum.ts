@@ -5,6 +5,4 @@ export enum JobType {
     CONTRACT = "contract",
     REMOTE = "remote"
 
-
-
 }

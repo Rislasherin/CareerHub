@@ -318,432 +318,353 @@ export default function StudentProfilePage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32">
 
         {/* Top bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">My Profile</h1>
-            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mt-1">Visible to HR & Companies · Keep it updated</p>
+            <p className="text-slate-500 font-medium mt-1">This profile is exactly what HR & Companies see. Keep it updated!</p>
           </div>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-student-primary text-white shadow-xl hover:scale-105 transition-all duration-300 font-bold px-8 py-3 rounded-2xl"
-          >
-            {saving ? 'Saving...' : 'Save Profile'}
-          </Button>
+          <div className="hidden md:block">
+            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Profile Active
+            </span>
+          </div>
         </div>
 
-        {/* Interactive Banner Profile Card */}
-        <GlassCard className="p-8 border-slate-100 rounded-[2.5rem] bg-slate-900 text-white relative overflow-hidden mb-8 shadow-2xl">
-          {/* Subtle glowing backgrounds */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-student-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl -z-10" />
+        {/* Main 2-Column Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          
+          {/* LEFT COLUMN */}
+          <div className="xl:col-span-4 space-y-8">
+            
+            {/* Banner Card */}
+            <GlassCard className="p-8 border-slate-100 rounded-[2rem] bg-[#0F172A] text-white relative overflow-hidden shadow-2xl flex flex-col items-center text-center">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -z-10" />
+              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-rose-500/20 rounded-full blur-3xl -z-10" />
 
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            {/* Avatar Initials */}
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center font-black text-3xl text-white shadow-lg shrink-0">
-              {firstName.charAt(0)}{lastName.charAt(0)}
-            </div>
-
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex flex-col md:flex-row md:items-center gap-3 justify-center md:justify-start mb-2">
-                <h2 className="text-3xl font-black tracking-tight">{firstName} {lastName}</h2>
-                <span className="bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 justify-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Open to Work
-                </span>
+              <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-black text-4xl text-white shadow-xl mb-4 border-4 border-slate-800">
+                {firstName.charAt(0)}{lastName.charAt(0)}
               </div>
-              <p className="text-slate-300 text-sm font-medium mb-3">
-                {collegeName} · {branch} · Batch {graduationYear} · CGPA {cgpa}
+
+              <h2 className="text-2xl font-black tracking-tight mb-1">{firstName} {lastName}</h2>
+              <p className="text-slate-300 text-sm font-medium mb-4">
+                {degree} • {branch}
               </p>
 
-              {/* Profile tag overview */}
-              <div className="flex flex-wrap gap-1.5 justify-center md:justify-start text-xs text-slate-400">
-                {languages.slice(0, 3).map(lang => (
-                  <span key={lang} className="bg-white/10 px-2 py-0.5 rounded-lg">{lang}</span>
-                ))}
-                {frameworks.slice(0, 2).map(fw => (
-                  <span key={fw} className="bg-white/10 px-2 py-0.5 rounded-lg">{fw}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Profile complete indicator */}
-            <div className="text-center md:text-right shrink-0">
-              <div className="inline-block bg-white/10 border border-white/20 px-4 py-2 rounded-2xl backdrop-blur-md mb-2">
-                <span className="text-emerald-400 font-black mr-1.5">✓</span>
-                <span className="text-xs font-bold text-slate-200">{completionPercentage}% Profile Complete</span>
-              </div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VISIBLE TO HR & COMPANIES</p>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Warning Callout info */}
-        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center gap-3 text-rose-800 text-sm font-semibold mb-8 shadow-sm">
-          <span className="text-lg">👁</span>
-          <span>This profile is exactly what HR/Companies see. Fill all sections for maximum recruiter visibility.</span>
-        </div>
-
-        {/* Sections */}
-        <div className="space-y-8">
-        
-          {/* 0. Resume Section */}
-          <ResumeSection 
-            initialResume={resumeMetadata} 
-            onUpdate={(newResume) => {
-              setResumeMetadata(newResume);
-              if (user && newResume) {
-                dispatch(setStudentDetails({
-                  ...user,
-                  resume: newResume
-                } as any));
-              } else if (user && !newResume) {
-                const { resume, ...rest } = user;
-                dispatch(setStudentDetails(rest as any));
-              }
-            }} 
-          />
-
-
-          {/* 1. Personal Information */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>👤</span> Personal Information
-              </h3>
-              <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100">
-                ✓ Complete
+              <span className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Open to Work
               </span>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
-              <Input label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
-              <Input label="Phone" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
-              <Input label="Email" value={email} disabled className="bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100 shadow-inner" />
-              <Input label="LinkedIn URL" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
-              <Input label="GitHub URL" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} />
-              <Input label="Portfolio URL" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} />
-              <Input label="City" value={city} onChange={e => setCity(e.target.value)} />
-            </div>
-          </GlassCard>
-
-          {/* 2. Education (PREFILLED fields) */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm relative">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>🎓</span> Education
-              </h3>
-              <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold border border-slate-200 flex items-center gap-1">
-                🔒 Verified Institution & Branch
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input label="College / University" value={collegeName} disabled className="bg-slate-50/70 text-slate-400 cursor-not-allowed border-slate-100/50 shadow-inner" />
-              <Input label="Degree" value={degree} onChange={e => setDegree(e.target.value)} placeholder="e.g. B.Tech" />
-              <Input label="Branch" value={branch} disabled className="bg-slate-50/70 text-slate-400 cursor-not-allowed border-slate-100/50 shadow-inner" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <Input label="Graduation Year" value={graduationYear} onChange={e => setGraduationYear(e.target.value)} placeholder="e.g. 2025" />
-              <Input label="CGPA" value={cgpa} onChange={e => setCgpa(e.target.value)} placeholder="e.g. 9.10" />
-              <Input label="Active Backlogs" value={activeBacklogs} onChange={e => setActiveBacklogs(e.target.value)} placeholder="e.g. 0" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <Input label="12th %" value={twelfthPercentage} onChange={e => setTwelfthPercentage(e.target.value)} placeholder="e.g. 96.4" />
-              <Input label="10th %" value={tenthPercentage} onChange={e => setTenthPercentage(e.target.value)} placeholder="e.g. 98.2" />
-            </div>
-          </GlassCard>
-
-          {/* 3. Technical Skills */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>🔧</span> Technical Skills
-              </h3>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50 px-3 py-1 rounded-lg">Auto-normalized</span>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {[
-                { label: 'Languages', state: languages, setter: setLanguages, placeholder: 'e.g. JavaScript, Python' },
-                { label: 'Frameworks', state: frameworks, setter: setFrameworks, placeholder: 'e.g. React, Next.js' },
-                { label: 'Databases', state: databases, setter: setDatabases, placeholder: 'e.g. PostgreSQL, MongoDB' },
-                { label: 'Cloud / DevOps', state: cloudDevops, setter: setCloudDevops, placeholder: 'e.g. AWS, Docker' },
-                { label: 'Other Tools', state: otherTools, setter: setOtherTools, placeholder: 'e.g. Git, Figma' },
-                { label: 'AI / ML', state: aiMl, setter: setAiMl, placeholder: 'e.g. PyTorch, LangChain' }
-              ].map(section => (
-                <div key={section.label} className="flex flex-col gap-3 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{section.label}</label>
-                  
-                  <div className="flex flex-wrap gap-2 min-h-[32px]">
-                    {section.state.map(skill => (
-                      <span key={skill} className="bg-white border border-slate-200 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm shadow-slate-200/50">
-                        {skill}
-                        <button type="button" onClick={() => section.setter(section.state.filter(s => s !== skill))} className="text-slate-300 hover:text-rose-500 transition-colors">
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                    {section.state.length === 0 && <span className="text-xs text-slate-400 italic py-1.5">No skills added...</span>}
-                  </div>
-
-                  <div className="relative z-10 mt-2">
-                    <SkillAutocomplete
-                      placeholder={section.placeholder}
-                      onSelect={(skill) => {
-                        if (!section.state.includes(skill)) {
-                          section.setter([...section.state, skill]);
-                        }
-                      }}
-                    />
-                  </div>
+              <div className="w-full bg-slate-800/50 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Profile Score</span>
+                  <span className="text-sm font-black text-emerald-400">{completionPercentage}%</span>
                 </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          {/* 4. Work Experience */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>💼</span> Work Experience / Internships
-              </h3>
-              <Button type="button" onClick={handleAddExperience} className="bg-amber-50 hover:bg-amber-100 border border-amber-100 text-amber-700 font-bold py-1.5 px-4 rounded-xl text-xs">
-                + Add Experience
-              </Button>
-            </div>
-
-            <div className="space-y-8">
-              {experiences.map((exp, idx) => (
-                <div key={idx} className="p-6 rounded-[2rem] border border-slate-100 bg-slate-50/50 relative">
-                  <button
-                    onClick={() => handleRemoveExperience(idx)}
-                    className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-100"
-                  >
-                    Remove
-                  </button>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input label="Company Name *" value={exp.company} onChange={e => handleUpdateExperience(idx, 'company', e.target.value)} />
-                    <Input label="Role / Designation *" value={exp.role} onChange={e => handleUpdateExperience(idx, 'role', e.target.value)} />
-                    <Input label="Duration (e.g. May 2024 - Jul 2024) *" value={exp.duration} onChange={e => handleUpdateExperience(idx, 'duration', e.target.value)} />
-                    <Input label="Location" value={exp.location || ''} onChange={e => handleUpdateExperience(idx, 'location', e.target.value)} />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Work Summary (Shown to HR)</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Write brief points on what you built, tech stack used, and metrics/impact..."
-                      value={exp.summary || ''}
-                      onChange={e => handleUpdateExperience(idx, 'summary', e.target.value)}
-                      className="bg-white border border-slate-200 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner w-full"
-                    />
-                  </div>
+                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${completionPercentage}%` }} />
                 </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          {/* 5. Projects */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>🔗</span> Projects
-              </h3>
-              <Button type="button" onClick={handleAddProject} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-700 font-bold py-1.5 px-4 rounded-xl text-xs">
-                + Add Project
-              </Button>
-            </div>
-
-            <div className="space-y-8">
-              {projects.map((proj, idx) => (
-                <div key={idx} className="p-6 rounded-[2rem] border border-slate-100 bg-slate-50/50 relative">
-                  <button
-                    onClick={() => handleRemoveProject(idx)}
-                    className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-100"
-                  >
-                    Remove
-                  </button>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input label="Project Name *" value={proj.name} onChange={e => handleUpdateProject(idx, 'name', e.target.value)} />
-                    <Input
-                      label="Tech Stack (Comma-separated) *"
-                      value={proj.techStack.join(', ')}
-                      onChange={e => handleUpdateProject(idx, 'techStack', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
-                    />
-                    <Input label="GitHub Link" value={proj.github || ''} onChange={e => handleUpdateProject(idx, 'github', e.target.value)} />
-                    <Input label="Live Demo Link" value={proj.liveDemo || ''} onChange={e => handleUpdateProject(idx, 'liveDemo', e.target.value)} />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Project Description (Shown to HR)</label>
-                    <textarea
-                      rows={3}
-                      placeholder="e.g. Built multi-user real-time collaborative text editor with socket.io support. Scaled using Redis adapter..."
-                      value={proj.description || ''}
-                      onChange={e => handleUpdateProject(idx, 'description', e.target.value)}
-                      className="bg-white border border-slate-200 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20 shadow-inner w-full"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          {/* 6. Preferences & Soft Skills */}
-          <GlassCard className="p-8 md:p-10 border-slate-100 rounded-[2.5rem] bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>🎯</span> Job Preferences & Soft Skills
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Input label="Preferred Role" value={preferredRole} onChange={e => setPreferredRole(e.target.value)} placeholder="e.g. Full Stack Developer, Data Scientist" />
-              <Input label="Expected CTC" value={expectedCtc} onChange={e => setExpectedCtc(e.target.value)} placeholder="e.g. 12-15 LPA" />
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Mode</label>
-                <select
-                  value={workMode}
-                  onChange={e => setWorkMode(e.target.value)}
-                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
-                >
-                  <option value="" disabled>Select Work Mode...</option>
-                  <option value="On-Site">On-Site Office</option>
-                  <option value="Remote">Fully Remote</option>
-                  <option value="Hybrid">Hybrid Mode</option>
-                  <option value="Any">Any Mode</option>
-                </select>
               </div>
+            </GlassCard>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Availability / Notice Period</label>
-                <select
-                  value={noticePeriod}
-                  onChange={e => setNoticePeriod(e.target.value)}
-                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
-                >
-                  <option value="" disabled>Select Availability...</option>
-                  <option value="Immediate">Immediate Joiner</option>
-                  <option value="15 Days">15 Days</option>
-                  <option value="1 Month">1 Month</option>
-                  <option value="Post Graduation">After Graduation</option>
-                </select>
-              </div>
-
-              <Input label="Preferred Location" value={preferenceLocation} onChange={e => setPreferenceLocation(e.target.value)} placeholder="e.g. Bangalore, India" />
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Job Type</label>
-                <select
-                  value={jobType}
-                  onChange={e => setJobType(e.target.value)}
-                  className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px]"
-                >
-                  <option value="" disabled>Select Job Type...</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Internship">Internship</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Part-time">Part-time</option>
-                </select>
-              </div>
-
-              <Input label="Available Start Date" value={startDate} onChange={e => setStartDate(e.target.value)} placeholder="e.g. June 2025" />
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Soft Skills (Comma-Separated)</label>
-              <Input
-                placeholder="e.g. Leadership, Communication, Problem Solving"
-                value={softSkillsInput}
-                onChange={e => setSoftSkillsInput(e.target.value)}
+            {/* Resume Section */}
+            <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+               <ResumeSection 
+                initialResume={resumeMetadata} 
+                onUpdate={(newResume) => {
+                  setResumeMetadata(newResume);
+                  if (user && newResume) {
+                    dispatch(setStudentDetails({
+                      ...user,
+                      resume: newResume
+                    } as any));
+                  } else if (user && !newResume) {
+                    const { resume, ...rest } = user;
+                    dispatch(setStudentDetails(rest as any));
+                  }
+                }} 
               />
             </div>
 
-            <div className="flex justify-between items-center mb-4 pb-4">
-              <h3 className="text-sm font-bold text-slate-700">Spoken Languages</h3>
-              <Button type="button" onClick={handleAddSpokenLanguage} className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1 px-3 rounded-xl text-[10px] uppercase tracking-wider">
-                + Add Language
-              </Button>
-            </div>
-            
-            <div className="space-y-4 mb-8">
-              {spokenLanguages.map((lang, idx) => (
-                <div key={idx} className="flex gap-4 items-center">
-                  <div className="flex-1">
-                    <Input placeholder="Language (e.g. English)" value={lang.language} onChange={e => handleUpdateSpokenLanguage(idx, 'language', e.target.value)} />
-                  </div>
-                  <div className="flex-1">
-                    <select
-                      value={lang.proficiency}
-                      onChange={e => handleUpdateSpokenLanguage(idx, 'proficiency', e.target.value)}
-                      className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px] w-full"
-                    >
-                      <option value="Native">Native/Bilingual</option>
-                      <option value="Fluent">Fluent</option>
-                      <option value="Professional">Professional</option>
-                      <option value="Conversational">Conversational</option>
-                    </select>
-                  </div>
-                  <button type="button" onClick={() => setSpokenLanguages(spokenLanguages.filter((_, i) => i !== idx))} className="text-rose-500 bg-rose-50 p-3 rounded-xl hover:bg-rose-100">
-                    ×
-                  </button>
+            {/* Job Preferences */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg">🎯</div>
+                <h3 className="text-lg font-black text-slate-900">Job Preferences</h3>
+              </div>
+
+              <div className="space-y-5">
+                <Input label="Preferred Role" value={preferredRole} onChange={e => setPreferredRole(e.target.value)} placeholder="e.g. Full Stack" />
+                <Input label="Expected CTC" value={expectedCtc} onChange={e => setExpectedCtc(e.target.value)} placeholder="e.g. 12 LPA" />
+                <Input label="Preferred Location" value={preferenceLocation} onChange={e => setPreferenceLocation(e.target.value)} placeholder="e.g. Bangalore" />
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Work Mode</label>
+                  <select value={workMode} onChange={e => setWorkMode(e.target.value)} className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner w-full">
+                    <option value="" disabled>Select...</option>
+                    <option value="On-Site">On-Site Office</option>
+                    <option value="Remote">Fully Remote</option>
+                    <option value="Hybrid">Hybrid Mode</option>
+                  </select>
                 </div>
-              ))}
-            </div>
 
-            <div className="flex justify-between items-center mb-4 border-t border-slate-100 pt-8 pb-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <span>🏆</span> Achievements & Certifications
-              </h3>
-              <Button type="button" onClick={handleAddAchievement} className="bg-purple-50 hover:bg-purple-100 border border-purple-100 text-purple-700 font-bold py-1.5 px-4 rounded-xl text-xs">
-                + Add Achievement
-              </Button>
-            </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Notice Period</label>
+                  <select value={noticePeriod} onChange={e => setNoticePeriod(e.target.value)} className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner w-full">
+                    <option value="" disabled>Select...</option>
+                    <option value="Immediate">Immediate Joiner</option>
+                    <option value="15 Days">15 Days</option>
+                    <option value="1 Month">1 Month</option>
+                    <option value="Post Graduation">After Graduation</option>
+                  </select>
+                </div>
+              </div>
+            </GlassCard>
 
-            <div className="space-y-6">
-              {achievements.map((ach, idx) => (
-                <div key={idx} className="p-6 rounded-[2rem] border border-slate-100 bg-slate-50/50 relative">
-                  <button
-                    onClick={() => setAchievements(achievements.filter((_, i) => i !== idx))}
-                    className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-100"
-                  >
-                    Remove
-                  </button>
+            {/* Soft Skills & Languages */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-pink-400">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg">🗣️</div>
+                <h3 className="text-lg font-black text-slate-900">Soft Skills</h3>
+              </div>
+              <div className="space-y-6">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Skills (Comma-Separated)</label>
+                  <Input placeholder="Leadership, Communication..." value={softSkillsInput} onChange={e => setSoftSkillsInput(e.target.value)} />
+                </div>
+                
+                <div className="pt-2">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Languages</label>
+                    <button type="button" onClick={handleAddSpokenLanguage} className="text-xs font-bold text-indigo-700 bg-indigo-50 px-4 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">+ Add</button>
+                  </div>
+                  <div className="space-y-3">
+                    {spokenLanguages.map((lang, idx) => (
+                      <div key={idx} className="flex gap-2 items-center bg-slate-50/50 p-2 rounded-2xl border border-slate-100/80 overflow-hidden">
+                        <input className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-700 outline-none px-2" placeholder="e.g. English" value={lang.language} onChange={e => handleUpdateSpokenLanguage(idx, 'language', e.target.value)} />
+                        <select value={lang.proficiency} onChange={e => handleUpdateSpokenLanguage(idx, 'proficiency', e.target.value)} className="shrink-0 max-w-[110px] bg-white border border-slate-200 text-xs py-1.5 px-2 rounded-xl outline-none font-medium text-slate-600 shadow-sm cursor-pointer">
+                          <option value="Native">Native</option>
+                          <option value="Fluent">Fluent</option>
+                          <option value="Professional">Professional</option>
+                        </select>
+                        <button type="button" onClick={() => setSpokenLanguages(spokenLanguages.filter((_, i) => i !== idx))} className="shrink-0 text-rose-400 hover:text-rose-600 px-2 font-black">×</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input label="Title *" value={ach.title} onChange={e => handleUpdateAchievement(idx, 'title', e.target.value)} />
-                    <Input label="Subtitle (e.g. Issued by AWS)" value={ach.subtitle || ''} onChange={e => handleUpdateAchievement(idx, 'subtitle', e.target.value)} />
-                    
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Type</label>
-                      <select
-                        value={ach.type}
-                        onChange={e => handleUpdateAchievement(idx, 'type', e.target.value)}
-                        className="bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner h-[50px] w-full"
-                      >
-                        <option value="award">Award</option>
-                        <option value="certification">Certification</option>
-                        <option value="coding">Coding Competition</option>
-                        <option value="other">Other</option>
-                      </select>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="xl:col-span-8 space-y-8">
+            
+            {/* 1. Personal Information */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-blue-400">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">👤</div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Personal Information</h3>
+                  <p className="text-xs font-semibold text-slate-500">Basic contact and social links</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Input label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                <Input label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                <Input label="Phone" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
+                <Input label="Email" value={email} disabled className="bg-slate-50/50 text-slate-400 cursor-not-allowed border-slate-100" />
+                <Input label="LinkedIn URL" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
+                <Input label="GitHub URL" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} />
+                <Input label="Portfolio URL" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} />
+                <Input label="City" value={city} onChange={e => setCity(e.target.value)} />
+              </div>
+            </GlassCard>
+
+            {/* 2. Education */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-purple-400">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">🎓</div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Education Details</h3>
+                  <p className="text-xs font-semibold text-slate-500">Academic background (Auto-verified by College)</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Input label="College / University" value={collegeName} disabled className="bg-slate-50/50 text-slate-400 cursor-not-allowed border-slate-100 md:col-span-2" />
+                <Input label="Degree" value={degree} onChange={e => setDegree(e.target.value)} placeholder="e.g. B.Tech" />
+                <Input label="Branch" value={branch} disabled className="bg-slate-50/50 text-slate-400 cursor-not-allowed border-slate-100" />
+                <Input label="Graduation Year" value={graduationYear} onChange={e => setGraduationYear(e.target.value)} />
+                <Input label="Current CGPA" value={cgpa} onChange={e => setCgpa(e.target.value)} />
+                <Input label="12th Percentage (%)" value={twelfthPercentage} onChange={e => setTwelfthPercentage(e.target.value)} />
+                <Input label="10th Percentage (%)" value={tenthPercentage} onChange={e => setTenthPercentage(e.target.value)} />
+              </div>
+            </GlassCard>
+
+            {/* 3. Technical Skills */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-emerald-400">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">⚡</div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Technical Skills</h3>
+                  <p className="text-xs font-semibold text-slate-500">Categorized tech stack for better ATS matching</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  { label: 'Languages', state: languages, setter: setLanguages, placeholder: 'e.g. JS, Python' },
+                  { label: 'Frameworks', state: frameworks, setter: setFrameworks, placeholder: 'e.g. React, Spring' },
+                  { label: 'Databases', state: databases, setter: setDatabases, placeholder: 'e.g. Postgres, MongoDB' },
+                  { label: 'Cloud / Tools', state: cloudDevops, setter: setCloudDevops, placeholder: 'e.g. AWS, Docker' }
+                ].map(section => (
+                  <div key={section.label} className="flex flex-col gap-3 bg-slate-50/50 p-5 rounded-[1.5rem] border border-slate-100">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{section.label}</label>
+                    <div className="flex flex-wrap gap-2 min-h-[32px]">
+                      {section.state.map(skill => (
+                        <span key={skill} className="bg-white border border-slate-200 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+                          {skill}
+                          <button type="button" onClick={() => section.setter(section.state.filter(s => s !== skill))} className="text-slate-300 hover:text-rose-500">×</button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="relative z-10 mt-1">
+                      <SkillAutocomplete placeholder={section.placeholder} onSelect={skill => !section.state.includes(skill) && section.setter([...section.state, skill])} />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
+                ))}
+              </div>
+            </GlassCard>
 
+            {/* 4. Experience */}
+            {/* 4. Experience */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-amber-400">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700/80 flex items-center justify-center text-2xl">💼</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900">Experience</h3>
+                    <p className="text-xs font-semibold text-slate-500">Internships & Work History</p>
+                  </div>
+                </div>
+                <Button type="button" onClick={handleAddExperience} className="bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-1.5 px-5 rounded-full text-sm transition-colors border border-amber-200/60 shadow-sm">
+                  + Add New
+                </Button>
+              </div>
+              <div className="space-y-6">
+                {experiences.map((exp, idx) => (
+                  <div key={idx} className="p-6 rounded-[1.5rem] border border-slate-100 bg-slate-50 relative group">
+                    <button onClick={() => handleRemoveExperience(idx)} className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:bg-rose-100 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity">Remove</button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pr-20">
+                      <Input label="Company Name *" value={exp.company} onChange={e => handleUpdateExperience(idx, 'company', e.target.value)} />
+                      <Input label="Role / Designation *" value={exp.role} onChange={e => handleUpdateExperience(idx, 'role', e.target.value)} />
+                      <Input label="Duration (e.g. May 2024 - Jul 2024) *" value={exp.duration} onChange={e => handleUpdateExperience(idx, 'duration', e.target.value)} />
+                      <Input label="Location" value={exp.location || ''} onChange={e => handleUpdateExperience(idx, 'location', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Work Summary</label>
+                      <textarea rows={3} placeholder="Describe your responsibilities and achievements..." value={exp.summary || ''} onChange={e => handleUpdateExperience(idx, 'summary', e.target.value)} className="bg-white border border-slate-200 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner w-full" />
+                    </div>
+                  </div>
+                ))}
+                {experiences.length === 0 && (
+                  <div className="text-center py-10 text-slate-400/80 font-medium border-[2px] border-dashed border-amber-200/50 bg-amber-50/20 rounded-[2rem]">
+                    No experience added yet.
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+
+            {/* 5. Projects */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-teal-400">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-2xl">🚀</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900">Projects</h3>
+                    <p className="text-xs font-semibold text-slate-500">Showcase your best work</p>
+                  </div>
+                </div>
+                <Button type="button" onClick={handleAddProject} className="bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold py-1.5 px-5 rounded-full text-sm transition-colors border border-teal-200/60 shadow-sm">
+                  + Add New
+                </Button>
+              </div>
+              <div className="space-y-6">
+                {projects.map((proj, idx) => (
+                  <div key={idx} className="p-6 rounded-[1.5rem] border border-slate-100 bg-slate-50 relative group">
+                    <button onClick={() => handleRemoveProject(idx)} className="absolute top-4 right-4 text-xs font-bold text-rose-500 hover:bg-rose-100 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity">Remove</button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pr-20">
+                      <Input label="Project Name *" value={proj.name} onChange={e => handleUpdateProject(idx, 'name', e.target.value)} />
+                      <Input label="Tech Stack (Comma-separated) *" value={proj.techStack.join(', ')} onChange={e => handleUpdateProject(idx, 'techStack', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))} />
+                      <Input label="GitHub Link" value={proj.github || ''} onChange={e => handleUpdateProject(idx, 'github', e.target.value)} />
+                      <Input label="Live Demo Link" value={proj.liveDemo || ''} onChange={e => handleUpdateProject(idx, 'liveDemo', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Project Description</label>
+                      <textarea rows={3} placeholder="Describe the problem, solution, and your role..." value={proj.description || ''} onChange={e => handleUpdateProject(idx, 'description', e.target.value)} className="bg-white border border-slate-200 px-4 py-3 rounded-2xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner w-full" />
+                    </div>
+                  </div>
+                ))}
+                {projects.length === 0 && (
+                  <div className="text-center py-10 text-slate-400/80 font-medium border-[2px] border-dashed border-teal-200/50 bg-teal-50/20 rounded-[2rem]">
+                    No projects added yet.
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+
+            {/* 6. Achievements */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-yellow-400">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-2xl">🏆</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900">Achievements</h3>
+                    <p className="text-xs font-semibold text-slate-500">Awards & Certifications</p>
+                  </div>
+                </div>
+                <Button type="button" onClick={handleAddAchievement} className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 font-bold py-1.5 px-5 rounded-full text-sm transition-colors border border-yellow-200/60 shadow-sm">
+                  + Add New
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {achievements.map((ach, idx) => (
+                  <div key={idx} className="p-5 rounded-[1.5rem] border border-slate-100 bg-slate-50 relative group">
+                    <button onClick={() => setAchievements(achievements.filter((_, i) => i !== idx))} className="absolute top-3 right-3 text-rose-400 hover:text-rose-600 font-black">×</button>
+                    <div className="space-y-3 pr-6">
+                      <Input label="Title *" value={ach.title} onChange={e => handleUpdateAchievement(idx, 'title', e.target.value)} />
+                      <Input label="Issuer / Subtitle" value={ach.subtitle || ''} onChange={e => handleUpdateAchievement(idx, 'subtitle', e.target.value)} />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Type</label>
+                        <select value={ach.type} onChange={e => handleUpdateAchievement(idx, 'type', e.target.value)} className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-slate-800 text-sm shadow-inner w-full outline-none">
+                          <option value="award">Award</option>
+                          <option value="certification">Certification</option>
+                          <option value="coding">Coding Competition</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+
+          </div>
         </div>
 
+      </div>
+
+      {/* Floating Save Pill */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-slate-200 p-2.5 z-50 flex gap-6 items-center rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.08)] w-[90%] max-w-md md:max-w-lg justify-between">
+        <div className="hidden sm:block pl-4 py-1">
+           <p className="text-sm font-black text-slate-800">Unsaved Changes</p>
+           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Save to update profile</p>
+        </div>
+        <div className="sm:hidden pl-4 py-1">
+           <p className="text-sm font-black text-slate-800">Unsaved</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="w-auto bg-student-primary text-white shadow-md hover:scale-105 transition-all duration-300 font-bold px-8 py-2.5 rounded-full text-sm shrink-0">
+          {saving ? 'Saving...' : 'Save Profile'}
+        </Button>
       </div>
     </DashboardLayout>
   );

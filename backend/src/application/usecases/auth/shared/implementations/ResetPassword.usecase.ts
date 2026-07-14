@@ -21,17 +21,14 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     private readonly superAdminRepo: ISuperAdminRepository
   ) { }
 
-  async execute(token: string, newPassword: string): Promise<void> {
-    // 1. Verify token
+  async execute(token: string, newPassword: string): Promise<void> {
     const decoded = this.jwtService.verifyResetToken(token);
     if (!decoded || !decoded.id || !decoded.role) {
       throw new AppError("Invalid or expired reset token", HttpStatus.BAD_REQUEST, ErrorCode.INVALID_TOKEN);
     }
 
     const { id, role } = decoded;
-    const hashedPassword = await this.bcryptService.hash(newPassword);
-
-    // 2. Update password in the correct repository
+    const hashedPassword = await this.bcryptService.hash(newPassword);
     let updated = false;
 
     switch (role) {

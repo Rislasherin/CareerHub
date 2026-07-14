@@ -17,9 +17,11 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 const statusTabs = [
   { id: 'APPLIED', label: 'Applied', icon: Clock },
   { id: 'SHORTLISTED', label: 'Shortlisted', icon: CheckCircle2 },
-  { id: 'NEXT_ROUND', label: 'Next Round', icon: CheckCircle2 },
   { id: 'INTERVIEWING', label: 'Interviewing', icon: Calendar },
-  { id: 'OFFERED', label: 'Offered', icon: Trophy },
+  { id: 'UNDER_REVIEW', label: 'Under Review', icon: Eye },
+  { id: 'NEXT_ROUND', label: 'Next Round', icon: CheckCircle2 },
+  { id: 'SELECTED', label: 'Selected', icon: Trophy },
+  { id: 'OFFERED', label: 'Offered', icon: CheckCircle2 },
   { id: 'HIRED', label: 'Hired', icon: CheckCircle2 },
   { id: 'REJECTED', label: 'Rejected', icon: XCircle }
 ];
@@ -62,24 +64,17 @@ export default function JobApplicantsPage() {
     return errs;
   });
 
-
-  useEffect(() => {
-    if (jobId) {
-      fetchApplications();
-      fetchInterviewers();
-    }
-  }, [jobId]);
-
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get(`${API_ROUTES.HR.JOBS}/${jobId}/applications`) as ApiResponse<any[]>;
+      const response = await apiClient.get(`${API_ROUTES.HR.JOBS}/${jobId}/applications`) as any;
       if (response.success) {
-        setApplications(response.data || []);
+        const data = response.data?.applications || (Array.isArray(response.data) ? response.data : []);
+        setApplications(data);
         
         // Auto-select applicant if passed in query string
-        if (targetApplicantId && response.data) {
-          const targetApp = response.data.find((a: any) => a.id === targetApplicantId);
+        if (targetApplicantId && data) {
+          const targetApp = data.find((a: any) => a.id === targetApplicantId);
           if (targetApp) {
             setSelectedApp(targetApp);
             setShowDetails(true);
@@ -103,6 +98,13 @@ export default function JobApplicantsPage() {
       toast.error('Failed to load interviewers');
     }
   };
+
+  useEffect(() => {
+    if (jobId) {
+      fetchApplications();
+      fetchInterviewers();
+    }
+  }, [jobId]);
 
   const submitSchedule = async () => {
     if (!selectedApp) return;
@@ -439,7 +441,7 @@ export default function JobApplicantsPage() {
                             </Button>
                           )}
 
-                          {(selectedApp.status === 'SHORTLISTED' || selectedApp.status === 'UNDER_REVIEW' || selectedApp.status === 'NEXT_ROUND') && (
+                          {(selectedApp.status === 'SHORTLISTED' || selectedApp.status === 'UNDER_REVIEW' || selectedApp.status === 'NEXT_ROUND' || selectedApp.status === 'INTERVIEWING') && (
                             <Button
                               isLoading={updating}
                               onClick={() => {
@@ -452,7 +454,27 @@ export default function JobApplicantsPage() {
                             </Button>
                           )}
 
-                          {selectedApp.status === 'UNDER_REVIEW' && (
+                          {selectedApp.status === 'INTERVIEWING' && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'UNDER_REVIEW')}
+                              className="bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 font-bold text-xs"
+                            >
+                              Mark Under Review
+                            </Button>
+                          )}
+
+                          {(selectedApp.status === 'INTERVIEWING' || selectedApp.status === 'UNDER_REVIEW' || selectedApp.status === 'NEXT_ROUND') && (
+                            <Button
+                              isLoading={updating}
+                              onClick={() => updateStatus(selectedApp.id, 'SELECTED')}
+                              className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
+                            >
+                              Select for Hire
+                            </Button>
+                          )}
+
+                          {selectedApp.status === 'SELECTED' && (
                             <Button
                               isLoading={updating}
                               onClick={() => {
@@ -461,7 +483,7 @@ export default function JobApplicantsPage() {
                               }}
                               className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs"
                             >
-                              Hire
+                              Generate Offer
                             </Button>
                           )}
 

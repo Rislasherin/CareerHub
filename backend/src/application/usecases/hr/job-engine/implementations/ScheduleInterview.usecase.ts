@@ -1,6 +1,5 @@
 import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
 import { IScheduleInterviewUseCase } from "../interfaces/IScheduleInterview.usecase";
-import { IJobApplicationDocument } from "@infrastructure/database/models/jobApplication.model";
 import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
 import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
 import { AppError } from "@application/errors/AppError";
@@ -24,7 +23,6 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
     async execute(companyId: string, dto: SheduleInterviewDto): Promise<Interview> {
         let application = await this._jobApplicationRepository.findById(dto.applicationId);
         
-        // Fallback: The frontend might pass a studentId instead of an applicationId from the Candidate Profile page
         if (!application) {
             const studentApps = await this._jobApplicationRepository.findByStudentId(dto.applicationId);
             application = studentApps.find(app => app.companyId === companyId) || null;
@@ -39,9 +37,7 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
         const startOfDay = new Date(scheduledDate);
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(scheduledDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        // Check interviewer daily limit
+        endOfDay.setHours(23, 59, 59, 999);
         const interviewerInterviews = await this._interviewRepository.findByInterviewerId(dto.interviewerId);
         const dailyInterviews = interviewerInterviews.filter(inv => {
             if (inv.status === InterviewStatus.CANCELLED) return false;
@@ -52,7 +48,7 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
         if (dailyInterviews.length >= 5) {
             throw new AppError("This interviewer already has the maximum of 5 interviews scheduled for this day.", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
-
+        
         const interview = Interview.create({
             jobId: application.jobId,
             applicationId: application.id!,
@@ -97,4 +93,5 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
 
         return savedInterview
     }
+
 }

@@ -1,7 +1,6 @@
 import { IsString, IsNotEmpty, IsEnum, MaxLength } from 'class-validator';
 import { NoticePriority } from '@domain/enums/NoticePriority';
 
-
 export class NoticeRequestDto {
   @IsString()
   @IsNotEmpty({ message: 'Title is required' })
@@ -16,5 +15,4 @@ export class NoticeRequestDto {
   @IsNotEmpty()
   priority: NoticePriority;
 }
-
 

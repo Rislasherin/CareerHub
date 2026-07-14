@@ -6,7 +6,6 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
-
 export class UploadResumeUseCase implements IUploadResumeUseCase {
     constructor(
         private _studentRepository: StudentRepository,

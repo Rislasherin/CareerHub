@@ -43,8 +43,6 @@ export class LoginHRUseCase implements ILoginHRUseCase {
       throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
     }
 
-
-
     const payload = {
       id: hrUser.id!,
       role: Role.HR,

@@ -15,7 +15,6 @@ import { IOtpRepository } from "@domain/repositories/IOtpRepository";
 import { EmailService } from "@infrastructure/services/email/email.service";
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
 
-
 export class RegisterOrganizationUseCase implements IRegisterOrganizationUseCase {
     constructor(
         private readonly collegeAdminRepository : ICollegeAdminRepository,
@@ -103,9 +102,6 @@ export class RegisterOrganizationUseCase implements IRegisterOrganizationUseCase
             email: dto.email,
             message: "An OTP has been sent to your college admin email."
         };
-        
-
-
 
     }
 }

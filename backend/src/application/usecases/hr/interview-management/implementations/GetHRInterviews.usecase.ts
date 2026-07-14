@@ -35,7 +35,7 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
                         studentCollege = student.collegeId || "University";
                     }
                 } catch (e) {
-                    // Ignore CastError if ID is invalid
+
                 }
             }
 
@@ -47,7 +47,7 @@ export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
                         interviewerRole = interviewer.designation || "Interviewer";
                     }
                 } catch (e) {
-                    // Ignore CastError if ID is invalid
+
                 }
             }
 

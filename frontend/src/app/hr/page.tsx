@@ -125,7 +125,7 @@ export default function HRDashboard() {
                         />
                      </div>
                      <Link href="/hr/jobs/new">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl px-6 h-11 border-none">
+                        <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-black text-xs rounded-xl px-6 h-11 border-none shadow-lg">
                            <Plus size={16} className="mr-2" /> Post Job
                         </Button>
                      </Link>
@@ -139,8 +139,8 @@ export default function HRDashboard() {
                </header>
 
                {/* Welcome Banner */}
-               <section className="relative p-10 lg:p-12 rounded-[2.5rem] bg-indigo-600 text-white overflow-hidden shadow-2xl shadow-indigo-500/20">
-                  <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
+               <section className="relative p-10 lg:p-12 rounded-[2.5rem] bg-[#1b1430] text-white overflow-hidden shadow-2xl">
+                  <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                      <div>
                         <h2 className="text-4xl font-black mb-3 tracking-tight">Welcome back, {hrDetails?.companyName || 'Partner'}! 👋</h2>
@@ -150,7 +150,7 @@ export default function HRDashboard() {
                      </div>
                      <div className="flex gap-4">
                         <Link href="/hr/jobs/new">
-                           <Button className="bg-white text-indigo-600 hover:bg-indigo-50 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none">Post First Job <ChevronRight size={16} className="ml-1" /></Button>
+                           <Button className="bg-white text-[#1b1430] hover:bg-slate-100 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none shadow-lg">Post First Job <ChevronRight size={16} className="ml-1" /></Button>
                         </Link>
                         <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest">Guidebook</Button>
                      </div>
@@ -258,7 +258,7 @@ export default function HRDashboard() {
                               return (
                                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
                                     <div
-                                       className="w-full bg-indigo-600 rounded-t-lg transition-all hover:bg-indigo-700"
+                                       className="w-full bg-[#1b1430] rounded-t-lg transition-all hover:bg-[#2d244a]"
                                        style={{ height: `${(v / maxVal) * 100}%` }}
                                     />
                                     <span className="text-[8px] font-black text-slate-400">
@@ -321,18 +321,15 @@ export default function HRDashboard() {
                   <div className="p-10 rounded-[2.5rem] bg-slate-900 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
                      <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(99,102,241,0.1),transparent_70%)] pointer-events-none" />
                      <div className="space-y-6 relative z-10">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                           <ShieldCheck size={24} />
-                        </div>
                         <h3 className="text-2xl font-black tracking-tight">Enterprise Scaling</h3>
                         <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
                            Need to hire for multiple departments? Upgrade your plan to unlock bulk candidate exports and AI-powered interviewer scheduling.
                         </p>
-                        <Button className="bg-indigo-600 hover:bg-indigo-500 px-8 py-3.5 h-auto rounded-xl font-black text-xs uppercase tracking-widest border-none shadow-xl shadow-indigo-500/10">View Plans</Button>
+                        <Button className="bg-[#1b1430] hover:bg-[#2d244a] px-8 py-3.5 h-auto rounded-xl font-black text-xs uppercase tracking-widest border-none shadow-xl">View Plans</Button>
                      </div>
                      <div className="hidden md:block relative z-10">
                         <div className="w-40 h-40 rounded-full border-4 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-                           <TrendingUp size={64} className="text-indigo-400" />
+                           <TrendingUp size={64} className="text-[#1b1430]" />
                         </div>
                      </div>
                   </div>

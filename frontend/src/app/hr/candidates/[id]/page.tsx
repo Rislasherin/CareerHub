@@ -219,7 +219,7 @@ export default function CandidateProfilePage() {
 
             {/* Tabs */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-1.5 flex gap-1 overflow-x-auto">
-               {['Overview', 'Resume', 'Activity', 'Notes', 'Interviews'].map((tab) => (
+               {['Overview', 'Resume'].map((tab) => (
                   <button
                      key={tab}
                      onClick={() => setActiveTab(tab)}
@@ -492,74 +492,7 @@ export default function CandidateProfilePage() {
                </div>
             )}
 
-            {/* ============================== */}
-            {/* 3. ACTIVITY TAB (Timeline) */}
-            {/* ============================== */}
-            {activeTab === 'Activity' && (
-               <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">Activity Log</h3>
-                  
-                  {/* Vertical Timeline Container */}
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-[23px] before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
-                     
-                     {/* Event: Shortlisted */}
-                     <div className="relative flex items-start gap-6 group">
-                        <div className="w-12 h-12 rounded-full border-[3px] border-white bg-emerald-50 text-emerald-500 shadow-sm ring-1 ring-emerald-200 flex items-center justify-center z-10 shrink-0 group-hover:scale-110 transition-transform">
-                           <Check size={20} strokeWidth={2.5} />
-                        </div>
-                        <div className="flex-1 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                           <h4 className="text-sm font-bold text-slate-900">Shortlisted by Priya K.</h4>
-                           <p className="text-xs font-medium text-slate-400 mt-1">Jan 20, 2025 • 11:32 AM</p>
-                        </div>
-                     </div>
 
-                     {/* Event: Note Added */}
-                     <div className="relative flex items-start gap-6 group">
-                        <div className="w-12 h-12 rounded-full border-[3px] border-white bg-slate-50 text-slate-400 shadow-sm ring-1 ring-slate-200 flex items-center justify-center z-10 shrink-0 group-hover:scale-110 transition-transform">
-                           <MessageSquare size={18} />
-                        </div>
-                        <div className="flex-1 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                           <h4 className="text-sm font-bold text-slate-900">Note added by Rahul M.</h4>
-                           <p className="text-xs font-medium text-slate-400 mt-1">Jan 22, 2025 • 3:14 PM</p>
-                        </div>
-                     </div>
-
-                     {/* Event: Email Sent */}
-                     <div className="relative flex items-start gap-6 group">
-                        <div className="w-12 h-12 rounded-full border-[3px] border-white bg-indigo-50 text-indigo-500 shadow-sm ring-1 ring-indigo-200 flex items-center justify-center z-10 shrink-0 group-hover:scale-110 transition-transform">
-                           <Mail size={18} />
-                        </div>
-                        <div className="flex-1 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                           <h4 className="text-sm font-bold text-slate-900">Email sent: Interview Confirmation</h4>
-                           <p className="text-xs font-medium text-slate-400 mt-1">Jan 23, 2025 • 9:05 AM</p>
-                        </div>
-                     </div>
-
-                     {/* Event: Resume Downloaded */}
-                     <div className="relative flex items-start gap-6 group">
-                        <div className="w-12 h-12 rounded-full border-[3px] border-white bg-slate-50 text-slate-400 shadow-sm ring-1 ring-slate-200 flex items-center justify-center z-10 shrink-0 group-hover:scale-110 transition-transform">
-                           <FileText size={18} />
-                        </div>
-                        <div className="flex-1 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                           <h4 className="text-sm font-bold text-slate-900">Resume downloaded by Priya K.</h4>
-                           <p className="text-xs font-medium text-slate-400 mt-1">Jan 24, 2025 • 2:48 PM</p>
-                        </div>
-                     </div>
-
-                     {/* Event: Profile Viewed */}
-                     <div className="relative flex items-start gap-6 group">
-                        <div className="w-12 h-12 rounded-full border-[3px] border-white bg-slate-50 text-slate-400 shadow-sm ring-1 ring-slate-200 flex items-center justify-center z-10 shrink-0 group-hover:scale-110 transition-transform">
-                           <Eye size={18} />
-                        </div>
-                        <div className="flex-1 bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                           <h4 className="text-sm font-bold text-slate-900">Profile viewed by TC (You)</h4>
-                           <p className="text-xs font-medium text-slate-400 mt-1">Today • 10:00 AM</p>
-                        </div>
-                     </div>
-
-                  </div>
-               </div>
-            )}
          </div>
 
          {/* Schedule Interview Modal */}

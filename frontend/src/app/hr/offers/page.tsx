@@ -13,10 +13,6 @@ export default function HROffersPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchOffers();
-  }, []);
-
   const fetchOffers = async () => {
     setLoading(true);
     try {
@@ -42,6 +38,10 @@ export default function HROffersPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   const handleResendEmail = async (offerId: string) => {
     try {
@@ -127,81 +127,80 @@ export default function HROffersPage() {
           {loading ? (
             <div className="text-center py-12 text-slate-500">Loading offers...</div>
           ) : offers.map((offer) => (
-            <GlassCard key={offer.id} className="p-6">
+            <div key={offer.id} className="bg-white rounded-[20px] border border-slate-200 shadow-sm p-6 relative">
               
               {/* Card Header */}
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-inner">
-                    {offer.student?.user?.firstName?.[0]}{offer.student?.user?.lastName?.[0]}
+                  <div className="w-14 h-14 rounded-xl bg-[#1b1430] text-white flex items-center justify-center font-bold text-xl shadow-inner shadow-white/20">
+                    {(offer.studentId?.firstName?.[0] || offer.student?.user?.firstName?.[0] || 'U')}{(offer.studentId?.lastName?.[0] || offer.student?.user?.lastName?.[0] || 'N')}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">
-                      {offer.student?.user?.firstName} {offer.student?.user?.lastName}
+                      {offer.studentId?.firstName || offer.student?.user?.firstName} {offer.studentId?.lastName || offer.student?.user?.lastName}
                     </h3>
-                    <p className="text-sm text-slate-500 mt-0.5">
-                      {offer.student?.college?.name} • {offer.student?.degree} • All rounds cleared
+                    <p className="text-sm text-slate-500 mt-0.5 font-medium">
+                      {offer.studentId?.college?.name || offer.student?.college?.name || 'Candidate'} • All rounds cleared
                     </p>
                   </div>
                 </div>
 
-                <div className={`px-4 py-1.5 rounded-full text-sm font-medium border flex items-center gap-2
-                  ${offer.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                    offer.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                    'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                <div className={`px-4 py-2 rounded-lg text-sm font-bold border flex items-center gap-2 whitespace-nowrap
+                  ${offer.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 
+                    offer.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                    'bg-slate-50 text-slate-600 border-slate-200'}`}>
                   {offer.status === 'ACCEPTED' && <CheckCircle2 size={16} />}
                   {offer.status === 'PENDING' && <Clock size={16} />}
-                  {offer.status === 'ACCEPTED' ? `Accepted • Joining ${new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : offer.status}
+                  {offer.status === 'ACCEPTED' ? `Accepted - Joining ${new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : offer.status}
                 </div>
               </div>
 
               {/* Data Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Role</p>
-                  <p className="font-semibold text-slate-900">{offer.role}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</p>
+                  <p className="font-bold text-slate-900">{offer.role}</p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">CTC</p>
-                  <p className="font-semibold text-slate-900">{formatCurrency(offer.ctc)}/yr</p>
+                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">CTC</p>
+                  <p className="font-bold text-slate-900">{formatCurrency(offer.ctc)}/yr</p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Joining Date</p>
-                  <p className="font-semibold text-slate-900">{new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Joining Date</p>
+                  <p className="font-bold text-slate-900">{new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Offer Sent</p>
-                  <p className="font-semibold text-slate-900">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Offer Sent</p>
+                  <p className="font-bold text-slate-900">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
               </div>
 
               {/* Actions Row */}
-              <div className="flex items-center gap-3">
-                <Button onClick={() => handleDownloadPdf(offer.id, 'preview')} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button onClick={() => handleDownloadPdf(offer.id, 'preview')} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg">
                   <FileText size={16} className="mr-2" /> Preview Offer Letter
                 </Button>
-                <Button onClick={() => handleDownloadPdf(offer.id, 'download')} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+                <Button onClick={() => handleDownloadPdf(offer.id, 'download')} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg">
                   <Download size={16} className="mr-2" /> Download PDF
                 </Button>
-                <Button onClick={() => handleResendEmail(offer.id)} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+                <Button onClick={() => handleResendEmail(offer.id)} variant="secondary" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg">
                   <Mail size={16} className="mr-2" /> Resend Email
                 </Button>
 
                 <div className="flex-1"></div>
 
                 {offer.status === 'ACCEPTED' && (
-                  <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-emerald-100">
-                    <CheckCircle2 size={16} /> Candidate Accepted
+                  <div className="text-emerald-600 text-sm font-bold flex items-center gap-2 px-2">
+                    <CheckCircle2 size={18} /> Candidate Accepted
                   </div>
                 )}
                 {offer.status === 'PENDING' && (
-                  <div className="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-amber-100">
-                    <Clock size={16} /> Awaiting Response
+                  <div className="text-amber-500 text-sm font-bold flex items-center gap-2 px-2">
+                    <Clock size={18} /> Awaiting Response
                   </div>
                 )}
               </div>
-
-            </GlassCard>
+            </div>
           ))}
         </div>
       </div>

@@ -28,16 +28,13 @@ export default function HRHireRequestsPage() {
     return errs;
   });
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
   const fetchRequests = async () => {
     setLoading(true);
     try {
       const res = await apiClient.get('/hr/hire-requests') as any;
       if (res.success) {
-        setRequests(res.data || []);
+        const data = res.data?.applications || (Array.isArray(res.data) ? res.data : []);
+        setRequests(data);
       }
     } catch (err) {
       toast.error('Failed to fetch hire requests');
@@ -45,6 +42,10 @@ export default function HRHireRequestsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
   const submitOffer = async () => {
     setUpdating(true);

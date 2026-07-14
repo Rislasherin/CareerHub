@@ -46,7 +46,6 @@ export interface InterviewProps {
   updatedAt?: Date;
 }
 
-
 export class Interview {
   constructor(private readonly _props: InterviewProps) {}
 
@@ -72,8 +71,6 @@ export class Interview {
   get cancellationReason(): string | undefined { return this._props.cancellationReason; }
   get createdAt(): Date | undefined { return this._props.createdAt; }
   get updatedAt(): Date | undefined { return this._props.updatedAt; }
-
-  
 
   submitFeedback(feedback: InterviewFeedback): void {
     if (this._props.status !== InterviewStatus.SCHEDULED) {

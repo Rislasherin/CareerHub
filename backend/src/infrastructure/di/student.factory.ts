@@ -33,7 +33,6 @@ export const makeApplyToJobUseCase = () => {
   return new ApplyToJobUseCase(studentRepository, jobRepository, jobApplicationRepository, createSystemNotificationUseCase);
 };
 
-
 export const makeGetStudentFullProfileUseCase = () => {
   return new GetStudentFullProfileUseCase(studentRepository, organizationRepository);
 };

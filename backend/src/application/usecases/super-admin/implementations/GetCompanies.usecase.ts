@@ -8,7 +8,6 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
     private readonly _hrUserRepository: IHRUserRepository
   ) { }
 
-
   async execute(query: string, page: number, limit: number, status?: string) {
     const { hrUsers, total } = await this._hrUserRepository.searchHRUsers(query, page, limit, status);
 

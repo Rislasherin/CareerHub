@@ -18,10 +18,6 @@ export default function StudentOffersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
-  useEffect(() => {
-    fetchOffers();
-  }, []);
-
   const fetchOffers = async () => {
     setLoading(true);
     try {
@@ -35,6 +31,10 @@ export default function StudentOffersPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   const handleRespond = async (offerId: string, status: 'ACCEPTED' | 'REJECTED') => {
     try {
@@ -89,85 +89,108 @@ export default function StudentOffersPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading ? (
-            <div className="text-center py-12 text-slate-500">Loading offers...</div>
+            <div className="col-span-full text-center py-12 text-slate-500">Loading offers...</div>
           ) : offers.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="col-span-full text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
               You haven't received any offers yet. Keep applying!
             </div>
-          ) : paginatedOffers.map((offer) => (
-            <GlassCard key={offer.id} className="p-6">
+          ) : paginatedOffers.map((offer) => {
+            const isPending = offer.status === 'PENDING';
+            const isAccepted = offer.status === 'ACCEPTED';
+            const isRejected = offer.status === 'REJECTED';
+            
+            return (
+            <div key={offer.id} className="bg-[#FEF6F3] rounded-[2rem] p-6 relative overflow-hidden shadow-sm border border-orange-100/50 flex flex-col">
+              {/* Header */}
               <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 overflow-hidden shadow-sm">
-                    {offer.job?.company?.logo ? (
-                      <img src={offer.job.company.logo} alt="Company logo" className="w-full h-full object-contain" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center p-2 shadow-sm border border-orange-100 shrink-0">
+                    {offer.job?.companyId?.logo ? (
+                      <img src={offer.job.companyId.logo} alt="Company logo" className="w-full h-full object-contain" />
                     ) : (
-                      <Building2 className="text-slate-400" size={24} />
+                      <Building2 className="text-slate-400" size={20} />
                     )}
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {offer.job?.company?.name || 'Company Name'}
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-bold text-slate-900 truncate">
+                      {offer.job?.companyId?.companyName || 'Company Name'}
                     </h3>
-                    <p className="text-sm font-medium text-slate-500 mt-0.5">
+                    <p className="text-sm text-slate-500 font-medium truncate">
                       {offer.role}
                     </p>
                   </div>
                 </div>
 
-                <div className={`px-4 py-1.5 rounded-full text-sm font-medium border flex items-center gap-2
-                  ${offer.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                    offer.status === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                    offer.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                    'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                  {offer.status === 'ACCEPTED' && <CheckCircle2 size={16} />}
-                  {offer.status === 'REJECTED' && <XCircle size={16} />}
-                  {offer.status === 'PENDING' && <Clock size={16} />}
-                  {offer.status}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1"><IndianRupee size={12}/> CTC</p>
-                  <p className="font-semibold text-slate-900">{formatCurrency(offer.ctc)} / year</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1"><Calendar size={12}/> Joining Date</p>
-                  <p className="font-semibold text-slate-900">{new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1"><Clock size={12}/> Expires On</p>
-                  <p className="font-semibold text-rose-600">{new Date(offer.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-center">
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => { setSelectedOffer(offer); setShowOfferModal(true); }}
-                    className="w-full bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
-                  >
-                    <FileText size={16} className="mr-2" /> View Offer Letter
-                  </Button>
-                </div>
-              </div>
-
-              {offer.status === 'PENDING' && (
-                <div className="flex items-center gap-3 pt-6 border-t border-slate-100">
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-500 font-medium">Please review the offer letter carefully before making a decision.</p>
+                {isPending && (
+                  <div className="bg-orange-100/80 text-orange-600 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 border border-orange-200 shrink-0">
+                    🎉 Offer!
                   </div>
-                  <Button variant="secondary" onClick={() => handleRespond(offer.id, 'REJECTED')} className="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 font-bold px-8">
-                    Decline Offer
-                  </Button>
-                  <Button onClick={() => handleRespond(offer.id, 'ACCEPTED')} className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 font-bold px-8">
-                    Accept Offer
-                  </Button>
+                )}
+                {isAccepted && (
+                  <div className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 border border-emerald-200 shrink-0">
+                    <CheckCircle2 size={12} /> Accepted
+                  </div>
+                )}
+                 {isRejected && (
+                  <div className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 border border-rose-200 shrink-0">
+                    <XCircle size={12} /> Declined
+                  </div>
+                )}
+              </div>
+
+              {/* Big CTC */}
+              <div className="mb-6">
+                <h2 className="text-4xl font-black text-rose-500 tracking-tight">
+                  ₹{(offer.ctc / 100000).toFixed(1)} LPA
+                </h2>
+              </div>
+
+              {/* Details Grid (2x2) */}
+              <div className="grid grid-cols-2 gap-y-5 gap-x-4 mb-8 flex-1">
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Offer Date</p>
+                  <p className="text-sm font-bold text-slate-900">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
-              )}
-            </GlassCard>
-          ))}
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Joining</p>
+                  <p className="text-sm font-bold text-slate-900">{offer.joiningDate ? new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Deadline</p>
+                  <p className="text-sm font-bold text-slate-900">{offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                  <p className="text-sm font-bold text-slate-900 capitalize truncate">{offer.status.toLowerCase().replace('_', ' ')}</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-4">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => { setSelectedOffer(offer); setShowOfferModal(true); }}
+                  className="bg-transparent border-2 border-rose-200/60 text-rose-600 hover:bg-rose-50 hover:border-rose-300 px-8 py-2.5 rounded-xl font-bold transition-all"
+                >
+                  View Letter
+                </Button>
+                
+                {isPending && (
+                  <>
+                    <Button onClick={() => handleRespond(offer.id, 'ACCEPTED')} className="bg-[#EF4444] hover:bg-red-600 text-white shadow-lg shadow-red-500/25 px-8 py-2.5 rounded-xl font-bold transition-all">
+                      Accept Offer
+                    </Button>
+                    <button onClick={() => handleRespond(offer.id, 'REJECTED')} className="text-sm font-bold text-slate-400 hover:text-rose-500 ml-2 transition-colors">
+                      Decline
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            );
+          })}
         </div>
 
         {!loading && totalPages > 1 && (
@@ -201,7 +224,7 @@ export default function StudentOffersPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-black text-slate-900">Official Offer Letter</h2>
-                      <p className="text-xs font-semibold text-slate-500">{selectedOffer.job?.company?.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">{selectedOffer.job?.companyId?.companyName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -218,7 +241,7 @@ export default function StudentOffersPage() {
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-slate-100/50">
                   <div id="offer-letter-preview" className="bg-white p-8 md:p-12 border border-slate-200 shadow-lg rounded-xl max-w-3xl mx-auto text-slate-800">
                     <div className="text-center mb-10">
-                      <h2 className="text-3xl font-black text-slate-900">{selectedOffer.job?.company?.name || 'Company Name'}</h2>
+                      <h2 className="text-3xl font-black text-slate-900">{selectedOffer.job?.companyId?.companyName || 'Company Name'}</h2>
                       <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-2">Offer of Employment • Confidential</p>
                     </div>
 
@@ -228,7 +251,7 @@ export default function StudentOffersPage() {
                       <p>Dear <strong className="text-slate-900">{selectedOffer.student?.user?.firstName} {selectedOffer.student?.user?.lastName}</strong>,</p>
                       
                       <p>
-                        We are pleased to extend an offer of employment for the position of <strong className="text-slate-900">{selectedOffer.role || '[Role]'}</strong> at {selectedOffer.job?.company?.name}. 
+                        We are pleased to extend an offer of employment for the position of <strong className="text-slate-900">{selectedOffer.role || '[Role]'}</strong> at {selectedOffer.job?.companyId?.companyName}. 
                         You have successfully completed our selection process and we believe you will be an excellent addition to our team.
                       </p>
 
@@ -260,7 +283,7 @@ export default function StudentOffersPage() {
 
                       <div className="flex justify-between mt-16 pt-8 border-t border-slate-200">
                         <div className="text-xs text-slate-500 font-medium">
-                          HR Manager • {selectedOffer.job?.company?.name}
+                          HR Manager • {selectedOffer.job?.companyId?.companyName}
                         </div>
                         <div className="text-xs text-slate-500 font-medium text-right">
                           Candidate Acceptance Signature

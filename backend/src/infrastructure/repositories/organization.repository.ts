@@ -4,7 +4,6 @@ import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepos
 import { toOrganizationEntity,toOrganizationPersistence } from "@application/mappers/organization.mapper";
 import { OrganizationDocument, OrganizationModel } from "@infrastructure/database/models/organizer/organization.model";
 
-
 export class OrganizationRepository extends BaseRepository
 <Organization,OrganizationDocument> implements IOrganizationRepository {
 

@@ -43,8 +43,6 @@ export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
       throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
     }
 
-
-
     const payload = {
       id: admin.id!,
       role: Role.COLLEGE_ADMIN,

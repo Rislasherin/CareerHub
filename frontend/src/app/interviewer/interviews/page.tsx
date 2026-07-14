@@ -37,6 +37,7 @@ interface RescheduleRequest {
 
 interface InterviewData {
   id: string;
+  title?: string;
   status: string;
   scheduledAt: string;
   durationMinutes?: number;
@@ -64,7 +65,7 @@ export default function MyInterviewsPage() {
   const [selectedCancel, setSelectedCancel] = useState<InterviewData | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 4;
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -260,8 +261,13 @@ function InterviewCard({ interview, onOpenBrief, onReschedule, onCancel, onOpenF
               <p className="text-xs font-medium text-slate-500 mt-1">Software Engineer — Fullstack • <span className="font-bold text-slate-700">91% AI Match</span></p>
             </div>
           </div>
-          <div className="px-4 py-1.5 border border-blue-200 bg-white text-blue-600 text-xs font-bold rounded-full shadow-sm">
-            Technical Round 1
+          <div className="flex flex-col items-end gap-2">
+            <div className="px-4 py-1.5 border border-blue-200 bg-white text-blue-600 text-xs font-bold rounded-full shadow-sm">
+              {interview.title || 'Technical Round 1'}
+            </div>
+            <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase tracking-wider">
+              {interview.status.replace(/_/g, ' ')}
+            </div>
           </div>
         </div>
 

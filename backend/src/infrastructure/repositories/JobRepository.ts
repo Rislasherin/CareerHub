@@ -111,5 +111,3 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
   }
 }
 
-
-

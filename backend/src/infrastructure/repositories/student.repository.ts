@@ -14,7 +14,6 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
     return toStudentEntity(doc);
   }
 
-
   protected toPersistence(entity: Student): Record<string, unknown> {
     return toStudentPersistence(entity);
   }
@@ -80,5 +79,4 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
     return doc ? this.toEntity(doc as StudentDocument) : null;
   }
 
-  
 }

@@ -9,7 +9,5 @@ export interface IStorageService {
   uploadFileWithMetadata(file:Express.Multer.File,folder:string): Promise<UploadMetadata>
   deleteFile(publicId:string):Promise<void>
 
-
-
 }
 

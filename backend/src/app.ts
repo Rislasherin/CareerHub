@@ -9,7 +9,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 const app: Application = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: [process.env.CLIENT_URL || "http://localhost:3000", "http://127.0.0.1:3000"], credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -17,7 +17,6 @@ app.use(cookieParser());
 app.get("/api/health", (_req: Request, res: Response) => {
   res.status(HttpStatus.OK).json({ success: true, message: "Server is healthy" });
 });
-
 
 app.use("/api", routes);
 

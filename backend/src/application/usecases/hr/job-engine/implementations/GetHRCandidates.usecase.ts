@@ -9,31 +9,24 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
     private readonly _studentRepository: IStudentRepository
   ) { }
 
-  async execute(companyId: string): Promise<CandidateListItem[]> {
-    // 1. Fetch all company jobs
+  async execute(companyId: string): Promise<CandidateListItem[]> {
     const jobs = await this._jobRepository.findByCompanyId(companyId);
     if (jobs.length === 0) {
       return [];
-    }
-
-    // 2. Fetch all students
+    }
     const { students } = await this._studentRepository.searchAllStudents("", 1, 1000);
 
     const candidatesList: CandidateListItem[] = [];
     const collegeCache = new Map<string, string>();
 
-    const companyJobIds = jobs.map(j => String(j.id));
-
-    // 3. For each student, check their match against each company job
+    const companyJobIds = jobs.map(j => String(j.id));
     for (const student of students) {
       const studentAppliedJobs = (student.appliedJobs || []).map(id => String(id));
       const hasAppliedToCompany = studentAppliedJobs.some(id => companyJobIds.includes(id));
 
       if (!hasAppliedToCompany) {
         continue;
-      }
-
-      // Gather student skills
+      }
       const studentSkillSet = new Set<string>();
       if (student.skills) {
         const sObj = student.skills;
@@ -43,18 +36,14 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
         (Array.isArray(sObj.cloudDevops) ? sObj.cloudDevops : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
         (Array.isArray(sObj.otherTools) ? sObj.otherTools : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
         (Array.isArray(sObj.aiMl) ? sObj.aiMl : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-      }
-
-      // Find the job with the highest match score for this student
+      }
       let bestJob: typeof jobs[0] | null = null;
       let highestScore = -1;
 
       for (const job of jobs) {
         if (!job.id || !studentAppliedJobs.includes(String(job.id))) {
           continue;
-        }
-
-        // Skill Match (70%)
+        }
         const requiredSkills = Array.isArray(job.requiredSkills) ? job.requiredSkills : [];
         let skillMatchScore = 70;
         if (requiredSkills.length > 0) {
@@ -65,9 +54,7 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
             }
           });
           skillMatchScore = (matchedCount / requiredSkills.length) * 70;
-        }
-
-        // Academic Matching (30% weight: 15% CGPA, 15% Backlogs)
+        }
         const minCGPA = job.eligibility?.minCGPA || 0;
         const allowedBacklogs = job.eligibility?.allowedBacklogs !== undefined ? job.eligibility.allowedBacklogs : 0;
 
@@ -102,9 +89,7 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
               }
             } catch (e) { }
           }
-        }
-
-        // Compile skills list for display
+        }
         const allSkills: string[] = [];
         if (student.skills) {
           const sObj = student.skills;
@@ -135,9 +120,7 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
           status: 'NEW'
         });
       }
-    }
-
-    // Sort by matchScore descending (Applied candidates with top score first)
+    }
     candidatesList.sort((a, b) => b.matchScore - a.matchScore);
 
     return candidatesList;

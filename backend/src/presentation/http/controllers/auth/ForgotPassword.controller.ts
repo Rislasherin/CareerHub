@@ -19,7 +19,6 @@ export class ForgotPasswordController {
     await this._forgotPasswordUseCase.execute(email);
     sendSuccess(res, null, MESSAGES.SUCCESS.PASSWORD_RESET_LINK_SENT);
   });
-  
 
   resetPassword = asyncHandler(async (req: Request, res: Response) => {
     const { token, password } = req.body;

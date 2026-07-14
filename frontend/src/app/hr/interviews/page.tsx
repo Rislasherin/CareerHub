@@ -134,7 +134,29 @@ export default function InterviewsPage() {
       }
       return true;
     })
-    .sort((a: any, b: any) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.scheduledAt).getTime();
+      const dateB = new Date(b.scheduledAt).getTime();
+      const now = new Date().getTime();
+
+      const isUpcomingA = dateA >= now && a.status === 'SCHEDULED';
+      const isUpcomingB = dateB >= now && b.status === 'SCHEDULED';
+      
+      const isPendingActionA = a.status === 'RESCHEDULE_REQUESTED' || a.status === 'CANCELLATION_REQUESTED';
+      const isPendingActionB = b.status === 'RESCHEDULE_REQUESTED' || b.status === 'CANCELLATION_REQUESTED';
+
+      if (isPendingActionA && !isPendingActionB) return -1;
+      if (!isPendingActionA && isPendingActionB) return 1;
+
+      if (isUpcomingA && !isUpcomingB) return -1;
+      if (!isUpcomingA && isUpcomingB) return 1;
+
+      if (isUpcomingA && isUpcomingB) {
+         return dateA - dateB;
+      }
+
+      return dateB - dateA;
+    });
 
   const totalPages = Math.ceil(filteredAndSortedInterviews.length / itemsPerPage);
   const paginatedInterviews = filteredAndSortedInterviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -150,7 +172,7 @@ export default function InterviewsPage() {
           <p className="text-slate-500 font-medium mt-1">Manage all scheduled rounds · Current Season</p>
         </div>
         <div className="flex gap-3">
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 flex items-center gap-2">
+          <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold px-6 flex items-center gap-2 border-transparent">
             <Calendar size={18} /> Schedule Interview
           </Button>
         </div>
@@ -167,31 +189,31 @@ export default function InterviewsPage() {
       {/* Filters */}
       <div className="flex gap-2">
         <button 
-          onClick={() => setActiveFilter('ALL')}
+          onClick={() => { setActiveFilter('ALL'); setCurrentPage(1); }}
           className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors ${activeFilter === 'ALL' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
         >
           All ({(interviews || []).length})
         </button>
         <button 
-          onClick={() => setActiveFilter('RESCHEDULES')}
+          onClick={() => { setActiveFilter('RESCHEDULES'); setCurrentPage(1); }}
           className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'RESCHEDULES' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
         >
           <Clock size={14} /> Reschedule Requests ({(interviews || []).filter((i: any) => i.status === 'RESCHEDULE_REQUESTED').length})
         </button>
         <button 
-          onClick={() => setActiveFilter('TODAY')}
+          onClick={() => { setActiveFilter('TODAY'); setCurrentPage(1); }}
           className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'TODAY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
         >
           <Calendar size={14} /> Today
         </button>
         <button 
-          onClick={() => setActiveFilter('FEEDBACK')}
+          onClick={() => { setActiveFilter('FEEDBACK'); setCurrentPage(1); }}
           className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'FEEDBACK' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
         >
           <Bell size={14} /> Feedback Due
         </button>
         <button 
-          onClick={() => setActiveFilter('COMPLETED')}
+          onClick={() => { setActiveFilter('COMPLETED'); setCurrentPage(1); }}
           className={`px-4 py-1.5 rounded-full font-bold text-sm border transition-colors flex items-center gap-2 ${activeFilter === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
         >
           <CheckCircle2 size={14} /> Completed
@@ -279,10 +301,6 @@ export default function InterviewsPage() {
                           ) : interview.status === 'COMPLETED' ? (
                             <button onClick={() => setSelectedFeedback(interview)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
                               <FileText size={12} /> View Feedback
-                            </button>
-                          ) : interview.status === 'SCHEDULED' ? (
-                            <button onClick={() => toast.info('HR direct reschedule is coming soon!')} className="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
-                              <RefreshCw size={12} /> Reschedule
                             </button>
                           ) : null}
                         </div>
@@ -425,12 +443,12 @@ export default function InterviewsPage() {
                 
                 {selectedFeedback.jobId && (
                   <div className="pt-4 border-t border-slate-100 flex justify-end">
-                    <Button 
-                      onClick={() => router.push(`/hr/jobs/${selectedFeedback.jobId}/applicants?applicant=${selectedFeedback.candidate.applicationId}`)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
-                    >
-                      Go to Applicant Pipeline
-                    </Button>
+                      <Button 
+                        onClick={() => router.push(`/hr/jobs/${selectedFeedback.jobId}/applicants?applicant=${selectedFeedback.candidate.applicationId}`)}
+                        className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold border-transparent"
+                      >
+                        Go to Applicant Pipeline
+                      </Button>
                   </div>
                 )}
               </div>
@@ -492,7 +510,7 @@ export default function InterviewsPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-colors"
+                  className="flex-1 py-3 bg-[#1b1430] hover:bg-[#2d244a] text-white rounded-xl font-bold shadow-md transition-colors"
                 >
                   Confirm Reassignment
                 </button>

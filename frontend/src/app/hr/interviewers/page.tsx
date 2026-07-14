@@ -363,7 +363,7 @@ export default function InterviewersPage() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Interviewers</h1>
             <p className="text-slate-500 font-medium mt-1">Manage your company's interview panel.</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 font-bold px-6 h-12 rounded-xl">
+          <Button onClick={() => setIsModalOpen(true)} className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold px-6 h-12 rounded-xl">
             <Plus size={18} className="mr-2" /> Add Interviewer
           </Button>
         </div>
@@ -457,7 +457,7 @@ export default function InterviewersPage() {
                     >
                       Cancel
                     </button>
-                    <Button type="submit" isLoading={isAdding} disabled={!Object.values(formData).every(Boolean) || isAdding} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl disabled:opacity-50">
+                    <Button type="submit" isLoading={isAdding} disabled={!Object.values(formData).every(Boolean) || isAdding} className="flex-1 bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold h-12 rounded-xl disabled:opacity-50">
                       Send Invite
                     </Button>
                   </div>
@@ -518,7 +518,7 @@ export default function InterviewersPage() {
                     >
                       Cancel
                     </button>
-                    <Button type="submit" isLoading={isUpdating} disabled={!editFormData.firstName || !editFormData.lastName || isUpdating} className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold h-12 rounded-xl disabled:opacity-50">
+                    <Button type="submit" isLoading={isUpdating} disabled={!editFormData.firstName || !editFormData.lastName || isUpdating} className="flex-1 bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold h-12 rounded-xl disabled:opacity-50">
                       Save Changes
                     </Button>
                   </div>

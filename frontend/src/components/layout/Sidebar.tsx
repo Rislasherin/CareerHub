@@ -179,11 +179,11 @@ export const Sidebar = ({ onClose, onLogoutRequest }: { onClose?: () => void; on
         };
       case 'hr':
         return {
-          bg: 'bg-[#0F172A]',
-          accent: 'text-violet-400',
-          accentBg: 'bg-violet-500/10',
-          indicator: 'bg-violet-500',
-          logoBg: 'bg-violet-500'
+          bg: 'bg-[#1b1430]',
+          accent: 'text-indigo-300',
+          accentBg: 'bg-indigo-500/10',
+          indicator: 'bg-indigo-400',
+          logoBg: 'bg-indigo-500'
         };
       case 'interviewer':
         return {

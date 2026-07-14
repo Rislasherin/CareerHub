@@ -45,7 +45,6 @@ export class UpdateCompanyOnboardingDto {
   @MaxLength(50, { message: "Company size string cannot exceed 50 characters" })
   size?: string;
 
-
   // Step 3 fields
   @Expose()
   @IsString()

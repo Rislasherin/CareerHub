@@ -56,9 +56,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
         };
       }
       throw new AppError("HR User with this email already exists", HttpStatus.BAD_REQUEST, ErrorCode.USER_ALREADY_EXISTS);
-    }
-
-    // Step 1: Create Company (pending)
+    }
     const company = await this._companyRepository.create(
       Company.create({
         name: `Pending Company (${dto.firstName} ${dto.lastName}) - ${Date.now()}`,
@@ -67,9 +65,7 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
       })
     );
 
-    const hashedPassword = await this._bcryptService.hash(dto.password);
-
-    // Step 2: Create HR User (pending)
+    const hashedPassword = await this._bcryptService.hash(dto.password);
     const hrUser = await this._hrUserRepository.create(
       HRUser.create({
         companyId: company.id!,
@@ -81,14 +77,10 @@ export class RegisterCompanyUseCase implements IRegisterCompanyUseCase {
         role: Role.HR,
         status: UserStatus.PENDING,
       })
-    );
-
-    // Step 3: Generate and save OTP
+    );
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     logger.info(`[OTP GENERATED] Email: ${dto.email}, OTP: ${otp}`); 
-    await this._otpRepository.create(dto.email, otp);
-
-    // Step 4: Send OTP Email
+    await this._otpRepository.create(dto.email, otp);
     await this._emailService.sendOTP(dto.email, otp, "New Company");
 
     return {

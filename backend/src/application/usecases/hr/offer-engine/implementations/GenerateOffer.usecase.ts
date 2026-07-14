@@ -36,14 +36,6 @@ export class GenerateOfferUseCase implements IGenerateOfferUseCase {
             throw new AppError("Unauthorized", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);
         }
 
-        const interviews = await this._interviewRepository.findByApplicationId(application.id as string);
-        const hasPendingInterviews = interviews.some(i => 
-            [InterviewStatus.SCHEDULED, InterviewStatus.RESCHEDULE_REQUESTED, InterviewStatus.CANCELLATION_REQUESTED].includes(i.status)
-        );
-
-        if (hasPendingInterviews) {
-            throw new AppError("Cannot generate offer while there are pending interviews", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
-        }
 
         const offer = Offer.create({
             jobId: application.jobId,

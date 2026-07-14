@@ -11,17 +11,11 @@ export class ResolveSkillUseCase implements IResolveSkillUseCase {
     const normalizedInput = NormalizationUtil.normalize(rawInput);
     if (!normalizedInput) {
       throw new Error("Invalid skill input");
-    }
-
-    // 1. Try Exact Match on Canonical Name
+    }
     const exactMatch = await this._skillRepository.findByNormalizedName(normalizedInput);
-    if (exactMatch) return exactMatch;
-
-    // 2. Try Exact Match on Aliases
+    if (exactMatch) return exactMatch;
     const aliasMatch = await this._skillRepository.findByAlias(normalizedInput);
-    if (aliasMatch) return aliasMatch;
-
-    // 3. No match found, create a new UNVERIFIED canonical entity
+    if (aliasMatch) return aliasMatch;
     // Uses UPSERT to prevent race conditions
     return await this._skillRepository.upsert(rawInput.trim(), normalizedInput);
   }

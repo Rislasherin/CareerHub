@@ -20,9 +20,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
     const student = await this._studentRepository.findById(studentId);
     if (!student) {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
-    }
-
-    // Gather student skills
+    }
     const studentSkillSet = new Set<string>();
     if (student.skills) {
       const sObj = student.skills;
@@ -63,9 +61,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
             }
           } catch (e) { }
         }
-      }
-
-      // 1. Skill Match Percentage (70% weight)
+      }
       const requiredSkills = job.requiredSkills || [];
       let skillMatchScore = 70;
       if (requiredSkills.length > 0) {
@@ -76,9 +72,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
           }
         });
         skillMatchScore = (matchedCount / requiredSkills.length) * 70;
-      }
-
-      // 2. Academic Matching (30% weight: 15% CGPA, 15% Backlogs)
+      }
       const minCGPA = job.eligibility?.minCGPA || 0;
       const allowedBacklogs = job.eligibility?.allowedBacklogs !== undefined ? job.eligibility.allowedBacklogs : 0;
       const eligibleBranches = job.eligibility?.eligibleBranches || [];
@@ -113,9 +107,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
         matchScore,
         isEligible
       };
-    }));
-
-    // Sort by matchScore descending, then by createdAt descending
+    }));
     enrichedJobs.sort((a, b) => {
       if (b.matchScore !== a.matchScore) {
         return b.matchScore - a.matchScore;

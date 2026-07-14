@@ -4,7 +4,6 @@ import { IDeleteNoticeUseCase } from "../interfaces/IDeleteNotice.usecase";
 export class DeleteNoticeUseCase implements IDeleteNoticeUseCase {
     constructor(private readonly _noticeRepository:INoticeRepository){}
 
-
     async execute(collegeId: string, noticeId: string): Promise<void> {
         const notice = await this._noticeRepository.findById(noticeId);
         if(!notice || notice.collegeId !== collegeId){

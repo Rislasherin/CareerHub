@@ -17,7 +17,6 @@ import { studentRepository as studentRepo } from "@infrastructure/di/infra.conta
 import { PlatformSettingsController } from "@presentation/http/controllers/super-admin/platformSettings.controller";
 import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
-
 const orgRepository = new OrganizationRepository();
 const platformSettingsRepository = new PlatformSettingsRepository();
 
@@ -74,7 +73,6 @@ export const makeUpdateOrganizationPlanUseCase = () => {
   return new UpdateOrganizationPlanUseCase(orgRepository);
 };
 
-
 export const makeGetPlatformSettingsUseCase = () => {
     return new GetPlatformSettingsUseCase(platformSettingsRepository);
 };
@@ -93,7 +91,6 @@ export const makeSuperAdminController = () => {
     makeUpdateOrganizationPlanUseCase()
   );
 };
-
 
 export const makePlatformSettingsController = () => {
     return new PlatformSettingsController(

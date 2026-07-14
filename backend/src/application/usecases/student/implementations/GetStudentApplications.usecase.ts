@@ -79,7 +79,6 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
       };
     }));
 
-    // Sort by appliedAt descending
     enrichedApplications.sort((a, b) => {
       const dateA = a.appliedAt ? new Date(a.appliedAt).getTime() : 0;
       const dateB = b.appliedAt ? new Date(b.appliedAt).getTime() : 0;

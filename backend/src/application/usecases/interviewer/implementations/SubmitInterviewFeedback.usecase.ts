@@ -36,7 +36,6 @@ export class SubmitInterviewFeedbackUseCase implements ISubmitInterviewFeedbackU
       throw new AppError("Feedback has already been submitted for this interview", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    // 1. Update Interview Status & Feedback
     interview.submitFeedback({
       dsaScore: data.dsaScore,
       dsaNotes: data.dsaNotes,
@@ -58,11 +57,17 @@ export class SubmitInterviewFeedbackUseCase implements ISubmitInterviewFeedbackU
       throw new AppError(MESSAGES.ERROR.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
     }
 
-    // 2. Update the Job Application status so HR knows it is ready for review
     if (updatedInterview.applicationId) {
       const application = await this._jobApplicationRepository.findById(updatedInterview.applicationId);
       if (application) {
-        application.updateStatus(JobApplicationStatus.UNDER_REVIEW);
+        let nextStatus = JobApplicationStatus.UNDER_REVIEW;
+        if (data.recommendedAction === "HIRE") {
+          nextStatus = JobApplicationStatus.SELECTED;
+        } else if (data.recommendedAction === "REJECT") {
+          nextStatus = JobApplicationStatus.REJECTED;
+        }
+
+        application.updateStatus(nextStatus);
         await this._jobApplicationRepository.update(updatedInterview.applicationId, application);
 
         // Notify Student — interview completed

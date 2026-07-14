@@ -45,9 +45,6 @@ export const makeInterviewerController = () => {
   return new InterviewerController(getScheduleUseCase, requestRescheduleUseCase, makeSubmitInterviewFeedbackUseCase(), cancelInterviewUseCase)
 }
 
-
-
-
 export const makeInterviewerAuthController = () => {
   return new InterviewerAuthController(
     makeActivateInterviewerUseCase(),

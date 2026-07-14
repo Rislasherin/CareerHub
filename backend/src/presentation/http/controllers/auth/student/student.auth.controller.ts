@@ -10,7 +10,6 @@ import { IVerifyInvitationTokenUseCase } from "@application/usecases/auth/studen
 import { ISetupStudentPasswordUseCase } from "@application/usecases/auth/student/interfaces/ISetupStudentPassword.usecase";
 import { env } from "@infrastructure/config/env.validator";
 
-
 export class StudentAuthController {
   constructor(
     private readonly _loginUseCase: ILoginStudentUsescase,

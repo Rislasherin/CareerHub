@@ -20,7 +20,6 @@ import { noticeRepository } from "@infrastructure/di/infra.container";
 import { UpdateNoticeUseCase } from "@application/usecases/college/notices/implementations/UpdateNotice.usecase";
 import { DeleteNoticeUseCase } from "@application/usecases/college/notices/implementations/Delete.notice.UseCase";
 
-
 export const makeGetPendingStudentsUseCase = () => {
   return new GetPendingStudentsUseCase(studentRepository);
 };
