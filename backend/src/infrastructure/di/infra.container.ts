@@ -19,6 +19,9 @@ import { OfferRepository } from "@infrastructure/repositories/offer.repository";
 import { NotificationModel } from "@infrastructure/database/models/common/notification.model";
 import { NotificationRepository } from "@infrastructure/repositories/notification.repository";
 import { CreateSystemNotificationUseCase } from "@application/usecases/common/notifications/implementations/CreateSystemNotification.usecase";
+import { SubscriptionRepository } from "@infrastructure/repositories/subscription.repository";
+import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
+
 
 export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
@@ -55,3 +58,5 @@ export const crossRoleAuthService = new CrossRoleAuthService(
 );
 
 export const interviewRepository = new InterviewRepository();
+export const paymentGateway = new RazorpayGateway();
+export const subscriptionRepository = new SubscriptionRepository();

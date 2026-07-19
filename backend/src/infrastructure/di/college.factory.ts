@@ -19,6 +19,10 @@ import { NoticeController } from "@presentation/http/controllers/college/notice.
 import { noticeRepository } from "@infrastructure/di/infra.container";
 import { UpdateNoticeUseCase } from "@application/usecases/college/notices/implementations/UpdateNotice.usecase";
 import { DeleteNoticeUseCase } from "@application/usecases/college/notices/implementations/Delete.notice.UseCase";
+import { CreateSubscriptionUseCase } from "@application/usecases/college/implementations/CreateSubscription.usecase";
+import { HandlePaymentWebhookUseCase } from "@application/usecases/college/implementations/HandlePaymentWebhook.usecase";
+import { SubscriptionController } from "@presentation/http/controllers/college/SubscriptionController";
+import { subscriptionRepository, paymentGateway } from "@infrastructure/di/infra.container";
 
 export const makeGetPendingStudentsUseCase = () => {
   return new GetPendingStudentsUseCase(studentRepository);
@@ -110,3 +114,18 @@ export const makeNoticeController = () => {
     makeUpdateNoticeUseCase(),
   )
 }
+
+export const makeCreateSubscriptionUseCase = () => {
+  return new CreateSubscriptionUseCase(subscriptionRepository, paymentGateway);
+};
+
+export const makeHandlePaymentWebhookUseCase = () => {
+  return new HandlePaymentWebhookUseCase(subscriptionRepository, paymentGateway);
+};
+
+export const makeSubscriptionController = () => {
+  return new SubscriptionController(
+    makeCreateSubscriptionUseCase(),
+    makeHandlePaymentWebhookUseCase()
+  );
+};

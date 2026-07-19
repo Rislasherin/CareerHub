@@ -90,9 +90,8 @@ export default function CandidateProfilePage() {
    const handleScheduleSubmit = handleFormSubmit(async () => {
       setUpdating(true);
       try {
-         // Note: Scheduling requires an applicationId. Since this page might not have it contextually, we pass a dummy or inform the user.
          const payload = {
-            applicationId: id, // Fallback
+            applicationId: id,
             ...interviewForm,
             roundNumber: Number(interviewForm.roundNumber),
             durationMinutes: Number(interviewForm.durationMinutes)
@@ -234,9 +233,10 @@ export default function CandidateProfilePage() {
                ))}
             </div>
 
-            {/* ============================== */}
+            {/* ========================== */}
             {/* 1. OVERVIEW TAB */}
-            {/* ============================== */}
+            {/* ==
+            -======================== */}
             {activeTab === 'Overview' && (
                <div className="space-y-6">
                   {/* Metric Cards */}

@@ -81,7 +81,8 @@ const collegeAdminNav: NavCategory[] = [
     items: [
       { label: 'Student Directory', icon: Users, href: '/college/students' },
       { label: 'Drive Approvals', icon: FileCheck, href: '/college/jobs' },
-      {label: "Notice Board", icon:Bell, href:"/college/notices"}
+      { label: 'Notice Board', icon: Bell, href: '/college/notices' },
+      { label: 'Plan & Billing', icon: CreditCard, href: '/college/subscription' }
     ]
   }
 ];

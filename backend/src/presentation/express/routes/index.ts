@@ -13,6 +13,7 @@ import { ROUTES } from "@shared/constants/routes.constants";
 import { maintenanceMiddleware } from "../middlewares/maintenance.middleware";
 import skillRouter from "./skill.router";
 import interviewerRouter from './interviewer/interviewer.router'
+import subscriptionRouter from './college/subscription.router';
 
 const router = Router();
 
@@ -31,5 +32,7 @@ router.use("/student", studentRouter);
 router.use("/super-admin", superAdminRouter);
 router.use("/skills", skillRouter);
 router.use('/interviewer', interviewerRouter)
+router.use('/subscription', subscriptionRouter);
+
 
 export default router;

@@ -64,5 +64,9 @@ export const API_ROUTES = {
     INTERVIEWER: '/interviewer/notifications',
     COLLEGE:    '/college/notifications',
     SUPER_ADMIN: '/super-admin/notifications',
+  },
+  SUBSCRIPTION: {
+    CREATE: '/subscription/create'
   }
 };
+
