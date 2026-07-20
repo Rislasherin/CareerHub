@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Pagination } from '@/components/shared/Pagination';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import {
   Briefcase,
   Calendar,
@@ -258,9 +259,7 @@ export default function StudentJobsFeed() {
             </div>
 
             {/* Notification Bell */}
-            <button className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all">
-              <Bell size={18} />
-            </button>
+            <NotificationBell role="student" />
 
             {/* Upload Resume Button */}
             <button className="h-10 bg-[#E11D48] hover:bg-[#BE123C] text-white px-5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-500/20 transition-all">

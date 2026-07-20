@@ -54,6 +54,16 @@ export const superAdminService = {
   updatePlatformSettings: async (settingsData: any) => {
     const response = await apiClient.patch('/super-admin/platform-settings', settingsData);
     return response.data;
+  },
+
+  extendTrial: async (orgId: string, days: number) => {
+    const response = await apiClient.patch(`${API_ROUTES.SUPER_ADMIN.ORGANIZATIONS}/${orgId}/extend-trial`, { days });
+    return response.data;
+  },
+
+  getBillingInvoices: async (page = 1, limit = 10) => {
+    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.BILLING}?page=${page}&limit=${limit}`);
+    return response.data;
   }
 };
 

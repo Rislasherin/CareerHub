@@ -5,11 +5,24 @@ import { HttpStatus } from '@domain/enums/HttpStatus.enum';
 import { sendSuccess } from '@shared/utils/response.util';
 import { MESSAGES } from '@shared/constants/messages.constants';
 
+import { IGetCollegeSubscriptionUseCase } from '@application/usecases/college/interfaces/IGetCollegeSubscription.usecase';
+
 export class SubscriptionController {
   constructor(
     private readonly createSubscriptionUseCase: ICreateSubscriptionUseCase,
-    private readonly handleWebhookUseCase: IHandlePaymentWebhookUseCase
+    private readonly handleWebhookUseCase: IHandlePaymentWebhookUseCase,
+    private readonly getCollegeSubscriptionUseCase: IGetCollegeSubscriptionUseCase
   ) {}
+
+  public getMyPlan = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const collegeId = (req as any).user?.id;
+      const sub = await this.getCollegeSubscriptionUseCase.execute(collegeId);
+      sendSuccess(res, sub, "Subscription fetched");
+    } catch (error: any) {
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: error.message });
+    }
+  };
 
   public create = async (req: Request, res: Response): Promise<void> => {
     try {

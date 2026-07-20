@@ -123,9 +123,16 @@ export const makeHandlePaymentWebhookUseCase = () => {
   return new HandlePaymentWebhookUseCase(subscriptionRepository, paymentGateway);
 };
 
+import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
+
+export const makeGetCollegeSubscriptionUseCase = () => {
+  return new GetCollegeSubscriptionUseCase();
+};
+
 export const makeSubscriptionController = () => {
   return new SubscriptionController(
     makeCreateSubscriptionUseCase(),
-    makeHandlePaymentWebhookUseCase()
+    makeHandlePaymentWebhookUseCase(),
+    makeGetCollegeSubscriptionUseCase()
   );
 };

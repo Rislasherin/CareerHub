@@ -51,6 +51,10 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
           currentProps.status = UserStatus.PENDING;
       } else {
           currentProps.status = UserStatus.ACTIVE;
+          // Start 14-day free trial on immediate approval
+          const trialEnd = new Date();
+          trialEnd.setDate(trialEnd.getDate() + 14);
+          currentProps.trialEndsAt = trialEnd;
       }
     }
 

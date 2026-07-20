@@ -14,6 +14,8 @@ export const SubscriptionSchema = new Schema(
     },
     gatewaySubscriptionId: { type: String, required: true, unique: true },
     aiTokensAllocated: { type: Number, default: 0 },
+    startDate: { type: Date },
+    endDate: { type: Date },
   },
   {
     timestamps: true,

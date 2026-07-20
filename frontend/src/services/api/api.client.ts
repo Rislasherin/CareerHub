@@ -117,6 +117,15 @@ apiClient.interceptors.response.use(
       return new Promise(() => {});
     }
 
+    // Intercept trial expiration
+    if (errorMessage.toLowerCase().includes('trial has expired')) {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/college/subscription') {
+        toast.error('Your trial has expired. Please upgrade to continue.');
+        window.location.href = '/college/subscription';
+      }
+      return new Promise(() => {});
+    }
+
     // Handle 401 Unauthorized (Token Expiration)
     if (statusCode === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh-token' && !isAuthRoute) {
       if (isRefreshing) {

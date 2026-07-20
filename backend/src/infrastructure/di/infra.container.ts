@@ -21,9 +21,7 @@ import { NotificationRepository } from "@infrastructure/repositories/notificatio
 import { CreateSystemNotificationUseCase } from "@application/usecases/common/notifications/implementations/CreateSystemNotification.usecase";
 import { SubscriptionRepository } from "@infrastructure/repositories/subscription.repository";
 import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
-
-
-export const notificationRepository = new NotificationRepository(NotificationModel);
+import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
@@ -39,6 +37,8 @@ export const jobApplicationRepository = new JobApplicationRepository();
 export const jwtService = new JwtService();
 export const bcryptService = new BcryptService();
 export const offerRepository = new OfferRepository();
+export const subscriptionRepository = new SubscriptionRepository();
+export const getCollegeSubscriptionUseCase = new GetCollegeSubscriptionUseCase();
 export const authMiddleware = new AuthMiddleware(
     jwtService,
     studentRepository,
@@ -47,7 +47,8 @@ export const authMiddleware = new AuthMiddleware(
     collegeAdminRepository,
     superAdminRepository,
     organizationRepository,
-    companyRepository
+    companyRepository,
+    subscriptionRepository
 );
 export const crossRoleAuthService = new CrossRoleAuthService(
     studentRepository,
@@ -59,4 +60,3 @@ export const crossRoleAuthService = new CrossRoleAuthService(
 
 export const interviewRepository = new InterviewRepository();
 export const paymentGateway = new RazorpayGateway();
-export const subscriptionRepository = new SubscriptionRepository();

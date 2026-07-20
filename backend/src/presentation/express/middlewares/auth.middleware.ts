@@ -8,8 +8,10 @@ import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepos
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
+import { ISubscriptionRepository } from "@domain/repositories/ISubscriptionRepository";
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
+import { SubscriptionStatus } from "@domain/enums/SubscriptionStatus.enum";
 
 export class AuthMiddleware {
   constructor(
@@ -20,7 +22,8 @@ export class AuthMiddleware {
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _superAdminRepository: ISuperAdminRepository,
     private readonly _organizationRepository: IOrganizationRepository,
-    private readonly _companyRepository: ICompanyRepository
+    private readonly _companyRepository: ICompanyRepository,
+    private readonly _subscriptionRepository?: ISubscriptionRepository
   ) { }
 
   protect = async (req: Request, _res: Response, next: NextFunction) => {
@@ -92,7 +95,7 @@ export class AuthMiddleware {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
               }
               // Check if organization is pending approval
-              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding'];
+              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding', '/subscription/create'];
               if (orgJson.status === UserStatus.PENDING && orgJson.onboardingStep >= 3) {
                 const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
                 if (!isAllowed) {
@@ -100,11 +103,31 @@ export class AuthMiddleware {
                 }
               }
 
+              // Check if trial has expired and no active subscription
+              if (orgJson.status === UserStatus.ACTIVE && orgJson.trialEndsAt) {
+                const isTrialExpired = new Date(orgJson.trialEndsAt) < new Date();
+                
+                if (isTrialExpired) {
+                  let hasActiveSubscription = false;
+                  if (this._subscriptionRepository) {
+                    const sub = await this._subscriptionRepository.findByCollegeId(orgJson.id as string);
+                    hasActiveSubscription = sub?.status === SubscriptionStatus.ACTIVE;
+                  }
+                  
+                  const isAllowed = ['/auth/logout', '/subscription/create', '/auth/me'].some(p => req.originalUrl.includes(p));
+                  if (!hasActiveSubscription && !isAllowed) {
+                    throw new UnauthorizedError("Your trial has expired. Please subscribe to continue using the platform.");
+                  }
+                }
+              }
+
               user = { 
                 ...userJson, 
                 onboardingStep: orgJson.onboardingStep,
                 collegeName: orgJson.name,
-                activeBranches: orgJson.activeBranches || []
+                activeBranches: orgJson.activeBranches || [],
+                plan: orgJson.plan || null,
+                trialEndsAt: orgJson.trialEndsAt || null
               };
             }
           }

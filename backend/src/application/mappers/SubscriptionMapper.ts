@@ -12,6 +12,8 @@ export class SubscriptionMapper {
       status: raw.status as SubscriptionStatus,
       gatewaySubscriptionId: raw.gatewaySubscriptionId,
       aiTokensAllocated: raw.aiTokensAllocated,
+      startDate: (raw as any).startDate,
+      endDate: (raw as any).endDate,
       createdAt: raw.createdAt as Date,
       updatedAt: raw.updatedAt as Date,
     });
@@ -25,6 +27,8 @@ export class SubscriptionMapper {
       status: subscription.status,
       gatewaySubscriptionId: subscription.gatewaySubscriptionId,
       aiTokensAllocated: subscription.aiTokensAllocated,
+      startDate: subscription.startDate,
+      endDate: subscription.endDate,
       createdAt: subscription.createdAt,
       updatedAt: subscription.updatedAt,
     };

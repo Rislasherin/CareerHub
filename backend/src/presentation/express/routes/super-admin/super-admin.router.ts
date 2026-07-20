@@ -15,10 +15,12 @@ router.get("/organizations", superAdminController.getOrganizations);
 router.get("/students", superAdminController.getStudents);
 router.get("/companies", superAdminController.getCompanies);
 router.get("/interviewers", superAdminController.getInterviewers);
+router.get("/billing", superAdminController.getBillingInvoices);
 
 // Management actions
 router.patch("/management/:role/:id/status", superAdminController.updateStatus);
 router.patch("/organizations/:id/plan", superAdminController.updateOrganizationPlan);
+router.patch("/organizations/:id/extend-trial", superAdminController.extendTrial);
 router.delete("/management/:role/:id", superAdminController.deleteUser);
 
 // Platform Settings

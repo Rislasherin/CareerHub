@@ -5,4 +5,5 @@ export interface IOrganizationRepository extends IBaseRepository<Organization> {
     findByName(name:string) :Promise<Organization | null>
     searchOrganizations(query: string, page: number, limit: number, status?: string): Promise<{ organizations: Organization[], total: number }>;
     updateStatus(id: string, status: string, blockedBy?: string): Promise<void>;
+    extendTrial(orgId: string, days: number): Promise<void>;
 }

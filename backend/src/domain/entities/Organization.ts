@@ -18,7 +18,9 @@ export interface OrganizationProps {
   currentAcademicYear?: string;
   activePlacementBatch?: string;
   plan?: string;
+  trialEndsAt?: Date;
   logoUrl?: string;
+
   onboardingStep?: number;
   website?: string;
   description?: string;
@@ -66,6 +68,19 @@ export class Organization {
 
   get activeBranches(): string[] {
     return this._props.activeBranches || [];
+  }
+
+  get trialEndsAt(): Date | undefined {
+    return this._props.trialEndsAt;
+  }
+
+  get plan(): string | undefined {
+    return this._props.plan;
+  }
+
+  get isTrialActive(): boolean {
+    if (!this._props.trialEndsAt) return false;
+    return new Date() < new Date(this._props.trialEndsAt);
   }
 
   toJSON():OrganizationProps {

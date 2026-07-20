@@ -52,7 +52,25 @@ export class OrganizationRepository extends BaseRepository
     } else if (status?.toUpperCase() !== 'BLOCKED') {
       update.blockedBy = null;
     }
+    // Set trial start when admin approves a PENDING org
+    if (status?.toUpperCase() === 'ACTIVE') {
+      const existing = await this.model.findById(id).select('trialEndsAt');
+      if (existing && !existing.trialEndsAt) {
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 14);
+        update.trialEndsAt = trialEnd;
+      }
+    }
     await this.model.updateOne({ _id: id }, { $set: update });
+  }
+
+  async extendTrial(orgId: string, days: number): Promise<void> {
+    const org = await this.model.findById(orgId).select('trialEndsAt');
+    const base = org?.trialEndsAt && new Date(org.trialEndsAt) > new Date()
+      ? new Date(org.trialEndsAt)
+      : new Date();
+    base.setDate(base.getDate() + days);
+    await this.model.updateOne({ _id: orgId }, { $set: { trialEndsAt: base } });
   }
 
 }

@@ -66,6 +66,13 @@ const super_adminNav: NavCategory[] = [
       { label: 'Subscriptions', icon: CreditCard, href: '/admin/subscriptions' },
       { label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
     ]
+  },
+  {
+    title: 'FINANCE',
+    items: [
+      { label: 'Revenue', icon: BarChart3, href: '/admin/revenue' },
+      { label: 'Billing & Invoices', icon: FileText, href: '/admin/billing' },
+    ]
   }
 ];
 

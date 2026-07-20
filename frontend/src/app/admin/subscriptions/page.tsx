@@ -10,13 +10,9 @@ import {
   X,
   Building2,
   Search,
-  CreditCard,
-  Edit3,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   Zap,
-  DollarSign
+  CalendarPlus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { superAdminService } from '@/services/super-admin/super-admin.service';
@@ -29,6 +25,7 @@ interface Organization {
   state?: string;
   countOfStudents?: number;
   plan?: 'BASIC' | 'PRO';
+  trialEndsAt?: string;
 }
 
 interface SubscriptionPlan {
@@ -178,6 +175,16 @@ export default function SubscriptionManagement() {
     }
   };
 
+  const handleExtendTrial = async (collegeId: string) => {
+    try {
+      await superAdminService.extendTrial(collegeId, 14);
+      toast.success('Trial extended by 14 days');
+      fetchColleges();
+    } catch (err) {
+      toast.error('Failed to extend trial');
+    }
+  };
+
   // Compute live counts
   const basicCount = basicPlan.baseCollegeCount + Object.values(collegePlans).filter(p => p === 'BASIC').length;
   const proCount = proPlan.baseCollegeCount + Object.values(collegePlans).filter(p => p === 'PRO').length;
@@ -231,8 +238,8 @@ export default function SubscriptionManagement() {
     },
     {
       header: 'Active Plan',
-      render: (college) => {
-        const activePlan = collegePlans[college.id] || 'BASIC';
+      render: (college: any) => {
+        const activePlan = college.realPlan || 'BASIC';
         return (
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${activePlan === 'PRO'
               ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
@@ -251,20 +258,20 @@ export default function SubscriptionManagement() {
       )
     },
     {
-      header: 'Update Plan',
-      className: 'text-right',
-      render: (college) => {
-        const activePlan = collegePlans[college.id] || 'BASIC';
+      header: 'Expiry Date',
+      render: (college: any) => {
+        if (!college.realPlanEndDate) {
+          return <span className="text-xs font-bold text-amber-500/80">No Active Plan</span>;
+        }
+        const endsAt = new Date(college.realPlanEndDate);
         return (
-          <div className="flex items-center justify-end gap-2">
-            <select
-              value={activePlan}
-              onChange={(e) => handlePlanChange(college.id, e.target.value as 'BASIC' | 'PRO')}
-              className="bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-black text-slate-300 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
-            >
-              <option value="BASIC">BASIC PLAN</option>
-              <option value="PRO">PRO PLAN</option>
-            </select>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-black text-emerald-400">
+              Active
+            </span>
+            <span className="text-[10px] text-slate-500">
+              {endsAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
           </div>
         );
       }

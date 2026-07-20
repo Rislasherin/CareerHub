@@ -10,3 +10,8 @@ export const createSubscription = async (planType: 'BASIC' | 'PRO'): Promise<Cre
   const response = await apiClient.post(API_ROUTES.SUBSCRIPTION.CREATE, { planType }) as ApiResponse<CreateSubscriptionResponse>;
   return response.data;
 };
+
+export const getMyPlan = async (): Promise<any> => {
+  const response = await apiClient.get(API_ROUTES.SUBSCRIPTION.GET_MY_PLAN) as ApiResponse<any>;
+  return response.data;
+};

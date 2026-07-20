@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Button } from '@/components/shared/Button';
 import { 
   Zap, 
@@ -74,10 +75,7 @@ export default function StudentDashboard() {
             <p className="text-slate-500 font-medium">Welcome back, {user?.firstName || 'Student'}! Your profile is active and verified.</p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all relative">
-              <Bell size={20} />
-              <span className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white" />
-            </button>
+            <NotificationBell role="student" />
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName}`} alt="avatar" />

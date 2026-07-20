@@ -32,7 +32,9 @@ export const organizationSchema = new Schema(
     currentAcademicYear: { type: String, required: false },
     activePlacementBatch: { type: String, required: false },
     plan: { type: String, required: false },
+    trialEndsAt: { type: Date, required: false },
     logoUrl: { type: String, required: false },
+
     onboardingStep: { type: Number, default: 0 },
     website: { type: String, required: false },
     status: {

@@ -3,6 +3,7 @@ import { GetOrganizationsUseCase } from "@application/usecases/super-admin/imple
 import { GetStudentsUseCase } from "@application/usecases/super-admin/implementations/GetStudents.usecase";
 import { GetCompaniesUseCase } from "@application/usecases/super-admin/implementations/GetCompanies.usecase";
 import { GetInterviewersUseCase } from "@application/usecases/super-admin/implementations/GetInterviewers.usecase";
+import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
 import {
   studentRepository,
   companyRepository,
@@ -13,7 +14,7 @@ import {
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
-import { studentRepository as studentRepo } from "@infrastructure/di/infra.container";
+import { studentRepository as studentRepo, subscriptionRepository } from "@infrastructure/di/infra.container";
 import { PlatformSettingsController } from "@presentation/http/controllers/super-admin/platformSettings.controller";
 import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
@@ -38,6 +39,10 @@ export const makeGetCompaniesUseCase = () => {
 
 export const makeGetInterviewersUseCase = () => {
   return new GetInterviewersUseCase(interviewerRepository);
+};
+
+export const makeGetBillingInvoicesUseCase = () => {
+  return new GetBillingInvoicesUseCase(subscriptionRepository, orgRepository);
 };
 
 import { LoginSuperAdminUseCase } from "@application/usecases/auth/superadmin/implementations/LoginSuperAdmin.usecase";
@@ -73,6 +78,12 @@ export const makeUpdateOrganizationPlanUseCase = () => {
   return new UpdateOrganizationPlanUseCase(orgRepository);
 };
 
+import { ExtendCollegeTrialUseCase } from "@application/usecases/super-admin/implementations/ExtendCollegeTrial.usecase";
+
+export const makeExtendCollegeTrialUseCase = () => {
+  return new ExtendCollegeTrialUseCase(orgRepository);
+};
+
 export const makeGetPlatformSettingsUseCase = () => {
     return new GetPlatformSettingsUseCase(platformSettingsRepository);
 };
@@ -88,7 +99,9 @@ export const makeSuperAdminController = () => {
     makeGetInterviewersUseCase(),
     makeUpdateUserStatusUseCase(),
     makeDeleteUserUseCase(),
-    makeUpdateOrganizationPlanUseCase()
+    makeUpdateOrganizationPlanUseCase(),
+    makeExtendCollegeTrialUseCase(),
+    makeGetBillingInvoicesUseCase()
   );
 };
 

@@ -9,6 +9,8 @@ import { IGetInterviewersUseCase } from "@application/usecases/super-admin/inter
 import { IUpdateUserStatusUseCase } from "@application/usecases/super-admin/interfaces/IUpdateUserStatus.usecase";
 import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces/IDeleteUser.usecase";
 import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
+import { ExtendCollegeTrialUseCase } from "@application/usecases/super-admin/implementations/ExtendCollegeTrial.usecase";
+import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
 import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class SuperAdminController {
@@ -20,7 +22,9 @@ export class SuperAdminController {
     private readonly _getInterviewersUseCase: IGetInterviewersUseCase,
     private readonly _updateStatusUseCase: IUpdateUserStatusUseCase,
     private readonly _deleteUserUseCase: IDeleteUserUseCase,
-    private readonly _updatePlanUseCase: IUpdateOrganizationPlanUseCase
+    private readonly _updatePlanUseCase: IUpdateOrganizationPlanUseCase,
+    private readonly _extendTrialUseCase: ExtendCollegeTrialUseCase,
+    private readonly _getBillingInvoicesUseCase: GetBillingInvoicesUseCase
   ) { }
 
   updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -73,4 +77,16 @@ export class SuperAdminController {
     sendSuccess(res, null, MESSAGES.SUCCESS.DELETED);
   });
 
+  extendTrial = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { days = 14 } = req.body;
+    await this._extendTrialUseCase.execute(id, Number(days));
+    sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
+  });
+
+  getBillingInvoices = asyncHandler(async (req: Request, res: Response) => {
+    const { page = "1", limit = "10" } = req.query;
+    const result = await this._getBillingInvoicesUseCase.execute(parseInt(page as string), parseInt(limit as string));
+    sendSuccess(res, result, "Billing invoices fetched successfully");
+  });
 }

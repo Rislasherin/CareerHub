@@ -6,6 +6,7 @@ export const API_ROUTES = {
     COMPANIES: '/super-admin/companies',
     INTERVIEWERS: '/super-admin/interviewers',
     MANAGEMENT: '/super-admin/management',
+    BILLING: '/super-admin/billing',
   },
   STUDENT: {
     PROFILE: '/student/profile',
@@ -66,7 +67,8 @@ export const API_ROUTES = {
     SUPER_ADMIN: '/super-admin/notifications',
   },
   SUBSCRIPTION: {
-    CREATE: '/subscription/create'
+    CREATE: '/subscription/create',
+    GET_MY_PLAN: '/subscription/my-plan'
   }
 };
 
