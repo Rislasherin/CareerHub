@@ -12,6 +12,7 @@
     "lint:fix": "eslint src/**/*.ts --fix"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.49.4",
     "@types/multer": "^2.1.0",
     "bcrypt": "^5.1.1",
@@ -28,6 +29,7 @@
     "mongoose": "^8.9.5",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
+    "openai": "^6.48.0",
     "puppeteer": "^23.11.1",
     "razorpay": "^2.9.8",
     "reflect-metadata": "^0.2.2",
