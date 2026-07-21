@@ -28,6 +28,7 @@ export class UpdateStudentProfileUseCase implements IUpdateStudentProfileUseCase
       portfolioUrl: dto.portfolioUrl !== undefined ? dto.portfolioUrl : currentProps.portfolioUrl,
       resume: currentProps.resume,
       city: dto.city !== undefined ? dto.city : currentProps.city,
+      professionalSummary: dto.professionalSummary !== undefined ? dto.professionalSummary : currentProps.professionalSummary,
       degree: dto.degree !== undefined ? dto.degree : currentProps.degree,
       branch: dto.branch !== undefined ? dto.branch : currentProps.branch,
       graduationYear: dto.graduationYear !== undefined ? dto.graduationYear : currentProps.graduationYear,

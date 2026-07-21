@@ -196,6 +196,11 @@ export class UpdateStudentProfileDto {
   city?: string;
 
   @Expose()
+  @IsString()
+  @IsOptional()
+  professionalSummary?: string;
+
+  @Expose()
   @IsObject()
   @ValidateNested()
   @Type(() => StudentSkillsDto)

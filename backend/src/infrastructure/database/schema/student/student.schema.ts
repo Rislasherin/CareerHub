@@ -22,11 +22,11 @@ export const studentSchema = new Schema(
     isDeleted: { type: Boolean, default: false, index: true },
     appliedJobs: [{ type: String, default: [] }],
 
-    // Day 12 Student Profile fields
     linkedinUrl: { type: String, required: false },
     githubUrl: { type: String, required: false },
     portfolioUrl: { type: String, required: false },
     city: { type: String, required: false },
+    professionalSummary: { type: String, required: false, default: "" },
 
     // Academic details (verified & locked)
     degree: { type: String, required: false },

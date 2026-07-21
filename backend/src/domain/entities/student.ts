@@ -62,11 +62,11 @@ export interface StudentProps {
   createdAt?: Date;
   updatedAt?: Date;
 
-  // Day 12 Student Profile props
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
   city?: string;
+  professionalSummary?: string;
 
   // Academic (Locked)
   degree?: string;
@@ -192,6 +192,10 @@ export class Student {
 
   get city(): string | undefined {
     return this._props.city;
+  }
+
+  get professionalSummary(): string | undefined {
+    return this._props.professionalSummary;
   }
 
   get degree(): string | undefined {
