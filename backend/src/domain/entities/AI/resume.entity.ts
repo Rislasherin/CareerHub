@@ -13,6 +13,8 @@ export interface IPersonalInfo {
   phone: string;
   linkedinUrl?: string;
   githubUrl?: string;
+  portfolioUrl?: string;
+  city?: string;
 }
 
 export interface IEducation {
@@ -25,6 +27,7 @@ export interface IEducation {
 export interface IExperience {
   company: string;
   role: string;
+  location?: string;
   startDate: Date;
   endDate?: Date;
   isCurrent: boolean;
@@ -50,6 +53,8 @@ export class Resume {
     public projects: IProject[],
     public skills: string[],
     public certifications: string[],
+    public achievements: string[] = [],
+    public languages: string[] = [],
     public isDeleted: boolean = false,
 
     public settings: IResumeSettings = {

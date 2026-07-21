@@ -16,7 +16,9 @@ export class ResumeMapper {
         email: raw.personalInfo?.email || '',
         phone: raw.personalInfo?.phone || '',
         linkedinUrl: raw.personalInfo?.linkedinUrl,
-        githubUrl: raw.personalInfo?.githubUrl
+        githubUrl: raw.personalInfo?.githubUrl,
+        portfolioUrl: raw.personalInfo?.portfolioUrl,
+        city: raw.personalInfo?.city
       },
       raw.summary || '',
       (raw.education || []).map((ed: any) => ({
@@ -28,6 +30,7 @@ export class ResumeMapper {
       (raw.experience || []).map((exp: any) => ({
         company: exp.company || '',
         role: exp.role || '',
+        location: exp.location,
         startDate: exp.startDate || new Date(),
         endDate: exp.endDate,
         isCurrent: exp.isCurrent || false,
@@ -41,9 +44,11 @@ export class ResumeMapper {
       })),
       raw.skills || [],
       raw.certifications || [],
+      raw.achievements || [],
+      raw.languages || [],
       false, // isDeleted
       raw.settings || { // FEATURE 2 SETTINGS
-        templateId: "professional-ats",
+        templateId: "professional",
         themeColor: "#1b1430",
         fontFamily: "Inter",
         fontSize: "base",
@@ -68,6 +73,8 @@ export class ResumeMapper {
       projects: entity.projects,
       skills: entity.skills,
       certifications: entity.certifications,
+      achievements: entity.achievements,
+      languages: entity.languages,
       settings: entity.settings,
       resumeName: entity.resumeName,
       lastSyncedAt: entity.lastSyncedAt,

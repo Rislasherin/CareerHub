@@ -7,7 +7,7 @@ export const ResumeSchema = new Schema({
   resumeName: { type: String, default: "Default Resume" },
   lastSyncedAt: { type: Date, default: Date.now },
   settings: {
-    templateId: { type: String, default: "professional-ats" },
+    templateId: { type: String, default: "professional" },
     themeColor: { type: String, default: "#1b1430" },
     fontFamily: { type: String, default: "Inter" },
     fontSize: { type: String, default: "base" },
@@ -20,6 +20,8 @@ export const ResumeSchema = new Schema({
     phone: { type: String, required: true },
     linkedinUrl: { type: String },
     githubUrl: { type: String },
+    portfolioUrl: { type: String },
+    city: { type: String },
   },
   summary: { type: String, default: "" },
   education: [{
@@ -31,6 +33,7 @@ export const ResumeSchema = new Schema({
   experience: [{
     company: { type: String },
     role: { type: String },
+    location: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },
     isCurrent: { type: Boolean, default: false },
@@ -44,5 +47,7 @@ export const ResumeSchema = new Schema({
   }],
   skills: [{ type: String }],
   certifications: [{ type: String }],
+  achievements: [{ type: String }],
+  languages: [{ type: String }],
   isDeleted: { type: Boolean, default: false }
 }, { timestamps: true });

@@ -18,9 +18,14 @@ export class ResumeRepository extends BaseRepository<Resume, ResumeDocument> imp
     }
 
     async findByStudentId(studentId: string): Promise<Resume | null> {
-        const raw = await ResumeModel.findOne({ studentId });
+        const raw = await ResumeModel.findOne({ studentId }).sort({ updatedAt: -1 });
         if (!raw) return null;
         return ResumeMapper.toDomain(raw);
+    }
+
+    async findAllByStudentId(studentId: string): Promise<Resume[]> {
+        const rawList = await ResumeModel.find({ studentId }).sort({ updatedAt: -1 });
+        return rawList.map(raw => ResumeMapper.toDomain(raw));
     }
 
     async save(resume: Resume): Promise<void> {
