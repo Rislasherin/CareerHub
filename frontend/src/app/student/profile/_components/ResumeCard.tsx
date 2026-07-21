@@ -34,23 +34,23 @@ export default function ResumeCard({ resume, onDelete, onReplace, isUploading }:
   return (
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-        <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+        <div className="flex items-center space-x-4 mb-4 sm:mb-0 min-w-0 flex-1 pr-4">
           <div className="h-12 w-12 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
             <FileText className="h-6 w-6" />
           </div>
-          <div className="overflow-hidden">
+          <div className="overflow-hidden min-w-0 flex-1">
             <h4 className="font-semibold text-slate-900 truncate">{resume.fileName}</h4>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 truncate">
               {(resume.fileSize / (1024 * 1024)).toFixed(2)} MB • Uploaded {new Date(resume.uploadDate).toLocaleDateString()}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 shrink-0">
-          <button onClick={() => setIsPreviewOpen(true)} className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Preview">
+        <div className="flex items-center space-x-1 shrink-0">
+          <button type="button" onClick={() => setIsPreviewOpen(true)} className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Preview">
             <Eye className="h-5 w-5" />
           </button>
-          <button onClick={async () => {
+          <button type="button" onClick={async () => {
             try {
               const res = await fetch(resume.url);
               const blob = await res.blob();
@@ -69,10 +69,10 @@ export default function ResumeCard({ resume, onDelete, onReplace, isUploading }:
             <Download className="h-5 w-5" />
           </button>
           <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" onChange={handleReplace} />
-          <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Replace">
+          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Replace">
             <RefreshCw className={`h-5 w-5 ${isUploading ? 'animate-spin' : ''}`} />
           </button>
-          <button onClick={onDelete} disabled={isUploading} className="p-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
+          <button type="button" onClick={onDelete} disabled={isUploading} className="p-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
             <Trash2 className="h-5 w-5" />
           </button>
         </div>
