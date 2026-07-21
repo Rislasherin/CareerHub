@@ -123,7 +123,8 @@ const studentNav: NavCategory[] = [
       { label: 'Notice Board', icon: Megaphone, href: '/student/notices' },
       { label: 'My Applications', icon: Calendar, href: '/student/applications'},
       { label: 'My Interviews', icon: Calendar, href: '/student/interviews'},
-      { label: 'My Offers', icon: FileText, href: '/student/offers' }
+      { label: 'My Offers', icon: FileText, href: '/student/offers' },
+      { label: 'Resume Builder', icon: FileCheck, href: '/student/resume' }
     ]
   }
 ];
