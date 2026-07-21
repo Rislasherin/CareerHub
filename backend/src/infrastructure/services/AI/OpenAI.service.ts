@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { IAIService, IAtsAnalysisResult } from "@application/interfaces/IAIService";
+import { IAIService, IAtsAnalysisResult, IJobMatchReport, ISectionCoachResult } from "@application/interfaces/IAIService";
 
 export class OpenAIService implements IAIService {
     private _openai: OpenAI
@@ -31,5 +31,25 @@ export class OpenAIService implements IAIService {
             ]
         });
         return response.choices[0].message.content || text
+    }
+
+    async extractResumeFromDocument(fileBuffer: Buffer, mimeType: string): Promise<any> {
+        throw new Error("extractResumeFromDocument is not implemented for OpenAIService. Please use GeminiService for PDF parsing.");
+    }
+
+    async rewriteEntireResume(resumeData: any, targetRole: string): Promise<any> {
+        throw new Error("rewriteEntireResume is not implemented for OpenAIService. Please use GeminiService.");
+    }
+
+    async matchJobDescription(resumeData: any, jobDescription: string): Promise<IJobMatchReport> {
+        throw new Error("matchJobDescription is not implemented for OpenAIService. Please use GeminiService.");
+    }
+
+    async coachSection(sectionName: string, sectionData: any, instructions: string, targetRole: string): Promise<ISectionCoachResult> {
+        throw new Error("coachSection is not implemented for OpenAIService. Please use GeminiService.");
+    }
+
+    async generateProfessionalSummary(profileData: any): Promise<string> {
+        throw new Error("generateProfessionalSummary is not implemented for OpenAIService. Please use GeminiService.");
     }
 }

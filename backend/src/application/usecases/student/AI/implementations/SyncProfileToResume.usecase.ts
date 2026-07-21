@@ -9,15 +9,28 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
         private readonly _resumeRepository: IResumeRepository
     ){}
 
-    async execute(studentId: string): Promise<Resume> {
+    async execute(studentId: string, resumeId?: string): Promise<Resume> {
         const student = await this._studentRepository.findById(studentId);
-        const resume = await this._resumeRepository.findByStudentId(studentId)
+        let resume = resumeId 
+            ? await this._resumeRepository.findById(resumeId) 
+            : await this._resumeRepository.findByStudentId(studentId);
 
         if(!student) {
             throw new Error("Student not found");
         }
         if(!resume) {
-            throw new Error("Resume not found");
+            resume = new Resume(
+                null,
+                studentId,
+                "Software Engineer",
+                { fullName: "", email: "", phone: "" },
+                "",
+                [],
+                [],
+                [],
+                [],
+                []
+            );
         }
     
         //Map personel info
@@ -26,8 +39,11 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             email: student.email,
             phone: student.phoneNumber || "",
             linkedinUrl: student.linkedinUrl,
-            githubUrl: student.githubUrl
+            githubUrl: student.githubUrl,
+            portfolioUrl: student.portfolioUrl,
+            city: student.city
         };
+        resume.summary = student.professionalSummary || "";
         // 3. Map Education
         resume.education = [{
             institution: "University", 
@@ -40,6 +56,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             resume.experience = student.experience.map(exp => ({
                 company: exp.company,
                 role: exp.role,
+                location: exp.location,
                 startDate: new Date(), 
                 isCurrent: exp.duration.toLowerCase().includes('present'),
                 bulletPoints: exp.summary ? exp.summary.split('.') : []
@@ -61,6 +78,24 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
                 ...(student.skills.frameworks || []),
                 ...(student.skills.cloudDevops || [])
             ];
+        }
+        
+        // 7. Map Achievements, Certifications, and Languages
+        if (student.achievements) {
+            // Certifications are achievements with type === 'certification'
+            resume.certifications = student.achievements
+                .filter(a => a.type === 'certification')
+                .map(a => a.subtitle ? `${a.title} — ${a.subtitle}` : a.title);
+            
+            // Non-certification achievements (awards, coding competitions, etc.)
+            resume.achievements = student.achievements
+                .filter(a => a.type !== 'certification')
+                .map(a => a.subtitle ? `${a.title} — ${a.subtitle}` : a.title);
+        }
+        if (student.spokenLanguages) {
+            resume.languages = student.spokenLanguages.map(l => 
+                l.proficiency ? `${l.language} (${l.proficiency})` : l.language
+            );
         }
         resume.lastSyncedAt = new Date();
         

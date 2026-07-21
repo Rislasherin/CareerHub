@@ -32,7 +32,7 @@ export class GeminiAtsRule implements IAtsRule {
                 ruleId: this.id,
                 status: status,
                 feedback: detailedFeedback,
-                metadata: aiResult.suggestions // store raw messages in metadata
+                metadata: aiResult.suggestions.map(s => `[${s.type}] ${s.message}`)
             };
         } catch (error) {
             return {
