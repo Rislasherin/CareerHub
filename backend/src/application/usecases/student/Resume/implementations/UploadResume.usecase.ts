@@ -1,6 +1,7 @@
 import { IStorageService } from "@application/interfaces/IStorageService";
 import { StudentRepository } from "@infrastructure/repositories/student.repository";
-import { IUploadResumeUseCase } from "../interfaces/IUploadResume.usecase";
+import { IUploadResumeUseCase, IUploadResumeResponse } from "../interfaces/IUploadResume.usecase";
+import { IParseResumeUseCase } from "../../AI/interfaces/IParseResume.usecase";
 import { ResumeMetadata, Student } from "@domain/entities/student";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -9,10 +10,11 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 export class UploadResumeUseCase implements IUploadResumeUseCase {
     constructor(
         private _studentRepository: StudentRepository,
-        private _storageService: IStorageService
+        private _storageService: IStorageService,
+        private _parseResumeUseCase: IParseResumeUseCase
     ) { }
 
-    async execute(studentId: string, file: Express.Multer.File): Promise<ResumeMetadata | undefined> {
+    async execute(studentId: string, file: Express.Multer.File): Promise<IUploadResumeResponse> {
         if (!file || file.mimetype !== 'application/pdf') {
             throw new AppError('Only PDF files are allowed', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
@@ -44,7 +46,19 @@ export class UploadResumeUseCase implements IUploadResumeUseCase {
         };
         const studentToUpdate = Student.create(updatedProps);
         const updatedStudent = await this._studentRepository.update(studentId,studentToUpdate);
-        return updatedStudent?.resume
+        
+        // Parse the resume for AI Data Sync
+        let parsedData = null;
+        try {
+            parsedData = await this._parseResumeUseCase.execute(studentId, file.buffer, file.mimetype);
+        } catch (error) {
+            console.warn('Failed to parse resume with AI, continuing without parsed data', error);
+        }
+
+        return {
+            resume: updatedStudent?.resume,
+            parsedData: parsedData
+        };
 
     }
 

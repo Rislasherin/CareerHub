@@ -17,6 +17,7 @@ import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/inter
 import { IGetStudentApplicationsUseCase } from "@application/usecases/student/interfaces/IGetStudentApplications.usecase";
 import { IGetStudentInterviewsUseCase } from "@application/usecases/student/interfaces/IGetStudentInterviews.usecase";
 import { IGenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/interfaces/IGenerateOfferPdf.usecase";
+import { IGenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/interfaces/IGenerateProfessionalSummary.usecase";
 
 export class StudentController {
   constructor(
@@ -34,8 +35,18 @@ export class StudentController {
     private readonly _getStudentInterviewsUseCase: IGetStudentInterviewsUseCase,
     private readonly _getStudentOffersUseCase: any,
     private readonly _respondToOfferUseCase: any,
-    private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase
+    private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase,
+    private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase
   ) { }
+
+  generateProfessionalSummary = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const summary = await this._generateProfessionalSummaryUseCase.execute(studentId);
+    sendSuccess(res, { summary }, "Professional summary generated successfully");
+  });
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;

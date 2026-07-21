@@ -15,6 +15,9 @@ import { GetStudentInterviewsUseCase } from "@application/usecases/student/imple
 import { GetStudentOffersUseCase } from "@application/usecases/student/implementations/GetStudentOffers.usecase";
 import { RespondToOfferUseCase } from "@application/usecases/student/implementations/RespondToOffer.usecase";
 import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOfferPdf.usecase";
+import { ParseResumeUseCase } from "@application/usecases/student/AI/implementations/ParseResume.usecase";
+import { AIServiceFactory } from "@infrastructure/factories/AIServiceFactory";
+import { GenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/implementations/GenerateProfessionalSummary.usecase";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -42,7 +45,9 @@ export const makeGetStudentNoticesUseCase = () => {
 };
 
 export const makeUploadResumeUseCase = () => {
-  return new UploadResumeUseCase(studentRepository, new CloudinaryService());
+  const aiService = AIServiceFactory.createdService();
+  const parseResumeUseCase = new ParseResumeUseCase(aiService);
+  return new UploadResumeUseCase(studentRepository, new CloudinaryService(), parseResumeUseCase);
 };
 export const makeDeleteResumeUseCase = () => {
   return new DeleteResumeUseCase(studentRepository, new CloudinaryService());
@@ -64,6 +69,10 @@ export const makeRespondToOfferUseCase = () => {
   return new RespondToOfferUseCase(offerRepository, jobApplicationRepository, createSystemNotificationUseCase);
 };
 
+export const makeGenerateProfessionalSummaryUseCase = () => {
+  return new GenerateProfessionalSummaryUseCase(studentRepository);
+};
+
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
@@ -78,6 +87,7 @@ export const makeStudentController = () => {
     makeGetStudentInterviewsUseCase(),
     makeGetStudentOffersUseCase(),
     makeRespondToOfferUseCase(),
-    new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository)
+    new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository),
+    makeGenerateProfessionalSummaryUseCase()
   );
 };

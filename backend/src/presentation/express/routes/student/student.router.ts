@@ -20,6 +20,7 @@ router.post("/verify", upload.single('file'), studentController.uploadVerificati
 
 router.get("/profile", studentController.getProfile);
 router.put("/profile", validateDto(UpdateStudentProfileDto), studentController.updateProfile);
+router.post("/profile/generate-summary", studentController.generateProfessionalSummary.bind(studentController));
 
 router.get("/jobs", studentController.getJobs);
 router.post("/jobs/:id/apply", studentController.applyJob);
@@ -43,5 +44,14 @@ router.patch("/notifications/:id/read", notificationController.markAsRead);
 router.post('/resume/analyze', resumeController.analyze);
 router.post('/resume/sync', resumeController.syncProfile);
 router.patch('/resume/settings', resumeController.updateSettings);
+router.get('/resume/export', resumeController.exportPdf);
+router.get('/resume/preview', resumeController.previewHtml);
+router.post('/resume/autofix', resumeController.autoFix);
+router.post('/resume/rewrite-all', resumeController.rewriteAll);
+
+router.get('/resumes', resumeController.getAll);
+router.post('/resumes', resumeController.create);
+router.post('/resume/match-job', resumeController.matchJob);
+router.post('/resume/coach-section', resumeController.coachSection);
 
 export default router;
