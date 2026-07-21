@@ -5,10 +5,12 @@ import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { UpdateStudentProfileDto } from "@application/dtos/student/UpdateStudentProfile.dto";
 import multer from "multer";
+import { ResumeFactory } from "@infrastructure/di/resume.factory";
 
 const router = Router();
 const studentController = makeStudentController();
 const upload = multer({ storage: multer.memoryStorage() });
+const resumeController = ResumeFactory.createResumeController();
 
 // Use authMiddleware.protect for all routes in this router
 router.use(authMiddleware.protect);
@@ -37,5 +39,9 @@ router.get("/interviews", studentController.getInterviews.bind(studentController
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
 router.patch("/notifications/:id/read", notificationController.markAsRead);
+
+router.post('/resume/analyze', resumeController.analyze);
+router.post('/resume/sync', resumeController.syncProfile);
+router.patch('/resume/settings', resumeController.updateSettings);
 
 export default router;
