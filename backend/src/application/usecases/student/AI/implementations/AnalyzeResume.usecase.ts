@@ -1,17 +1,23 @@
 import { AtsEngine } from "@application/services/ats/AtsEngine";
 import { ExperienceDetailRule } from "@application/services/ats/rules/static/ExperienceDetailRule";
 import { HasLinkedInRule } from "@application/services/ats/rules/static/HasLinkedInRule";
+import { StarImpactRule } from "@application/services/ats/rules/static/StarImpactRule";
+import { HasProjectsRule } from "@application/services/ats/rules/static/HasProjectsRule";
+import { HasSkillsRule } from "@application/services/ats/rules/static/HasSkillsRule";
 import { IAnalyzeResumeUseCase } from "../interfaces/IAnalyzeResume.usecase";
 import { IAIService } from "@application/interfaces/IAIService";
 import { ExperiencedSoftwareEngineerProfile } from "@application/services/ats/profiles/ExperiencedProfile";
+import { EntryLevelStudentProfile } from "@application/services/ats/profiles/EntryLevelProfile";
 import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
 import { AtsReport } from "@application/services/ats/types/ats.types";
-
 import { HasExperienceRule } from "@application/services/ats/rules/static/HasExperienceRule";
 import { GeminiAtsRule } from "@application/services/ats/rules/dynamic/GeminiAtsRule";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class AnalyzeResumeUseCase implements IAnalyzeResumeUseCase {
-    private _atsEngine: AtsEngine
+    private _atsEngine: AtsEngine;
 
     constructor(
         private readonly _resumeRepository: IResumeRepository,
@@ -21,52 +27,28 @@ export class AnalyzeResumeUseCase implements IAnalyzeResumeUseCase {
             new HasLinkedInRule(),
             new HasExperienceRule(),
             new ExperienceDetailRule(),
+            new StarImpactRule(),
+            new HasProjectsRule(),
+            new HasSkillsRule(),
             new GeminiAtsRule(this._aiService)
         ]);
     }
+
+
     async execute(studentId: string): Promise<AtsReport> {
-        let resume = await this._resumeRepository.findByStudentId(studentId);
+        const resume = await this._resumeRepository.findByStudentId(studentId);
 
         if (!resume) {
-            const { Resume } = await import("@domain/entities/AI/resume.entity.js");
-            const mockResume = new Resume(
-                null,
-                studentId,
-                "Software Engineer",
-                {
-                    fullName: "Jane Student",
-                    email: "jane@university.edu",
-                    phone: "+1 555-0123",
-                    // Intentionally leaving out LinkedIn/GitHub so some rules fail!
-                },
-                "Motivated software engineering student with strong foundation in web development.",
-                [{ institution: "State University", degree: "B.S. Computer Science", graduationYear: 2026, gpa: "3.8" }],
-                [{
-                    company: "Tech Startup Inc.",
-                    role: "Software Engineering Intern",
-                    startDate: new Date("2025-05-01"),
-                    endDate: new Date("2025-08-01"),
-                    isCurrent: false,
-                    bulletPoints: [
-                        "Built a dashboard", // Intentionally weak bullet for rules to catch
-                        "Used React and Node.js to create APIs"
-                    ]
-                }],
-                [],
-                ["JavaScript", "React", "Node.js"],
-                []
-            );
-            
-            await this._resumeRepository.save(mockResume);
-            resume = await this._resumeRepository.findByStudentId(studentId);
+            throw new AppError("Resume not found. Please sync your profile to generate your resume.", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
-        if (!resume) {
-            throw new Error("Resume not found.");
-        }
+        // Dynamically select scoring profile based on career stage
+        const scoringProfile = (resume.experience && resume.experience.length >= 2)
+            ? ExperiencedSoftwareEngineerProfile
+            : EntryLevelStudentProfile;
 
-        const atsReport = await this._atsEngine.evaluate(resume, ExperiencedSoftwareEngineerProfile)
-
+        const atsReport = await this._atsEngine.evaluate(resume, scoringProfile);
         return atsReport;
-    };
+    }
 }
+

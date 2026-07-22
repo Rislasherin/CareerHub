@@ -37,21 +37,33 @@ router.delete('/profile/resume', studentController.deleteResume.bind(studentCont
 
 router.get("/interviews", studentController.getInterviews.bind(studentController));
 
+import { validateSchema } from "@presentation/express/middlewares/validateSchema";
+import { 
+  SyncProfileSchema, 
+  UpdateSettingsSchema, 
+  AutoFixSchema, 
+  RewriteAllSchema, 
+  CreateResumeSchema, 
+  MatchJobSchema, 
+  CoachSectionSchema 
+} from "@application/dtos/student/resume.dto";
+
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
 router.patch("/notifications/:id/read", notificationController.markAsRead);
 
 router.post('/resume/analyze', resumeController.analyze);
-router.post('/resume/sync', resumeController.syncProfile);
-router.patch('/resume/settings', resumeController.updateSettings);
+router.post('/resume/sync', validateSchema(SyncProfileSchema), resumeController.syncProfile);
+router.patch('/resume/settings', validateSchema(UpdateSettingsSchema), resumeController.updateSettings);
 router.get('/resume/export', resumeController.exportPdf);
 router.get('/resume/preview', resumeController.previewHtml);
-router.post('/resume/autofix', resumeController.autoFix);
-router.post('/resume/rewrite-all', resumeController.rewriteAll);
+router.post('/resume/autofix', validateSchema(AutoFixSchema), resumeController.autoFix);
+router.post('/resume/rewrite-all', validateSchema(RewriteAllSchema), resumeController.rewriteAll);
 
 router.get('/resumes', resumeController.getAll);
-router.post('/resumes', resumeController.create);
-router.post('/resume/match-job', resumeController.matchJob);
-router.post('/resume/coach-section', resumeController.coachSection);
+router.post('/resumes', validateSchema(CreateResumeSchema), resumeController.create);
+router.post('/resume/match-job', validateSchema(MatchJobSchema), resumeController.matchJob);
+router.post('/resume/coach-section', validateSchema(CoachSectionSchema), resumeController.coachSection);
 
 export default router;
+

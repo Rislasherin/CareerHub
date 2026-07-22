@@ -1,5 +1,5 @@
-import { IResumeSettings, Resume } from "@domain/entities/AI/resume.entity";
+import { IResumeSettings, Resume, IExperience, IProject } from "@domain/entities/AI/resume.entity";
 
 export interface IUpdateResumeSettingsUseCase {
-    execute(studentId:string,newSettings:Partial<IResumeSettings>): Promise<Resume>
+    execute(studentId: string, payload: { settings?: Partial<IResumeSettings>, summary?: string, targetRole?: string, experience?: IExperience[], projects?: IProject[], skills?: string[] }): Promise<Resume>;
 }

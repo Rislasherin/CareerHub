@@ -4,9 +4,9 @@ import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
 
-import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { ISyncProfileToResumeUseCase } from "@application/usecases/student/AI/interfaces/ISyncProfileToResume.usecase";
 import { IUpdateResumeSettingsUseCase } from "@application/usecases/student/AI/interfaces/IUpdateResumeSettings.usecase";
 import { IExportResumePdfUseCase } from "@application/usecases/student/AI/interfaces/IExportResumePdf.usecase";
@@ -33,53 +33,47 @@ export class ResumeController {
         private readonly _coachResumeSectionUseCase: ICoachResumeSectionUseCase
     ) { }
 
-    public analyze = asyncHandler(async (req: Request, res: Response) => {
-        // Cast to any since Express Request might not have .user strongly typed depending on your custom type definitions
-        const studentId = (req as any).user?.id || (req as any).user?._id;
-
+    private _getStudentId(req: Request): string {
+        const authUser = req.user as { id?: string; _id?: string } | undefined;
+        const reqAuthUser = (req as unknown as { user?: { id?: string; _id?: string } }).user;
+        const studentId = authUser?.id || authUser?._id || reqAuthUser?.id || reqAuthUser?._id;
         if (!studentId) {
             throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
         }
+        return studentId;
+    }
 
+    public analyze = asyncHandler(async (req: Request, res: Response) => {
+        const studentId = this._getStudentId(req);
         const atsReport = await this._analyzeResumeUseCase.execute(studentId);
-
         sendSuccess(res, atsReport, MESSAGES.SUCCESS.FETCHED, HttpStatus.OK);
     });
 
     public syncProfile = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = (req as any).user?.id || (req as any).user?._id;
+        const studentId = this._getStudentId(req);
         const { resumeId } = req.body;
-
-        if (!studentId) {
-            throw new AppError("Unauthorized", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
-        };
-
         const updatedResume = await this.__syncProfileToResumeUseCase.execute(studentId, resumeId);
-
-        sendSuccess(res, updatedResume, "Resume successfully synced with profile", HttpStatus.OK);
-
-    })
-
-    public updateSettings = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = (req as any).user?.id || (req as any).user?._id;
-        const { settings } = req.body;
-
-        if (!studentId || !settings) {
-            throw new AppError("Invalid Request", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
-        }
-
-        // We use the new UseCase to apply partial settings updates
-        const updatedResume = await this.__updateResumeSettingsUseCase.execute(studentId, settings);
-
-        sendSuccess(res, updatedResume.settings, "Settings auto-saved successfully", HttpStatus.OK);
+        sendSuccess(res, updatedResume, MESSAGES.RESUME.SYNC_SUCCESS, HttpStatus.OK);
     });
 
-    public exportPdf = asyncHandler(async(req: Request, res:Response) => {
-        const studentId = (req as any).user?.id || (req as any).user?._id;
+    public updateSettings = asyncHandler(async (req: Request, res: Response) => {
+        const studentId = this._getStudentId(req);
+        const { settings } = req.body;
+
+        if (!settings) {
+            throw new AppError(MESSAGES.RESUME.SETTINGS_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+
+        const updatedResume = await this.__updateResumeSettingsUseCase.execute(studentId, settings);
+        sendSuccess(res, updatedResume.settings, MESSAGES.RESUME.SETTINGS_SAVED, HttpStatus.OK);
+    });
+
+    public exportPdf = asyncHandler(async (req: Request, res: Response) => {
+        this._getStudentId(req);
         const resumeId = req.query.resumeId as string;
         
-        if (!studentId || !resumeId) {
-            throw new AppError("resumeId is required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        if (!resumeId) {
+            throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
         const pdfBuffer = await this._exportResumePdfUseCase.execute(resumeId);
@@ -91,82 +85,72 @@ export class ResumeController {
         res.end(pdfBuffer);
     });
 
-    previewHtml = asyncHandler(async(req:Request,res:Response) => {
-        const studentId = req.user?.id
+    public previewHtml = asyncHandler(async (req: Request, res: Response) => {
+        this._getStudentId(req);
         const resumeId = req.query.resumeId as string;
-        if(!studentId || !resumeId) {
-            throw new AppError("resumeId is required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        if (!resumeId) {
+            throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
         const html = await this._previewHtmlUseCase.execute(resumeId, req.query.template as string);
 
-        res.setHeader('Content-Type', 'text/html')
-        res.removeHeader('Content-Security-Policy')
-        res.removeHeader('X-Frame-Options')
-        res.send(html)
+        res.setHeader('Content-Type', 'text/html');
+        res.removeHeader('Content-Security-Policy');
+        res.removeHeader('X-Frame-Options');
+        res.send(html);
     });
 
     public autoFix = asyncHandler(async (req: Request, res: Response) => {
         const { text, targetRole } = req.body;
         if (!text || !targetRole) {
-            throw new AppError("Text and targetRole are required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+            throw new AppError(MESSAGES.RESUME.TEXT_AND_ROLE_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
         
         const fixedText = await this._autoFixTextUseCase.execute(text, targetRole);
-        
-        sendSuccess(res, { fixedText }, "Text autofixed successfully", HttpStatus.OK);
+        sendSuccess(res, { fixedText }, MESSAGES.RESUME.AUTOFIX_SUCCESS, HttpStatus.OK);
     });
 
     public rewriteAll = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = req.user?.id;
+        const studentId = this._getStudentId(req);
         const targetRole = req.body.targetRole || "Software Engineer";
 
-        if (!studentId) {
-            throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-        }
-
         const updatedResume = await this._rewriteEntireResumeUseCase.execute(studentId, targetRole);
-
-        sendSuccess(res, updatedResume, "Resume fully rewritten by AI", HttpStatus.OK);
+        sendSuccess(res, updatedResume, MESSAGES.RESUME.REWRITE_SUCCESS, HttpStatus.OK);
     });
 
     public getAll = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = req.user?.id;
-        if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-
+        const studentId = this._getStudentId(req);
         const resumes = await this._getResumesUseCase.execute(studentId);
-        sendSuccess(res, resumes, "Resumes fetched successfully", HttpStatus.OK);
+        sendSuccess(res, resumes, MESSAGES.RESUME.FETCHED, HttpStatus.OK);
     });
 
     public create = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = req.user?.id;
+        const studentId = this._getStudentId(req);
         const { title } = req.body;
-        if (!studentId) throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-
         const newResume = await this._createResumeUseCase.execute(studentId, title);
-        sendSuccess(res, newResume, "Resume created successfully", HttpStatus.CREATED);
+        sendSuccess(res, newResume, MESSAGES.RESUME.CREATED, HttpStatus.CREATED);
     });
 
     public matchJob = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = req.user?.id;
+        const studentId = this._getStudentId(req);
         const { resumeId, jobDescription } = req.body;
         
-        if (!studentId || !resumeId || !jobDescription) {
-            throw new AppError("resumeId and jobDescription are required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        if (!resumeId || !jobDescription) {
+            throw new AppError(MESSAGES.RESUME.MATCH_PARAMS_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
         const report = await this._matchJobDescriptionUseCase.execute(resumeId, jobDescription);
-        sendSuccess(res, report, "Job matched successfully", HttpStatus.OK);
+        sendSuccess(res, report, MESSAGES.RESUME.JOB_MATCH_SUCCESS, HttpStatus.OK);
     });
 
     public coachSection = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = req.user?.id;
+        const studentId = this._getStudentId(req);
         const { resumeId, sectionName, instructions, targetRole } = req.body;
 
-        if (!studentId || !resumeId || !sectionName || !instructions || !targetRole) {
-            throw new AppError("resumeId, sectionName, instructions, and targetRole are required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        if (!resumeId || !sectionName || !instructions || !targetRole) {
+            throw new AppError(MESSAGES.RESUME.COACH_PARAMS_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
         const result = await this._coachResumeSectionUseCase.execute(resumeId, sectionName, instructions, targetRole);
-        sendSuccess(res, result, "Section coached successfully", HttpStatus.OK);
+        sendSuccess(res, result, MESSAGES.RESUME.SECTION_COACH_SUCCESS, HttpStatus.OK);
     });
 }

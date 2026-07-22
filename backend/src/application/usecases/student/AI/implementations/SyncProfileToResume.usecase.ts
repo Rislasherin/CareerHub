@@ -2,6 +2,9 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { ISyncProfileToResumeUseCase } from "../interfaces/ISyncProfileToResume.usecase";
 import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
 import { Resume } from "@domain/entities/AI/resume.entity";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
     constructor(
@@ -15,10 +18,11 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             ? await this._resumeRepository.findById(resumeId) 
             : await this._resumeRepository.findByStudentId(studentId);
 
-        if(!student) {
-            throw new Error("Student not found");
+        if (!student) {
+            throw new AppError("Student profile not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
-        if(!resume) {
+
+        if (!resume) {
             resume = new Resume(
                 null,
                 studentId,
@@ -33,74 +37,94 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             );
         }
     
-        //Map personel info
+        // 1. Map personal info
         resume.personalInfo = {
-            fullName: `${student.firstName} ${student.lastName}`,
+            fullName: `${student.firstName} ${student.lastName}`.trim(),
             email: student.email,
             phone: student.phoneNumber || "",
-            linkedinUrl: student.linkedinUrl,
-            githubUrl: student.githubUrl,
-            portfolioUrl: student.portfolioUrl,
-            city: student.city
+            linkedinUrl: student.linkedinUrl || resume.personalInfo?.linkedinUrl,
+            githubUrl: student.githubUrl || resume.personalInfo?.githubUrl,
+            portfolioUrl: student.portfolioUrl || resume.personalInfo?.portfolioUrl,
+            city: student.city || resume.personalInfo?.city
         };
-        resume.summary = student.professionalSummary || "";
-        // 3. Map Education
-        resume.education = [{
-            institution: "University", 
-            degree: student.degree || "",
-            graduationYear: student.graduationYear || 0,
-            gpa: student.cgpa?.toString()
-        }];
-        // 4. Map Experience
-        if (student.experience) {
-            resume.experience = student.experience.map(exp => ({
-                company: exp.company,
-                role: exp.role,
-                location: exp.location,
-                startDate: new Date(), 
-                isCurrent: exp.duration.toLowerCase().includes('present'),
-                bulletPoints: exp.summary ? exp.summary.split('.') : []
-            }));
+
+        // 2. Summary
+        if (!resume.summary || resume.summary.trim() === "") {
+            resume.summary = student.professionalSummary || "";
         }
+
+        // 3. Map Education
+        if (student.degree) {
+            resume.education = [{
+                institution: "University", 
+                degree: student.degree || "",
+                graduationYear: student.graduationYear || 0,
+                gpa: student.cgpa?.toString()
+            }];
+        }
+
+
+        // 4. Map Experience (preserve existing bullet points if user edited them)
+        if (student.experience && student.experience.length > 0) {
+            resume.experience = student.experience.map((exp, idx) => {
+                const existingExp = resume?.experience?.[idx];
+                const bullets = (existingExp?.bulletPoints && existingExp.bulletPoints.length > 0)
+                    ? existingExp.bulletPoints
+                    : (exp.summary ? exp.summary.split('.').filter((b: string) => b.trim().length > 0) : []);
+                    
+                return {
+                    company: exp.company,
+                    role: exp.role,
+                    location: exp.location,
+                    startDate: new Date(), 
+                    isCurrent: exp.duration?.toLowerCase().includes('present') || false,
+                    bulletPoints: bullets
+                };
+            });
+        }
+
         // 5. Map Projects
-        if (student.projects) {
+        if (student.projects && student.projects.length > 0) {
             resume.projects = student.projects.map(proj => ({
                 name: proj.name,
                 description: proj.description || "",
-                technologies: proj.techStack,
-                link: proj.liveDemo || proj.github
+                technologies: proj.techStack || [],
+                link: proj.liveDemo || proj.github || ""
             }));
         }
-        // 6. Map Skills Flat Array
+
+        // 6. Map Skills (unique union)
         if (student.skills) {
-            resume.skills = [
+            const masterSkills = [
                 ...(student.skills.languages || []),
                 ...(student.skills.frameworks || []),
                 ...(student.skills.cloudDevops || [])
             ];
+            const combinedSkills = new Set([...masterSkills, ...(resume.skills || [])]);
+            resume.skills = Array.from(combinedSkills);
         }
         
-        // 7. Map Achievements, Certifications, and Languages
+        // 7. Map Achievements & Certifications
         if (student.achievements) {
-            // Certifications are achievements with type === 'certification'
             resume.certifications = student.achievements
                 .filter(a => a.type === 'certification')
                 .map(a => a.subtitle ? `${a.title} — ${a.subtitle}` : a.title);
             
-            // Non-certification achievements (awards, coding competitions, etc.)
             resume.achievements = student.achievements
                 .filter(a => a.type !== 'certification')
                 .map(a => a.subtitle ? `${a.title} — ${a.subtitle}` : a.title);
         }
+
         if (student.spokenLanguages) {
             resume.languages = student.spokenLanguages.map(l => 
                 l.proficiency ? `${l.language} (${l.proficiency})` : l.language
             );
         }
+
         resume.lastSyncedAt = new Date();
         
         await this._resumeRepository.save(resume);
         
         return resume;
     }
-}
+}

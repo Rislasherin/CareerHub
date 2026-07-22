@@ -1,6 +1,9 @@
 import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
 import { IAIService, ISectionCoachResult } from "@application/interfaces/IAIService";
 import { ICoachResumeSectionUseCase } from "../interfaces/ICoachResumeSection.usecase";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
     constructor(
@@ -11,7 +14,7 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
     async execute(resumeId: string, sectionName: string, instructions: string, targetRole: string): Promise<ISectionCoachResult> {
         const resume = await this._resumeRepository.findById(resumeId);
         if (!resume) {
-            throw new Error("Resume not found");
+            throw new AppError("Resume not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
         // Extract specific section data
@@ -22,10 +25,20 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
             case 'skills': sectionData = resume.skills; break;
             case 'education': sectionData = resume.education; break;
             case 'summary': sectionData = resume.summary; break;
-            default: throw new Error(`Unknown section: ${sectionName}`);
+            default: throw new AppError(`Unknown section: ${sectionName}`, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+
+        // Validate section data is non-empty
+        const isEmpty = !sectionData || 
+            (Array.isArray(sectionData) && sectionData.length === 0) || 
+            (typeof sectionData === 'string' && sectionData.trim().length === 0);
+
+        if (isEmpty) {
+            throw new AppError(`No content found in '${sectionName}' section. Please add at least one entry in your Profile before coaching.`, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
         const report = await this._aiService.coachSection(sectionName, sectionData, instructions, targetRole);
         return report;
     }
 }
+

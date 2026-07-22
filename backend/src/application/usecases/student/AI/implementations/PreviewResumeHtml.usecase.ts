@@ -4,6 +4,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IResumeRepository } from '@domain/repositories/AI/IResumeRepository';
 import { ResumeTemplateContext } from '@application/usecases/student/AI/templates/ResumeTemplateContext';
 import { IPreviewResumeHtmlUseCase } from "../interfaces/IPreviewResumeHtml.usecase";
+import { PreviewCacheService } from "@infrastructure/cache/PreviewCache.service";
 
 export class PreviewResumeHtmlUseCase implements IPreviewResumeHtmlUseCase {
     private readonly _templateContext = new ResumeTemplateContext();
@@ -18,7 +19,17 @@ export class PreviewResumeHtmlUseCase implements IPreviewResumeHtmlUseCase {
             if (!resume) {
                 return this._getEmptyStateHtml();
             }
-            return this._templateContext.generateHtml(templateId, resume as any);
+
+            const cacheKey = `${resumeId}:${templateId}:${resume.lastSyncedAt ? new Date(resume.lastSyncedAt).getTime() : 0}`;
+
+            const cachedHtml = PreviewCacheService.get(cacheKey);
+            if (cachedHtml) {
+                return cachedHtml;
+            }
+
+            const html = this._templateContext.generateHtml(templateId, resume as any);
+            PreviewCacheService.set(cacheKey, html);
+            return html;
         } catch (error: any) {
             // If it's already an AppError (e.g. validation), rethrow it
             if (error instanceof AppError) throw error;
@@ -26,6 +37,7 @@ export class PreviewResumeHtmlUseCase implements IPreviewResumeHtmlUseCase {
             return this._getEmptyStateHtml();
         }
     }
+
 
     private _getEmptyStateHtml(): string {
         return `<!DOCTYPE html>

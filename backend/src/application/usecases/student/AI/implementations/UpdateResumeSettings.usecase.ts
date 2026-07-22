@@ -1,24 +1,54 @@
 import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
 import { IUpdateResumeSettingsUseCase } from "../interfaces/IUpdateResumeSettings.usecase";
-import { IResumeSettings, Resume } from "@domain/entities/AI/resume.entity";
+import { IResumeSettings, Resume, IExperience, IProject } from "@domain/entities/AI/resume.entity";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class UpdateResumeSettingsUseCase implements IUpdateResumeSettingsUseCase {
     constructor(
         private readonly __resumeRepository: IResumeRepository
     ) { }
 
-    async execute(studentId: string, newSettings: Partial<IResumeSettings>): Promise<Resume> {
+    async execute(studentId: string, payload: { settings?: Partial<IResumeSettings>, summary?: string, targetRole?: string, experience?: IExperience[], projects?: IProject[], skills?: string[] } | Partial<IResumeSettings>): Promise<Resume> {
         const resume = await this.__resumeRepository.findByStudentId(studentId);
         if (!resume) {
-            throw new Error("Resume not found for this student");
+            throw new AppError("Resume not found for this student", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
-        resume.settings = {
-            ...resume.settings,
-            ...newSettings
-        };
+        // Support direct Partial<IResumeSettings> or nested payload
+        if ('settings' in payload || 'summary' in payload || 'targetRole' in payload || 'experience' in payload || 'projects' in payload || 'skills' in payload) {
+            const fullPayload = payload as { settings?: Partial<IResumeSettings>, summary?: string, targetRole?: string, experience?: IExperience[], projects?: IProject[], skills?: string[] };
+            if (fullPayload.settings) {
+                resume.settings = {
+                    ...resume.settings,
+                    ...fullPayload.settings
+                };
+            }
+            if (fullPayload.summary !== undefined) {
+                resume.summary = fullPayload.summary;
+            }
+            if (fullPayload.targetRole !== undefined) {
+                resume.targetRole = fullPayload.targetRole;
+            }
+            if (fullPayload.experience !== undefined && Array.isArray(fullPayload.experience)) {
+                resume.experience = fullPayload.experience;
+            }
+            if (fullPayload.projects !== undefined && Array.isArray(fullPayload.projects)) {
+                resume.projects = fullPayload.projects;
+            }
+            if (fullPayload.skills !== undefined && Array.isArray(fullPayload.skills)) {
+                resume.skills = fullPayload.skills;
+            }
+        } else {
+            resume.settings = {
+                ...resume.settings,
+                ...(payload as Partial<IResumeSettings>)
+            };
+        }
 
-        await this.__resumeRepository.save(resume)
+        resume.lastSyncedAt = new Date();
+        await this.__resumeRepository.save(resume);
         return resume;
     }
 }
