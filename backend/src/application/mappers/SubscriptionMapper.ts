@@ -17,7 +17,7 @@ export class SubscriptionMapper {
     });
   }
 
-  static toPersistence(subscription: Subscription): any {
+  static toPersistence(subscription: Subscription): Partial<SubscriptionDocument> {
     return {
       id: subscription.id,
       collegeId: subscription.collegeId,

@@ -2,7 +2,7 @@ import { ResumeMetadata } from "@domain/entities/student";
 
 export interface IUploadResumeResponse {
     resume?: ResumeMetadata;
-    parsedData?: any;
+    parsedData?: Record<string, unknown>;
 }
 
 export interface IUploadResumeUseCase {

@@ -1,8 +1,9 @@
-import { Interview, InterviewProps } from "@domain/entities/Interview";
+import { Interview, RescheduleRequest } from "@domain/entities/Interview";
 import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { InterviewType } from "@domain/enums/InterviewType.enum";
+import { InterviewDocument } from "@infrastructure/database/models/company/interview.model";
 
-export const toInterviewEntity = (doc: any): Interview => {
+export const toInterviewEntity = (doc: InterviewDocument): Interview => {
   return Interview.create({
     id: doc._id.toString(),
     jobId: doc.jobId.toString(),
@@ -12,13 +13,13 @@ export const toInterviewEntity = (doc: any): Interview => {
     interviewerId: doc.interviewerId.toString(),
     title: doc.title,
     type: doc.type as InterviewType,
-    roundNumber: doc.roundNumber,
+    roundNumber: (doc as InterviewDocument & { roundNumber?: number }).roundNumber ?? 1,
     status: doc.status as InterviewStatus,
     scheduledAt: doc.scheduledAt,
     durationMinutes: doc.durationMinutes,
     meetingLink: doc.meetingLink,
     feedback: doc.feedback,
-    rescheduleRequest: doc.rescheduleRequest,
+    rescheduleRequest: doc.rescheduleRequest as RescheduleRequest | undefined,
     cancellationReason: doc.cancellationReason,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt

@@ -4,6 +4,8 @@ import { ICoachResumeSectionUseCase } from "../interfaces/ICoachResumeSection.us
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
+import { Resume } from "@domain/entities/AI/resume.entity";
+
 
 export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
     constructor(
@@ -18,7 +20,8 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
         }
 
         // Extract specific section data
-        let sectionData: any;
+        type ResumeSectionData = Resume['experience'] | Resume['projects'] | Resume['skills'] | Resume['education'] | string;
+        let sectionData: ResumeSectionData | undefined;
         switch(sectionName.toLowerCase()) {
             case 'experience': sectionData = resume.experience; break;
             case 'projects': sectionData = resume.projects; break;

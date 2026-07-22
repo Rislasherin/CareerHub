@@ -253,8 +253,8 @@ export class Student {
     if (this.githubUrl || this.portfolioUrl) score += 10;
     
     if (this.skills) {
-      const skills = this.skills as any;
-      if (Object.values(skills).some((arr: any) => Array.isArray(arr) && arr.length > 0)) {
+      const skills = this.skills as StudentSkills;
+      if (Object.values(skills).some((arr: unknown) => Array.isArray(arr) && arr.length > 0)) {
         score += 15;
       }
     }

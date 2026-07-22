@@ -37,7 +37,7 @@ export class RefreshTokenController {
     }
 
     // Verify the refresh token (throws if invalid/expired)
-    const payload = this._jwtService.verifyRefreshToken(refreshToken) as any; // Revert to any for jwt payload temporary to fix type error
+    const payload = this._jwtService.verifyRefreshToken(refreshToken);
 
     // Check user status before refreshing
     let user: Record<string, unknown> | unknown;

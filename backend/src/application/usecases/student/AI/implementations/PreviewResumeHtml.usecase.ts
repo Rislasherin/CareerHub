@@ -30,7 +30,7 @@ export class PreviewResumeHtmlUseCase implements IPreviewResumeHtmlUseCase {
             const html = this._templateContext.generateHtml(templateId, resume as any);
             PreviewCacheService.set(cacheKey, html);
             return html;
-        } catch (error: any) {
+        } catch (error: unknown) {
             // If it's already an AppError (e.g. validation), rethrow it
             if (error instanceof AppError) throw error;
             // For unexpected errors (e.g. bad ObjectId format before first sync), return graceful fallback
