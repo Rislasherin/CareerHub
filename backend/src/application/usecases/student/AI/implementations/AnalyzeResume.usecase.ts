@@ -35,8 +35,8 @@ export class AnalyzeResumeUseCase implements IAnalyzeResumeUseCase {
     }
 
 
-    async execute(studentId: string): Promise<AtsReport> {
-        const resume = await this._resumeRepository.findByStudentId(studentId);
+    async execute(resumeId: string): Promise<AtsReport> {
+        const resume = await this._resumeRepository.findById(resumeId);
 
         if (!resume) {
             throw new AppError("Resume not found. Please sync your profile to generate your resume.", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);

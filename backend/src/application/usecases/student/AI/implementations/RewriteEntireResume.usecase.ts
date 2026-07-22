@@ -13,9 +13,9 @@ export class RewriteEntireResumeUseCase implements IRewriteEntireResumeUseCase {
         private readonly _resumeRepository: IResumeRepository
     ) {}
 
-    async execute(studentId: string, targetRole: string): Promise<any> {
+    async execute(resumeId: string, targetRole: string): Promise<Record<string, unknown>> {
         // We will rewrite the Resume document directly, not the student master profile
-        const resume = await this._resumeRepository.findByStudentId(studentId);
+        const resume = await this._resumeRepository.findById(resumeId);
         
         if (!resume) {
             throw new AppError("Resume not found. Please sync your profile first.", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);

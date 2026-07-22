@@ -45,14 +45,15 @@ import {
   RewriteAllSchema, 
   CreateResumeSchema, 
   MatchJobSchema, 
-  CoachSectionSchema 
+  CoachSectionSchema,
+  AnalyzeSchema
 } from "@application/dtos/student/resume.dto";
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
 router.patch("/notifications/:id/read", notificationController.markAsRead);
 
-router.post('/resume/analyze', resumeController.analyze);
+router.post('/resume/analyze', validateSchema(AnalyzeSchema), resumeController.analyze);
 router.post('/resume/sync', validateSchema(SyncProfileSchema), resumeController.syncProfile);
 router.patch('/resume/settings', validateSchema(UpdateSettingsSchema), resumeController.updateSettings);
 router.get('/resume/export', resumeController.exportPdf);

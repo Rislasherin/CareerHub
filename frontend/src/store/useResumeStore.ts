@@ -111,6 +111,8 @@ export const useResumeStore = create<ResumeState>()((set) => ({
       return { 
         activeResumeId: id, 
         jobMatchReport: null,
+        report: null,           // clear stale ATS score from previous version
+        sectionCoachResult: null,
         settings: active?.settings || { templateId: "professional" }
       };
     });
@@ -171,18 +173,24 @@ export const useResumeStore = create<ResumeState>()((set) => ({
   },
 
   triggerAnalysis: async () => {
+    const { activeResumeId } = useResumeStore.getState();
+    if (!activeResumeId) {
+      toast.error("Please select a resume version first.");
+      return;
+    }
     set({ isAnalyzing: true });
     try {
-      const reportData = await ResumeService.analyzeResume();
+      const reportData = await ResumeService.analyzeResume(activeResumeId);
       set({
-        report: reportData,
+        report: reportData as AtsReport,
         isAnalyzing: false
       });
       toast.success("Resume analyzed successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({ isAnalyzing: false });
-      if (error?.message) {
-        toast.error(error.message);
+      const err = error as { message?: string };
+      if (err?.message) {
+        toast.error(err.message);
       } else {
         toast.error("An unexpected error occurred during analysis.");
       }
@@ -230,14 +238,20 @@ export const useResumeStore = create<ResumeState>()((set) => ({
   },
 
   triggerRewriteAll: async (targetRole: string) => {
+    const { activeResumeId } = useResumeStore.getState();
+    if (!activeResumeId) {
+      toast.error("Please select a resume version first.");
+      return;
+    }
     set({ isAnalyzing: true, rewriteComparison: null });
     try {
-      const data = await ResumeService.rewriteEntireResume(targetRole);
-      set({ rewriteComparison: data, isAnalyzing: false });
+      const data = await ResumeService.rewriteEntireResume(activeResumeId, targetRole);
+      set({ rewriteComparison: data as { original: unknown; suggested: unknown }, isAnalyzing: false });
       toast.success("AI Resume Optimization suggestions are ready for review!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({ isAnalyzing: false });
-      toast.error(error?.message || "Failed to generate AI rewrite suggestions.");
+      const err = error as { message?: string };
+      toast.error(err?.message || "Failed to generate AI rewrite suggestions.");
     }
   },
 

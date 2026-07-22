@@ -10,10 +10,10 @@ export class UpdateResumeSettingsUseCase implements IUpdateResumeSettingsUseCase
         private readonly __resumeRepository: IResumeRepository
     ) { }
 
-    async execute(studentId: string, payload: { settings?: Partial<IResumeSettings>, summary?: string, targetRole?: string, experience?: IExperience[], projects?: IProject[], skills?: string[] } | Partial<IResumeSettings>): Promise<Resume> {
-        const resume = await this.__resumeRepository.findByStudentId(studentId);
+    async execute(resumeId: string, payload: { settings?: Partial<IResumeSettings>, summary?: string, targetRole?: string, experience?: IExperience[], projects?: IProject[], skills?: string[] } | Partial<IResumeSettings>): Promise<Resume> {
+        const resume = await this.__resumeRepository.findById(resumeId);
         if (!resume) {
-            throw new AppError("Resume not found for this student", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
+            throw new AppError("Resume not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
         // Support direct Partial<IResumeSettings> or nested payload

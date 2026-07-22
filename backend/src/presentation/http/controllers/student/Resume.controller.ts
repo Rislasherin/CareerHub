@@ -19,6 +19,7 @@ import { ICreateResumeUseCase } from "@application/usecases/student/AI/interface
 import { IGetResumesUseCase } from "@application/usecases/student/AI/interfaces/IGetResumes.usecase";
 import { IMatchJobDescriptionUseCase } from "@application/usecases/student/AI/interfaces/IMatchJobDescription.usecase";
 import { ICoachResumeSectionUseCase } from "@application/usecases/student/AI/interfaces/ICoachResumeSection.usecase";
+import { IExperience, IProject, IResumeSettings } from "@domain/entities/AI/resume.entity";
 
 export class ResumeController {
     constructor(
@@ -47,8 +48,12 @@ export class ResumeController {
     }
 
     public analyze = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = this._getStudentId(req);
-        const atsReport = await this._analyzeResumeUseCase.execute(studentId);
+        this._getStudentId(req);
+        const { resumeId } = req.body as { resumeId?: string };
+        if (!resumeId) {
+            throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+        const atsReport = await this._analyzeResumeUseCase.execute(resumeId);
         sendSuccess(res, atsReport, MESSAGES.SUCCESS.FETCHED, HttpStatus.OK);
     });
 
@@ -60,14 +65,14 @@ export class ResumeController {
     });
 
     public updateSettings = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = this._getStudentId(req);
-        const { settings } = req.body;
+        this._getStudentId(req);
+        const { resumeId, ...payload } = req.body as { resumeId?: string; settings?: Partial<IResumeSettings>; summary?: string; targetRole?: string; experience?: IExperience[]; projects?: IProject[]; skills?: string[] };
 
-        if (!settings) {
-            throw new AppError(MESSAGES.RESUME.SETTINGS_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        if (!resumeId) {
+            throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
-        const updatedResume = await this.__updateResumeSettingsUseCase.execute(studentId, settings);
+        const updatedResume = await this.__updateResumeSettingsUseCase.execute(resumeId, payload);
         sendSuccess(res, updatedResume.settings, MESSAGES.RESUME.SETTINGS_SAVED, HttpStatus.OK);
     });
 
@@ -113,10 +118,14 @@ export class ResumeController {
     });
 
     public rewriteAll = asyncHandler(async (req: Request, res: Response) => {
-        const studentId = this._getStudentId(req);
-        const targetRole = req.body.targetRole || "Software Engineer";
+        this._getStudentId(req);
+        const { resumeId, targetRole } = req.body as { resumeId?: string; targetRole?: string };
 
-        const updatedResume = await this._rewriteEntireResumeUseCase.execute(studentId, targetRole);
+        if (!resumeId) {
+            throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+
+        const updatedResume = await this._rewriteEntireResumeUseCase.execute(resumeId, targetRole || "Software Engineer");
         sendSuccess(res, updatedResume, MESSAGES.RESUME.REWRITE_SUCCESS, HttpStatus.OK);
     });
 

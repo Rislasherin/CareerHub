@@ -4,10 +4,9 @@ export class ResumeService {
   /**
    * Sends the full resume data to get the ATS Score and AI Suggestions
    */
-  static async analyzeResume() {
-    // Assuming the backend extracts studentId from the auth token
-    const response = await apiClient.post('/student/resume/analyze');
-    return (response as any).data;
+  static async analyzeResume(resumeId: string) {
+    const response = await apiClient.post('/student/resume/analyze', { resumeId });
+    return (response as { data: unknown }).data;
   }
 
   /**
@@ -21,9 +20,9 @@ export class ResumeService {
     return (response as any).data;
   }
 
-  public static async rewriteEntireResume(targetRole: string) {
-    const response = await apiClient.post('/student/resume/rewrite-all', { targetRole });
-    return (response as any).data;
+  public static async rewriteEntireResume(resumeId: string, targetRole: string) {
+    const response = await apiClient.post('/student/resume/rewrite-all', { resumeId, targetRole });
+    return (response as { data: unknown }).data;
   }
 
   public static async syncProfileToResume(resumeId: string): Promise<any> {

@@ -28,11 +28,16 @@ export const AutoFixSchema = z.object({
 });
 
 export const RewriteAllSchema = z.object({
+  resumeId: z.string().min(1, "resumeId is required"),
   targetRole: z.string().default("Software Engineer")
 });
 
 export const CreateResumeSchema = z.object({
   title: z.string().min(1, "Resume title is required")
+});
+
+export const AnalyzeSchema = z.object({
+  resumeId: z.string().min(1, "resumeId is required")
 });
 
 export const MatchJobSchema = z.object({
