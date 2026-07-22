@@ -87,7 +87,8 @@ export default function InterviewersPage() {
       setInterviewers(result.interviewers);
       setTotal(result.total);
     } catch (err) {
-      toast.error('Failed to load interviewers');
+      toast.error('Could not load interviewer accounts. Please try again.');
+
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +166,8 @@ export default function InterviewersPage() {
       setEditErrors({});
       fetchInterviewers(query, page, includeDeleted);
     } catch (err) {
-      toast.error('Failed to update interviewer');
+      toast.error('Could not update interviewer profile. Please try again.');
+
     } finally {
       setIsUpdating(false);
     }
@@ -236,7 +238,8 @@ export default function InterviewersPage() {
       setConfirmConfig({ ...confirmConfig, isOpen: false });
       fetchInterviewers(query, page, includeDeleted);
     } catch (err) {
-      toast.error('Failed to update status');
+      toast.error('Could not update status. Please try again.');
+
     } finally {
       setIsToggling(false);
     }

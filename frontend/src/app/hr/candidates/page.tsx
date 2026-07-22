@@ -138,7 +138,8 @@ export default function CandidatesPage() {
       const isPending = error?.error?.message?.toLowerCase().includes('pending') || error?.message?.toLowerCase().includes('pending');
       if (!isPending) {
         console.error('Failed to fetch candidates', error);
-        toast.error('Failed to load real candidates data');
+        toast.error('Could not load candidate profiles. Please try again.');
+
       }
     } finally {
       setLoading(false);

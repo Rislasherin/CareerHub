@@ -43,8 +43,9 @@ export default function ResumeSyncModal({ isOpen, onClose, parsedData, onImport 
               ✨
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900">AI Resume Extracted!</h2>
-              <p className="text-sm text-slate-500 font-medium">We found structured data in your PDF. What would you like to sync to your Master Profile?</p>
+              <h2 className="text-xl font-black text-slate-900">Resume Details Detected!</h2>
+              <p className="text-sm text-slate-500 font-medium">We analyzed your resume document. Which details would you like to automatically import into your Master Profile?</p>
+
             </div>
           </div>
         </div>

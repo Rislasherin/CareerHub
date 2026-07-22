@@ -307,12 +307,12 @@ export default function StudentProfilePage() {
       };
 
       const updated = await updateStudentProfile(payload);
-      toast.success('Profile successfully saved!');
+      toast.success('Your profile details have been saved successfully!');
       calculateProgress(updated);
       
       dispatch(setStudentDetails(updated as any));
     } catch (err: unknown) {
-      toast.error((err as Error)?.message || 'Failed to save student profile');
+      toast.error((err as Error)?.message || 'Could not save profile details. Please check your information and try again.');
     } finally {
       setSaving(false);
     }
@@ -348,9 +348,10 @@ export default function StudentProfilePage() {
     }
 
     if (importedCount > 0) {
-       toast.success("Imported AI data! Please review and click Save Profile.");
+       toast.success("Imported resume details into your profile! Please review and click Save Profile.");
     }
   };
+
 
   const handleGenerateSummary = async () => {
     setIsGeneratingSummary(true);

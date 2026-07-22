@@ -28,10 +28,10 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
       setIsUploading(true);
       const response = await uploadStudentResume(file);
       setResume(response.resume);
-      toast.success('Resume uploaded and parsed successfully');
+      toast.success('Resume uploaded and analyzed successfully!');
       onUpdate(response.resume, response.parsedData);
     } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Failed to upload resume');
+      toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Could not upload your resume. Please check the file format and try again.');
     } finally {
       setIsUploading(false);
     }
@@ -42,11 +42,12 @@ export default function ResumeSection({ initialResume, onUpdate }: Props) {
       setIsUploading(true);
       await deleteStudentResume();
       setResume(undefined);
-      toast.success('Resume deleted successfully');
+      toast.success('Resume removed successfully.');
       onUpdate(undefined);
     } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Failed to delete resume');
+      toast.error(error.response?.data?.error?.message || error.response?.data?.message || 'Could not remove resume file. Please try again.');
     } finally {
+
       setIsUploading(false);
     }
   };

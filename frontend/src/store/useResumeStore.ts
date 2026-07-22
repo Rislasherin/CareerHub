@@ -17,6 +17,7 @@ interface ResumeState {
   isAnalyzing: boolean;
   isFixing: boolean;
   isSyncing: boolean;
+  previewKey: number;
   settings: any;
   syncResume: () => Promise<void>;
   updateSettings: (resumeId: string, newSettings: any) => Promise<void>;  // Actions
@@ -42,13 +43,20 @@ interface ResumeState {
   isCoachingSection: boolean;
   triggerSectionCoach: (sectionName: string, instructions: string, targetRole: string) => Promise<void>;
   clearSectionCoach: () => void;
+
+  // AI Rewrite Side-by-Side Comparison
+  rewriteComparison: { original: any; suggested: any } | null;
+  clearRewriteComparison: () => void;
+  acceptRewriteComparison: (suggestedData: any) => Promise<void>;
 }
+
 
 export const useResumeStore = create<ResumeState>()((set) => ({
   report: null,
   isAnalyzing: false,
   isFixing: false,
   isSyncing: false,
+  previewKey: Date.now(),
   settings: {
     templateId: "professional",
     themeColor: "#1b1430",
@@ -186,57 +194,72 @@ export const useResumeStore = create<ResumeState>()((set) => ({
     try {
       const data = await ResumeService.autoFixText(text, targetRole);
       set({ isFixing: false });
-      toast.success("Text fixed magically!");
+      toast.success("AI optimization complete!");
       return data.fixedText;
     } catch (error: any) {
       set({ isFixing: false });
       if (error?.message) {
         toast.error(error.message);
       } else {
-        toast.error("An unexpected error occurred during auto-fix.");
+        toast.error("Could not optimize text. Please try again.");
       }
       return null;
     }
   },
 
-  triggerRewriteAll: async (targetRole: string) => {
-    set({ isAnalyzing: true }); // Using isAnalyzing to show loader on the main button
+  // AI Rewrite Side-by-Side Comparison
+  rewriteComparison: null,
+  clearRewriteComparison: () => set({ rewriteComparison: null }),
+  acceptRewriteComparison: async (suggestedData: any) => {
+    const { activeResumeId, updateSettings, triggerAnalysis } = useResumeStore.getState();
+    if (!activeResumeId) return;
     try {
-      await ResumeService.rewriteEntireResume(targetRole);
-      toast.success("Resume fully optimized by AI!");
-      // Re-run analysis to get new score
-      const reportData = await ResumeService.analyzeResume();
-      set({ report: reportData, isAnalyzing: false });
+      set({ isAnalyzing: true });
+      await updateSettings(activeResumeId, {
+        summary: suggestedData.summary,
+        experience: suggestedData.experience,
+        projects: suggestedData.projects
+      });
+      set({ rewriteComparison: null, previewKey: Date.now() });
+      toast.success("Optimizations saved to your resume successfully!");
+      await triggerAnalysis();
     } catch (error: any) {
       set({ isAnalyzing: false });
-      toast.error(error?.message || "Failed to rewrite resume.");
+      toast.error("Failed to save changes. Please try again.");
+    }
+  },
+
+  triggerRewriteAll: async (targetRole: string) => {
+    set({ isAnalyzing: true, rewriteComparison: null });
+    try {
+      const data = await ResumeService.rewriteEntireResume(targetRole);
+      set({ rewriteComparison: data, isAnalyzing: false });
+      toast.success("AI Resume Optimization suggestions are ready for review!");
+    } catch (error: any) {
+      set({ isAnalyzing: false });
+      toast.error(error?.message || "Failed to generate AI rewrite suggestions.");
     }
   },
 
   syncResume: async() => {
-    set({isSyncing:true});
+    set({ isSyncing: true });
     try {
       const { activeResumeId } = useResumeStore.getState();
       if (!activeResumeId) {
-          toast.error("No active resume selected");
+          toast.error("Please select a resume version first.");
           return;
       }
       await ResumeService.syncProfileToResume(activeResumeId);
-      toast.success("Resume magically synced with your latest Profile!");
-      
-      // Update iframe source slightly to force refresh if preview is open
-      const iframe = document.querySelector('iframe[title="Live Resume Preview"]') as HTMLIFrameElement;
-      if (iframe) {
-         const currentSrc = iframe.src;
-         const url = new URL(currentSrc);
-         url.searchParams.set('t', Date.now().toString());
-         iframe.src = url.toString();
-      }
-      
-    } catch (error:any) {
-      toast.error(error?.message || "Failed to sync profile" );
-    }finally {
-      set({isSyncing: false});
+      toast.success("Your resume has been updated with your latest profile details!");
+      set({ previewKey: Date.now() });
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update resume from profile");
+    } finally {
+      set({ isSyncing: false });
     }
+
   },
 }));
+
+
+

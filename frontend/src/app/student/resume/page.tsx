@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, Lightbulb, FileText, Download, Check, AlertTriangle, XCircle, Wand2, PenSquare, RefreshCw, GripVertical, User, GraduationCap, Briefcase, Wrench, Folder, Award, Sparkles, ChevronRight, CheckCircle2, X } from 'lucide-react';
+import { Search, Lightbulb, FileText, Download, Check, AlertTriangle, XCircle, Wand2, PenSquare, RefreshCw, GripVertical, User, GraduationCap, Briefcase, Wrench, Folder, Award, Sparkles, ChevronRight, CheckCircle2, X, Plus } from 'lucide-react';
+
 import { useResumeStore } from '@/store/useResumeStore';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { exportResumePdf } from '@/services/api/api.client';
@@ -15,25 +16,33 @@ export default function ResumeBuilderPage() {
   
   const [isExporting, setIsExporting] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewKey, setPreviewKey] = useState(Date.now()); // bumped to force iframe refresh
   const [isFixModalOpen, setIsFixModalOpen] = useState(false);
+
   const [fixingIssue, setFixingIssue] = useState<string | null>(null);
   const [fixedContent, setFixedContent] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [jdText, setJdText] = useState("");
+  const [viewMode, setViewMode] = useState<'dashboard' | 'preview'>('dashboard');
   
+  // Custom Modal States
+  const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
+  const [newVersionTitle, setNewVersionTitle] = useState("");
+
   // Section Coach State
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
   const [coachSectionName, setCoachSectionName] = useState("");
   const [coachInstructions, setCoachInstructions] = useState("Make it sound more professional and metric-driven.");
 
+
   const { 
     report, isAnalyzing, isFixing, triggerAnalysis, triggerAutoFix, triggerRewriteAll, 
-    syncResume, isSyncing, settings, updateSettings,
+    syncResume, isSyncing, settings, updateSettings, previewKey,
     resumes, activeResumeId, isLoadingResumes, fetchResumes, createNewResume, setActiveResume,
     jobMatchReport, isMatchingJob, triggerJobMatch,
-    sectionCoachResult, isCoachingSection, triggerSectionCoach, clearSectionCoach
+    sectionCoachResult, isCoachingSection, triggerSectionCoach, clearSectionCoach,
+    rewriteComparison, clearRewriteComparison, acceptRewriteComparison
   } = useResumeStore();
+
 
   useEffect(() => {
     fetchResumes();
@@ -41,11 +50,60 @@ export default function ResumeBuilderPage() {
 
   const activeResume = resumes.find(r => (r._id || r.id) === activeResumeId);
 
+  const renderFormattedData = (data: any) => {
+    if (!data) return <span className="italic text-slate-400">No content available</span>;
+    if (typeof data === 'string') return <p className="leading-relaxed">{data}</p>;
+    if (Array.isArray(data)) {
+        if (data.length === 0) return <span className="italic text-slate-400">No entries listed</span>;
+        return (
+            <ul className="list-disc pl-4 space-y-2">
+                {data.map((item: any, idx: number) => {
+                    if (typeof item === 'string') return <li key={idx}>{item}</li>;
+                    if (item?.role || item?.company) {
+                        return (
+                            <li key={idx} className="space-y-1">
+                                <span className="font-bold text-slate-800">{item.role || 'Role'}</span> {item.company ? <span className="text-slate-500">&bull; {item.company}</span> : ''}
+                                {item.bulletPoints && (
+                                    <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-600 font-normal">
+                                        {item.bulletPoints.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                                    </ul>
+                                )}
+                            </li>
+                        );
+                    }
+                    if (item?.name || item?.description) {
+                        return (
+                            <li key={idx}>
+                                <span className="font-bold text-slate-800">{item.name || 'Project'}</span>: {item.description}
+                            </li>
+                        );
+                    }
+                    return <li key={idx}>{String(item)}</li>;
+                })}
+            </ul>
+        );
+    }
+    if (typeof data === 'object') {
+        return (
+            <div className="space-y-1">
+                {Object.entries(data).map(([key, val]) => (
+                    <div key={key}>
+                        <span className="font-semibold capitalize text-slate-700">{key}: </span>
+                        <span>{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return String(data);
+  };
+
+
   const handleAutoFix = async (issueMsg: string) => {
       setFixingIssue(issueMsg);
       setFixedContent(null);
       setIsFixModalOpen(true);
-      const targetRole = "Software Engineer"; // Default role
+      const targetRole = activeResume?.targetRole || "Software Engineer";
       const result = await triggerAutoFix(issueMsg, targetRole);
       if (result) {
           setFixedContent(result);
@@ -63,8 +121,7 @@ export default function ResumeBuilderPage() {
   // Sync profile then auto-open preview
   const handleSync = async () => {
       await syncResume();
-      setPreviewKey(Date.now());
-      setIsPreviewOpen(true);
+      setViewMode('preview');
   };
 
   const handleExportPdf = async () => {
@@ -87,125 +144,143 @@ export default function ResumeBuilderPage() {
       }
   };
 
+  const handleOpenNewVersionModal = () => {
+      setNewVersionTitle("");
+      setIsNewVersionModalOpen(true);
+  };
 
-  const handleCreateNew = async () => {
-      const title = prompt("Enter a name for this Resume Version (e.g., Backend Engineer):");
-      if (title) {
-          setIsCreating(true);
-          await createNewResume(title);
-          setIsCreating(false);
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newVersionTitle.trim()) {
+          toast.error("Please enter a title for your resume version.");
+          return;
       }
-  }
+      setIsCreating(true);
+      await createNewResume(newVersionTitle.trim());
+      setIsCreating(false);
+      setIsNewVersionModalOpen(false);
+      setNewVersionTitle("");
+  };
 
-  const atsScore = report?.overallScore ?? 78;
+
+  const atsScore = report?.overallScore ?? 0;
+  const hasReport = !!report;
 
   // Dynamic Suggestions from ATS Report
-  const criticalIssues = report?.criticalIssues || [
-     'Add quantified results \u2014 "Reduced load time by 40%"',
-     'No GitHub / LinkedIn in contact section.'
-  ];
-  const improvements = report?.warnings || [
-     '73% of SWE roles require AWS/GCP. Add cloud skills.'
-  ];
-  const strengths = report?.strengths || [
-     '3 impactful projects with GitHub links \u2014 excellent.'
-  ];
-  const hasContactInfo = user?.phoneNumber && (user?.linkedinUrl || user?.githubUrl);
+  const criticalIssues = report?.criticalIssues || [];
+  const improvements = report?.warnings || [];
+  const strengths = report?.strengths || [];
+
+  const hasContactInfo = !!(user?.phoneNumber && (user?.linkedinUrl || user?.githubUrl));
   const hasEducation = !!user?.degree;
-  const hasExperience = user?.experience && user.experience.length > 0;
-  const hasSkills = user?.skills && (user.skills.languages?.length || 0) > 0;
-  const hasProjects = user?.projects && user.projects.length > 0;
+  const hasExperience = !!(user?.experience && user.experience.length > 0);
+  const experienceCount = user?.experience?.length || 0;
+  const skillCount = (user?.skills?.languages?.length || 0) + (user?.skills?.frameworks?.length || 0) + (user?.skills?.cloudDevops?.length || 0);
+  const certCount = user?.achievements?.filter(a => a.type === 'certification')?.length || 0;
+  const hasProjects = !!(user?.projects && user.projects.length > 0);
   const projectCount = user?.projects?.length || 0;
+
+  const previewApiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/student/resume/preview?resumeId=${activeResumeId}&template=${settings.templateId}&t=${previewKey}`;
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-8 pb-12">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-6 pb-12">
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Resume Builder</h1>
             <p className="text-slate-500 font-medium text-sm mt-1">
-              AI-powered &bull; 4 Naukri templates &bull; ATS scored &bull; PDF export
+              Craft an ATS-optimized resume tailored for top companies &bull; Instant scoring &bull; PDF export
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search jobs, companies..."
-                className="w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none"
-              />
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* View Mode Toggle Bar */}
+            <div className="bg-slate-200/80 p-1 rounded-xl flex items-center gap-1 border border-slate-300/50">
+               <button 
+                 onClick={() => setViewMode('dashboard')}
+                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'dashboard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+               >
+                 <Sparkles size={14} className="text-purple-500" /> Dashboard
+               </button>
+               <button 
+                 onClick={() => setViewMode('preview')}
+                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+               >
+                 <FileText size={14} className="text-blue-500" /> Full Resume Preview
+               </button>
             </div>
-            <button className="h-10 px-4 bg-[#E11D48] hover:bg-[#BE123C] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-rose-500/20">
-              <Lightbulb size={14} /> Practice Now
+
+            <button onClick={handleSync} disabled={isSyncing} className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-md">
+              <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} /> {isSyncing ? 'Updating...' : 'Import Profile Details'}
+            </button>
+            <button onClick={handleExportPdf} disabled={isExporting} className="h-10 px-4 bg-[#E11D48] hover:bg-[#BE123C] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-rose-500/20">
+              <Download size={14} /> Download PDF
             </button>
           </div>
         </header>
 
-        {/* Top Dark Card (ATS Score) */}
-        <div className="bg-[#242424] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-xl text-white gap-6">
-          <div className="flex items-center gap-6">
-            {/* Circular Ring */}
-            <div className="relative w-20 h-20 shrink-0">
-               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="#3f3f46" strokeWidth="6" />
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="#E11D48" strokeWidth="6" strokeDasharray={`${atsScore * 2.82} 282`} strokeLinecap="round" />
-               </svg>
-               <div className="absolute inset-0 flex items-center justify-center flex-col">
-                  <span className="text-2xl font-black">{atsScore}</span>
-               </div>
-            </div>
-            <div>
-               <h2 className="text-xl font-bold">ATS Score: {atsScore}/100</h2>
-               <p className="text-sm text-gray-400 mt-1">3 critical issues preventing 90+ score</p>
-               <div className="flex items-center gap-2 mt-3">
-                  <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/30">3 Critical</span>
-                  <span className="bg-yellow-500/20 text-yellow-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-500/30">5 Improve</span>
-                  <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">12 Good</span>
-               </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-             <button 
-                onClick={handleSync}
-                disabled={isSyncing}
-                className="flex-1 md:flex-none border border-gray-600 hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-             >
-                <RefreshCw size={14} className={isSyncing ? "animate-spin text-emerald-400" : "text-emerald-400"} /> {isSyncing ? 'Syncing...' : 'Sync Profile'}
-             </button>
-             <button 
-                onClick={() => triggerRewriteAll("Software Engineer")}
-                disabled={isAnalyzing}
-                className="flex-1 md:flex-none border border-gray-600 hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-             >
-                <Sparkles size={14} className="text-purple-400" /> {isAnalyzing ? 'Rewriting...' : 'Rewrite with AI'}
-             </button>
-             <button 
-                onClick={() => setIsPreviewOpen(true)}
-                className="flex-1 md:flex-none border border-gray-600 hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-             >
-                <FileText size={14} /> Live Preview
-             </button>
-             <button 
-                onClick={handleExportPdf}
-                disabled={isExporting}
-                className="flex-1 md:flex-none border border-gray-600 hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-             >
-                <Download size={14} /> Export PDF
-             </button>
-          </div>
-        </div>
 
-        {/* Main 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           
-           {/* Left Column (2/3) */}
-           <div className="lg:col-span-2 space-y-8">
-              
-              {/* Choose Template Section */}
-              <GlassCard className="p-6 bg-white rounded-2xl border border-slate-200">
+        {/* View Mode: Preview Only */}
+        {viewMode === 'preview' && (
+           <div className="w-full bg-slate-900 rounded-2xl p-6 border border-slate-800 flex justify-center shadow-2xl min-h-[85vh]">
+              <div className="w-full max-w-[850px] aspect-[1/1.414] bg-white shadow-2xl relative rounded-lg overflow-hidden border border-slate-300">
+                 <iframe 
+                   key={previewKey}
+                   src={previewApiUrl}
+                   className="w-full h-full border-none absolute inset-0 bg-white"
+                   title="Full Live Resume Preview"
+                 />
+              </div>
+           </div>
+        )}
+
+        {/* View Mode: Dashboard View */}
+        {viewMode === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+             
+             {/* Left Editor / Controls Column (2/3 width) */}
+             <div className="lg:col-span-2 space-y-6">
+                
+                {/* Top Dark Card (ATS Score) */}
+                <div className="bg-[#242424] rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between shadow-xl text-white gap-6">
+                  <div className="flex items-center gap-6">
+                    <div className="relative w-20 h-20 shrink-0">
+                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="45" fill="none" stroke="#3f3f46" strokeWidth="6" />
+                          <circle cx="50" cy="50" r="45" fill="none" stroke="#E11D48" strokeWidth="6" strokeDasharray={`${atsScore * 2.82} 282`} strokeLinecap="round" />
+                       </svg>
+                       <div className="absolute inset-0 flex items-center justify-center flex-col">
+                          <span className="text-2xl font-black">{atsScore}</span>
+                       </div>
+                    </div>
+                    <div>
+                       <h2 className="text-xl font-bold">ATS Score: {atsScore}/100</h2>
+                       <p className="text-sm text-gray-400 mt-1">{hasReport ? `${criticalIssues.length} critical issue(s)` : "Run analysis to evaluate ATS score"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                     <button 
+                        onClick={() => triggerRewriteAll("Software Engineer")}
+                        disabled={isAnalyzing}
+                        className="flex-1 md:flex-none border border-gray-600 hover:bg-gray-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                     >
+                        <Sparkles size={14} className="text-purple-400" /> {isAnalyzing ? 'Optimizing...' : 'Optimize Resume with AI'}
+
+                     </button>
+                     <button 
+                        onClick={() => setViewMode('preview')}
+                        className="flex-1 md:flex-none bg-white text-slate-900 hover:bg-slate-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                     >
+                        <FileText size={14} className="text-blue-600" /> Preview
+                     </button>
+                  </div>
+                </div>
+
+
+                {/* Choose Template Section */}
+                <GlassCard className="p-6 bg-white rounded-2xl border border-slate-200">
+
                  <div className="flex items-center justify-between mb-5">
                     <h3 className="font-bold text-slate-800">Choose Template</h3>
                     <div className="flex gap-2">
@@ -354,13 +429,13 @@ export default function ResumeBuilderPage() {
                     </div>
 
                     {/* Work Experience */}
-                    <div className={`p-4 rounded-xl border flex items-center gap-4 bg-amber-50/30 border-amber-200`}>
-                       <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0">
-                          <Briefcase size={18} className="text-amber-600" />
+                    <div className={`p-4 rounded-xl border flex items-center gap-4 ${hasExperience ? 'bg-emerald-50/30 border-emerald-100' : 'bg-amber-50/30 border-amber-200'}`}>
+                       <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                          <Briefcase size={18} className={hasExperience ? "text-emerald-600" : "text-amber-600"} />
                        </div>
                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-slate-800">Work Experience</h4>
-                          <p className="text-xs text-amber-700 mt-0.5">Bullet points lack metrics</p>
+                          <h4 className="text-sm font-bold text-slate-800">Work Experience ({experienceCount})</h4>
+                          <p className="text-xs text-slate-500 mt-0.5">{hasExperience ? `${experienceCount} position(s) added` : "No work experience added yet"}</p>
                        </div>
                        <div className="flex items-center gap-2">
                           <button 
@@ -369,28 +444,43 @@ export default function ResumeBuilderPage() {
                           >
                              <Sparkles size={12} className="text-purple-500" /> AI Coach
                           </button>
-                          <div className="flex items-center gap-1 text-amber-600 border border-amber-200 bg-amber-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                             <AlertTriangle size={10} /> Improve
-                          </div>
+                          {hasExperience ? (
+                             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+                                <Check size={12} /> Complete
+                             </div>
+                          ) : (
+                             <div className="flex items-center gap-1 text-amber-600 border border-amber-200 bg-amber-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                                <AlertTriangle size={10} /> Add Info
+                             </div>
+                          )}
                        </div>
                     </div>
 
                     {/* Skills */}
-                    <div className={`p-4 rounded-xl border flex items-center gap-4 bg-rose-50/30 border-rose-200`}>
-                       <div className="w-10 h-10 rounded-full bg-white border border-rose-200 flex items-center justify-center shrink-0">
-                          <Wrench size={18} className="text-rose-600" />
+                    <div className={`p-4 rounded-xl border flex items-center gap-4 ${skillCount > 0 ? 'bg-emerald-50/30 border-emerald-100' : 'bg-rose-50/30 border-rose-200'}`}>
+                       <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                          <Wrench size={18} className={skillCount > 0 ? "text-emerald-600" : "text-rose-600"} />
                        </div>
                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-slate-800">Skills</h4>
-                          <p className="text-xs text-rose-600 mt-0.5">Missing: AWS, Docker, TypeScript</p>
+                          <h4 className="text-sm font-bold text-slate-800">Skills ({skillCount})</h4>
+                          <p className="text-xs text-slate-500 mt-0.5">{skillCount > 0 ? `${skillCount} technical & core skills listed` : "No skills added yet"}</p>
                        </div>
                        <div className="flex items-center gap-2">
-                          <button className="flex items-center gap-1.5 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors shadow-sm">
-                             <Wand2 size={12} className="text-purple-500" /> Fix
+                          <button 
+                             onClick={() => router.push('/student/profile')}
+                             className="flex items-center gap-1.5 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors shadow-sm"
+                          >
+                             Edit in Profile
                           </button>
-                          <div className="flex items-center gap-1 text-rose-600 border border-rose-200 bg-rose-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                             <X size={10} /> Keywords
-                          </div>
+                          {skillCount > 0 ? (
+                             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+                                <Check size={12} /> Complete
+                             </div>
+                          ) : (
+                             <div className="flex items-center gap-1 text-rose-600 border border-rose-200 bg-rose-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                                <X size={10} /> Add Skills
+                             </div>
+                          )}
                        </div>
                     </div>
 
@@ -401,7 +491,7 @@ export default function ResumeBuilderPage() {
                        </div>
                        <div className="flex-1">
                           <h4 className="text-sm font-bold text-slate-800">Projects ({projectCount})</h4>
-                          <p className="text-xs text-slate-500 mt-0.5">{hasProjects ? "GitHub links present \u00b7 Strong" : "No projects added"}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{hasProjects ? `${projectCount} project(s) added` : "No projects added"}</p>
                        </div>
                        {hasProjects ? (
                           <div className="flex items-center gap-2">
@@ -416,20 +506,20 @@ export default function ResumeBuilderPage() {
                               </div>
                           </div>
                        ) : (
-                          <button className="flex items-center gap-1.5 text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors shadow-sm">
+                          <button onClick={() => router.push('/student/profile')} className="flex items-center gap-1.5 text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors shadow-sm">
                              Add Project
                           </button>
                        )}
                     </div>
 
                     {/* Certifications */}
-                    <div className={`p-4 rounded-xl border flex items-center gap-4 bg-amber-50/30 border-amber-200`}>
-                       <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0">
-                          <Award size={18} className="text-amber-600" />
+                    <div className={`p-4 rounded-xl border flex items-center gap-4 ${certCount > 0 ? 'bg-emerald-50/30 border-emerald-100' : 'bg-amber-50/30 border-amber-200'}`}>
+                       <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                          <Award size={18} className={certCount > 0 ? "text-emerald-600" : "text-amber-600"} />
                        </div>
                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-slate-800">Certifications</h4>
-                          <p className="text-xs text-amber-700 mt-0.5">Only 1 cert \u2014 add 2+ for better ATS</p>
+                          <h4 className="text-sm font-bold text-slate-800">Certifications ({certCount})</h4>
+                          <p className="text-xs text-slate-500 mt-0.5">{certCount > 0 ? `${certCount} certification(s) listed` : "No certifications added yet"}</p>
                        </div>
                        <div className="flex items-center gap-2">
                           <button 
@@ -438,9 +528,15 @@ export default function ResumeBuilderPage() {
                           >
                              Edit in Profile
                           </button>
-                          <div className="flex items-center gap-1 text-amber-600 border border-amber-200 bg-amber-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                             <AlertTriangle size={10} /> Add more
-                          </div>
+                          {certCount > 0 ? (
+                             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+                                <Check size={12} /> Complete
+                             </div>
+                          ) : (
+                             <div className="flex items-center gap-1 text-amber-600 border border-amber-200 bg-amber-50 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                                <AlertTriangle size={10} /> Add Certs
+                             </div>
+                          )}
                        </div>
                     </div>
 
@@ -465,9 +561,10 @@ export default function ResumeBuilderPage() {
                         <option key={r._id || r.id} value={r._id || r.id}>{r.resumeName || 'Untitled Resume'}</option>
                     ))}
                  </select>
-                 <button onClick={handleCreateNew} disabled={isCreating} className="text-xs text-purple-400 font-bold hover:text-purple-300 transition-colors">
+                 <button onClick={handleOpenNewVersionModal} disabled={isCreating} className="text-xs text-purple-400 font-bold hover:text-purple-300 transition-colors">
                      + New Version
                  </button>
+
              </div>
              <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
                 {activeResume?.resumeName || "AI Resume Builder"} <Sparkles className="text-purple-400" size={24} />
@@ -590,7 +687,8 @@ export default function ResumeBuilderPage() {
                  </div>
               </GlassCard>
            </div>
-        </div>
+         </div>
+        )}
       </div>
       
       {/* Live Preview Modal */}
@@ -725,20 +823,20 @@ export default function ResumeBuilderPage() {
                              <p className="text-xs font-bold text-emerald-800 mb-1">AI Explanation:</p>
                              <p className="text-sm text-emerald-700">{sectionCoachResult.explanation}</p>
                          </div>
-                         <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Original</p>
-                                 <div className="p-3 bg-slate-100 rounded-lg text-xs text-slate-500 max-h-64 overflow-y-auto opacity-70">
-                                     <pre className="whitespace-pre-wrap font-sans">{JSON.stringify(activeResume ? activeResume[coachSectionName as keyof typeof activeResume] : {}, null, 2)}</pre>
-                                 </div>
-                             </div>
-                             <div>
-                                 <p className="text-[10px] font-bold text-blue-600 uppercase mb-2">AI Suggestion</p>
-                                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-slate-800 max-h-64 overflow-y-auto shadow-inner">
-                                     <pre className="whitespace-pre-wrap font-sans">{JSON.stringify(sectionCoachResult.suggestedData, null, 2)}</pre>
-                                 </div>
-                             </div>
-                         </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Original Content</p>
+                                  <div className="p-4 bg-slate-100/80 rounded-xl border border-slate-200 text-xs text-slate-600 max-h-64 overflow-y-auto leading-relaxed">
+                                      {renderFormattedData(activeResume ? activeResume[coachSectionName as keyof typeof activeResume] : null)}
+                                  </div>
+                              </div>
+                              <div>
+                                  <p className="text-[10px] font-bold text-blue-600 uppercase mb-2">AI Optimized Suggestion</p>
+                                  <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-xl text-xs text-slate-800 max-h-64 overflow-y-auto shadow-sm leading-relaxed font-medium">
+                                      {renderFormattedData(sectionCoachResult.suggestedData)}
+                                  </div>
+                              </div>
+                          </div>
                      </div>
                  )}
               </div>
@@ -767,6 +865,195 @@ export default function ResumeBuilderPage() {
         </div>
       )}
 
+       {/* Side-by-Side AI Rewrite Comparison Modal */}
+       {rewriteComparison && (
+         <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border border-slate-200">
+               <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-900 to-indigo-900 text-white flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2">
+                     <Sparkles className="text-purple-400 animate-pulse" size={20} />
+                     <h2 className="text-base font-bold">AI Resume Optimization Comparison</h2>
+                  </div>
+                  <button 
+                     onClick={clearRewriteComparison}
+                     className="w-8 h-8 rounded-full hover:bg-white/10 text-slate-300 flex items-center justify-center transition-colors"
+                  >
+                     <X size={20} />
+                  </button>
+               </div>
+
+               <div className="p-6 overflow-y-auto space-y-6 bg-slate-50 flex-1">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                     <div className="bg-slate-200/60 p-3 rounded-xl font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <span>Original Content</span>
+                     </div>
+                     <div className="bg-emerald-100/80 p-3 rounded-xl font-bold text-xs text-emerald-900 uppercase tracking-wider flex items-center gap-2 border border-emerald-300/50">
+                        <Sparkles size={14} className="text-emerald-600" />
+                        <span>AI Suggested (STAR Method & Metrics)</span>
+                     </div>
+                  </div>
+
+                  {/* Summary Comparison */}
+                  {rewriteComparison.suggested.summary && (
+                     <div className="space-y-2">
+                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">Professional Summary</h3>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                           <div className="p-4 bg-white rounded-xl border border-slate-200 text-sm text-slate-700">
+                              {rewriteComparison.original.summary || <span className="italic text-slate-400">No summary provided</span>}
+                           </div>
+                           <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 text-sm font-medium text-emerald-950 shadow-sm">
+                              {rewriteComparison.suggested.summary}
+                           </div>
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Experience Comparison */}
+                  {rewriteComparison.suggested.experience?.length > 0 && (
+                     <div className="space-y-3">
+                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">Work Experience</h3>
+                        <div className="space-y-4">
+                           {rewriteComparison.suggested.experience.map((exp: any, idx: number) => {
+                              const origExp = rewriteComparison.original.experience?.[idx];
+                              return (
+                                 <div key={idx} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-white rounded-xl border border-slate-200 text-xs space-y-2">
+                                       <div className="font-bold text-slate-900">{origExp?.role || exp.role} &bull; <span className="text-slate-500">{origExp?.company || exp.company}</span></div>
+                                       <ul className="list-disc pl-4 space-y-1 text-slate-600">
+                                          {(origExp?.bulletPoints || []).map((b: string, i: number) => (
+                                             <li key={i}>{b}</li>
+                                          ))}
+                                       </ul>
+                                    </div>
+                                    <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 text-xs space-y-2 shadow-sm">
+                                       <div className="font-bold text-emerald-950">{exp.role} &bull; <span className="text-emerald-700">{exp.company}</span></div>
+                                       <ul className="list-disc pl-4 space-y-1 text-emerald-900 font-medium">
+                                          {(exp.bulletPoints || []).map((b: string, i: number) => (
+                                             <li key={i}>{b}</li>
+                                          ))}
+                                       </ul>
+                                    </div>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Projects Comparison */}
+                  {rewriteComparison.suggested.projects?.length > 0 && (
+                     <div className="space-y-3">
+                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">Projects</h3>
+                        <div className="space-y-4">
+                           {rewriteComparison.suggested.projects.map((proj: any, idx: number) => {
+                              const origProj = rewriteComparison.original.projects?.[idx];
+                              return (
+                                 <div key={idx} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
+                                       <div className="font-bold text-slate-900">{origProj?.name || proj.name}</div>
+                                       <p className="text-slate-600">{origProj?.description || "No description"}</p>
+                                    </div>
+                                    <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 text-xs space-y-1 shadow-sm">
+                                       <div className="font-bold text-emerald-950">{proj.name}</div>
+                                       <p className="text-emerald-900 font-medium">{proj.description}</p>
+                                    </div>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  )}
+               </div>
+
+               <div className="p-4 border-t border-slate-200 bg-white flex justify-between items-center shrink-0">
+                  <span className="text-xs text-slate-500 font-medium">Accepting will save only approved changes to your resume and update your ATS score.</span>
+                  <div className="flex items-center gap-3">
+                     <button 
+                        onClick={clearRewriteComparison}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5"
+                     >
+                        <X size={14} /> ✗ Reject Changes
+                     </button>
+                     <button 
+                        onClick={() => acceptRewriteComparison(rewriteComparison.suggested)}
+                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
+                     >
+                        <Check size={14} /> ✓ Accept & Save Changes
+                     </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+       )}
+
+       {/* New Resume Version Modal */}
+       {isNewVersionModalOpen && (
+         <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border border-slate-200">
+               <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 to-purple-900 text-white flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2.5">
+                     <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-400/30">
+                        <Sparkles className="text-purple-300" size={16} />
+                     </div>
+                     <div>
+                        <h2 className="text-sm font-bold">Create New Resume Version</h2>
+                        <p className="text-[10px] text-slate-300">Target tailored roles like Backend Engineer or Full Stack</p>
+                     </div>
+                  </div>
+                  <button 
+                     onClick={() => setIsNewVersionModalOpen(false)}
+                     className="w-8 h-8 rounded-full hover:bg-white/10 text-slate-300 flex items-center justify-center transition-colors"
+                  >
+                     <X size={18} />
+                  </button>
+               </div>
+
+               <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+                  <div>
+                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        Version Name / Target Role
+                     </label>
+                     <input 
+                        type="text"
+                        value={newVersionTitle}
+                        onChange={(e) => setNewVersionTitle(e.target.value)}
+                        placeholder="e.g. Backend Engineer, Data Scientist"
+                        autoFocus
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                     />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                     <button 
+                        type="button"
+                        onClick={() => setIsNewVersionModalOpen(false)}
+                        className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                     >
+                        Cancel
+                     </button>
+                     <button 
+                        type="submit"
+                        disabled={isCreating}
+                        className="px-5 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors shadow-lg shadow-purple-500/25 flex items-center gap-2"
+                     >
+                        {isCreating ? (
+                           <>
+                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <span>Creating...</span>
+                           </>
+                        ) : (
+                           <>
+                              <Plus size={14} /> Create Version
+                           </>
+                        )}
+                     </button>
+                  </div>
+               </form>
+            </div>
+         </div>
+       )}
     </DashboardLayout>
   );
 }
+
+
