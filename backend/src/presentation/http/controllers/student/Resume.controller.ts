@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
-import { AnalyzeResumeUseCase } from "@application/usecases/student/AI/implementations/AnalyzeResume.usecase";
+import { IAnalyzeResumeUseCase } from "@application/usecases/student/AI/interfaces/IAnalyzeResume.usecase";
+
+
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { sendSuccess } from "@shared/utils/response.util";
 import { AppError } from "@application/errors/AppError";
@@ -20,7 +22,8 @@ import { ICoachResumeSectionUseCase } from "@application/usecases/student/AI/int
 
 export class ResumeController {
     constructor(
-        private readonly _analyzeResumeUseCase: AnalyzeResumeUseCase,
+        private readonly _analyzeResumeUseCase: IAnalyzeResumeUseCase,
+
         private readonly __syncProfileToResumeUseCase: ISyncProfileToResumeUseCase,
         private readonly __updateResumeSettingsUseCase: IUpdateResumeSettingsUseCase,
         private readonly _exportResumePdfUseCase: IExportResumePdfUseCase,
