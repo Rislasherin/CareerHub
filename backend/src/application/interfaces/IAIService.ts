@@ -11,16 +11,16 @@ export interface IJobMatchReport {
 }
 
 export interface ISectionCoachResult {
-  suggestedData: any;
+  suggestedData: unknown;
   explanation: string;
 }
 
 export interface IAIService {
-  analyzeResume(resumeData: any): Promise<IAtsAnalysisResult>;
+  analyzeResume(resumeData: unknown): Promise<IAtsAnalysisResult>;
   autoFixText(text: string, instructions: string): Promise<string>;
-  coachSection(sectionName: string, sectionData: any, instructions: string, targetRole: string): Promise<ISectionCoachResult>;
-  extractResumeFromDocument(fileBuffer: Buffer, mimeType: string): Promise<any>;
-  rewriteEntireResume(resumeData: any, targetRole: string): Promise<any>;
-  matchJobDescription(resumeData: any, jobDescription: string): Promise<IJobMatchReport>;
-  generateProfessionalSummary(profileData: any): Promise<string>;
+  coachSection(sectionName: string, sectionData: unknown, instructions: string, targetRole: string): Promise<ISectionCoachResult>;
+  extractResumeFromDocument(fileBuffer: Buffer, mimeType: string): Promise<Record<string, unknown>>;
+  rewriteEntireResume(resumeData: unknown, targetRole: string): Promise<Record<string, unknown>>;
+  matchJobDescription(resumeData: unknown, jobDescription: string): Promise<IJobMatchReport>;
+  generateProfessionalSummary(profileData: unknown): Promise<string>;
 }
