@@ -42,7 +42,7 @@ export class AnalyzeResumeUseCase implements IAnalyzeResumeUseCase {
             throw new AppError("Resume not found. Please sync your profile to generate your resume.", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
-        // Dynamically select scoring profile based on career stage
+        // pick the right scoring weights depending on how much experience they have
         const scoringProfile = (resume.experience && resume.experience.length >= 2)
             ? ExperiencedSoftwareEngineerProfile
             : EntryLevelStudentProfile;
@@ -51,4 +51,4 @@ export class AnalyzeResumeUseCase implements IAnalyzeResumeUseCase {
         return atsReport;
     }
 }
-
+

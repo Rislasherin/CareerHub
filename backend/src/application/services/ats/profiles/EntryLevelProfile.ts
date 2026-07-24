@@ -13,5 +13,3 @@ export const EntryLevelStudentProfile: ScoringProfile = {
         { ruleId: "AI_REVIEW", weight: 10, isCritical: false }
     ]
 };
-
-

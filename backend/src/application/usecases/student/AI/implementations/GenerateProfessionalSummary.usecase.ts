@@ -20,7 +20,7 @@ export class GenerateProfessionalSummaryUseCase implements IGenerateProfessional
             throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND);
         }
 
-        // Map only the relevant profile data to send to Gemini
+        // only send what Gemini actually needs, no extra noise
         const profileData = {
             firstName: student.firstName,
             lastName: student.lastName,

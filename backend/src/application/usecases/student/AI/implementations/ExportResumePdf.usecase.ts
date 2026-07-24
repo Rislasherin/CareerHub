@@ -28,7 +28,7 @@ export class ExportResumePdfUseCase implements IExportResumePdfUseCase {
             
             const htmlContent = this._templateContext.generateHtml(templateId, resume as any);
 
-            // Execute PDF generation inside the bounded Puppeteer Pool
+            // use the pool so we're not spinning up a new browser every time
             const pdfBuffer = await puppeteerPool.execute(async (page) => {
                 await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
                 return await page.pdf({

@@ -31,9 +31,9 @@ export class PreviewResumeHtmlUseCase implements IPreviewResumeHtmlUseCase {
             PreviewCacheService.set(cacheKey, html);
             return html;
         } catch (error: unknown) {
-            // If it's already an AppError (e.g. validation), rethrow it
+            // rethrow if it's already our custom error
             if (error instanceof AppError) throw error;
-            // For unexpected errors (e.g. bad ObjectId format before first sync), return graceful fallback
+            // anything else (like bad mongo ID before first sync) just show the empty state
             return this._getEmptyStateHtml();
         }
     }

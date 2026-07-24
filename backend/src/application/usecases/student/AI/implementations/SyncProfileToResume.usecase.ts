@@ -37,7 +37,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             );
         }
     
-        // 1. Map personal info
+        // basic contact stuff first
         resume.personalInfo = {
             fullName: `${student.firstName} ${student.lastName}`.trim(),
             email: student.email,
@@ -48,12 +48,12 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             city: student.city || resume.personalInfo?.city
         };
 
-        // 2. Summary
+        // only set summary if they haven't written one yet
         if (!resume.summary || resume.summary.trim() === "") {
             resume.summary = student.professionalSummary || "";
         }
 
-        // 3. Map Education
+        // pull in their degree info
         if (student.degree) {
             resume.education = [{
                 institution: "University", 
@@ -64,7 +64,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
         }
 
 
-        // 4. Map Experience (preserve existing bullet points if user edited them)
+        // keep their custom bullet points if they already edited them, otherwise generate from summary
         if (student.experience && student.experience.length > 0) {
             resume.experience = student.experience.map((exp, idx) => {
                 const existingExp = resume?.experience?.[idx];
@@ -83,7 +83,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             });
         }
 
-        // 5. Map Projects
+        // grab their projects
         if (student.projects && student.projects.length > 0) {
             resume.projects = student.projects.map(proj => ({
                 name: proj.name,
@@ -93,7 +93,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             }));
         }
 
-        // 6. Map Skills (unique union)
+        // merge skills without duplicates
         if (student.skills) {
             const masterSkills = [
                 ...(student.skills.languages || []),
@@ -104,7 +104,7 @@ export class SyncProfileToResumeUseCase implements ISyncProfileToResumeUseCase {
             resume.skills = Array.from(combinedSkills);
         }
         
-        // 7. Map Achievements & Certifications
+        // split achievements into certs vs regular ones
         if (student.achievements) {
             resume.certifications = student.achievements
                 .filter(a => a.type === 'certification')

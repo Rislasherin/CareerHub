@@ -1,3 +1,5 @@
+// fetch html using iframe 
+//avid each html creation
 import { logger } from "@infrastructure/logger/logger";
 
 interface CacheEntry {

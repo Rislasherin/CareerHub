@@ -38,13 +38,13 @@ router.delete('/profile/resume', studentController.deleteResume.bind(studentCont
 router.get("/interviews", studentController.getInterviews.bind(studentController));
 
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
-import { 
-  SyncProfileSchema, 
-  UpdateSettingsSchema, 
-  AutoFixSchema, 
-  RewriteAllSchema, 
-  CreateResumeSchema, 
-  MatchJobSchema, 
+import {
+  SyncProfileSchema,
+  UpdateSettingsSchema,
+  AutoFixSchema,
+  RewriteAllSchema,
+  CreateResumeSchema,
+  MatchJobSchema,
   CoachSectionSchema,
   AnalyzeSchema
 } from "@application/dtos/student/resume.dto";
@@ -60,7 +60,6 @@ router.get('/resume/export', resumeController.exportPdf);
 router.get('/resume/preview', resumeController.previewHtml);
 router.post('/resume/autofix', validateSchema(AutoFixSchema), resumeController.autoFix);
 router.post('/resume/rewrite-all', validateSchema(RewriteAllSchema), resumeController.rewriteAll);
-
 router.get('/resumes', resumeController.getAll);
 router.post('/resumes', validateSchema(CreateResumeSchema), resumeController.create);
 router.post('/resume/match-job', validateSchema(MatchJobSchema), resumeController.matchJob);

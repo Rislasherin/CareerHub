@@ -31,7 +31,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
         newResume.resumeName = title || "Untitled Resume";
         newResume.versionId = `v${Date.now()}`;
 
-        // Map personal info
+        // fill in their basic info
         newResume.personalInfo = {
             fullName: `${student.firstName} ${student.lastName}`,
             email: student.email,
@@ -39,14 +39,14 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
             linkedinUrl: student.linkedinUrl,
             githubUrl: student.githubUrl
         };
-        // Map Education
+        // education section
         newResume.education = [{
             institution: "University", 
             degree: student.degree || "",
             graduationYear: student.graduationYear || 0,
             gpa: student.cgpa?.toString()
         }];
-        // Map Experience
+        // work experience
         if (student.experience) {
             newResume.experience = student.experience.map(exp => ({
                 company: exp.company,
@@ -56,7 +56,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
                 bulletPoints: exp.summary ? exp.summary.split('.') : []
             }));
         }
-        // Map Projects
+        // their side projects
         if (student.projects) {
             newResume.projects = student.projects.map(proj => ({
                 name: proj.name,
@@ -65,7 +65,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
                 link: proj.liveDemo || proj.github
             }));
         }
-        // Map Skills Flat Array
+        // flatten all skill categories into one array
         if (student.skills) {
             newResume.skills = [
                 ...(student.skills.languages || []),
@@ -78,6 +78,6 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
         await this._resumeRepository.save(newResume);
         
         const allResumes = await this._resumeRepository.findAllByStudentId(studentId);
-        return allResumes[0]; // because it's sorted by updatedAt descending
+        return allResumes[0]; // sorted by updatedAt desc, so first one is the newest
     }
 }

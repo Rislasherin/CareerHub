@@ -37,13 +37,13 @@ export class StarImpactRule implements IAtsRule {
                 if (!trimmed) return;
                 totalBullets++;
 
-                // Check action verb
+                // does it start with a strong action verb?
                 const firstWord = trimmed.split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g, '');
                 if (ACTION_VERBS.has(firstWord)) {
                     actionVerbBullets++;
                 }
 
-                // Check metric presence
+                // does it have a number or metric in it?
                 if (METRIC_REGEX.test(trimmed)) {
                     quantifiedBullets++;
                 }

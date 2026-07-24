@@ -24,7 +24,6 @@ import { IExperience, IProject, IResumeSettings } from "@domain/entities/AI/resu
 export class ResumeController {
     constructor(
         private readonly _analyzeResumeUseCase: IAnalyzeResumeUseCase,
-
         private readonly __syncProfileToResumeUseCase: ISyncProfileToResumeUseCase,
         private readonly __updateResumeSettingsUseCase: IUpdateResumeSettingsUseCase,
         private readonly _exportResumePdfUseCase: IExportResumePdfUseCase,
@@ -79,7 +78,7 @@ export class ResumeController {
     public exportPdf = asyncHandler(async (req: Request, res: Response) => {
         this._getStudentId(req);
         const resumeId = req.query.resumeId as string;
-        
+
         if (!resumeId) {
             throw new AppError(MESSAGES.RESUME.RESUME_ID_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
@@ -89,7 +88,7 @@ export class ResumeController {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=Resume.pdf');
         res.setHeader('Content-Length', pdfBuffer.length);
-        
+
         res.end(pdfBuffer);
     });
 
@@ -112,7 +111,7 @@ export class ResumeController {
         if (!text || !targetRole) {
             throw new AppError(MESSAGES.RESUME.TEXT_AND_ROLE_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
-        
+
         const fixedText = await this._autoFixTextUseCase.execute(text, targetRole);
         sendSuccess(res, { fixedText }, MESSAGES.RESUME.AUTOFIX_SUCCESS, HttpStatus.OK);
     });
@@ -145,7 +144,7 @@ export class ResumeController {
     public matchJob = asyncHandler(async (req: Request, res: Response) => {
         const studentId = this._getStudentId(req);
         const { resumeId, jobDescription } = req.body;
-        
+
         if (!resumeId || !jobDescription) {
             throw new AppError(MESSAGES.RESUME.MATCH_PARAMS_REQUIRED, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }

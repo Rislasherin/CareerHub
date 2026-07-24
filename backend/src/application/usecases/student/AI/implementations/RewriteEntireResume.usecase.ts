@@ -14,7 +14,7 @@ export class RewriteEntireResumeUseCase implements IRewriteEntireResumeUseCase {
     ) {}
 
     async execute(resumeId: string, targetRole: string): Promise<Record<string, unknown>> {
-        // We will rewrite the Resume document directly, not the student master profile
+        // touching the resume snapshot only, not the master profile
         const resume = await this._resumeRepository.findById(resumeId);
         
         if (!resume) {
@@ -46,7 +46,7 @@ export class RewriteEntireResumeUseCase implements IRewriteEntireResumeUseCase {
             skills: resume.skills || []
         };
 
-        // Send to AI for rewrite
+        // hand it off to AI
         const rewrittenData = await this._aiService.rewriteEntireResume(cleanData, targetRole) as {
             summary?: string;
             experience?: Array<{ company?: string; role?: string; location?: string; bulletPoints?: string[]; descriptionBullets?: string[]; description?: string }>;

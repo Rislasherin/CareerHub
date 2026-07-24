@@ -63,9 +63,7 @@ class PuppeteerPool {
                     } catch (error) {
                         logger.error("Failed to create page for queued task", error);
                         this.activePages--;
-                        // If it fails, we should really throw or reject the promise, 
-                        // but since resolve is expected to pass a page, a robust pool would pass 
-                        // rejection capabilities or just rely on the next call.
+                        // TODO: handle this rejection properly instead of silently eating it
                     }
                 }
             }

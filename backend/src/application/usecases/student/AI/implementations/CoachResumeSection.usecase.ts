@@ -19,7 +19,7 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
             throw new AppError("Resume not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
-        // Extract specific section data
+        // grab just the section they want coached
         type ResumeSectionData = Resume['experience'] | Resume['projects'] | Resume['skills'] | Resume['education'] | string;
         let sectionData: ResumeSectionData | undefined;
         switch(sectionName.toLowerCase()) {
@@ -31,7 +31,7 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
             default: throw new AppError(`Unknown section: ${sectionName}`, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
         }
 
-        // Validate section data is non-empty
+        // don't bother AI if there's nothing to coach
         const isEmpty = !sectionData || 
             (Array.isArray(sectionData) && sectionData.length === 0) || 
             (typeof sectionData === 'string' && sectionData.trim().length === 0);
