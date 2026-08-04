@@ -9,7 +9,7 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
     private readonly _studentRepository: IStudentRepository
   ) { }
 
-  async execute(companyId: string,jobId:string): Promise<CandidateListItem[]> {
+  async execute(companyId: string): Promise<CandidateListItem[]> {
 
     const jobs = await this._jobRepository.findByCompanyId(companyId);
     if (jobs.length === 0) {
