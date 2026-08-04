@@ -25,5 +25,5 @@ export interface CandidateListItem {
 }
 
 export interface IGetHRCandidatesUseCase {
-  execute(companyId: string): Promise<CandidateListItem[]>;
+  execute(companyId: string,jobId:string): Promise<CandidateListItem[]>;
 }

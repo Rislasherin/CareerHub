@@ -5,6 +5,7 @@ import { IBaseRepository } from "./IBaseRepository";
 export interface IJobRepository extends IBaseRepository<Job> {
   findByCompanyId(companyId: string): Promise<Job[]>;
   findByCollegeIdAndStatus(collegeId: string, status: JobStatus): Promise<Job[]>;
+
   searchJobs(
     filters: {
       collegeId?: string;
@@ -13,7 +14,9 @@ export interface IJobRepository extends IBaseRepository<Job> {
       searchQuery?: string;
     },
     page: number,
-    limit: number
+    limit: number,
+
+
   ): Promise<{ jobs: Job[]; total: number }>;
 
 }

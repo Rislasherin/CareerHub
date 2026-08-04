@@ -9,24 +9,30 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
     private readonly _studentRepository: IStudentRepository
   ) { }
 
-  async execute(companyId: string): Promise<CandidateListItem[]> {
+  async execute(companyId: string,jobId:string): Promise<CandidateListItem[]> {
+
     const jobs = await this._jobRepository.findByCompanyId(companyId);
     if (jobs.length === 0) {
       return [];
-    }
+    }
+
     const { students } = await this._studentRepository.searchAllStudents("", 1, 1000);
 
     const candidatesList: CandidateListItem[] = [];
     const collegeCache = new Map<string, string>();
 
-    const companyJobIds = jobs.map(j => String(j.id));
+    const companyJobIds = jobs.map(j => String(j.id));
+
     for (const student of students) {
       const studentAppliedJobs = (student.appliedJobs || []).map(id => String(id));
       const hasAppliedToCompany = studentAppliedJobs.some(id => companyJobIds.includes(id));
 
+
       if (!hasAppliedToCompany) {
         continue;
-      }
+      }
+      
+
       const studentSkillSet = new Set<string>();
       if (student.skills) {
         const sObj = student.skills;
@@ -36,14 +42,16 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
         (Array.isArray(sObj.cloudDevops) ? sObj.cloudDevops : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
         (Array.isArray(sObj.otherTools) ? sObj.otherTools : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
         (Array.isArray(sObj.aiMl) ? sObj.aiMl : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-      }
+      }
+
       let bestJob: typeof jobs[0] | null = null;
       let highestScore = -1;
 
       for (const job of jobs) {
         if (!job.id || !studentAppliedJobs.includes(String(job.id))) {
           continue;
-        }
+        }
+
         const requiredSkills = Array.isArray(job.requiredSkills) ? job.requiredSkills : [];
         let skillMatchScore = 70;
         if (requiredSkills.length > 0) {
@@ -54,7 +62,8 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
             }
           });
           skillMatchScore = (matchedCount / requiredSkills.length) * 70;
-        }
+        }
+
         const minCGPA = job.eligibility?.minCGPA || 0;
         const allowedBacklogs = job.eligibility?.allowedBacklogs !== undefined ? job.eligibility.allowedBacklogs : 0;
 
@@ -89,7 +98,8 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
               }
             } catch (e) { }
           }
-        }
+        }
+
         const allSkills: string[] = [];
         if (student.skills) {
           const sObj = student.skills;
@@ -120,9 +130,12 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
           status: 'NEW'
         });
       }
-    }
+    }
+
     candidatesList.sort((a, b) => b.matchScore - a.matchScore);
 
     return candidatesList;
+
+
   }
 }
