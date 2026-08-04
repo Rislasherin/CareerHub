@@ -29,6 +29,7 @@ export const toStudentEntity = (doc: StudentDocument): Student => {
     githubUrl: rawDoc.githubUrl || undefined,
     portfolioUrl: rawDoc.portfolioUrl || undefined,
     city: rawDoc.city || undefined,
+    professionalSummary: rawDoc.professionalSummary || undefined,
 
     degree: rawDoc.degree || undefined,
     branch: rawDoc.branch || undefined,
@@ -105,6 +106,7 @@ export const toStudentPersistence = (entity: Student) => {
     githubUrl: props.githubUrl,
     portfolioUrl: props.portfolioUrl,
     city: props.city,
+    professionalSummary: props.professionalSummary,
 
     degree: props.degree,
     branch: props.branch,

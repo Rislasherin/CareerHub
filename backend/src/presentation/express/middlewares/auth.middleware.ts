@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { IJwtService } from "@application/interfaces/IJwt.service";
+import { IJwtService, JwtPayload } from "@application/interfaces/IJwt.service";
 import { UnauthorizedError } from "@application/errors/AuthError";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
@@ -12,6 +12,9 @@ import { ISubscriptionRepository } from "@domain/repositories/ISubscriptionRepos
 import { UserStatus } from "@domain/enums/user.status.enum";
 import { Role } from "@domain/enums/Roles.enum";
 import { SubscriptionStatus } from "@domain/enums/SubscriptionStatus.enum";
+
+/** Normalized key-value map used internally after serializing a domain entity */
+type EntityJson = Record<string, unknown>;
 
 export class AuthMiddleware {
   constructor(
@@ -26,7 +29,7 @@ export class AuthMiddleware {
     private readonly _subscriptionRepository?: ISubscriptionRepository
   ) { }
 
-  protect = async (req: Request, _res: Response, next: NextFunction) => {
+  protect = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       let token: string | undefined;
 
@@ -40,63 +43,62 @@ export class AuthMiddleware {
         throw new UnauthorizedError("Access token missing");
       }
 
-      const decoded = this._jwtService.verifyAccessToken(token) as any; // Revert to any for jwt payload temporary to fix type error
+      const decoded: JwtPayload = this._jwtService.verifyAccessToken(token);
 
-      // Real-time status check to handle automatic logout if blocked
-      let user: any;
+      let user: EntityJson | null = null;
+
       switch (decoded.role) {
         case Role.STUDENT:
-          user = await this._studentRepository.findById(decoded.id);
+          user = this._toJson(await this._studentRepository.findById(decoded.id));
           break;
-        case Role.HR:
-          user = await this._hrUserRepository.findById(decoded.id);
-          if (user && user.companyId) {
-            const company: any = await this._companyRepository.findById(user.companyId);
-            if (company) {
-              const userJson = user.toJSON ? user.toJSON() : user;
-              const companyJson = company.toJSON ? company.toJSON() : company;
 
-              // Check if company is blocked
-              if (companyJson.status === UserStatus.BLOCKED) {
+        case Role.HR: {
+          const hrUser = this._toJson(await this._hrUserRepository.findById(decoded.id));
+          if (hrUser && hrUser.companyId) {
+            const company = this._toJson(await this._companyRepository.findById(hrUser.companyId as string));
+            if (company) {
+              if (company.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
               }
-              // Check if company is pending approval but trying to access restricted routes
               const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding'];
-              if (companyJson.status === UserStatus.PENDING && companyJson.onboardingStep >= 3) {
-                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
-                if (!isAllowed) {
+              if (company.status === UserStatus.PENDING && (company.onboardingStep as number) >= 3) {
+                if (!allowedPendingPaths.some(p => req.originalUrl.includes(p))) {
                   throw new UnauthorizedError("Your company account is currently pending administrator approval.");
                 }
               }
-
-              user = { ...userJson, onboardingStep: companyJson.onboardingStep };
+              user = { ...hrUser, onboardingStep: company.onboardingStep };
+            } else {
+              user = hrUser;
             }
+          } else {
+            user = hrUser;
           }
           break;
-        case Role.INTERVIEWER:
-          user = await this._interviewerRepository.findById(decoded.id);
-          if (user && user.companyId) {
-            const company: any = await this._companyRepository.findById(user.companyId);
+        }
+
+        case Role.INTERVIEWER: {
+          const interviewerUser = this._toJson(await this._interviewerRepository.findById(decoded.id));
+          if (interviewerUser && interviewerUser.companyId) {
+            const company = this._toJson(await this._companyRepository.findById(interviewerUser.companyId as string));
             if (company && company.status === UserStatus.BLOCKED) {
               throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
             }
           }
+          user = interviewerUser;
           break;
-        case Role.COLLEGE_ADMIN:
-          user = await this._collegeAdminRepository.findById(decoded.id);
-          if (user && user.orgId) {
-            const org: any = await this._organizationRepository.findById(user.orgId);
-            if (org) {
-              const userJson = user.toJSON ? user.toJSON() : user;
-              const orgJson = org.toJSON ? org.toJSON() : org;
+        }
 
-              // Check if organization is blocked
-              if (orgJson.status === UserStatus.BLOCKED) {
+        case Role.COLLEGE_ADMIN: {
+          const collegeUser = this._toJson(await this._collegeAdminRepository.findById(decoded.id));
+          if (collegeUser && collegeUser.orgId) {
+            const org = this._toJson(await this._organizationRepository.findById(collegeUser.orgId as string));
+            if (org) {
+              if (org.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
               }
               // Check if organization is pending approval
               const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding', '/subscription/create'];
-              if (orgJson.status === UserStatus.PENDING && orgJson.onboardingStep >= 3) {
+              if (org.status === UserStatus.PENDING && (org.onboardingStep as number) >= 3) {
                 const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
                 if (!isAllowed) {
                   throw new UnauthorizedError("Your institution account is currently pending administrator approval.");
@@ -104,13 +106,13 @@ export class AuthMiddleware {
               }
 
               // Check if trial has expired and no active subscription
-              if (orgJson.status === UserStatus.ACTIVE && orgJson.trialEndsAt) {
-                const isTrialExpired = new Date(orgJson.trialEndsAt) < new Date();
+              if (org.status === UserStatus.ACTIVE && org.trialEndsAt) {
+                const isTrialExpired = new Date(org.trialEndsAt as string | number | Date) < new Date();
                 
                 if (isTrialExpired) {
                   let hasActiveSubscription = false;
                   if (this._subscriptionRepository) {
-                    const sub = await this._subscriptionRepository.findByCollegeId(orgJson.id as string);
+                    const sub = await this._subscriptionRepository.findByCollegeId(org.id as string);
                     hasActiveSubscription = sub?.status === SubscriptionStatus.ACTIVE;
                   }
                   
@@ -122,18 +124,24 @@ export class AuthMiddleware {
               }
 
               user = { 
-                ...userJson, 
-                onboardingStep: orgJson.onboardingStep,
-                collegeName: orgJson.name,
-                activeBranches: orgJson.activeBranches || [],
-                plan: orgJson.plan || null,
-                trialEndsAt: orgJson.trialEndsAt || null
+                ...collegeUser, 
+                onboardingStep: org.onboardingStep,
+                collegeName: org['name'],
+                activeBranches: org['activeBranches'] || [],
+                plan: org['plan'] || null,
+                trialEndsAt: org['trialEndsAt'] || null
               };
+            } else {
+              user = collegeUser;
             }
+          } else {
+            user = collegeUser;
           }
           break;
+        }
+
         case Role.SUPER_ADMIN:
-          user = await this._superAdminRepository.findById(decoded.id);
+          user = this._toJson(await this._superAdminRepository.findById(decoded.id));
           break;
       }
 
@@ -141,11 +149,23 @@ export class AuthMiddleware {
         throw new UnauthorizedError("Your account has been blocked or no longer exists.");
       }
 
-      const userData = user.toJSON ? user.toJSON() : (user.toObject ? user.toObject() : user);
-      req.user = { ...decoded, ...userData };
+      req.user = { ...decoded, ...user };
       next();
     } catch (error) {
       next(error);
     }
   };
+
+  /**
+   * Serializes any domain entity to a plain key-value record.
+   * Uses `unknown` as input so domain-specific Props types (which lack an
+   * index signature) are accepted without modifying the domain layer.
+   */
+  private _toJson(entity: unknown): EntityJson | null {
+    if (entity === null || entity === undefined) return null;
+    const e = entity as Record<string, unknown>;
+    if (typeof e['toJSON'] === 'function') return (e['toJSON'] as () => EntityJson)();
+    if (typeof e['toObject'] === 'function') return (e['toObject'] as () => EntityJson)();
+    return e;
+  }
 }

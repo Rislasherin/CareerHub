@@ -1,7 +1,7 @@
 import { CanonicalSkillRepository } from '@infrastructure/repositories/CanonicalSkillRepository';
 import { SearchSkillsUseCase } from '@application/usecases/skills/implementations/SearchSkills.usecase';
 import { ResolveSkillUseCase } from '@application/usecases/skills/implementations/ResolveSkill.usecase';
-import { SkillController } from '@presentation/express/controllers/skill.controller';
+import { SkillController } from '@presentation/http/controllers/common/skill.controller';
 
 const repository = new CanonicalSkillRepository();
 

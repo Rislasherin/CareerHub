@@ -40,9 +40,9 @@ export class JwtService implements IJwtService {
     return jwt.sign(payload, JWT_ACCESS_SECRET, { expiresIn: "1h" });
   }
 
-  verifyResetToken(token: string): any {
+  verifyResetToken(token: string): JwtPayload {
     try {
-      return jwt.verify(token, JWT_ACCESS_SECRET);
+      return jwt.verify(token, JWT_ACCESS_SECRET) as JwtPayload;
     } catch (error) {
       return this.handleJwtError(error);
     }

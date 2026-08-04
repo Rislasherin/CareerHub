@@ -169,3 +169,11 @@ apiClient.interceptors.response.use(
     return Promise.reject(error.response.data || error);
   }
 );
+
+export const exportResumePdf = async (resumeId: string) => {
+  const response = await apiClient.get('/student/resume/export', {
+    params: { resumeId },
+    responseType: 'blob',
+  });
+  return response;
+};

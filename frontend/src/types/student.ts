@@ -64,6 +64,7 @@ export interface StudentProfile {
   githubUrl?: string;
   portfolioUrl?: string;
   city?: string;
+  professionalSummary?: string;
 
   // Academic (Locked)
   degree?: string;

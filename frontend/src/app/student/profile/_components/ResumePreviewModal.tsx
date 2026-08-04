@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -10,17 +11,25 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 export default function ResumePreviewModal({ url, onClose }: { url: string; onClose: () => void }) {
   const [numPages, setNumPages] = useState<number>();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold text-lg">Resume Preview</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
+          <button type="button" onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
             <X className="h-5 w-5 text-gray-600" />
           </button>
         </div>
@@ -46,7 +55,7 @@ export default function ResumePreviewModal({ url, onClose }: { url: string; onCl
            </Document>
            
            <div className="mt-8">
-             <button onClick={async () => {
+             <button type="button" onClick={async () => {
                try {
                  const res = await fetch(url);
                  const blob = await res.blob();
@@ -67,6 +76,7 @@ export default function ResumePreviewModal({ url, onClose }: { url: string; onCl
            </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

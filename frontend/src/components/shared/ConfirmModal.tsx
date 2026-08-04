@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, X } from 'lucide-react';
 import { Button } from './Button';
@@ -42,10 +43,18 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
   };
 
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -66,6 +75,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   <AlertCircle size={24} />
                 </div>
                 <button 
+                  type="button"
                   onClick={onClose}
                   className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-xl hover:bg-slate-50"
                 >
@@ -101,6 +111,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

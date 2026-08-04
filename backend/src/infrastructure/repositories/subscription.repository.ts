@@ -19,12 +19,12 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async findByGatewayId(gatewayId: string): Promise<Subscription | null> {
     const doc = await SubscriptionModel.findOne({ gatewaySubscriptionId: gatewayId });
     if (!doc) return null;
-    return SubscriptionMapper.toDomain(doc as any);
+    return SubscriptionMapper.toDomain(doc);
   }
 
   async findByCollegeId(collegeId: string): Promise<Subscription | null> {
     const doc = await SubscriptionModel.findOne({ collegeId: collegeId });
     if (!doc) return null;
-    return SubscriptionMapper.toDomain(doc as any);
+    return SubscriptionMapper.toDomain(doc);
   }
 }

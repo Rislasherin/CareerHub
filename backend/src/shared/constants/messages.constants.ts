@@ -30,6 +30,21 @@ export const MESSAGES = {
     SKILLS_RETRIEVED: "Skills retrieved successfully",
     SKILL_RESOLVED: "Skill resolved successfully",
   },
+  RESUME: {
+    SYNC_SUCCESS: "Resume successfully synced with profile",
+    SETTINGS_SAVED: "Settings saved successfully",
+    AUTOFIX_SUCCESS: "Text optimized successfully",
+    REWRITE_SUCCESS: "Resume optimization suggestions generated successfully",
+    FETCHED: "Resumes fetched successfully",
+    CREATED: "Resume version created successfully",
+    JOB_MATCH_SUCCESS: "Job description matching completed successfully",
+    SECTION_COACH_SUCCESS: "Section coaching completed successfully",
+    SETTINGS_REQUIRED: "Settings payload is required",
+    RESUME_ID_REQUIRED: "Resume ID is required",
+    TEXT_AND_ROLE_REQUIRED: "Text and target role are required",
+    MATCH_PARAMS_REQUIRED: "Resume ID and job description are required",
+    COACH_PARAMS_REQUIRED: "Resume ID, section name, instructions, and target role are required"
+  },
   ERROR: {
     UNAUTHORIZED: "Unauthorized access",
     NOT_FOUND: "Resource not found",
@@ -37,3 +52,4 @@ export const MESSAGES = {
     INTERNAL_SERVER_ERROR: "Internal server error",
   }
 };
+

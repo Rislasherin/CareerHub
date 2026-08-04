@@ -62,11 +62,11 @@ export interface StudentProps {
   createdAt?: Date;
   updatedAt?: Date;
 
-  // Day 12 Student Profile props
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
   city?: string;
+  professionalSummary?: string;
 
   // Academic (Locked)
   degree?: string;
@@ -194,6 +194,10 @@ export class Student {
     return this._props.city;
   }
 
+  get professionalSummary(): string | undefined {
+    return this._props.professionalSummary;
+  }
+
   get degree(): string | undefined {
     return this._props.degree;
   }
@@ -249,8 +253,8 @@ export class Student {
     if (this.githubUrl || this.portfolioUrl) score += 10;
     
     if (this.skills) {
-      const skills = this.skills as any;
-      if (Object.values(skills).some((arr: any) => Array.isArray(arr) && arr.length > 0)) {
+      const skills = this.skills as StudentSkills;
+      if (Object.values(skills).some((arr: unknown) => Array.isArray(arr) && arr.length > 0)) {
         score += 15;
       }
     }

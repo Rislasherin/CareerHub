@@ -27,31 +27,33 @@ export class SubscriptionController {
   public create = async (req: Request, res: Response): Promise<void> => {
     try {
       const { planType } = req.body;
-      const collegeId = (req as any).user?.id || req.body.collegeId; 
+      const collegeId = req.user?.id || req.body.collegeId;
 
       const result = await this.createSubscriptionUseCase.execute(collegeId, planType);
       sendSuccess(res, result, MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
-    } catch (error: any) {
-      const message = error?.error?.description || error.message || MESSAGES.ERROR.INTERNAL_SERVER_ERROR;
+    } catch (error: unknown) {
+      const errObj = error as { error?: { description?: string }; message?: string };
+      const message = errObj?.error?.description || errObj?.message || MESSAGES.ERROR.INTERNAL_SERVER_ERROR;
       console.error("Subscription Error:", message);
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: message });
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   };
 
   public webhook = async (req: Request, res: Response): Promise<void> => {
     try {
       const signature = req.headers['x-razorpay-signature'] as string;
-      const rawBody = req.body; // Needs express.raw middleware
-      
+      const rawBody = req.body;
+
       const payload = JSON.parse(rawBody.toString());
       const eventType = payload.event;
       const gatewaySubId = payload.payload.subscription.entity.id;
 
       await this.handleWebhookUseCase.execute(rawBody.toString(), signature, eventType, gatewaySubId);
-      
+
       res.status(HttpStatus.OK).send(MESSAGES.SUCCESS.UPDATED);
-    } catch (error: any) {
-      console.error("Webhook Error:", error.message);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : MESSAGES.ERROR.VALIDATION_ERROR;
+      console.error("Webhook Error:", msg);
       res.status(HttpStatus.BAD_REQUEST).send(MESSAGES.ERROR.VALIDATION_ERROR);
     }
   };

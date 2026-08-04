@@ -8,8 +8,12 @@ export interface StudentDetails {
   rollNumber?: string;
   department?: string;
   collegeId?: string;
+  collegeName?: string;
   status: string;
   profileImage?: string;
+  phoneNumber?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
   proofUrl?: string;
   rejectReason?: string;
   onboardingStep?: number;
@@ -36,6 +40,10 @@ export interface StudentDetails {
     fileSize: number;
     uploadDate: string;
   };
+  experience?: any[];
+  projects?: any[];
+  achievements?: any[];
+  spokenLanguages?: any[];
 }
 
 interface StudentState {

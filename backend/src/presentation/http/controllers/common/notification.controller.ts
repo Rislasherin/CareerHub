@@ -4,6 +4,9 @@ import { IMarkNotificationReadUseCase } from "@application/usecases/common/notif
 import { NotificationRole } from "@domain/enums/NotificationRole.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
+import { AppError } from "@application/errors/AppError";
+import { HttpStatus } from "@domain/enums/HttpStatus.enum";
+import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export class NotificationController {
     constructor(
@@ -13,15 +16,17 @@ export class NotificationController {
 
     public getMyNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user = (req as any).user;
-            let userId = user.id;
+            const user = req.user;
+            if (!user) throw new AppError("Not authenticated", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+
+            let userId: string = user.id;
             let role: NotificationRole;
 
             if (user.role === 'hr') {
-                userId = user.companyId;
+                userId = user.companyId as string;
                 role = NotificationRole.HR;
             } else if (user.role === 'college_admin') {
-                userId = user.orgId;
+                userId = user.orgId as string;
                 role = NotificationRole.ADMIN;
             } else if (user.role === 'student') {
                 role = NotificationRole.STUDENT;
@@ -50,15 +55,17 @@ export class NotificationController {
 
     public markAllAsRead = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user = (req as any).user;
-            let userId = user.id;
+            const user = req.user;
+            if (!user) throw new AppError("Not authenticated", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+
+            let userId: string = user.id;
             let role: NotificationRole;
 
             if (user.role === 'hr') {
-                userId = user.companyId;
+                userId = user.companyId as string;
                 role = NotificationRole.HR;
             } else if (user.role === 'college_admin') {
-                userId = user.orgId;
+                userId = user.orgId as string;
                 role = NotificationRole.ADMIN;
             } else if (user.role === 'student') {
                 role = NotificationRole.STUDENT;

@@ -26,7 +26,7 @@ export default function StudentOffersPage() {
         setOffers(res.data || []);
       }
     } catch (err) {
-      toast.error('Failed to fetch offers');
+      toast.error('Could not load your job offers. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -40,11 +40,11 @@ export default function StudentOffersPage() {
     try {
       const res = await apiClient.patch(`/student/offers/${offerId}/respond`, { status }) as any;
       if (res.success) {
-        toast.success(`Offer ${status.toLowerCase()} successfully!`);
+        toast.success(`Offer ${status === 'ACCEPTED' ? 'accepted' : 'declined'} successfully!`);
         fetchOffers();
       }
     } catch (err) {
-      toast.error('Failed to respond to offer');
+      toast.error('Could not update your offer response. Please try again.');
     }
   };
 
@@ -63,9 +63,10 @@ export default function StudentOffersPage() {
       document.body.removeChild(a);
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
-      toast.error('Failed to download PDF');
+      toast.error('Could not download offer letter PDF. Please try again.');
     }
   };
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {

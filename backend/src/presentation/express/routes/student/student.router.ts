@@ -5,10 +5,12 @@ import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { UpdateStudentProfileDto } from "@application/dtos/student/UpdateStudentProfile.dto";
 import multer from "multer";
+import { ResumeFactory } from "@infrastructure/di/resume.factory";
 
 const router = Router();
 const studentController = makeStudentController();
 const upload = multer({ storage: multer.memoryStorage() });
+const resumeController = ResumeFactory.createResumeController();
 
 // Use authMiddleware.protect for all routes in this router
 router.use(authMiddleware.protect);
@@ -18,6 +20,7 @@ router.post("/verify", upload.single('file'), studentController.uploadVerificati
 
 router.get("/profile", studentController.getProfile);
 router.put("/profile", validateDto(UpdateStudentProfileDto), studentController.updateProfile);
+router.post("/profile/generate-summary", studentController.generateProfessionalSummary.bind(studentController));
 
 router.get("/jobs", studentController.getJobs);
 router.post("/jobs/:id/apply", studentController.applyJob);
@@ -34,8 +37,33 @@ router.delete('/profile/resume', studentController.deleteResume.bind(studentCont
 
 router.get("/interviews", studentController.getInterviews.bind(studentController));
 
+import { validateSchema } from "@presentation/express/middlewares/validateSchema";
+import {
+  SyncProfileSchema,
+  UpdateSettingsSchema,
+  AutoFixSchema,
+  RewriteAllSchema,
+  CreateResumeSchema,
+  MatchJobSchema,
+  CoachSectionSchema,
+  AnalyzeSchema
+} from "@application/dtos/student/resume.dto";
+
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
 router.patch("/notifications/:id/read", notificationController.markAsRead);
 
+router.post('/resume/analyze', validateSchema(AnalyzeSchema), resumeController.analyze);
+router.post('/resume/sync', validateSchema(SyncProfileSchema), resumeController.syncProfile);
+router.patch('/resume/settings', validateSchema(UpdateSettingsSchema), resumeController.updateSettings);
+router.get('/resume/export', resumeController.exportPdf);
+router.get('/resume/preview', resumeController.previewHtml);
+router.post('/resume/autofix', validateSchema(AutoFixSchema), resumeController.autoFix);
+router.post('/resume/rewrite-all', validateSchema(RewriteAllSchema), resumeController.rewriteAll);
+router.get('/resumes', resumeController.getAll);
+router.post('/resumes', validateSchema(CreateResumeSchema), resumeController.create);
+router.post('/resume/match-job', validateSchema(MatchJobSchema), resumeController.matchJob);
+router.post('/resume/coach-section', validateSchema(CoachSectionSchema), resumeController.coachSection);
+
 export default router;
+

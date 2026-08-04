@@ -9,6 +9,7 @@ import {
   getStudentProfile,
   updateStudentProfile
 } from '@/services/student/profile.service';
+import { apiClient } from '@/services/api/api.client';
 import {
   StudentProfile,
   StudentExperience,
@@ -17,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { SkillAutocomplete } from '@/components/shared/SkillAutocomplete';
 import ResumeSection from './_components/ResumeSection';
+import ResumeSyncModal from './_components/ResumeSyncModal';
 import { ResumeMetadata } from '@/types/student';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setStudentDetails } from '@/redux/slices/studentSlice';
@@ -39,6 +41,12 @@ export default function StudentProfilePage() {
   const [githubUrl, setGithubUrl] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [city, setCity] = useState('');
+  const [professionalSummary, setProfessionalSummary] = useState('');
+
+  // AI Summary states
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [showSummaryPreview, setShowSummaryPreview] = useState(false);
+  const [generatedSummary, setGeneratedSummary] = useState('');
 
   // Academic fields
   const [collegeName, setCollegeName] = useState('');
@@ -76,6 +84,8 @@ export default function StudentProfilePage() {
   
   // Resume
   const [resumeMetadata, setResumeMetadata] = useState<ResumeMetadata | undefined>(undefined);
+  const [parsedResumeData, setParsedResumeData] = useState<any | null>(null);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   // Profile completion score
   const [completionPercentage, setCompletionPercentage] = useState(85);
@@ -108,6 +118,7 @@ export default function StudentProfilePage() {
         setGithubUrl(profile.githubUrl || '');
         setPortfolioUrl(profile.portfolioUrl || '');
         setCity(profile.city || '');
+        setProfessionalSummary(profile.professionalSummary || '');
 
         // Map academic fields
         setCollegeName(profile.collegeName || '');
@@ -270,6 +281,7 @@ export default function StudentProfilePage() {
         githubUrl: githubUrl.trim(),
         portfolioUrl: portfolioUrl.trim(),
         city: city.trim(),
+        professionalSummary: professionalSummary.trim(),
         degree: degree.trim(),
         branch: branch.trim(),
         graduationYear: graduationYear ? Number(graduationYear) : undefined,
@@ -295,14 +307,62 @@ export default function StudentProfilePage() {
       };
 
       const updated = await updateStudentProfile(payload);
-      toast.success('Profile successfully saved!');
+      toast.success('Your profile details have been saved successfully!');
       calculateProgress(updated);
       
       dispatch(setStudentDetails(updated as any));
     } catch (err: unknown) {
-      toast.error((err as Error)?.message || 'Failed to save student profile');
+      toast.error((err as Error)?.message || 'Could not save profile details. Please check your information and try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImportParsedData = (dataToImport: any) => {
+    setIsSyncModalOpen(false);
+    let importedCount = 0;
+    
+    if (dataToImport.experience) {
+       const newExperiences = dataToImport.experience.map((e: any) => ({
+          company: e.company || '',
+          role: e.title || '',
+          duration: `${e.startDate || ''} - ${e.endDate || ''}`.trim(),
+          summary: e.descriptionBullets?.join('\n') || ''
+       }));
+       setExperiences([...experiences, ...newExperiences]);
+       importedCount++;
+    }
+
+    if (dataToImport.skills) {
+       // We can just dump them in "otherTools" or "languages" for now
+       const newSkills = dataToImport.skills.filter((s: string) => !otherTools.includes(s));
+       setOtherTools([...otherTools, ...newSkills]);
+       importedCount++;
+    }
+
+    if (dataToImport.personalInfo) {
+       if (dataToImport.personalInfo.linkedinUrl) setLinkedinUrl(dataToImport.personalInfo.linkedinUrl);
+       if (dataToImport.personalInfo.githubUrl) setGithubUrl(dataToImport.personalInfo.githubUrl);
+       if (dataToImport.personalInfo.phone) setPhoneNumber(dataToImport.personalInfo.phone);
+       importedCount++;
+    }
+
+    if (importedCount > 0) {
+       toast.success("Imported resume details into your profile! Please review and click Save Profile.");
+    }
+  };
+
+
+  const handleGenerateSummary = async () => {
+    setIsGeneratingSummary(true);
+    try {
+      const response = await apiClient.post('/student/profile/generate-summary') as any;
+      setGeneratedSummary(response.data.summary);
+      setShowSummaryPreview(true);
+    } catch (err: any) {
+      // apiClient shows toast automatically on errors
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -372,8 +432,12 @@ export default function StudentProfilePage() {
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                <ResumeSection 
                 initialResume={resumeMetadata} 
-                onUpdate={(newResume) => {
+                onUpdate={(newResume, parsedData) => {
                   setResumeMetadata(newResume);
+                  if (parsedData) {
+                    setParsedResumeData(parsedData);
+                    setIsSyncModalOpen(true);
+                  }
                   if (user && newResume) {
                     dispatch(setStudentDetails({
                       ...user,
@@ -479,6 +543,53 @@ export default function StudentProfilePage() {
                 <Input label="GitHub URL" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} />
                 <Input label="Portfolio URL" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} />
                 <Input label="City" value={city} onChange={e => setCity(e.target.value)} />
+              </div>
+            </GlassCard>
+
+            {/* 1.5 Professional Summary */}
+            <GlassCard className="p-6 md:p-8 border-slate-100 rounded-[2rem] bg-white shadow-sm border-b-4 border-b-indigo-400">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">📝</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900">Professional Summary</h3>
+                    <p className="text-xs font-semibold text-slate-500">Appears at the top of your resume</p>
+                  </div>
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={handleGenerateSummary} 
+                  disabled={isGeneratingSummary}
+                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2 px-5 rounded-full text-sm transition-colors border border-indigo-200 shadow-sm whitespace-nowrap"
+                >
+                  {isGeneratingSummary ? 'Generating...' : '✨ Generate with AI'}
+                </Button>
+              </div>
+
+              {showSummaryPreview ? (
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 mb-4 relative animate-in fade-in zoom-in duration-300">
+                   <h4 className="text-xs font-black uppercase text-indigo-500 tracking-wider mb-2">AI Generated Preview</h4>
+                   <p className="text-sm text-slate-700 leading-relaxed italic">{generatedSummary}</p>
+                   <div className="flex gap-3 mt-4">
+                      <Button onClick={() => { setProfessionalSummary(generatedSummary); setShowSummaryPreview(false); }} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-full font-bold">Accept</Button>
+                      <Button onClick={handleGenerateSummary} className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs px-4 py-2 rounded-full font-bold">Regenerate</Button>
+                      <Button onClick={() => setShowSummaryPreview(false)} className="bg-transparent hover:bg-slate-100 text-slate-500 text-xs px-4 py-2 rounded-full font-bold">Cancel</Button>
+                   </div>
+                </div>
+              ) : null}
+
+              <div className="relative">
+                <textarea 
+                  rows={4} 
+                  maxLength={700}
+                  value={professionalSummary}
+                  onChange={e => setProfessionalSummary(e.target.value)}
+                  placeholder="Write a concise 2-4 sentence professional summary..."
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner resize-none"
+                />
+                <div className="absolute bottom-3 right-4 text-xs font-bold text-slate-400">
+                  {professionalSummary.length}/700
+                </div>
               </div>
             </GlassCard>
 
@@ -666,6 +777,14 @@ export default function StudentProfilePage() {
           {saving ? 'Saving...' : 'Save Profile'}
         </Button>
       </div>
+
+      <ResumeSyncModal 
+        isOpen={isSyncModalOpen} 
+        onClose={() => setIsSyncModalOpen(false)} 
+        parsedData={parsedResumeData} 
+        onImport={handleImportParsedData} 
+      />
+
     </DashboardLayout>
   );
 }

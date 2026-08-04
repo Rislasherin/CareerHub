@@ -14,5 +14,5 @@ export interface IJwtService {
   verifyAccessToken(token: string): JwtPayload;
   verifyRefreshToken(token: string): JwtPayload;
   generateResetToken(payload: Record<string, unknown>): string;
-  verifyResetToken(token: string): any;
+  verifyResetToken(token: string): JwtPayload;
 }

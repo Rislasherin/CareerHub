@@ -6,19 +6,18 @@ import { sendSuccess } from "@shared/utils/response.util";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { IPostJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IPostJob.usecase";;
-import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobs.usecase";;
-import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/interfaces/ICloseJob.usecase";;
-import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IDeleteJob.usecase";;
-import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRCandidates.usecase";;
-import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateJob.usecase";;
+import { IPostJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IPostJob.usecase";
+import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobs.usecase";
+import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/interfaces/ICloseJob.usecase";
+import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IDeleteJob.usecase";
+import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRCandidates.usecase";
+import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateJob.usecase";
 import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IGetCandidateProfileUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetCandidateProfile.usecase";
 import { IGetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobApplications.usecase";
 import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateApplicationStatus.usecase";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
-import { ScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/implementations/ScheduleInterview.usecase";
-
+import { IScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/interfaces/IScheduleInterview.usecase";
 import { IGetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRHireRequests.usecase";
 
 export class HRJobController {
@@ -31,9 +30,9 @@ export class HRJobController {
     private readonly _updateJobUseCase: IUpdateJobUseCase,
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
     private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
-    private readonly _getHRHireRequestsUseCase: any,
+    private readonly _getHRHireRequestsUseCase: IGetHRHireRequestsUseCase,
     private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase,
-    private readonly _sheduleInterviewUseCase: ScheduleInterviewUseCase
+    private readonly _sheduleInterviewUseCase: IScheduleInterviewUseCase
   ) { }
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
@@ -99,6 +98,7 @@ export class HRJobController {
     const candidates = await this._getHRCandidatesUseCase.execute(companyId);
     sendSuccess(res, candidates, MESSAGES.SUCCESS.FETCHED);
   });
+
   updateJob = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     if (!companyId) {
@@ -111,10 +111,9 @@ export class HRJobController {
 
   getCandidateProfile = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.params.id;
-    const profile = await this._getCandidateProfileUseCase.execute(studentId)
-
-    sendSuccess(res, profile, MESSAGES.SUCCESS.FETCHED)
-  })
+    const profile = await this._getCandidateProfileUseCase.execute(studentId);
+    sendSuccess(res, profile, MESSAGES.SUCCESS.FETCHED);
+  });
 
   getJobApplications = asyncHandler(async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
@@ -143,7 +142,7 @@ export class HRJobController {
     const companyId = req.user?.companyId;
     if (!companyId) throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
 
-    const { id } = req.params; // applicationId
+    const { id } = req.params;
     const { status } = req.body;
 
     logger.info(`[DEBUG] HR Attempting to update application ${id} to status: ${status}`);
@@ -165,6 +164,5 @@ export class HRJobController {
 
     const interview = await this._sheduleInterviewUseCase.execute(companyId, req.body);
     sendSuccess(res, interview.toJSON(), MESSAGES.SUCCESS.INTERVIEW_SCHEDULED, HttpStatus.CREATED);
-  })
-
+  });
 }

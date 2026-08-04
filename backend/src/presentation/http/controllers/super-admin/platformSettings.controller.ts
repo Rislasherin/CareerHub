@@ -1,16 +1,15 @@
 
 import { Request, Response } from "express";
-import { GetPlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/GetPlatformSettings.usecase";
-import { UpdatePlatformSettingsUseCase } from "@application/usecases/super-admin/implementations/UpdatePlatformSettings.usecase";
+import { IGetPlatformSettingsUseCase } from "@application/usecases/super-admin/interfaces/IGetPlatformSettings.usecase";
+import { IUpdatePlatformSettingsUseCase } from "@application/usecases/super-admin/interfaces/IUpdatePlatformSettings.usecase";
 import { asyncHandler } from "@shared/utils/asyncHandler.util";
 import { MESSAGES } from "@shared/constants/messages.constants";
 import { sendSuccess } from "@shared/utils/response.util";
-import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 export class PlatformSettingsController {
     constructor(
-        private readonly _getSettingsUseCase: GetPlatformSettingsUseCase,
-        private readonly _updateSettingsUseCase: UpdatePlatformSettingsUseCase
+        private readonly _getSettingsUseCase: IGetPlatformSettingsUseCase,
+        private readonly _updateSettingsUseCase: IUpdatePlatformSettingsUseCase
     ) { }
 
     getSettings = asyncHandler(async (req: Request, res: Response) => {

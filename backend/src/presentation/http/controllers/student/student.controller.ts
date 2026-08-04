@@ -17,6 +17,9 @@ import { IDeleteResumeUseCase } from "@application/usecases/student/Resume/inter
 import { IGetStudentApplicationsUseCase } from "@application/usecases/student/interfaces/IGetStudentApplications.usecase";
 import { IGetStudentInterviewsUseCase } from "@application/usecases/student/interfaces/IGetStudentInterviews.usecase";
 import { IGenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/interfaces/IGenerateOfferPdf.usecase";
+import { IGenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/interfaces/IGenerateProfessionalSummary.usecase";
+import { IGetStudentOffersUseCase } from "@application/usecases/student/interfaces/IGetStudentOffers.usecase";
+import { IRespondToOfferUseCase } from "@application/usecases/student/interfaces/IRespondToOffer.usecase";
 
 export class StudentController {
   constructor(
@@ -32,10 +35,20 @@ export class StudentController {
     private readonly _deleteResumeUsecase: IDeleteResumeUseCase,
     private readonly _getStudentApplicationsUseCase: IGetStudentApplicationsUseCase,
     private readonly _getStudentInterviewsUseCase: IGetStudentInterviewsUseCase,
-    private readonly _getStudentOffersUseCase: any,
-    private readonly _respondToOfferUseCase: any,
-    private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase
+    private readonly _getStudentOffersUseCase: IGetStudentOffersUseCase,
+    private readonly _respondToOfferUseCase: IRespondToOfferUseCase,
+    private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase,
+    private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase
   ) { }
+
+  generateProfessionalSummary = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const summary = await this._generateProfessionalSummaryUseCase.execute(studentId);
+    sendSuccess(res, { summary }, "Professional summary generated successfully");
+  });
 
   uploadVerification = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;
