@@ -31,7 +31,7 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
       if (!hasAppliedToCompany) {
         continue;
       }
-      
+
 
       const studentSkillSet = new Set<string>();
       if (student.skills) {
