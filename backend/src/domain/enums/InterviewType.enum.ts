@@ -1,7 +1,7 @@
+
 export enum InterviewType {
-  APTITUDE = 'APTITUDE',
-  CODING = 'CODING',
-  TECHNICAL = 'TECHNICAL',
-  HR = 'HR',
-  GROUP_DISCUSSION = 'GROUP_DISCUSSION'
+  TECHNICAL  = 'TECHNICAL',
+  BEHAVIORAL = 'BEHAVIORAL',
+  HR         = 'HR',
+  CUSTOM     = 'CUSTOM',
 }

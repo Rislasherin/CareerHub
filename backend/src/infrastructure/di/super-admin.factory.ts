@@ -2,12 +2,12 @@ import { GetDashboardStatsUseCase } from "@application/usecases/super-admin/impl
 import { GetOrganizationsUseCase } from "@application/usecases/super-admin/implementations/GetOrganizations.usecase";
 import { GetStudentsUseCase } from "@application/usecases/super-admin/implementations/GetStudents.usecase";
 import { GetCompaniesUseCase } from "@application/usecases/super-admin/implementations/GetCompanies.usecase";
-import { GetInterviewersUseCase } from "@application/usecases/super-admin/implementations/GetInterviewers.usecase";
+
 import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
 import {
   studentRepository,
   companyRepository,
-  interviewerRepository,
+
   superAdminRepository,
   collegeAdminRepository,
   hrUserRepository
@@ -22,7 +22,7 @@ const orgRepository = new OrganizationRepository();
 const platformSettingsRepository = new PlatformSettingsRepository();
 
 export const makeGetDashboardStatsUseCase = () => {
-  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, interviewerRepository, hrUserRepository);
+  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, hrUserRepository);
 };
 
 export const makeGetOrganizationsUseCase = () => {
@@ -37,9 +37,7 @@ export const makeGetCompaniesUseCase = () => {
   return new GetCompaniesUseCase(companyRepository, hrUserRepository);
 };
 
-export const makeGetInterviewersUseCase = () => {
-  return new GetInterviewersUseCase(interviewerRepository);
-};
+
 
 export const makeGetBillingInvoicesUseCase = () => {
   return new GetBillingInvoicesUseCase(subscriptionRepository, orgRepository);
@@ -67,11 +65,11 @@ import { UpdatePlatformSettingsUseCase } from "@application/usecases/super-admin
 import { EmailService } from "@infrastructure/services/email/email.service";
 
 export const makeUpdateUserStatusUseCase = () => {
-  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository, collegeAdminRepository, new EmailService());
+  return new UpdateUserStatusUseCase(studentRepository, orgRepository, companyRepository, hrUserRepository, collegeAdminRepository, new EmailService());
 };
 
 export const makeDeleteUserUseCase = () => {
-  return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, interviewerRepository, hrUserRepository);
+  return new DeleteUserUseCase(studentRepository, orgRepository, companyRepository, hrUserRepository);
 };
 
 export const makeUpdateOrganizationPlanUseCase = () => {
@@ -96,7 +94,6 @@ export const makeSuperAdminController = () => {
     makeGetOrganizationsUseCase(),
     makeGetStudentsUseCase(),
     makeGetCompaniesUseCase(),
-    makeGetInterviewersUseCase(),
     makeUpdateUserStatusUseCase(),
     makeDeleteUserUseCase(),
     makeUpdateOrganizationPlanUseCase(),

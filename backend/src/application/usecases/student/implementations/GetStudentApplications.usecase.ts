@@ -55,16 +55,18 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
       }
 
       let interviewData = null;
-      if (appJson.status === JobApplicationStatus.INTERVIEWING) {
+      if (appJson.status === JobApplicationStatus.INTERVIEWING && appJson.jobId) {
         try {
-          const interviews = await this._interviewRepository.findByApplicationId(appJson.id!);
-          if (interviews && interviews.length > 0) {
+          const allInterviews = await this._interviewRepository.findByStudentId(studentId);
+          const jobInterviews = allInterviews.filter(i => i.jobId === appJson.jobId);
+          if (jobInterviews && jobInterviews.length > 0) {
             // Get the most recent interview
-            const latestInterview = interviews[interviews.length - 1];
+            const latestInterview = jobInterviews[jobInterviews.length - 1];
             interviewData = {
-              title: latestInterview.title,
+              type: latestInterview.type,
+              status: latestInterview.status,
               scheduledAt: latestInterview.scheduledAt,
-              meetingLink: latestInterview.meetingLink
+              liveKitRoomName: latestInterview.liveKitRoomName
             };
           }
         } catch (e) {

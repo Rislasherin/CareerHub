@@ -1,26 +1,21 @@
-import { model, Document } from "mongoose";
-import { InterviewSchema } from "../../schema/company/interview.schema";
-import { RecommendationEnum } from "@domain/enums/Recommendation.enum";
-import { InterviewFeedback } from "@domain/entities/Interview";
+import { model, Document } from 'mongoose';
+import { InterviewSchema } from '../../schema/company/interview.schema';
+import { InterviewStatus } from '@domain/enums/InterviewStatus.enum';
+import { InterviewType } from '@domain/enums/InterviewType.enum';
 
 export interface InterviewDocument extends Document {
-  jobId: string;
-  applicationId: string;
   studentId: string;
+  jobId: string;
   companyId: string;
-  interviewerId: string;
-  title: string;
-  type: string;
-  status: string;
+  type: InterviewType;
+  status: InterviewStatus;
+  liveKitRoomName: string | null;
   scheduledAt: Date;
-  durationMinutes: number;
-  meetingLink?: string;
-  feedback?: InterviewFeedback;
-  rescheduleRequest?: Record<string, any>;
-  cancellationReason?: string;
+  startedAt: Date | null;
+  completedAt: Date | null;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const InterviewModel = model<InterviewDocument>("Interview", InterviewSchema);
+export const InterviewModel = model<InterviewDocument>('Interview', InterviewSchema);

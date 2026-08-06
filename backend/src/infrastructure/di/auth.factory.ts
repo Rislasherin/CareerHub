@@ -5,7 +5,6 @@ import {
   jwtService, 
   studentRepository,
   hrUserRepository,
-  interviewerRepository,
   collegeAdminRepository,
   superAdminRepository,
   crossRoleAuthService,
@@ -61,7 +60,7 @@ export const makeForgotPasswordController = () => {
     jwtService,
     studentRepository,
     hrUserRepository,
-    interviewerRepository,
+
     collegeAdminRepository,
     superAdminRepository
   );
@@ -70,7 +69,7 @@ export const makeForgotPasswordController = () => {
     bcryptService,
     studentRepository,
     hrUserRepository,
-    interviewerRepository,
+
     collegeAdminRepository,
     superAdminRepository
   );
@@ -83,7 +82,7 @@ export const makeRefreshTokenController = () => {
     jwtService,
     studentRepository,
     hrUserRepository,
-    interviewerRepository,
+
     collegeAdminRepository,
     superAdminRepository
   );

@@ -1,5 +1,5 @@
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
 
 import { IGetStudentInterviewsUseCase } from "../interfaces/IGetStudentInterviews.usecase";
@@ -7,9 +7,7 @@ import { IGetStudentInterviewsUseCase } from "../interfaces/IGetStudentInterview
 export class GetStudentInterviewsUseCase implements IGetStudentInterviewsUseCase {
     constructor(
         private readonly _interviewRepository: IInterviewRepository,
-        private readonly _companyRepository: ICompanyRepository,
-        private readonly _interviewerRepository: IInterviewerRepository
-    ) { }
+        private readonly _companyRepository: ICompanyRepository    ) { }
 
     async execute(studentId: string): Promise<any[]> {
         const interview = await this._interviewRepository.findByStudentId(studentId);
@@ -25,26 +23,17 @@ export class GetStudentInterviewsUseCase implements IGetStudentInterviewsUseCase
                 } catch (error) { }
             }
 
-            if (inv.interviewerId) {
-                try {
-                    // FIX: Use _interviewerRepository instead of _interviewRepository
-                    const interviewer = await this._interviewerRepository.findById(inv.interviewerId);
-                    if (interviewer) {
-                        interviewerName = `${interviewer.firstName} ${interviewer.lastName}`;
-                    }
-                } catch (error) { }
-            }
-
             return {
                 id: inv.id,
-                title: inv.title,
+                jobId: inv.jobId,
                 type: inv.type,
                 status: inv.status,
                 scheduledAt: inv.scheduledAt,
-                durationMinutes: inv.durationMinutes,
-                meetingLink: inv.meetingLink,
+                liveKitRoomName: inv.liveKitRoomName,
+                startedAt: inv.startedAt,
+                completedAt: inv.completedAt,
                 companyName,
-                interviewerName
+                interviewerName: 'AI Interviewer'
             };
         }));
     }

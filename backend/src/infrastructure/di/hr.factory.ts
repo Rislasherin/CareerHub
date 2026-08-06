@@ -1,8 +1,6 @@
 import { RegisterCompanyUseCase } from "@application/usecases/auth/hr/implementations/RegisterCompany.usecase";
 import { UpdateCompanyOnboardingUseCase } from "@application/usecases/auth/hr/implementations/UpdateCompanyOnboarding.usecase";
-import { AddInterviewerUseCase } from "@application/usecases/hr/interviewer-management/implementations/AddInterviewer.usecase";;
-import { GetInterviewersUseCase } from "@application/usecases/hr/interviewer-management/implementations/GetInterviewers.usecase";;
-import { ToggleInterviewerStatusUseCase } from "@application/usecases/hr/interviewer-management/implementations/ToggleInterviewerStatus.usecase";;
+
 import { VerifyCompanyOtpUseCase } from "@application/usecases/auth/hr/implementations/VerifyCompanyOtp.usecase";
 import { GetHRDashboardStatsUseCase } from "@application/usecases/hr/dashboard/implementations/GetHRDashboardStats.usecase";;
 import { HRDashboardController } from "@presentation/http/controllers/hr/hr.dashboard.controller";
@@ -16,23 +14,15 @@ import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/impl
 import { GetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobApplications.usecase";
 import { GetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRHireRequests.usecase";
 import { UpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/implementations/UpdateApplicationStatus.usecase";
-import { companyRepository, hrUserRepository, interviewerRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository, interviewRepository, organizationRepository, createSystemNotificationUseCase } from "@infrastructure/di/infra.container";
+import { companyRepository, hrUserRepository, bcryptService, jwtService, otpRepository, crossRoleAuthService, superAdminRepository, collegeAdminRepository, studentRepository, jobRepository, jobApplicationRepository, interviewRepository, organizationRepository, createSystemNotificationUseCase } from "@infrastructure/di/infra.container";
 import { HRAuthController } from "@presentation/http/controllers/auth/hr/hr.auth.controller";
-import { InterviewerManagementController } from "@presentation/http/controllers/hr/interviewer.management.controller";
+
 import { EmailService } from "@infrastructure/services/email/email.service";
 import { LoginHRUseCase } from "@application/usecases/auth/hr/implementations/LoginHR.usecase";
-import { UpdateInterviewerUseCase } from "@application/usecases/hr/interviewer-management/implementations/UpdateInterviewer.usecase";;
-import { DeleteInterviewerUseCase } from "@application/usecases/hr/interviewer-management/implementations/DeleteInterviewer.usecase";;
-import { RestoreInterviewerUseCase } from "@application/usecases/hr/interviewer-management/implementations/RestoreInterviewer.usecase";;
-import { ResendInterviewerInviteUseCase } from "@application/usecases/hr/interviewer-management/ResendInterviewerInvite.usecase";
+
 import { GetCandidateProfileUseCase } from "@application/usecases/hr/job-engine/implementations/GetCandidateProfile.usecase";
 import { JobApplicationRepository } from "@infrastructure/repositories/jobApplication.repository";
-import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
-import { ScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/implementations/ScheduleInterview.usecase";
-import { GetRescheduleRequestsUseCase } from "@application/usecases/hr/interview-management/implementations/GetRescheduleRequests.usecase";
-import { ResolveRescheduleUseCase } from "@application/usecases/hr/interview-management/implementations/ResolveReschedule.usecase";
-import { GetHRInterviewsUseCase } from "@application/usecases/hr/interview-management/implementations/GetHRInterviews.usecase";
-import { HRInterviewController } from "@presentation/http/controllers/hr/hr.interview.controller";
+
 import { offerRepository } from "@infrastructure/di/infra.container";
 import { HROfferController } from "@presentation/http/controllers/hr/hr.offer.controller";
 import { GenerateOfferUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOffer.usecase";
@@ -67,48 +57,10 @@ export const makeHRAuthController = () => {
   );
 };
 
-export const makeAddInterviewerUseCase = () => {
-  return new AddInterviewerUseCase(interviewerRepository, emailService, jwtService, crossRoleAuthService);
-};
 
-export const makeGetInterviewersUseCase = () => {
-  return new GetInterviewersUseCase(interviewerRepository);
-};
-
-export const makeToggleInterviewerStatusUseCase = () => {
-  return new ToggleInterviewerStatusUseCase(interviewerRepository);
-};
-
-export const makeResendInterviewerInviteUseCase = () => {
-  return new ResendInterviewerInviteUseCase(interviewerRepository, emailService, jwtService);
-};
-
-export const makeUpdateInterviewerUseCase = () => {
-  return new UpdateInterviewerUseCase(interviewerRepository);
-};
-
-export const makeDeleteInterviewerUseCase = () => {
-  return new DeleteInterviewerUseCase(interviewerRepository);
-};
-
-export const makeRestoreInterviewerUseCase = () => {
-  return new RestoreInterviewerUseCase(interviewerRepository);
-};
-
-export const makeInterviewerManagementController = () => {
-  return new InterviewerManagementController(
-    makeAddInterviewerUseCase(),
-    makeGetInterviewersUseCase(),
-    makeToggleInterviewerStatusUseCase(),
-    makeResendInterviewerInviteUseCase(),
-    makeUpdateInterviewerUseCase(),
-    makeDeleteInterviewerUseCase(),
-    makeRestoreInterviewerUseCase()
-  );
-};
 
 export const makeGetHRDashboardStatsUseCase = () => {
-  return new GetHRDashboardStatsUseCase(interviewerRepository);
+  return new GetHRDashboardStatsUseCase();
 };
 
 export const makeHRDashboardController = () => {
@@ -155,9 +107,7 @@ export const makeUpdateApplicationStatusUseCase = () => {
   return new UpdateApplicationStatusUseCase(jobApplicationRepository, createSystemNotificationUseCase);
 };
 
-export const makeSheduleInterviewUseCase = () => {
-  return new ScheduleInterviewUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase)
-}
+
 
 export const makeHRJobController = () => {
   return new HRJobController(
@@ -170,23 +120,11 @@ export const makeHRJobController = () => {
     makeGetCandidateProfileUseCase(),
     makeGetHRJobApplicationsUseCase(),
     makeGetHRHireRequestsUseCase(),
-    makeUpdateApplicationStatusUseCase(),
-    makeSheduleInterviewUseCase(),
+    makeUpdateApplicationStatusUseCase()
   );
 };
 
-import { ApproveCancellationUseCase } from "@application/usecases/hr/interview-management/implementations/ApproveCancellation.usecase";
-import { ReassignInterviewerUseCase } from "@application/usecases/hr/interview-management/implementations/ReassignInterviewer.usecase";
 
-export const makeHRInterviewController = () => {
-  return new HRInterviewController(
-    new GetHRInterviewsUseCase(interviewRepository, studentRepository, interviewerRepository),
-    new GetRescheduleRequestsUseCase(interviewRepository),
-    new ResolveRescheduleUseCase(interviewRepository),
-    new ApproveCancellationUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase),
-    new ReassignInterviewerUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase)
-  );
-};
 
 export const makeHROfferController = () => {
   return new HROfferController(

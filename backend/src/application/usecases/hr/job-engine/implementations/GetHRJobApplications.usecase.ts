@@ -7,7 +7,6 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IGetHRJobApplicationsUseCase } from "../interfaces/IGetHRJobApplications.usecase";
 
 import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
-import { InterviewProps } from "@domain/entities/Interview";
 
 export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase {
   constructor(
@@ -39,11 +38,22 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
           } catch (e) { }
         }
 
-        let interviews: InterviewProps[] = [];
-        if (appJson.id) {
+        let interviews: Record<string, unknown>[] = [];
+        if (appJson.studentId && appJson.jobId) {
           try {
-            const rawInterviews = await this._interviewRepository.findByApplicationId(appJson.id);
-            interviews = rawInterviews.map(i => i.toJSON());
+            const rawInterviews = await this._interviewRepository.findByStudentId(appJson.studentId);
+            interviews = rawInterviews
+              .filter(i => i.jobId === appJson.jobId)
+              .map(i => {
+                const props = i.toJSON();
+                return {
+                  id: props.id,
+                  type: props.type,
+                  status: props.status,
+                  scheduledAt: props.scheduledAt,
+                  liveKitRoomName: props.liveKitRoomName
+                };
+              });
           } catch (e) { }
         }
 

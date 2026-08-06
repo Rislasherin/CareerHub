@@ -1,127 +1,138 @@
-import { InterviewStatus } from "../enums/InterviewStatus.enum";
-import { InterviewType } from "../enums/InterviewType.enum";
-import { RecommendationEnum } from "@domain/enums/Recommendation.enum";
+import { InterviewStatus } from '@domain/enums/InterviewStatus.enum';
+import { InterviewType } from '@domain/enums/InterviewType.enum';
 
-export interface InterviewFeedback {
-  dsaScore?: number;
-  dsaNotes?: string;
-  codingScore?: number;
-  codingNotes?: string;
-  systemDesignScore?: number;
-  systemDesignNotes?: string;
-  problemSolvingScore?: number;
-  problemSolvingNotes?: string;
-  strengths?: string;
-  weaknesses?: string;
-  hrNotes?: string;
-  recommendedAction?: RecommendationEnum;
-}
-
-export interface RescheduleRequest {
-  reason: string;
-  preferredDate: Date;
-  preferredTime: string;
-  noteToHr?: string;
-  requestedAt: Date;
-}
-
-export interface InterviewProps {
-  id?: string;
-  jobId: string;
-  applicationId: string;
-  studentId: string;
-  companyId: string;
-  interviewerId: string;
-  title: string;
-  type: InterviewType;
-  roundNumber: number;
-  status: InterviewStatus;
-  scheduledAt: Date;
-  durationMinutes: number;
-  meetingLink?: string;
-  feedback?: InterviewFeedback;
-  rescheduleRequest?: RescheduleRequest;
-  cancellationReason?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 export class Interview {
-  constructor(private readonly _props: InterviewProps) {}
+  private _id: string;
+  private _studentId: string;
+  private _jobId: string;
+  private _companyId: string;
+  private _type: InterviewType;
+  private _status: InterviewStatus;
+  private _liveKitRoomName: string | null;
+  private _scheduledAt: Date;
+  private _startedAt: Date | null;
+  private _completedAt: Date | null;
+  private _createdAt: Date;
 
-  static create(props: InterviewProps): Interview {
-    return new Interview(props);
+  constructor(props: {
+    id: string;
+    studentId: string;
+    jobId: string;
+    companyId: string;
+    type: InterviewType;
+    status: InterviewStatus;
+    liveKitRoomName?: string | null;
+    scheduledAt: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    createdAt: Date;
+  }) {
+    this._id = props.id;
+    this._studentId = props.studentId;
+    this._jobId = props.jobId;
+    this._companyId = props.companyId;
+    this._type = props.type;
+    this._status = props.status;
+    this._liveKitRoomName = props.liveKitRoomName ?? null;
+    this._scheduledAt = props.scheduledAt;
+    this._startedAt = props.startedAt ?? null;
+    this._completedAt = props.completedAt ?? null;
+    this._createdAt = props.createdAt;
   }
 
-  get id(): string | undefined { return this._props.id; }
-  get jobId(): string { return this._props.jobId; }
-  get applicationId(): string { return this._props.applicationId; }
-  get studentId(): string { return this._props.studentId; }
-  get companyId(): string { return this._props.companyId; }
-  get interviewerId(): string { return this._props.interviewerId; }
-  get title(): string { return this._props.title; }
-  get type(): InterviewType { return this._props.type; }
-  get roundNumber(): number { return this._props.roundNumber; }
-  get status(): InterviewStatus { return this._props.status; }
-  get scheduledAt(): Date { return this._props.scheduledAt; }
-  get durationMinutes(): number { return this._props.durationMinutes; }
-  get meetingLink(): string | undefined { return this._props.meetingLink; }
-  get feedback(): InterviewFeedback | undefined { return this._props.feedback; }
-  get rescheduleRequest(): RescheduleRequest | undefined { return this._props.rescheduleRequest; }
-  get cancellationReason(): string | undefined { return this._props.cancellationReason; }
-  get createdAt(): Date | undefined { return this._props.createdAt; }
-  get updatedAt(): Date | undefined { return this._props.updatedAt; }
+  // ─── Getters ────────────────────────────────────────────────────────────────
 
-  submitFeedback(feedback: InterviewFeedback): void {
-    if (this._props.status !== InterviewStatus.SCHEDULED) {
-      throw new Error("Cannot submit feedback for an interview that is not scheduled.");
+  get id() { return this._id; }
+  get studentId() { return this._studentId; }
+  get jobId() { return this._jobId; }
+  get companyId() { return this._companyId; }
+  get type() { return this._type; }
+  get status() { return this._status; }
+  get liveKitRoomName() { return this._liveKitRoomName; }
+  get scheduledAt() { return this._scheduledAt; }
+  get startedAt() { return this._startedAt; }
+  get completedAt() { return this._completedAt; }
+  get createdAt() { return this._createdAt; }
+
+  // ─── State Transition Methods ────────────────────────────────────────────────
+
+  /** Student has arrived at the waiting room. */
+  markAsWaiting(): void {
+    this._assertStatus(InterviewStatus.SCHEDULED, 'markAsWaiting');
+    this._status = InterviewStatus.WAITING;
+  }
+
+  /** System has created the LiveKit room and is loading AI context. */
+  markAsPreparing(liveKitRoomName: string): void {
+    this._assertStatus(InterviewStatus.WAITING, 'markAsPreparing');
+    this._status = InterviewStatus.PREPARING;
+    this._liveKitRoomName = liveKitRoomName;
+  }
+
+  /** AI Worker has joined the room. Interview is now live. */
+  markAsInProgress(): void {
+    this._assertStatus(InterviewStatus.PREPARING, 'markAsInProgress');
+    this._status = InterviewStatus.IN_PROGRESS;
+    this._startedAt = new Date();
+  }
+
+  /** Conversation has ended, report generation has begun. */
+  markAsGenerating(): void {
+    this._assertStatus(InterviewStatus.IN_PROGRESS, 'markAsGenerating');
+    this._status = InterviewStatus.GENERATING;
+  }
+
+  /** Report is saved. Interview is fully complete. */
+  markAsCompleted(): void {
+    this._assertStatus(InterviewStatus.GENERATING, 'markAsCompleted');
+    this._status = InterviewStatus.COMPLETED;
+    this._completedAt = new Date();
+  }
+
+  /** HR or Student cancelled before completion. */
+  cancel(): void {
+    const cancellableStates = [InterviewStatus.SCHEDULED, InterviewStatus.WAITING];
+    if (!cancellableStates.includes(this._status)) {
+      throw new Error(`Cannot cancel an interview with status: ${this._status}`);
     }
-    this._props.feedback = feedback;
-    this._props.status = InterviewStatus.COMPLETED;
+    this._status = InterviewStatus.CANCELLED;
   }
 
-  requestReschedule(request: Omit<RescheduleRequest, 'requestedAt'>): void {
-    this._props.rescheduleRequest = {
-      ...request,
-      requestedAt: new Date()
+  /** System marks as failed on an unrecoverable error. */
+  markAsFailed(): void {
+    this._status = InterviewStatus.FAILED;
+  }
+
+  /** Convenience: checks if the interview can currently be joined. */
+  isJoinable(): boolean {
+    return this._status === InterviewStatus.SCHEDULED;
+  }
+
+  toJSON() {
+    return {
+      id: this._id,
+      studentId: this._studentId,
+      jobId: this._jobId,
+      companyId: this._companyId,
+      type: this._type,
+      status: this._status,
+      liveKitRoomName: this._liveKitRoomName,
+      scheduledAt: this._scheduledAt,
+      startedAt: this._startedAt,
+      completedAt: this._completedAt,
+      createdAt: this._createdAt,
     };
-    this._props.status = InterviewStatus.RESCHEDULE_REQUESTED;
   }
 
-  resolveReschedule(approve: boolean, newDate?: Date, newTime?: string): void {
-    if (this._props.status !== InterviewStatus.RESCHEDULE_REQUESTED) {
-      throw new Error("No pending reschedule request found.");
+  // ─── Private Helpers ─────────────────────────────────────────────────────────
+
+  private _assertStatus(expected: InterviewStatus, callerMethod: string): void {
+    if (this._status !== expected) {
+      throw new Error(
+        `[Interview.${callerMethod}] Invalid transition. ` +
+        `Expected status "${expected}", but current status is "${this._status}".`
+      );
     }
-    
-    if (approve) {
-      if (!newDate) throw new Error("New date must be provided when approving a reschedule.");
-      this._props.scheduledAt = newDate;
-      this._props.status = InterviewStatus.SCHEDULED;
-    } else {
-      // If rejected, it stays at the old scheduled date, or gets cancelled based on HR action
-      // Standard behavior: returns to SCHEDULED at old time, HR handles communication
-      this._props.status = InterviewStatus.SCHEDULED;
-    }
-    
-    // Clear the request after resolving
-    this._props.rescheduleRequest = undefined;
-  }
-
-  // Interviewer requests cancellation — goes to HR for approval
-  requestCancellation(reason: string): void {
-    if (this._props.status !== InterviewStatus.SCHEDULED) {
-      throw new Error("Only scheduled interviews can request cancellation.");
-    }
-    this._props.status = InterviewStatus.CANCELLATION_REQUESTED;
-    this._props.cancellationReason = reason;
-  }
-
-  // HR approves the cancellation
-  approveCancellation(): void {
-    this._props.status = InterviewStatus.CANCELLED;
-  }
-
-  toJSON(): InterviewProps {
-    return { ...this._props };
   }
 }
