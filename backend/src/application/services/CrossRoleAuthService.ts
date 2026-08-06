@@ -1,6 +1,6 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 
@@ -8,7 +8,7 @@ export class CrossRoleAuthService {
   constructor(
     private readonly _studentRepo: IStudentRepository,
     private readonly _hrRepo: IHRUserRepository,
-    private readonly _interviewerRepo: IInterviewerRepository,
+
     private readonly _collegeAdminRepo: ICollegeAdminRepository,
     private readonly _superAdminRepo: ISuperAdminRepository
   ) { }
@@ -24,9 +24,7 @@ export class CrossRoleAuthService {
     const hr = await this._hrRepo.findByEmail(checkEmail);
     if (hr) return { inUse: true, role: "HR", status: hr.status };
 
-    // Check Interviewers
-    const interviewer = await this._interviewerRepo.findByEmail(checkEmail);
-    if (interviewer) return { inUse: true, role: "Interviewer", status: interviewer.status };
+
 
     // Check College Admins
     const collegeAdmin = await this._collegeAdminRepo.findByEmail(checkEmail);

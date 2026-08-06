@@ -2,7 +2,7 @@ import { StudentRepository } from "@infrastructure/repositories/student.reposito
 import { SuperAdminRepository } from "@infrastructure/repositories/SuperAdminRepository";
 import { CompanyRepository } from "@infrastructure/repositories/CompanyRepository";
 import { HRUserRepository } from "@infrastructure/repositories/HRUserRepository";
-import { InterviewerRepository } from "@infrastructure/repositories/InterviewerRepository";
+
 import { OtpRepository } from "@infrastructure/repositories/OtpRepository";
 import { CollegeAdminRepository } from "@infrastructure/repositories/college-admin.repository";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
@@ -21,13 +21,17 @@ import { NotificationRepository } from "@infrastructure/repositories/notificatio
 import { CreateSystemNotificationUseCase } from "@application/usecases/common/notifications/implementations/CreateSystemNotification.usecase";
 import { SubscriptionRepository } from "@infrastructure/repositories/subscription.repository";
 import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
-import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";export const notificationRepository = new NotificationRepository(NotificationModel);
+import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
+import { LiveKitMediaServer } from "@infrastructure/services/livekit/LiveKitMediaServer";
+import { RabbitMQBroker } from "@infrastructure/services/queue/RabbitMQBroker";
+
+export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
 export const companyRepository = new CompanyRepository();
 export const hrUserRepository = new HRUserRepository();
-export const interviewerRepository = new InterviewerRepository();
+
 export const otpRepository = new OtpRepository();
 export const collegeAdminRepository = new CollegeAdminRepository();
 export const organizationRepository = new OrganizationRepository();
@@ -43,7 +47,7 @@ export const authMiddleware = new AuthMiddleware(
     jwtService,
     studentRepository,
     hrUserRepository,
-    interviewerRepository,
+
     collegeAdminRepository,
     superAdminRepository,
     organizationRepository,
@@ -53,10 +57,22 @@ export const authMiddleware = new AuthMiddleware(
 export const crossRoleAuthService = new CrossRoleAuthService(
     studentRepository,
     hrUserRepository,
-    interviewerRepository,
+
     collegeAdminRepository,
     superAdminRepository
 );
 
 export const interviewRepository = new InterviewRepository();
 export const paymentGateway = new RazorpayGateway();
+
+// ─── AI Interview Infrastructure ──────────────────────────────────────────────
+
+export const liveKitMediaServer = new LiveKitMediaServer(
+  process.env.LIVEKIT_HOST!,
+  process.env.LIVEKIT_API_KEY!,
+  process.env.LIVEKIT_API_SECRET!
+);
+
+export const rabbitMQBroker = new RabbitMQBroker(
+  process.env.RABBITMQ_URL!
+);
