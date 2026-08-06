@@ -1,48 +1,36 @@
-import { Interview, RescheduleRequest } from "@domain/entities/Interview";
-import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
-import { InterviewType } from "@domain/enums/InterviewType.enum";
-import { InterviewDocument } from "@infrastructure/database/models/company/interview.model";
+import { Interview } from '@domain/entities/Interview';
+import { InterviewStatus } from '@domain/enums/InterviewStatus.enum';
+import { InterviewType } from '@domain/enums/InterviewType.enum';
+import { InterviewDocument } from '@infrastructure/database/models/company/interview.model';
+
 
 export const toInterviewEntity = (doc: InterviewDocument): Interview => {
-  return Interview.create({
+  return new Interview({
     id: doc._id.toString(),
-    jobId: doc.jobId.toString(),
-    applicationId: doc.applicationId.toString(),
     studentId: doc.studentId.toString(),
+    jobId: doc.jobId.toString(),
     companyId: doc.companyId.toString(),
-    interviewerId: doc.interviewerId.toString(),
-    title: doc.title,
     type: doc.type as InterviewType,
-    roundNumber: (doc as InterviewDocument & { roundNumber?: number }).roundNumber ?? 1,
     status: doc.status as InterviewStatus,
+    liveKitRoomName: doc.liveKitRoomName ?? null,
     scheduledAt: doc.scheduledAt,
-    durationMinutes: doc.durationMinutes,
-    meetingLink: doc.meetingLink,
-    feedback: doc.feedback,
-    rescheduleRequest: doc.rescheduleRequest as RescheduleRequest | undefined,
-    cancellationReason: doc.cancellationReason,
+    startedAt: doc.startedAt ?? null,
+    completedAt: doc.completedAt ?? null,
     createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt
   });
 };
 
+
 export const toInterviewPersistence = (entity: Interview): Record<string, unknown> => {
-  const props = entity.toJSON();
   return {
-    jobId: props.jobId,
-    applicationId: props.applicationId,
-    studentId: props.studentId,
-    companyId: props.companyId,
-    interviewerId: props.interviewerId,
-    title: props.title,
-    type: props.type,
-    roundNumber: props.roundNumber,
-    status: props.status,
-    scheduledAt: props.scheduledAt,
-    durationMinutes: props.durationMinutes,
-    meetingLink: props.meetingLink,
-    feedback: props.feedback,
-    rescheduleRequest: props.rescheduleRequest,
-    cancellationReason: props.cancellationReason,
+    studentId: entity.studentId,
+    jobId: entity.jobId,
+    companyId: entity.companyId,
+    type: entity.type,
+    status: entity.status,
+    liveKitRoomName: entity.liveKitRoomName,
+    scheduledAt: entity.scheduledAt,
+    startedAt: entity.startedAt,
+    completedAt: entity.completedAt,
   };
 };

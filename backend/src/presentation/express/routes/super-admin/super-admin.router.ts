@@ -14,7 +14,7 @@ router.get("/dashboard/stats", superAdminController.getStats);
 router.get("/organizations", superAdminController.getOrganizations);
 router.get("/students", superAdminController.getStudents);
 router.get("/companies", superAdminController.getCompanies);
-router.get("/interviewers", superAdminController.getInterviewers);
+
 router.get("/billing", superAdminController.getBillingInvoices);
 
 // Management actions
