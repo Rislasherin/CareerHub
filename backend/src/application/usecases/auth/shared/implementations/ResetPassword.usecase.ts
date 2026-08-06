@@ -1,6 +1,6 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { IJwtService } from "@application/interfaces/IJwt.service";
@@ -16,7 +16,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     private readonly bcryptService: IBcryptService,
     private readonly studentRepo: IStudentRepository,
     private readonly hrRepo: IHRUserRepository,
-    private readonly interviewerRepo: IInterviewerRepository,
+    
     private readonly collegeAdminRepo: ICollegeAdminRepository,
     private readonly superAdminRepo: ISuperAdminRepository
   ) { }
@@ -40,10 +40,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         await this.hrRepo.update(id, { password: hashedPassword } as never);
         updated = true;
         break;
-      case 'interviewer':
-        await this.interviewerRepo.update(id, { password: hashedPassword } as never);
-        updated = true;
-        break;
+
       case 'college_admin':
         await this.collegeAdminRepo.update(id, { password: hashedPassword } as never);
         updated = true;

@@ -3,7 +3,7 @@ import { IJwtService, JwtPayload } from "@application/interfaces/IJwt.service";
 import { UnauthorizedError } from "@application/errors/AuthError";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
@@ -21,7 +21,7 @@ export class AuthMiddleware {
     private readonly _jwtService: IJwtService,
     private readonly _studentRepository: IStudentRepository,
     private readonly _hrUserRepository: IHRUserRepository,
-    private readonly _interviewerRepository: IInterviewerRepository,
+
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _superAdminRepository: ISuperAdminRepository,
     private readonly _organizationRepository: IOrganizationRepository,
@@ -76,17 +76,7 @@ export class AuthMiddleware {
           break;
         }
 
-        case Role.INTERVIEWER: {
-          const interviewerUser = this._toJson(await this._interviewerRepository.findById(decoded.id));
-          if (interviewerUser && interviewerUser.companyId) {
-            const company = this._toJson(await this._companyRepository.findById(interviewerUser.companyId as string));
-            if (company && company.status === UserStatus.BLOCKED) {
-              throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
-            }
-          }
-          user = interviewerUser;
-          break;
-        }
+
 
         case Role.COLLEGE_ADMIN: {
           const collegeUser = this._toJson(await this._collegeAdminRepository.findById(decoded.id));

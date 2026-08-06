@@ -2,7 +2,7 @@ import { IEmailService } from "@application/services/IEmailService";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { Role } from "@domain/enums/Roles.enum";
@@ -17,7 +17,7 @@ export class UpdateUserStatusUseCase implements IUpdateUserStatusUseCase {
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
     private readonly companyRepo: ICompanyRepository,
-    private readonly interviewerRepo: IInterviewerRepository,
+    
     private readonly hrRepo: IHRUserRepository,
     private readonly collegeAdminRepo: ICollegeAdminRepository,
     private readonly emailService: IEmailService
@@ -56,9 +56,6 @@ export class UpdateUserStatusUseCase implements IUpdateUserStatusUseCase {
         }
         break;
       }
-      case Role.INTERVIEWER:
-        await this.interviewerRepo.updateStatus(id, status, adminRole);
-        break;
       default:
         throw new AppError("Invalid role for status update", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }

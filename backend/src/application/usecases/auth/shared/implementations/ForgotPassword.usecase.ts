@@ -2,7 +2,7 @@ import { IEmailService } from "@application/services/IEmailService";
 import { IJwtService } from "@application/interfaces/IJwt.service";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 
@@ -15,7 +15,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     private readonly jwtService: IJwtService,
     private readonly studentRepo: IStudentRepository,
     private readonly hrRepo: IHRUserRepository,
-    private readonly interviewerRepo: IInterviewerRepository,
+    
     private readonly collegeAdminRepo: ICollegeAdminRepository,
     private readonly superAdminRepo: ISuperAdminRepository
   ) { }
@@ -32,10 +32,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
       if (user) role = 'hr';
     }
 
-    if (!user) {
-      user = await this.interviewerRepo.findByEmail(email);
-      if (user) role = 'interviewer';
-    }
+
 
     if (!user) {
       user = await this.collegeAdminRepo.findByEmail(email);

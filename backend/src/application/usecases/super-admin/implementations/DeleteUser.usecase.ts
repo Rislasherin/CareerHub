@@ -1,7 +1,7 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { ICompanyRepository } from "@domain/repositories/ICompanyRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
 import { Role } from "@domain/enums/Roles.enum";
 import { AppError } from "@application/errors/AppError";
@@ -15,7 +15,7 @@ export class DeleteUserUseCase implements IDeleteUserUseCase {
     private readonly studentRepo: IStudentRepository,
     private readonly orgRepo: IOrganizationRepository,
     private readonly companyRepo: ICompanyRepository,
-    private readonly interviewerRepo: IInterviewerRepository,
+    
     private readonly hrRepo: IHRUserRepository
   ) { }
 
@@ -29,9 +29,6 @@ export class DeleteUserUseCase implements IDeleteUserUseCase {
         break;
       case Role.HR:
         await this.hrRepo.delete(id);
-        break;
-      case Role.INTERVIEWER:
-        await this.interviewerRepo.delete(id);
         break;
       default:
         throw new AppError("Invalid role for deletion", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);

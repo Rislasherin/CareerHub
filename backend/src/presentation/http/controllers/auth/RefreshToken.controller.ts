@@ -8,7 +8,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IHRUserRepository } from "@domain/repositories/IHRUserRepository";
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { ISuperAdminRepository } from "@domain/repositories/ISuperAdminRepository";
 import { UserStatus } from "@domain/enums/user.status.enum";
@@ -20,7 +20,7 @@ export class RefreshTokenController {
     private readonly _jwtService: IJwtService,
     private readonly _studentRepository: IStudentRepository,
     private readonly _hrUserRepository: IHRUserRepository,
-    private readonly _interviewerRepository: IInterviewerRepository,
+    
     private readonly _collegeAdminRepository: ICollegeAdminRepository,
     private readonly _superAdminRepository: ISuperAdminRepository
   ) { }
@@ -47,9 +47,6 @@ export class RefreshTokenController {
         break;
       case Role.HR:
         user = await this._hrUserRepository.findById(payload.id);
-        break;
-      case Role.INTERVIEWER:
-        user = await this._interviewerRepository.findById(payload.id);
         break;
       case Role.COLLEGE_ADMIN:
         user = await this._collegeAdminRepository.findById(payload.id);
