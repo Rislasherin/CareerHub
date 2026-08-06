@@ -17,7 +17,7 @@ import { IGetCandidateProfileUseCase } from "@application/usecases/hr/job-engine
 import { IGetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobApplications.usecase";
 import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateApplicationStatus.usecase";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
-import { IScheduleInterviewUseCase } from "@application/usecases/hr/job-engine/interfaces/IScheduleInterview.usecase";
+
 import { IGetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRHireRequests.usecase";
 
 export class HRJobController {
@@ -31,8 +31,7 @@ export class HRJobController {
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
     private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
     private readonly _getHRHireRequestsUseCase: IGetHRHireRequestsUseCase,
-    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase,
-    private readonly _sheduleInterviewUseCase: IScheduleInterviewUseCase
+    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase
   ) { }
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
@@ -156,13 +155,5 @@ export class HRJobController {
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
-  sheduleInterview = asyncHandler(async (req: Request, res: Response) => {
-    const companyId = req.user?.companyId;
-    if (!companyId) {
-      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
-    }
 
-    const interview = await this._sheduleInterviewUseCase.execute(companyId, req.body);
-    sendSuccess(res, interview.toJSON(), MESSAGES.SUCCESS.INTERVIEW_SCHEDULED, HttpStatus.CREATED);
-  });
 }

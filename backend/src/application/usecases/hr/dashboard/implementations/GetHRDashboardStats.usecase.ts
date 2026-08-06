@@ -1,12 +1,12 @@
-import { IInterviewerRepository } from "@domain/repositories/IInterviewerRepository";
+
 import { IGetHRDashboardStatsUseCase } from "../interfaces/IGetHRDashboardStats.usecase";
 
 export class GetHRDashboardStatsUseCase implements IGetHRDashboardStatsUseCase {
-  constructor(private readonly _interviewerRepository: IInterviewerRepository) { }
+  constructor() { }
 
   async execute(companyId: string): Promise<any> {
     // Retrieve actual active interviewer count from the database
-    const { total: activeInterviewers } = await this._interviewerRepository.searchInterviewers(companyId, "", 1, 1);
+    const activeInterviewers = 0;
 
     return {
       stats: {
