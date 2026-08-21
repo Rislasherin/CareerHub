@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 
 export interface IGetResumesUseCase {
     execute(studentId: string): Promise<Resume[]>;

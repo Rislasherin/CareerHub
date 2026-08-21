@@ -135,3 +135,14 @@ export const makeHROfferController = () => {
   );
 };
 
+import { HRInterviewController } from "@presentation/http/controllers/hr/hr.interview.controller";
+import { ScheduleInterviewUseCase } from "@application/usecases/hr/interview/ScheduleInterview.usecase";
+import { GetHRInterviewsUseCase } from "@application/usecases/hr/interview/GetHRInterviews.usecase";
+
+export const makeHRInterviewController = () => {
+  return new HRInterviewController(
+    new ScheduleInterviewUseCase(interviewRepository, jobApplicationRepository),
+    new GetHRInterviewsUseCase(interviewRepository, studentRepository, jobRepository)
+  );
+};
+

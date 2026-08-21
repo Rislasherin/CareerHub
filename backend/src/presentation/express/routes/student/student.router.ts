@@ -37,6 +37,7 @@ router.delete('/profile/resume', studentController.deleteResume.bind(studentCont
 
 router.get("/interviews", studentController.getInterviews.bind(studentController));
 
+
 import { validateSchema } from "@presentation/express/middlewares/validateSchema";
 import {
   SyncProfileSchema,

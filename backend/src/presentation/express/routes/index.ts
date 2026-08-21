@@ -14,7 +14,6 @@ import { maintenanceMiddleware } from "../middlewares/maintenance.middleware";
 import skillRouter from "./skill.router";
 
 import subscriptionRouter from './college/subscription.router';
-import aiInterviewRouter from './ai-interview/ai-interview.router';
 
 const router = Router();
 
@@ -34,7 +33,6 @@ router.use("/super-admin", superAdminRouter);
 router.use("/skills", skillRouter);
 
 router.use('/subscription', subscriptionRouter);
-router.use('/ai-interview', aiInterviewRouter);
 
 
 export default router;

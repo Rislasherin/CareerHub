@@ -5,9 +5,9 @@ import { ValidationError } from "@application/errors/validation.error";
 
 type ClassConstructor<T extends object> = new (...args: unknown[]) => T;
 
-export const validateDto = <T extends object>(dtoClass: ClassConstructor<T>) => {
+export const validateDto = <T extends object>(dtoClass: ClassConstructor<T>, source: 'body' | 'query' | 'params' = 'body') => {
   return async (req: Request, _res: Response, next: NextFunction) => {
-    const dto = plainToInstance(dtoClass, req.body, {
+    const dto = plainToInstance(dtoClass, req[source], {
       excludeExtraneousValues: true,
     });
 
@@ -22,7 +22,7 @@ export const validateDto = <T extends object>(dtoClass: ClassConstructor<T>) => 
       return next(new ValidationError(messages));
     }
 
-    req.body = dto;
+    req[source] = dto;
     next();
   };
 };

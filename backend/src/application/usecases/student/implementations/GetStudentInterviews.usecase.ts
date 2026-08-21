@@ -29,11 +29,10 @@ export class GetStudentInterviewsUseCase implements IGetStudentInterviewsUseCase
                 type: inv.type,
                 status: inv.status,
                 scheduledAt: inv.scheduledAt,
-                liveKitRoomName: inv.liveKitRoomName,
                 startedAt: inv.startedAt,
                 completedAt: inv.completedAt,
                 companyName,
-                interviewerName: 'AI Interviewer'
+                interviewerName
             };
         }));
     }

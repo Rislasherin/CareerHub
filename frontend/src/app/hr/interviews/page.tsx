@@ -33,18 +33,8 @@ export default function InterviewsPage() {
     }
   };
 
-  const fetchInterviewers = async () => {
-    try {
-      const res: any = await apiClient.get(API_ROUTES.HR.INTERVIEWERS);
-      setInterviewers(res.data?.interviewers || res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch interviewers", error);
-    }
-  };
-
   useEffect(() => {
     fetchInterviews();
-    fetchInterviewers();
   }, []);
 
   const getStatusBadge = (status: string) => {

@@ -1,7 +1,7 @@
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { IResumeRepository } from '@domain/repositories/AI/IResumeRepository';
+import { IResumeRepository } from '@domain/repositories/IResumeRepository';
 import { ResumeTemplateContext } from '@application/usecases/student/AI/templates/ResumeTemplateContext';
 import { IPreviewResumeHtmlUseCase } from "../interfaces/IPreviewResumeHtml.usecase";
 import { PreviewCacheService } from "@infrastructure/cache/PreviewCache.service";

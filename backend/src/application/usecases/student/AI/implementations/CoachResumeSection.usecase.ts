@@ -1,17 +1,17 @@
-import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
 import { IAIService, ISectionCoachResult } from "@application/interfaces/IAIService";
 import { ICoachResumeSectionUseCase } from "../interfaces/ICoachResumeSection.usecase";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 
 
 export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
     constructor(
         private readonly _resumeRepository: IResumeRepository,
         private readonly _aiService: IAIService
-    ) {}
+    ) { }
 
     async execute(resumeId: string, sectionName: string, instructions: string, targetRole: string): Promise<ISectionCoachResult> {
         const resume = await this._resumeRepository.findById(resumeId);
@@ -22,7 +22,7 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
         // grab just the section they want coached
         type ResumeSectionData = Resume['experience'] | Resume['projects'] | Resume['skills'] | Resume['education'] | string;
         let sectionData: ResumeSectionData | undefined;
-        switch(sectionName.toLowerCase()) {
+        switch (sectionName.toLowerCase()) {
             case 'experience': sectionData = resume.experience; break;
             case 'projects': sectionData = resume.projects; break;
             case 'skills': sectionData = resume.skills; break;
@@ -32,8 +32,8 @@ export class CoachResumeSectionUseCase implements ICoachResumeSectionUseCase {
         }
 
         // don't bother AI if there's nothing to coach
-        const isEmpty = !sectionData || 
-            (Array.isArray(sectionData) && sectionData.length === 0) || 
+        const isEmpty = !sectionData ||
+            (Array.isArray(sectionData) && sectionData.length === 0) ||
             (typeof sectionData === 'string' && sectionData.trim().length === 0);
 
         if (isEmpty) {

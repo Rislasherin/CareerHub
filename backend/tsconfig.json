@@ -51,6 +51,7 @@
     "node_modules",
     "dist",
     "scratch",
-    ".gemini"
+    ".gemini",
+    "src/worker.ts"
   ]
 }

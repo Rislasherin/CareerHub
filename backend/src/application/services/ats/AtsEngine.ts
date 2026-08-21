@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "./rules/IAtsRule";
 import { AtsReport, RuleStatus, ScoringProfile } from "./types/ats.types";
 
@@ -12,7 +12,7 @@ export class AtsEngine {
     public async evaluate(resume: Resume, profile: ScoringProfile): Promise<AtsReport> {
         let maxScore = 0;
         let earnedScore = 0;
-        
+
         const report: AtsReport = {
             overallScore: 0,
             sectionScores: {},
@@ -61,7 +61,7 @@ export class AtsEngine {
                 const partialPoints = config.weight / 2;
                 earnedScore += partialPoints;
                 report.sectionScores[rule.category].earned += partialPoints;
-                
+
                 report.warnings.push(`[${rule.category}] ${result.feedback}`);
                 report.improvements.push(`[${rule.category}] ${result.feedback}`);
             } else if (result.status === RuleStatus.FAIL) {
@@ -74,7 +74,7 @@ export class AtsEngine {
         }
 
         report.overallScore = maxScore > 0 ? Math.round((earnedScore / maxScore) * 100) : 0;
-        
+
         Object.keys(report.sectionScores).forEach(key => {
             const section = report.sectionScores[key];
             section.percentage = section.max > 0 ? Math.round((section.earned / section.max) * 100) : 0;

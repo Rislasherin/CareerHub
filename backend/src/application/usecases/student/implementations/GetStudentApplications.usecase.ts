@@ -65,8 +65,7 @@ export class GetStudentApplicationsUseCase implements IGetStudentApplicationsUse
             interviewData = {
               type: latestInterview.type,
               status: latestInterview.status,
-              scheduledAt: latestInterview.scheduledAt,
-              liveKitRoomName: latestInterview.liveKitRoomName
+              scheduledAt: latestInterview.scheduledAt
             };
           }
         } catch (e) {

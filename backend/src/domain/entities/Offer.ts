@@ -1,4 +1,4 @@
-import { OfferStatus } from "@domain/enums/OfferStatus.enum";
+ import { OfferStatus } from "@domain/enums/OfferStatus.enum";
 import { Role } from "@domain/enums/Roles.enum";
 
 export interface OfferProps {

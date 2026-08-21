@@ -1,5 +1,5 @@
-import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
+import { Resume } from "@domain/entities/resume.entity";
 import { ResumeDocument, ResumeModel } from "@infrastructure/database/models/student/resume.model";
 import { ResumeMapper } from "@application/mappers/resume.mapper";
 import { BaseRepository } from "./BaseRepository";

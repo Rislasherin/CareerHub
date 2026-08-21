@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { makeHRDashboardController, makeHRJobController, makeHROfferController } from "@infrastructure/di/hr.factory";
+import { makeHRDashboardController, makeHRJobController, makeHROfferController, makeHRInterviewController } from "@infrastructure/di/hr.factory";
 import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
@@ -9,6 +9,7 @@ const router = Router();
 const hrDashboardController = makeHRDashboardController();
 const hrJobController = makeHRJobController();
 const hrOfferController = makeHROfferController();
+const hrInterviewController = makeHRInterviewController();
 
 // Protect all HR routes
 router.use(authMiddleware.protect);
@@ -31,6 +32,9 @@ router.post("/offers", hrOfferController.generateOffer);
 router.get("/offers", hrOfferController.getHROffers);
 router.post("/offers/:id/resend", hrOfferController.resendOfferEmail);
 router.get("/offers/:id/pdf", hrOfferController.downloadOfferPdf);
+
+router.post("/interviews", hrInterviewController.scheduleInterview);
+router.get("/interviews", hrInterviewController.getInterviews);
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);

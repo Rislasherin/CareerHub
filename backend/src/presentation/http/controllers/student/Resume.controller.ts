@@ -19,7 +19,7 @@ import { ICreateResumeUseCase } from "@application/usecases/student/AI/interface
 import { IGetResumesUseCase } from "@application/usecases/student/AI/interfaces/IGetResumes.usecase";
 import { IMatchJobDescriptionUseCase } from "@application/usecases/student/AI/interfaces/IMatchJobDescription.usecase";
 import { ICoachResumeSectionUseCase } from "@application/usecases/student/AI/interfaces/ICoachResumeSection.usecase";
-import { IExperience, IProject, IResumeSettings } from "@domain/entities/AI/resume.entity";
+import { IExperience, IProject, IResumeSettings } from "@domain/entities/resume.entity";
 
 export class ResumeController {
     constructor(

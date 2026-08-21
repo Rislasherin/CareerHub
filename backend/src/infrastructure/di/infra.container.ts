@@ -22,8 +22,6 @@ import { CreateSystemNotificationUseCase } from "@application/usecases/common/no
 import { SubscriptionRepository } from "@infrastructure/repositories/subscription.repository";
 import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
 import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
-import { LiveKitMediaServer } from "@infrastructure/services/livekit/LiveKitMediaServer";
-import { RabbitMQBroker } from "@infrastructure/services/queue/RabbitMQBroker";
 
 export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
@@ -66,13 +64,3 @@ export const interviewRepository = new InterviewRepository();
 export const paymentGateway = new RazorpayGateway();
 
 // ─── AI Interview Infrastructure ──────────────────────────────────────────────
-
-export const liveKitMediaServer = new LiveKitMediaServer(
-  process.env.LIVEKIT_HOST!,
-  process.env.LIVEKIT_API_KEY!,
-  process.env.LIVEKIT_API_SECRET!
-);
-
-export const rabbitMQBroker = new RabbitMQBroker(
-  process.env.RABBITMQ_URL!
-);

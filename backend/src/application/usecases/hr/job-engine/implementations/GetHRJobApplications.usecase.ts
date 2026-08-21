@@ -50,8 +50,7 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
                   id: props.id,
                   type: props.type,
                   status: props.status,
-                  scheduledAt: props.scheduledAt,
-                  liveKitRoomName: props.liveKitRoomName
+                  scheduledAt: props.scheduledAt
                 };
               });
           } catch (e) { }

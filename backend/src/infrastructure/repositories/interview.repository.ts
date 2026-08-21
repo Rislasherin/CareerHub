@@ -25,7 +25,7 @@ export class InterviewRepository extends BaseRepository<Interview,InterviewDocum
     async findByStudentId(studentId: string): Promise<Interview[]> {
         const docs = await this.model
         .find({studentId,isDeleted: {$ne: true}})
-        .sort({scheduledAt: 1});
+        .sort({scheduledAt: -1});
 
         return docs.map(doc => this.toEntity(doc as InterviewDocument));
     }
@@ -33,14 +33,14 @@ export class InterviewRepository extends BaseRepository<Interview,InterviewDocum
     async findByJobId(jobId: string): Promise<Interview[]> {
         const docs = await this.model
         .find({jobId, isDeleted: {$ne: true}})
-        .sort({scheduledAt: 1})
+        .sort({scheduledAt: -1})
 
         return docs.map(doc => this.toEntity(doc as InterviewDocument))
     }
     async findByCompanyId(companyId: string): Promise<Interview[]> {
         const docs = await this.model
         .find({companyId, isDeleted: {$ne: true}})
-        .sort({scheduledAt: 1})
+        .sort({scheduledAt: -1})
 
         return docs.map(doc => this.toEntity(doc as InterviewDocument))
     }

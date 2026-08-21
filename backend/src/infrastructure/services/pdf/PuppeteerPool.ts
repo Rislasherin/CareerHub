@@ -1,5 +1,5 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
-import { logger } from '@infrastructure/logger/logger';
+import { Logger as logger } from '@infrastructure/logger/logger';
 
 class PuppeteerPool {
     private browser: Browser | null = null;

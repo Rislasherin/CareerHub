@@ -7,7 +7,7 @@ const logFormat = printf(({ level, message, timestamp, stack }) => {
   return `${timestamp} [${level}]: ${stack || message}`;
 });
 
-export const logger = winston.createLogger({
+export const Logger = winston.createLogger({
   level: process.env.NODE_ENV === "production" ? "warn" : "info",
   format: combine(colorize(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), errors({ stack: true }), logFormat),
   transports: [
@@ -25,3 +25,5 @@ export const logger = winston.createLogger({
     }),
   ],
 });
+
+export { Logger as logger };

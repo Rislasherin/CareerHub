@@ -1,4 +1,4 @@
-import { Resume } from '@domain/entities/AI/resume.entity';
+import { Resume } from '@domain/entities/resume.entity';
 import { ResumeDocument } from '@infrastructure/database/models/student/resume.model';
 
 export class ResumeMapper {

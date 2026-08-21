@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { logger } from "@infrastructure/logger/logger";
+import { Logger } from "@infrastructure/logger/logger";
 
 export const errorMiddleware = (
   err: Error,
@@ -11,7 +11,7 @@ export const errorMiddleware = (
   _next: NextFunction
 ) => {
   if (err instanceof AppError) {
-    logger.warn(`[${err.errorCode}] ${err.message}`);
+    Logger.warn(`[${err.errorCode}] ${err.message}`);
     return res.status(err.statusCode).json({
       success: false,
       error: {
@@ -21,7 +21,7 @@ export const errorMiddleware = (
     });
   }
 
-  logger.error("Unhandled error", err);
+  Logger.error("Unhandled error", err);
   return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
     success: false,
     error: {

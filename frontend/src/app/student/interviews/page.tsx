@@ -221,25 +221,23 @@ export default function StudentInterviewsPage() {
                         <div className="bg-slate-50 rounded-xl p-3">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Mode</p>
                           <p className="font-bold text-slate-800 text-sm">
-                            {inv.meetingLink ? 'Google Meet' : 'In-Person'}
+                            AI Interview
                           </p>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3 relative group overflow-hidden">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Venue</p>
                           <p className="font-bold text-slate-800 text-sm truncate">
-                            {inv.meetingLink ? inv.meetingLink.replace('https://', '') : 'TBD'}
+                            CareerHub AI Platform
                           </p>
                           
                           {/* Join Link Overlay (Hover) */}
-                          {inv.meetingLink && isUpcoming && (
-                            <a 
-                              href={inv.meetingLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="absolute inset-0 bg-rose-500 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          {isUpcoming && (
+                            <button 
+                              onClick={() => window.location.href = `/student/interviews/${inv.id}`}
+                              className="absolute inset-0 bg-rose-500 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none"
                             >
-                              Join Meeting
-                            </a>
+                              Join AI Interview
+                            </button>
                           )}
                         </div>
                       </div>

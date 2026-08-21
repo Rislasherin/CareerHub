@@ -1,4 +1,4 @@
-import { Resume} from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 
 export interface IResumeRepository {
   findById(id: string): Promise<Resume | null>;

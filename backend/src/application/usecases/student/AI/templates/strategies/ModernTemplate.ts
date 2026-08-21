@@ -1,5 +1,5 @@
 import { IResumeTemplateStrategy } from "../IResumeTemplateStrategy";
-import { Resume, IExperience, IProject, IEducation } from "@domain/entities/AI/resume.entity";
+import { Resume, IExperience, IProject, IEducation } from "@domain/entities/resume.entity";
 import { categorizeSkills, formatLink, ensureHttps } from "../utils/TemplateUtils";
 
 export class ModernTemplate implements IResumeTemplateStrategy {
@@ -8,7 +8,7 @@ export class ModernTemplate implements IResumeTemplateStrategy {
     generateHtml(resume: Resume, visibilityMap?: Record<string, boolean>): string {
         const categorizedSkills = categorizeSkills(resume.skills || []);
         const themeColor = resume.settings?.themeColor || '#2563eb';
-        
+
         return `
             <!DOCTYPE html>
             <html lang="en">
@@ -110,7 +110,7 @@ export class ModernTemplate implements IResumeTemplateStrategy {
         if (resume.personalInfo?.linkedinUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.linkedinUrl)}">${formatLink(resume.personalInfo.linkedinUrl)}</a>`);
         if (resume.personalInfo?.githubUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.githubUrl)}">${formatLink(resume.personalInfo.githubUrl)}</a>`);
         if (resume.personalInfo?.portfolioUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.portfolioUrl)}">${formatLink(resume.personalInfo.portfolioUrl)}</a>`);
-        
+
         return `
             <header class="header">
                 <h1>${resume.personalInfo?.fullName || 'Anonymous User'}</h1>
@@ -133,10 +133,10 @@ export class ModernTemplate implements IResumeTemplateStrategy {
     private renderExperience(resume: Resume, themeColor: string): string {
         if (!resume.experience || resume.experience.length === 0) return '';
         const itemsHtml = resume.experience.map((exp: IExperience) => {
-            const start = exp.startDate ? new Date(exp.startDate).toLocaleDateString('en-US', {month: 'short', year: 'numeric'}) : '';
-            const end = exp.isCurrent ? 'Present' : (exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', {month: 'short', year: 'numeric'}) : '');
+            const start = exp.startDate ? new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
+            const end = exp.isCurrent ? 'Present' : (exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '');
             const bullets = (exp.bulletPoints || []).filter(b => b.trim() !== '').map(b => `<li>${b.trim()}</li>`).join('');
-            
+
             return `
                 <div class="item-block">
                     <div class="item-header">
@@ -182,7 +182,7 @@ export class ModernTemplate implements IResumeTemplateStrategy {
     private renderSkills(categorizedSkills: Record<string, string[]>, themeColor: string): string {
         const validCategories = Object.entries(categorizedSkills).filter(([_, items]) => items.length > 0);
         if (validCategories.length === 0) return '';
-        
+
         const skillsHtml = validCategories.map(([cat, items]) => `
             <div class="skill-row">
                 <div class="skill-cat">${cat}</div>

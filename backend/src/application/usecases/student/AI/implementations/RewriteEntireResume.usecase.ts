@@ -1,7 +1,7 @@
 import { IAIService } from "@application/interfaces/IAIService";
 import { IRewriteEntireResumeUseCase } from "../interfaces/IRewriteEntireResume.usecase";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
-import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
@@ -11,12 +11,12 @@ export class RewriteEntireResumeUseCase implements IRewriteEntireResumeUseCase {
         private readonly _aiService: IAIService,
         private readonly _studentRepository: IStudentRepository,
         private readonly _resumeRepository: IResumeRepository
-    ) {}
+    ) { }
 
     async execute(resumeId: string, targetRole: string): Promise<Record<string, unknown>> {
         // touching the resume snapshot only, not the master profile
         const resume = await this._resumeRepository.findById(resumeId);
-        
+
         if (!resume) {
             throw new AppError("Resume not found. Please sync your profile first.", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }

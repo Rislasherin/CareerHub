@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "../IAtsRule";
 import { RuleResult, RuleStatus, AtsSection } from "../../types/ats.types";
 
@@ -15,7 +15,7 @@ export class ExperienceDetailRule implements IAtsRule {
     evaluate(resume: Resume): RuleResult<ExperienceMetadata> {
         const totalRoles = resume.experience.length;
         if (totalRoles === 0) {
-             return { ruleId: this.id, status: RuleStatus.SKIPPED, feedback: 'No experience to evaluate.' };
+            return { ruleId: this.id, status: RuleStatus.SKIPPED, feedback: 'No experience to evaluate.' };
         }
 
         let weakRoles = 0;
@@ -28,7 +28,7 @@ export class ExperienceDetailRule implements IAtsRule {
         return {
             ruleId: this.id,
             status,
-            feedback: status === RuleStatus.PASS 
+            feedback: status === RuleStatus.PASS
                 ? 'All experience entries have sufficient detail.'
                 : `${weakRoles} out of ${totalRoles} experience entries have fewer than 3 bullet points.`,
             metadata: { totalRoles, weakRoles }

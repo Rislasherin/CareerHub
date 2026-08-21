@@ -1,13 +1,13 @@
- import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { ICreateResumeUseCase } from "../interfaces/ICreateResume.usecase";
 
 export class CreateResumeUseCase implements ICreateResumeUseCase {
     constructor(
         private readonly _studentRepository: IStudentRepository,
         private readonly _resumeRepository: IResumeRepository
-    ) {}
+    ) { }
 
     async execute(studentId: string, title?: string): Promise<Resume> {
         const student = await this._studentRepository.findById(studentId);
@@ -41,7 +41,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
         };
         // education section
         newResume.education = [{
-            institution: "University", 
+            institution: "University",
             degree: student.degree || "",
             graduationYear: student.graduationYear || 0,
             gpa: student.cgpa?.toString()
@@ -51,7 +51,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
             newResume.experience = student.experience.map(exp => ({
                 company: exp.company,
                 role: exp.role,
-                startDate: new Date(), 
+                startDate: new Date(),
                 isCurrent: (exp.duration || '').toLowerCase().includes('present'),
                 bulletPoints: exp.summary ? exp.summary.split('.') : []
             }));
@@ -76,7 +76,7 @@ export class CreateResumeUseCase implements ICreateResumeUseCase {
         newResume.lastSyncedAt = new Date();
 
         await this._resumeRepository.save(newResume);
-        
+
         const allResumes = await this._resumeRepository.findAllByStudentId(studentId);
         return allResumes[0]; // sorted by updatedAt desc, so first one is the newest
     }

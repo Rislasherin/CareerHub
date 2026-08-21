@@ -3,7 +3,7 @@ import { IAIService, IAtsAnalysisResult, IJobMatchReport, ISectionCoachResult } 
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { logger } from "@infrastructure/logger/logger";
+import { Logger } from "@infrastructure/logger/logger";
 import { AIPromptRegistry } from "./prompts/AIPromptRegistry";
 
 export class GroqService implements IAIService {
@@ -29,7 +29,7 @@ export class GroqService implements IAIService {
             return JSON.parse(response.choices[0].message.content || '{}') as IAtsAnalysisResult;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] analyzeResume failed:", msg);
+            Logger.error("[Groq] analyzeResume failed:", msg);
             throw new AppError("Groq AI Resume Analysis failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -46,7 +46,7 @@ export class GroqService implements IAIService {
             return response.choices[0].message.content || text;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] autoFixText failed:", msg);
+            Logger.error("[Groq] autoFixText failed:", msg);
             throw new AppError("Groq AI Text Auto-Fix failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -65,7 +65,7 @@ export class GroqService implements IAIService {
             return JSON.parse(response.choices[0].message.content || '{}') as Record<string, unknown>;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] extractResumeFromDocument failed:", msg);
+            Logger.error("[Groq] extractResumeFromDocument failed:", msg);
             throw new AppError("Groq AI Document Extraction failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -84,7 +84,7 @@ export class GroqService implements IAIService {
             return JSON.parse(content || '{}') as Record<string, unknown>;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] rewriteEntireResume failed:", msg);
+            Logger.error("[Groq] rewriteEntireResume failed:", msg);
             throw new AppError("Groq AI Resume Rewrite failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -102,7 +102,7 @@ export class GroqService implements IAIService {
             return JSON.parse(response.choices[0].message.content || '{}') as IJobMatchReport;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] matchJobDescription failed:", msg);
+            Logger.error("[Groq] matchJobDescription failed:", msg);
             throw new AppError("Groq AI Job Description Match failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -120,7 +120,7 @@ export class GroqService implements IAIService {
             return JSON.parse(response.choices[0].message.content || '{}') as ISectionCoachResult;
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] coachSection failed:", msg);
+            Logger.error("[Groq] coachSection failed:", msg);
             throw new AppError("Groq AI Section Coaching failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -139,7 +139,7 @@ export class GroqService implements IAIService {
             return json.summary || '';
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error("[Groq] generateProfessionalSummary failed:", msg);
+            Logger.error("[Groq] generateProfessionalSummary failed:", msg);
             throw new AppError("Groq AI Summary Generation failed: " + msg, HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.INTERNAL_ERROR);
         }
     }

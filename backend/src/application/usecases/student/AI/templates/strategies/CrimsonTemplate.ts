@@ -1,5 +1,5 @@
 import { IResumeTemplateStrategy } from "../IResumeTemplateStrategy";
-import { Resume, IExperience, IProject, IEducation } from "@domain/entities/AI/resume.entity";
+import { Resume, IExperience, IProject, IEducation } from "@domain/entities/resume.entity";
 import { categorizeSkills, formatLink, ensureHttps } from "../utils/TemplateUtils";
 
 export class CrimsonTemplate implements IResumeTemplateStrategy {
@@ -7,7 +7,7 @@ export class CrimsonTemplate implements IResumeTemplateStrategy {
 
     generateHtml(resume: Resume, visibilityMap?: Record<string, boolean>): string {
         const categorizedSkills = categorizeSkills(resume.skills || []);
-        
+
         return `
             <!DOCTYPE html>
             <html lang="en">
@@ -115,7 +115,7 @@ export class CrimsonTemplate implements IResumeTemplateStrategy {
         if (resume.personalInfo?.linkedinUrl) contactLinks.push({ label: formatLink(resume.personalInfo.linkedinUrl), url: ensureHttps(resume.personalInfo.linkedinUrl), icon: "🔗" });
         if (resume.personalInfo?.githubUrl) contactLinks.push({ label: formatLink(resume.personalInfo.githubUrl), url: ensureHttps(resume.personalInfo.githubUrl), icon: "💻" });
         if (resume.personalInfo?.portfolioUrl) contactLinks.push({ label: formatLink(resume.personalInfo.portfolioUrl), url: ensureHttps(resume.personalInfo.portfolioUrl), icon: "🌐" });
-        
+
         return `
             <div class="contact-block">
                 ${contactLinks.map(link => `
@@ -131,7 +131,7 @@ export class CrimsonTemplate implements IResumeTemplateStrategy {
     private renderLeftSkills(categorizedSkills: Record<string, string[]>): string {
         const validCategories = Object.entries(categorizedSkills).filter(([_, items]) => items.length > 0);
         if (validCategories.length === 0) return '';
-        
+
         const skillsHtml = validCategories.map(([cat, items]) => `
             <div>
                 <div class="left-skill-cat">${cat}</div>
@@ -177,7 +177,7 @@ export class CrimsonTemplate implements IResumeTemplateStrategy {
             const start = exp.startDate ? new Date(exp.startDate).getFullYear() : '';
             const end = exp.isCurrent ? 'Present' : (exp.endDate ? new Date(exp.endDate).getFullYear() : '');
             const bullets = (exp.bulletPoints || []).filter(b => b.trim() !== '').map(b => `<li>${b.trim()}</li>`).join('');
-            
+
             return `
                 <div class="item-block">
                     <div class="item-header">

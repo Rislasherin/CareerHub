@@ -1,6 +1,6 @@
 import { IAIService, IAtsAnalysisResult, IJobMatchReport, ISectionCoachResult } from "@application/interfaces/IAIService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { logger } from "@infrastructure/logger/logger";
+import { Logger as logger } from "@infrastructure/logger/logger";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";

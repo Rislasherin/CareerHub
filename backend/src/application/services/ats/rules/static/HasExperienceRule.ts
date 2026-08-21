@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "../IAtsRule";
 import { RuleResult, RuleStatus, AtsSection } from "../../types/ats.types";
 
@@ -19,7 +19,7 @@ export class HasExperienceRule implements IAtsRule {
         return {
             ruleId: this.id,
             status: hasExperience ? RuleStatus.PASS : RuleStatus.FAIL,
-            feedback: hasExperience 
+            feedback: hasExperience
                 ? 'Contains work experience section.'
                 : 'Missing work experience section. Add relevant internships or jobs.',
             metadata: { hasExperience, totalEntries }

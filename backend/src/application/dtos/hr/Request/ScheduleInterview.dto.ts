@@ -10,8 +10,8 @@ export class SheduleInterviewDto {
 
     @Expose()
     @IsString()
-    @IsNotEmpty()
-    interviewerId!: string
+    @IsOptional()
+    interviewerId?: string
 
     @Expose()
     @IsString()

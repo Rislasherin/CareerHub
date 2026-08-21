@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "../IAtsRule";
 import { RuleResult, RuleStatus, AtsSection } from "../../types/ats.types";
 
@@ -9,10 +9,10 @@ export interface StarImpactMetadata {
 }
 
 const ACTION_VERBS = new Set([
-  'spearheaded', 'engineered', 'architected', 'optimized', 'built', 'developed', 
-  'implemented', 'scaled', 'reduced', 'increased', 'automated', 'designed', 
-  'led', 'created', 'accelerated', 'transformed', 'delivered', 'orchestrated',
-  'enhanced', 'revamped', 'launched', 'streamlined', 'pioneered', 'migrated'
+    'spearheaded', 'engineered', 'architected', 'optimized', 'built', 'developed',
+    'implemented', 'scaled', 'reduced', 'increased', 'automated', 'designed',
+    'led', 'created', 'accelerated', 'transformed', 'delivered', 'orchestrated',
+    'enhanced', 'revamped', 'launched', 'streamlined', 'pioneered', 'migrated'
 ]);
 
 const METRIC_REGEX = /\b(\d+%\b|\$\d+|\d+x\b|\d+\s*(k|m|b)\b|\b\d+\s*ms\b|\b\d+\s*users\b|\b\d+\s*percent\b|\b\d+\b)/i;

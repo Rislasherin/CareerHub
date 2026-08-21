@@ -1,5 +1,5 @@
 //Situation, Task, Action, Result
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "../IAtsRule";
 import { RuleResult, RuleStatus, AtsSection } from "../../types/ats.types";
 import { IAIService } from "@application/interfaces/IAIService";

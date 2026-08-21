@@ -1,5 +1,5 @@
 import { IResumeTemplateStrategy } from "./IResumeTemplateStrategy";
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { ProfessionalTemplate } from "./strategies/ProfessionalTemplate";
 import { ModernTemplate } from "./strategies/ModernTemplate";
 import { CrimsonTemplate } from "./strategies/CrimsonTemplate";

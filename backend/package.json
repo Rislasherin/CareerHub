@@ -9,17 +9,14 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "start:worker": "npx tsx src/worker.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@livekit/agents": "^1.6.1",
-    "@livekit/agents-plugin-openai": "^1.6.1",
-    "@livekit/agents-plugin-silero": "^1.6.1",
-    "@livekit/rtc-node": "^0.13.33",
+    "@qdrant/js-client-rest": "^1.19.0",
     "@supabase/supabase-js": "^2.49.4",
     "@types/multer": "^2.1.0",
-    "amqplib": "^2.0.1",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -31,7 +28,6 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "livekit-server-sdk": "^2.17.0",
     "mongoose": "^8.9.5",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
@@ -46,7 +42,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.10.8",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",

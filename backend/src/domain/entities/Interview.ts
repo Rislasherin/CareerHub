@@ -9,7 +9,6 @@ export class Interview {
   private _companyId: string;
   private _type: InterviewType;
   private _status: InterviewStatus;
-  private _liveKitRoomName: string | null;
   private _scheduledAt: Date;
   private _startedAt: Date | null;
   private _completedAt: Date | null;
@@ -22,7 +21,6 @@ export class Interview {
     companyId: string;
     type: InterviewType;
     status: InterviewStatus;
-    liveKitRoomName?: string | null;
     scheduledAt: Date;
     startedAt?: Date | null;
     completedAt?: Date | null;
@@ -34,7 +32,6 @@ export class Interview {
     this._companyId = props.companyId;
     this._type = props.type;
     this._status = props.status;
-    this._liveKitRoomName = props.liveKitRoomName ?? null;
     this._scheduledAt = props.scheduledAt;
     this._startedAt = props.startedAt ?? null;
     this._completedAt = props.completedAt ?? null;
@@ -49,7 +46,6 @@ export class Interview {
   get companyId() { return this._companyId; }
   get type() { return this._type; }
   get status() { return this._status; }
-  get liveKitRoomName() { return this._liveKitRoomName; }
   get scheduledAt() { return this._scheduledAt; }
   get startedAt() { return this._startedAt; }
   get completedAt() { return this._completedAt; }
@@ -63,29 +59,16 @@ export class Interview {
     this._status = InterviewStatus.WAITING;
   }
 
-  /** System has created the LiveKit room and is loading AI context. */
-  markAsPreparing(liveKitRoomName: string): void {
-    this._assertStatus(InterviewStatus.WAITING, 'markAsPreparing');
-    this._status = InterviewStatus.PREPARING;
-    this._liveKitRoomName = liveKitRoomName;
-  }
-
-  /** AI Worker has joined the room. Interview is now live. */
+  /** Interview has started. */
   markAsInProgress(): void {
-    this._assertStatus(InterviewStatus.PREPARING, 'markAsInProgress');
+    this._assertStatus(InterviewStatus.WAITING, 'markAsInProgress');
     this._status = InterviewStatus.IN_PROGRESS;
     this._startedAt = new Date();
   }
 
-  /** Conversation has ended, report generation has begun. */
-  markAsGenerating(): void {
-    this._assertStatus(InterviewStatus.IN_PROGRESS, 'markAsGenerating');
-    this._status = InterviewStatus.GENERATING;
-  }
-
-  /** Report is saved. Interview is fully complete. */
+  /** Interview is fully complete. */
   markAsCompleted(): void {
-    this._assertStatus(InterviewStatus.GENERATING, 'markAsCompleted');
+    this._assertStatus(InterviewStatus.IN_PROGRESS, 'markAsCompleted');
     this._status = InterviewStatus.COMPLETED;
     this._completedAt = new Date();
   }
@@ -108,6 +91,7 @@ export class Interview {
   isJoinable(): boolean {
     return this._status === InterviewStatus.SCHEDULED;
   }
+  
 
   toJSON() {
     return {
@@ -117,7 +101,6 @@ export class Interview {
       companyId: this._companyId,
       type: this._type,
       status: this._status,
-      liveKitRoomName: this._liveKitRoomName,
       scheduledAt: this._scheduledAt,
       startedAt: this._startedAt,
       completedAt: this._completedAt,

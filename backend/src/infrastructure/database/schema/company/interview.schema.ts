@@ -34,13 +34,7 @@ export const InterviewSchema = new Schema(
       required: true,
     },
 
-    // LiveKit room assigned when the student joins
-    liveKitRoomName: {
-      type: String,
-      default: null,
-    },
-
-    // Set when the AI worker joins and interview begins
+    // Set when the interview begins
     startedAt: {
       type: Date,
       default: null,

@@ -1,6 +1,6 @@
-import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
 import { IUpdateResumeSettingsUseCase } from "../interfaces/IUpdateResumeSettings.usecase";
-import { IResumeSettings, Resume, IExperience, IProject } from "@domain/entities/AI/resume.entity";
+import { IResumeSettings, Resume, IExperience, IProject } from "@domain/entities/resume.entity";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";

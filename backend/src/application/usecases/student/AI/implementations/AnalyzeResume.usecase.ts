@@ -8,7 +8,7 @@ import { IAnalyzeResumeUseCase } from "../interfaces/IAnalyzeResume.usecase";
 import { IAIService } from "@application/interfaces/IAIService";
 import { ExperiencedSoftwareEngineerProfile } from "@application/services/ats/profiles/ExperiencedProfile";
 import { EntryLevelStudentProfile } from "@application/services/ats/profiles/EntryLevelProfile";
-import { IResumeRepository } from "@domain/repositories/AI/IResumeRepository";
+import { IResumeRepository } from "@domain/repositories/IResumeRepository";
 import { AtsReport } from "@application/services/ats/types/ats.types";
 import { HasExperienceRule } from "@application/services/ats/rules/static/HasExperienceRule";
 import { GeminiAtsRule } from "@application/services/ats/rules/dynamic/GeminiAtsRule";

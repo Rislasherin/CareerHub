@@ -1,5 +1,5 @@
 import { IResumeTemplateStrategy } from "../IResumeTemplateStrategy";
-import { Resume, IExperience, IProject, IEducation } from "@domain/entities/AI/resume.entity";
+import { Resume, IExperience, IProject, IEducation } from "@domain/entities/resume.entity";
 import { categorizeSkills, formatLink, ensureHttps } from "../utils/TemplateUtils";
 
 export class ExecutiveTemplate implements IResumeTemplateStrategy {
@@ -7,7 +7,7 @@ export class ExecutiveTemplate implements IResumeTemplateStrategy {
 
     generateHtml(resume: Resume, visibilityMap?: Record<string, boolean>): string {
         const categorizedSkills = categorizeSkills(resume.skills || []);
-        
+
         return `
             <!DOCTYPE html>
             <html lang="en">
@@ -100,7 +100,7 @@ export class ExecutiveTemplate implements IResumeTemplateStrategy {
         if (resume.personalInfo?.linkedinUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.linkedinUrl)}" target="_blank">${formatLink(resume.personalInfo.linkedinUrl)}</a>`);
         if (resume.personalInfo?.githubUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.githubUrl)}" target="_blank">${formatLink(resume.personalInfo.githubUrl)}</a>`);
         if (resume.personalInfo?.portfolioUrl) contactLinks.push(`<a href="${ensureHttps(resume.personalInfo.portfolioUrl)}" target="_blank">${formatLink(resume.personalInfo.portfolioUrl)}</a>`);
-        
+
         return `
             <header class="header">
                 <h1>${resume.personalInfo?.fullName || 'Anonymous User'}</h1>
@@ -126,7 +126,7 @@ export class ExecutiveTemplate implements IResumeTemplateStrategy {
             const start = exp.startDate ? new Date(exp.startDate).getFullYear() : '';
             const end = exp.isCurrent ? 'Present' : (exp.endDate ? new Date(exp.endDate).getFullYear() : '');
             const bullets = (exp.bulletPoints || []).filter(b => b.trim() !== '').map(b => `<li>${b.trim()}</li>`).join('');
-            
+
             return `
                 <div class="item-block">
                     <div class="item-header">
@@ -170,7 +170,7 @@ export class ExecutiveTemplate implements IResumeTemplateStrategy {
     private renderSkills(categorizedSkills: Record<string, string[]>): string {
         const validCategories = Object.entries(categorizedSkills).filter(([_, items]) => items.length > 0);
         if (validCategories.length === 0) return '';
-        
+
         const skillsHtml = validCategories.map(([cat, items]) => `
             <div class="skill-row">
                 <div class="skill-cat">${cat}</div>

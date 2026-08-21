@@ -1,4 +1,4 @@
-import { Resume } from "@domain/entities/AI/resume.entity";
+import { Resume } from "@domain/entities/resume.entity";
 import { IAtsRule } from "../IAtsRule";
 import { RuleResult, RuleStatus, AtsSection } from "../../types/ats.types";
 
@@ -13,7 +13,7 @@ export class HasSkillsRule implements IAtsRule {
 
     evaluate(resume: Resume): RuleResult<SkillsMetadata> {
         const totalSkills = resume.skills ? resume.skills.length : 0;
-        
+
         if (totalSkills === 0) {
             return {
                 ruleId: this.id,

@@ -3,7 +3,7 @@ import { IAIService, IAtsAnalysisResult, IJobMatchReport, ISectionCoachResult } 
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { logger } from "@infrastructure/logger/logger";
+import { Logger as logger } from "@infrastructure/logger/logger";
 import { AIPromptRegistry } from "./prompts/AIPromptRegistry";
 
 export class OpenAIService implements IAIService {

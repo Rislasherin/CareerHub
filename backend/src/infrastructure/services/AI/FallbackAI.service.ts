@@ -1,5 +1,5 @@
 import { IAIService, IAtsAnalysisResult, IJobMatchReport, ISectionCoachResult } from "@application/interfaces/IAIService";
-import { logger } from "@infrastructure/logger/logger";
+import { Logger } from "@infrastructure/logger/logger";
 
 export class FallbackAIService implements IAIService {
     constructor(
@@ -12,11 +12,11 @@ export class FallbackAIService implements IAIService {
             return await fn(this.primaryService);
         } catch (error: unknown) {
             const errMsg = error instanceof Error ? error.message : String(error);
-            logger.warn(`[AIService] Primary AI provider operation '${operationName}' failed (${errMsg}). Attempting secondary provider...`);
+            Logger.warn(`[AIService] Primary AI provider operation '${operationName}' failed (${errMsg}). Attempting secondary provider...`);
             try {
                 return await fn(this.fallbackService);
             } catch (fallbackError: unknown) {
-                logger.error(`[AIService] Secondary AI provider operation '${operationName}' also failed. Propagating authentic exception.`);
+                Logger.error(`[AIService] Secondary AI provider operation '${operationName}' also failed. Propagating authentic exception.`);
                 throw fallbackError;
             }
         }

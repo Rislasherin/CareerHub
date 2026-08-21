@@ -8,8 +8,8 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 const app: Application = express();
 
-app.use(helmet());
-app.use(cors({ origin: [process.env.CLIENT_URL || "http://localhost:3000", "http://127.0.0.1:3000"], credentials: true }));
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

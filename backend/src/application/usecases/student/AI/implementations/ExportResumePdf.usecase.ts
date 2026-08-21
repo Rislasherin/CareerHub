@@ -3,7 +3,7 @@ import { IExportResumePdfUseCase } from "../interfaces/IExportResumePdf.usecase"
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { IResumeRepository } from '@domain/repositories/AI/IResumeRepository';
+import { IResumeRepository } from '@domain/repositories/IResumeRepository';
 import { ResumeTemplateContext } from '../templates/ResumeTemplateContext';
 import { puppeteerPool } from "@infrastructure/services/pdf/PuppeteerPool";
 
@@ -23,9 +23,9 @@ export class ExportResumePdfUseCase implements IExportResumePdfUseCase {
             if (!resume) {
                 throw new AppError("Resume not found", HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND);
             }
-            
-            const templateId = resume.settings?.templateId || "professional"; 
-            
+
+            const templateId = resume.settings?.templateId || "professional";
+
             const htmlContent = this._templateContext.generateHtml(templateId, resume as any);
 
             // use the pool so we're not spinning up a new browser every time

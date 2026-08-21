@@ -35,8 +35,6 @@ export class GenerateOfferUseCase implements IGenerateOfferUseCase {
         if (application.companyId !== companyId) {
             throw new AppError("Unauthorized", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);
         }
-
-
         const offer = Offer.create({
             jobId: application.jobId,
             applicationId: application.id as string,
