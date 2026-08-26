@@ -51,6 +51,23 @@ export const InterviewSchema = new Schema(
       required: true,
     },
 
+    durationMinutes: {
+      type: Number,
+      required: true,
+    },
+
+    configuration: {
+      types: [{ type: String, enum: Object.values(InterviewType) }],
+      difficulty: { type: String, default: 'MID' },
+      durationMinutes: { type: Number },
+      totalQuestions: { type: Number },
+      skills: [{ type: String }],
+      questionDistribution: { type: Schema.Types.Mixed },
+      customInstructions: [{ type: String }],
+      prohibitedTopics: [{ type: String }],
+      evaluationCriteria: [{ type: String }],
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
