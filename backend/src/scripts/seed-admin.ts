@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import path from 'path';
+import { Logger, LogCategory } from '../infrastructure/logger/logger';
 
 // Load env vars
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -10,9 +11,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/career
 
 async function seedAdmin() {
   try {
-    console.log('Connecting to MongoDB...');
+    Logger.info(LogCategory.SYSTEM_INFO, 'Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
-    console.log('Connected successfully.');
+    Logger.info(LogCategory.SYSTEM_INFO, 'Connected successfully.');
 
     const email = 'admin@careerhub.com';
     const password = 'AdminPassword123';
@@ -32,7 +33,7 @@ async function seedAdmin() {
     // Check if exists
     const existing = await SuperAdmin.findOne({ email });
     if (existing) {
-      console.log('Super Admin already exists with this email.');
+      Logger.info(LogCategory.SYSTEM_INFO, 'Super Admin already exists with this email.');
       process.exit(0);
     }
 
@@ -45,15 +46,15 @@ async function seedAdmin() {
       status: 'ACTIVE',
     });
 
-    console.log('-----------------------------------');
-    console.log('Super Admin Created Successfully!');
-    console.log(`Email: ${email}`);
-    console.log(`Password: ${password}`);
-    console.log('-----------------------------------');
+    Logger.info(LogCategory.SYSTEM_INFO, '-----------------------------------');
+    Logger.info(LogCategory.SYSTEM_INFO, 'Super Admin Created Successfully!');
+    Logger.info(LogCategory.SYSTEM_INFO, `Email: ${email}`);
+    Logger.info(LogCategory.SYSTEM_INFO, `Password: ${password}`);
+    Logger.info(LogCategory.SYSTEM_INFO, '-----------------------------------');
 
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding admin:', error);
+    Logger.error(LogCategory.SYSTEM_ERROR, 'Error seeding admin:', error);
     process.exit(1);
   }
 }
