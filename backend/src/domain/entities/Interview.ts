@@ -1,6 +1,6 @@
 import { InterviewStatus } from '@domain/enums/InterviewStatus.enum';
 import { InterviewType } from '@domain/enums/InterviewType.enum';
-
+import { InterviewConfiguration } from '@domain/value-objects/InterviewConfiguration';
 
 export class Interview {
   private _id: string;
@@ -13,6 +13,8 @@ export class Interview {
   private _startedAt: Date | null;
   private _completedAt: Date | null;
   private _createdAt: Date;
+  private readonly durationMinutes: number;
+  private _configuration?: InterviewConfiguration;
 
   constructor(props: {
     id: string;
@@ -25,6 +27,8 @@ export class Interview {
     startedAt?: Date | null;
     completedAt?: Date | null;
     createdAt: Date;
+    durationMinutes: number;
+    configuration?: InterviewConfiguration;
   }) {
     this._id = props.id;
     this._studentId = props.studentId;
@@ -36,6 +40,8 @@ export class Interview {
     this._startedAt = props.startedAt ?? null;
     this._completedAt = props.completedAt ?? null;
     this._createdAt = props.createdAt;
+    this.durationMinutes = props.durationMinutes;
+    this._configuration = props.configuration;
   }
 
   // ─── Getters ────────────────────────────────────────────────────────────────
@@ -50,6 +56,10 @@ export class Interview {
   get startedAt() { return this._startedAt; }
   get completedAt() { return this._completedAt; }
   get createdAt() { return this._createdAt; }
+  getDurationMinutes(): number { return this.durationMinutes; }
+  get configuration(): InterviewConfiguration {
+    return this._configuration ?? InterviewConfiguration.createDefault(this._type, this.durationMinutes);
+  }
 
   // ─── State Transition Methods ────────────────────────────────────────────────
 
@@ -89,7 +99,11 @@ export class Interview {
 
   /** Convenience: checks if the interview can currently be joined. */
   isJoinable(): boolean {
-    return this._status === InterviewStatus.SCHEDULED;
+    return (
+      this._status === InterviewStatus.SCHEDULED ||
+      this._status === InterviewStatus.WAITING ||
+      this._status === InterviewStatus.IN_PROGRESS
+    );
   }
   
 
@@ -105,6 +119,7 @@ export class Interview {
       startedAt: this._startedAt,
       completedAt: this._completedAt,
       createdAt: this._createdAt,
+      durationMinutes: this.durationMinutes,
     };
   }
 

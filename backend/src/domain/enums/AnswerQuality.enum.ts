@@ -1,0 +1,7 @@
+export enum AnswerQuality {
+  EXCELLENT = 'EXCELLENT',
+  GOOD = 'GOOD',
+  AVERAGE = 'AVERAGE',
+  POOR = 'POOR',
+  UNACCEPTABLE = 'UNACCEPTABLE',
+}

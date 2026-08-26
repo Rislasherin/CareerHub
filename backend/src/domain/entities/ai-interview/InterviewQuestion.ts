@@ -1,4 +1,5 @@
 import { QuestionType } from '../../enums/QuestionType.enum';
+import { InterviewType } from '../../enums/InterviewType.enum';
 import { AnswerEvaluation } from '../../value-objects/AnswerEvaluation';
 
 export interface IInterviewQuestionReadOnly {
@@ -6,6 +7,7 @@ export interface IInterviewQuestionReadOnly {
   get text(): string;
   get type(): QuestionType;
   get context(): string | undefined;
+  get category(): InterviewType | undefined;
   get candidateAnswer(): string | undefined;
   get evaluation(): AnswerEvaluation | undefined;
 }
@@ -15,6 +17,7 @@ export class InterviewQuestion implements IInterviewQuestionReadOnly {
   private _text: string;
   private _type: QuestionType;
   private _context?: string;
+  private _category?: InterviewType;
   private _candidateAnswer?: string;
   private _evaluation?: AnswerEvaluation;
 
@@ -23,6 +26,7 @@ export class InterviewQuestion implements IInterviewQuestionReadOnly {
     text: string;
     type: QuestionType;
     context?: string;
+    category?: InterviewType;
     candidateAnswer?: string;
     evaluation?: AnswerEvaluation;
   }) {
@@ -30,6 +34,7 @@ export class InterviewQuestion implements IInterviewQuestionReadOnly {
     this._text = props.text;
     this._type = props.type;
     this._context = props.context;
+    this._category = props.category;
     this._candidateAnswer = props.candidateAnswer;
     this._evaluation = props.evaluation;
   }
@@ -38,6 +43,7 @@ export class InterviewQuestion implements IInterviewQuestionReadOnly {
   get text() { return this._text; }
   get type() { return this._type; }
   get context() { return this._context; }
+  get category() { return this._category; }
   get candidateAnswer() { return this._candidateAnswer; }
   get evaluation() { return this._evaluation; }
 
