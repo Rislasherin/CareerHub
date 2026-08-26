@@ -11,6 +11,7 @@ const router = Router();
 const studentController = makeStudentController();
 const upload = multer({ storage: multer.memoryStorage() });
 const resumeController = ResumeFactory.createResumeController();
+const aiInterviewController = makeAIInterviewController();
 
 // Use authMiddleware.protect for all routes in this router
 router.use(authMiddleware.protect);
@@ -49,6 +50,7 @@ import {
   CoachSectionSchema,
   AnalyzeSchema
 } from "@application/dtos/student/resume.dto";
+import { makeAIInterviewController } from "@infrastructure/di/ai-interview.factory";
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
@@ -65,6 +67,14 @@ router.get('/resumes', resumeController.getAll);
 router.post('/resumes', validateSchema(CreateResumeSchema), resumeController.create);
 router.post('/resume/match-job', validateSchema(MatchJobSchema), resumeController.matchJob);
 router.post('/resume/coach-section', validateSchema(CoachSectionSchema), resumeController.coachSection);
+
+
+
+//ai-interview 
+router.post("/interviews/:interviewId/start", aiInterviewController.startInterview);
+router.get("/interviews/session/:sessionId/token", aiInterviewController.getLiveKitToken);
+router.get("/interviews/session/:sessionId/status", aiInterviewController.getSessionStatus);
+router.post("/interviews/:sessionId/questions/:questionId/answer", aiInterviewController.processAnswer);
 
 export default router;
 
