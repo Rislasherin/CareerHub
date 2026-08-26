@@ -19,7 +19,7 @@ export class UpdateApplicationStatusUseCase implements IUpdateApplicationStatusU
   async execute(applicationId: string, companyId: string, status: JobApplicationStatus): Promise<void> {
     const application = await this._jobApplicationRepository.findById(applicationId);
     
-    if (!application || application.companyId !== companyId) {
+    if (!application || String(application.companyId) !== String(companyId)) {
       throw new AppError("Application not found or unauthorized", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 

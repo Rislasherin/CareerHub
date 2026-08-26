@@ -13,24 +13,43 @@ export class GetHRInterviewsUseCase {
   async execute(companyId: string): Promise<any[]> {
     const interviews = await this._interviewRepository.findByCompanyId(companyId);
     
-    return Promise.all(interviews.map(async (inv) => {
+    // Deduplicate IDs
+    const uniqueStudentIds = [...new Set(interviews.map(i => i.studentId))];
+    const uniqueJobIds = [...new Set(interviews.map(i => i.jobId).filter(id => id))];
+
+    // Fetch unique records in parallel
+    const studentMap = new Map<string, any>();
+    const jobMap = new Map<string, any>();
+
+    await Promise.all([
+      ...uniqueStudentIds.map(async id => {
+         try {
+            const student = await this._studentRepository.findById(id);
+            if (student) studentMap.set(id, student);
+         } catch(e) {}
+      }),
+      ...uniqueJobIds.map(async id => {
+         try {
+            const job = await this._jobRepository.findById(id);
+            if (job) jobMap.set(id, job);
+         } catch(e) {}
+      })
+    ]);
+
+    return interviews.map((inv) => {
       let candidateName = "Unknown Candidate";
       let college = "Unknown College";
       let jobTitle = "Unknown Job";
 
-      try {
-        const student = await this._studentRepository.findById(inv.studentId);
-        if (student) {
-          candidateName = `${student.firstName} ${student.lastName}`;
-          college = student.branch || student.department || "N/A";
-        }
-        
-        const job = await this._jobRepository.findById(inv.jobId);
-        if (job) {
-          jobTitle = job.title;
-        }
-      } catch (err) {
-        // Ignore fetch errors for related entities
+      const student = studentMap.get(inv.studentId);
+      if (student) {
+        candidateName = `${student.firstName} ${student.lastName}`;
+        college = student.branch || student.department || "N/A";
+      }
+      
+      const job = jobMap.get(inv.jobId);
+      if (job) {
+        jobTitle = job.title;
       }
 
       return {
@@ -49,6 +68,6 @@ export class GetHRInterviewsUseCase {
         scheduledAt: inv.scheduledAt,
         status: inv.status,
       };
-    }));
+    });
   }
 }

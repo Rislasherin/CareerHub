@@ -124,7 +124,7 @@ export default function HRDashboard() {
                            className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all"
                         />
                      </div>
-                     <Link href="/hr/jobs/new">
+                     <Link href="/hr/jobs?action=post-job">
                         <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-black text-xs rounded-xl px-6 h-11 border-none shadow-lg">
                            <Plus size={16} className="mr-2" /> Post Job
                         </Button>
@@ -149,7 +149,7 @@ export default function HRDashboard() {
                         </p>
                      </div>
                      <div className="flex gap-4">
-                        <Link href="/hr/jobs/new">
+                        <Link href="/hr/jobs?action=post-job">
                            <Button className="bg-white text-[#1b1430] hover:bg-slate-100 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none shadow-lg">Post First Job <ChevronRight size={16} className="ml-1" /></Button>
                         </Link>
                         <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest">Guidebook</Button>

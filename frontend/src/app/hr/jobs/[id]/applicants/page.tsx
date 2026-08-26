@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
-import { Search, MapPin, Star, GraduationCap, Calendar, Mail, Phone, Clock, FileText, ChevronRight, X, ExternalLink, CheckCircle2, Eye, Trophy, XCircle, ArrowLeft } from 'lucide-react';
+import { Search, MapPin, Star, GraduationCap, Calendar, Mail, Phone, Clock, FileText, ChevronRight, X, ExternalLink, CheckCircle2, Eye, Trophy, XCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GenerateOfferModal } from '@/components/modals/GenerateOfferModal';
 import { apiClient } from '@/services/api/api.client';
@@ -27,6 +27,20 @@ const statusTabs = [
 ];
 
 export default function JobApplicantsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+      }
+    >
+      <JobApplicantsContent />
+    </Suspense>
+  );
+}
+
+function JobApplicantsContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -46,21 +60,34 @@ export default function JobApplicantsPage() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [interviewers, setInterviewers] = useState<any[]>([]);
   const [interviewForm, setInterviewForm] = useState({
-    interviewerId: '',
-    title: '',
-    type: 'TECHNICAL',
-    roundNumber: 1,
+    types: ['TECHNICAL'],
+    difficulty: 'MID',
     scheduledAt: '',
-    durationMinutes: 60,
-    meetingLink: ''
+    durationMinutes: '30',
+    totalQuestions: '6',
+    distribution: { technical: 100, behavioral: 0, hr: 0 } as Record<string, number>,
+    skills: '',
+    customInstructions: '',
+    prohibitedTopics: '',
   });
 
   const { errors, isValid, handleSubmit, getCaptureProps } = useFormValidation(interviewForm, (values) => {
     const errs: Record<string, string> = {};
-    if (!values.interviewerId) errs.interviewerId = "Interviewer is required";
-    if (!values.title?.trim()) errs.title = "Title is required";
+    if (!values.types || values.types.length === 0) errs.types = "Select at least one interview type";
     if (!values.scheduledAt) errs.scheduledAt = "Schedule time is required";
     else if (new Date(values.scheduledAt) < new Date()) errs.scheduledAt = "Cannot schedule in the past";
+    if (!values.durationMinutes) errs.durationMinutes = "Duration is required";
+
+    if (values.types && values.types.length > 1) {
+      let sum = 0;
+      values.types.forEach((t: string) => {
+        sum += Number(values.distribution?.[t.toLowerCase()] || 0);
+      });
+      if (sum !== 100) {
+        errs.distribution = `Distribution percentages must total exactly 100% (currently ${sum}%)`;
+      }
+    }
+
     return errs;
   });
 
@@ -89,14 +116,8 @@ export default function JobApplicantsPage() {
     }
   };
   const fetchInterviewers = async () => {
-    try {
-      const response = await apiClient.get(API_ROUTES.HR.INTERVIEWERS) as ApiResponse<any>;
-      if (response.success) {
-        setInterviewers(response.data?.interviewers || []);
-      }
-    } catch (err) {
-      toast.error('Failed to load interviewers');
-    }
+    // Left intentionally empty as interviewers are not needed for AI interviews.
+    // Retaining function signature to avoid refactoring side-effects.
   };
 
   useEffect(() => {
@@ -111,17 +132,38 @@ export default function JobApplicantsPage() {
 
     setUpdating(true);
     try {
+      const skillsList = interviewForm.skills.split(',').map(s => s.trim()).filter(Boolean);
+      const customInstructionsList = interviewForm.customInstructions.split('\n').map(s => s.trim()).filter(Boolean);
+      const prohibitedTopicsList = interviewForm.prohibitedTopics.split(',').map(s => s.trim()).filter(Boolean);
+
+      let questionDistribution: Record<string, number> | undefined = undefined;
+      if (interviewForm.types.length > 1) {
+        questionDistribution = {};
+        interviewForm.types.forEach((t) => {
+          const key = t.toLowerCase();
+          questionDistribution![key] = Number(interviewForm.distribution[key] || 0);
+        });
+      }
+
       const payload = {
         applicationId: selectedApp.id,
-        ...interviewForm,
-        roundNumber: Number(interviewForm.roundNumber),
-        durationMinutes: Number(interviewForm.durationMinutes)
+        type: interviewForm.types[0] || 'TECHNICAL',
+        types: interviewForm.types,
+        selectedTypes: interviewForm.types,
+        totalQuestions: parseInt(interviewForm.totalQuestions, 10) || undefined,
+        questionDistribution,
+        difficulty: interviewForm.difficulty,
+        scheduledAt: interviewForm.scheduledAt,
+        durationMinutes: parseInt(interviewForm.durationMinutes, 10),
+        skills: skillsList.length > 0 ? skillsList : undefined,
+        customInstructions: customInstructionsList.length > 0 ? customInstructionsList : undefined,
+        prohibitedTopics: prohibitedTopicsList.length > 0 ? prohibitedTopicsList : undefined,
       };
 
       const response = await apiClient.post(API_ROUTES.HR.INTERVIEWS, payload) as ApiResponse<any>;
 
       if (response.success) {
-        toast.success('Interview scheduled successfully');
+        toast.success('AI Interview scheduled successfully');
         setShowInterviewModal(false);
         setApplications(apps => apps.map(app =>
           app.id === selectedApp.id ? { ...app, status: 'INTERVIEWING' } : app
@@ -132,7 +174,15 @@ export default function JobApplicantsPage() {
         }
 
         setInterviewForm({
-          interviewerId: '', title: '', type: 'TECHNICAL', roundNumber: 1, scheduledAt: '', durationMinutes: 60, meetingLink: ''
+          types: ['TECHNICAL'],
+          difficulty: 'MID',
+          scheduledAt: '',
+          durationMinutes: '30',
+          totalQuestions: '6',
+          distribution: { technical: 100, behavioral: 0, hr: 0 },
+          skills: '',
+          customInstructions: '',
+          prohibitedTopics: '',
         });
       }
     } catch (err: any) {
@@ -450,7 +500,7 @@ export default function JobApplicantsPage() {
                               }}
                               className="bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 font-bold text-xs"
                             >
-                              {selectedApp.status === 'SHORTLISTED' ? 'Schedule Interview' : 'Schedule Next Round'}
+                              {selectedApp.status === 'SHORTLISTED' ? 'Schedule AI Interview' : 'Schedule Next Round'}
                             </Button>
                           )}
 
@@ -525,7 +575,7 @@ export default function JobApplicantsPage() {
               >
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-800">Schedule Interview</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">Schedule AI Interview</h2>
                     <p className="text-sm text-slate-500">For {selectedApp.student?.firstName} {selectedApp.student?.lastName}</p>
                   </div>
                   <button onClick={() => setShowInterviewModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -533,92 +583,235 @@ export default function JobApplicantsPage() {
                   </button>
                 </div>
 
-                <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4" {...getCaptureProps()}>
+                <form onSubmit={handleScheduleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto" {...getCaptureProps()}>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Interview Title</label>
-                    <input
-                      type="text" required placeholder="e.g., Round 1: Technical Discussion"
-                      name="title"
-                      className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.title ? 'border-red-500' : 'border-slate-200'}`}
-                      value={interviewForm.title} onChange={e => setInterviewForm({ ...interviewForm, title: e.target.value })}
-                    />
-                    {errors.title && <p className="text-red-500 text-[10px] mt-1">{errors.title}</p>}
+                    <label className="block text-sm font-semibold text-slate-800 mb-1.5">Interview Type(s)</label>
+                    <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 mb-2.5 text-xs text-indigo-800 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>This will create <strong>one AI interview</strong> containing the selected interview sections.</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'TECHNICAL', label: 'Technical', desc: 'Coding, stack & architecture' },
+                        { id: 'BEHAVIORAL', label: 'Behavioral', desc: 'STAR, culture & teamwork' },
+                        { id: 'HR', label: 'HR Screening', desc: 'Alignment, goals & fit' },
+                        { id: 'CUSTOM', label: 'Custom AI', desc: 'Custom competency rubric' },
+                      ].map((t) => {
+                        const isSelected = interviewForm.types.includes(t.id);
+                        return (
+                          <button
+                            type="button"
+                            key={t.id}
+                            onClick={() => {
+                              const newTypes = isSelected
+                                ? interviewForm.types.filter((x) => x !== t.id)
+                                : [...interviewForm.types, t.id];
+                              const safeTypes = newTypes.length > 0 ? newTypes : [t.id];
+                              
+                              // Automatically rebalance distribution equally across selected types
+                              const basePct = Math.floor(100 / safeTypes.length);
+                              let rem = 100 - (basePct * safeTypes.length);
+                              const newDist: Record<string, number> = { technical: 0, behavioral: 0, hr: 0, custom: 0 };
+                              safeTypes.forEach((st) => {
+                                const k = st.toLowerCase();
+                                const extra = rem > 0 ? 1 : 0;
+                                if (rem > 0) rem--;
+                                newDist[k] = basePct + extra;
+                              });
+
+                              setInterviewForm({
+                                ...interviewForm,
+                                types: safeTypes,
+                                distribution: newDist,
+                              });
+                            }}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              isSelected
+                                ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-sm'
+                                : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs">{t.label}</span>
+                              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${isSelected ? 'border-indigo-600 bg-indigo-600 text-white text-[9px]' : 'border-slate-300'}`}>
+                                {isSelected ? '✓' : ''}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-1 leading-snug">{t.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {errors.types && <p className="text-red-500 text-[10px] mt-1">{errors.types}</p>}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Round Number</label>
-                      <input
-                        type="number" min="1" required
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                        value={interviewForm.roundNumber} onChange={e => setInterviewForm({ ...interviewForm, roundNumber: Number(e.target.value) })}
-                      />
+                  {interviewForm.types.length > 1 && (
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700">Question Distribution (%)</label>
+                        {(() => {
+                          let sum = 0;
+                          interviewForm.types.forEach((t) => {
+                            sum += Number(interviewForm.distribution[t.toLowerCase()] || 0);
+                          });
+                          return (
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${sum === 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                              Total: {sum}% {sum === 100 ? '✓' : '(Must equal 100%)'}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {interviewForm.types.map((t) => {
+                          const k = t.toLowerCase();
+                          return (
+                            <div key={t} className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                              <span className="text-xs font-semibold text-slate-600">{t}:</span>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="100"
+                                  value={interviewForm.distribution[k] ?? ''}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value, 10) || 0;
+                                    setInterviewForm({
+                                      ...interviewForm,
+                                      distribution: {
+                                        ...interviewForm.distribution,
+                                        [k]: val,
+                                      },
+                                    });
+                                  }}
+                                  className="w-14 px-2 py-0.5 text-xs text-right border border-slate-200 rounded font-semibold focus:ring-1 focus:ring-indigo-600"
+                                />
+                                <span className="text-xs text-slate-400 font-bold">%</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {errors.distribution && <p className="text-red-500 text-[10px]">{errors.distribution}</p>}
                     </div>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Interview Type</label>
+                      <label className="block text-sm font-semibold text-slate-800 mb-1">Difficulty</label>
                       <select
-                        required
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                        value={interviewForm.type} onChange={e => setInterviewForm({ ...interviewForm, type: e.target.value })}
+                        name="difficulty"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm bg-white font-medium"
+                        value={interviewForm.difficulty}
+                        onChange={(e) => setInterviewForm({ ...interviewForm, difficulty: e.target.value })}
                       >
-                        <option value="APTITUDE">Aptitude Test</option>
-                        <option value="CODING">Coding Challenge</option>
-                        <option value="TECHNICAL">Technical Panel Interview</option>
-                        <option value="HR">HR Panel Interview</option>
-                        <option value="GROUP_DISCUSSION">Group Discussion (GD)</option>
+                        <option value="JUNIOR">Junior</option>
+                        <option value="MID">Mid-Level</option>
+                        <option value="SENIOR">Senior</option>
+                        <option value="LEAD">Lead</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Assign Interviewer</label>
-                      <select
-                        name="interviewerId"
-                        required
-                        className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.interviewerId ? 'border-red-500' : 'border-slate-200'}`}
-                        value={interviewForm.interviewerId} onChange={e => setInterviewForm({ ...interviewForm, interviewerId: e.target.value })}
-                      >
-                        <option value="" disabled>Select...</option>
-                        {interviewers.map(inv => (
-                          <option key={inv.id} value={inv.id}>{inv.firstName} {inv.lastName} ({inv.designation || 'Interviewer'})</option>
-                        ))}
-                      </select>
-                      {errors.interviewerId && <p className="text-red-500 text-[10px] mt-1">{errors.interviewerId}</p>}
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
-                      <input
-                        type="datetime-local" required
-                        name="scheduledAt"
-                        className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${errors.scheduledAt ? 'border-red-500' : 'border-slate-200'}`}
-                        value={interviewForm.scheduledAt} onChange={e => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
-                      />
-                      {errors.scheduledAt && <p className="text-red-500 text-[10px] mt-1">{errors.scheduledAt}</p>}
+                      <label className="block text-sm font-semibold text-slate-800 mb-1">Duration</label>
+                      <select
+                        required
+                        name="durationMinutes"
+                        className={`w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm bg-white font-medium ${errors.durationMinutes ? 'border-red-500' : 'border-slate-200'}`}
+                        value={interviewForm.durationMinutes}
+                        onChange={(e) => setInterviewForm({ ...interviewForm, durationMinutes: e.target.value })}
+                      >
+                        {process.env.NODE_ENV === 'development' && (
+                          <>
+                            <option value="1">1 min (Dev)</option>
+                            <option value="2">2 min (Dev)</option>
+                            <option value="5">5 min (Dev)</option>
+                          </>
+                        )}
+                        <option value="15">15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">60 min</option>
+                      </select>
+                      {errors.durationMinutes && <p className="text-red-500 text-[10px] mt-1">{errors.durationMinutes}</p>}
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Duration (Mins)</label>
+                      <label className="block text-sm font-semibold text-slate-800 mb-1">Questions</label>
                       <input
-                        type="number" min="15" step="15" required
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                        value={interviewForm.durationMinutes} onChange={e => setInterviewForm({ ...interviewForm, durationMinutes: Number(e.target.value) })}
+                        type="number"
+                        min="2"
+                        max="20"
+                        name="totalQuestions"
+                        value={interviewForm.totalQuestions}
+                        onChange={(e) => setInterviewForm({ ...interviewForm, totalQuestions: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm bg-white font-medium"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Meeting Link (Optional)</label>
+                    <label className="block text-sm font-semibold text-slate-800 mb-1">Date & Time</label>
                     <input
-                      type="url" placeholder="https://meet.google.com/..."
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                      value={interviewForm.meetingLink} onChange={e => setInterviewForm({ ...interviewForm, meetingLink: e.target.value })}
+                      type="datetime-local"
+                      required
+                      name="scheduledAt"
+                      className={`w-full px-3.5 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm ${errors.scheduledAt ? 'border-red-500' : 'border-slate-200'}`}
+                      value={interviewForm.scheduledAt}
+                      onChange={(e) => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
                     />
+                    {errors.scheduledAt && <p className="text-red-500 text-[10px] mt-1">{errors.scheduledAt}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-1">
+                      Focus Skills <span className="text-xs font-normal text-slate-500">(Optional, comma-separated)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. React, Node.js, PostgreSQL, System Design"
+                      className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm"
+                      value={interviewForm.skills}
+                      onChange={(e) => setInterviewForm({ ...interviewForm, skills: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-1">
+                      HR Custom Instructions & Guidelines <span className="text-xs font-normal text-slate-500">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Focus on practical architectural decisions. Ask candidate to provide code-level explanations."
+                      className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm"
+                      value={interviewForm.customInstructions}
+                      onChange={(e) => setInterviewForm({ ...interviewForm, customInstructions: e.target.value })}
+                    />
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {[
+                        "Focus on practical real-world scenarios",
+                        "Probe deeply into error handling",
+                        "Assess communication & clarity",
+                      ].map((preset) => (
+                        <button
+                          type="button"
+                          key={preset}
+                          onClick={() => {
+                            const current = interviewForm.customInstructions;
+                            const next = current ? `${current}\n${preset}` : preset;
+                            setInterviewForm({ ...interviewForm, customInstructions: next });
+                          }}
+                          className="text-[10px] bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 px-2 py-0.5 rounded-md border border-slate-200 transition-colors"
+                        >
+                          + {preset}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
                     <Button variant="secondary" onClick={() => setShowInterviewModal(false)} type="button">Cancel</Button>
                     <Button type="submit" disabled={!isValid || updating}>
-                      {updating ? 'Scheduling...' : 'Schedule Interview'}
+                      {updating ? 'Scheduling...' : 'Schedule AI Interview'}
                     </Button>
                   </div>
                 </form>

@@ -18,7 +18,7 @@ export class GetHRJobApplicationsUseCase implements IGetHRJobApplicationsUseCase
 
   async execute(jobId: string, companyId: string, page: number = 1, limit: number = 10): Promise<{ applications: Record<string, unknown>[], total: number }> {
     const job = await this._jobRepository.findById(jobId);
-    if (!job || job.companyId !== companyId) {
+    if (!job || String(job.companyId) !== String(companyId)) {
       throw new AppError("Job not found or unauthorized", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 

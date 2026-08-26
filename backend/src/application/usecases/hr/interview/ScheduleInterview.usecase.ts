@@ -3,6 +3,7 @@ import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationR
 import { Interview } from "@domain/entities/Interview";
 import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { InterviewType } from "@domain/enums/InterviewType.enum";
+import { InterviewConfiguration } from "@domain/value-objects/InterviewConfiguration";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
@@ -20,19 +21,37 @@ export class ScheduleInterviewUseCase {
     if (!application) {
       throw new AppError("Application not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
-    if (application.companyId !== companyId) {
+    if (String(application.companyId) !== String(companyId)) {
       throw new AppError("Unauthorized access to application", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
     }
+
+    const rawTypes = (payload.selectedTypes && payload.selectedTypes.length > 0)
+      ? payload.selectedTypes
+      : (payload.types && payload.types.length > 0 ? payload.types : [payload.type]);
+
+    const configuration = new InterviewConfiguration({
+      types: rawTypes,
+      difficulty: payload.difficulty,
+      durationMinutes: payload.durationMinutes,
+      totalQuestions: payload.totalQuestions,
+      skills: payload.skills,
+      questionDistribution: payload.questionDistribution,
+      customInstructions: payload.customInstructions,
+      prohibitedTopics: payload.prohibitedTopics,
+      evaluationCriteria: payload.evaluationCriteria,
+    });
 
     const interview = new Interview({
       id: new mongoose.Types.ObjectId().toString(),
       studentId: application.studentId,
       jobId: application.jobId,
       companyId: companyId,
-      type: InterviewType.TECHNICAL, // Enforced AI technical interview
+      type: rawTypes[0],
       status: InterviewStatus.SCHEDULED,
       scheduledAt: new Date(payload.scheduledAt),
+      durationMinutes: payload.durationMinutes,
       createdAt: new Date(),
+      configuration,
     });
 
     return await this._interviewRepository.create(interview);

@@ -259,6 +259,9 @@ export default function InterviewsPage() {
                       </td>
                       <td className="py-4 px-6">
                         <p className="font-bold text-slate-900">{new Date(interview.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {new Date(interview.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p>
+                        {interview.durationMinutes && (
+                          <p className="text-xs font-bold text-indigo-600 mt-1">Duration: {interview.durationMinutes} minutes</p>
+                        )}
                         {isRescheduleReq && (
                           <p className="text-xs font-bold text-orange-600 mt-1">Requested {new Date(interview.rescheduleRequest?.preferredDate).toLocaleDateString()} at {interview.rescheduleRequest?.preferredTime}</p>
                         )}

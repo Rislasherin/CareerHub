@@ -250,9 +250,9 @@ export default function CandidatesPage() {
                   className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all"
                 />
               </div>
-              <Link href="/hr/jobs/new">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl px-6 h-11 border-none shadow-sm">
-                  <Plus size={16} className="mr-2" /> Post Job
+              <Link href="/hr/jobs?action=post-job">
+                <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-black text-xs rounded-xl px-6 h-11 border-none shadow-lg">
+                  <Plus size={16} className="mr-2" /> Post Drive
                 </Button>
               </Link>
               <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 relative transition-all shadow-sm">

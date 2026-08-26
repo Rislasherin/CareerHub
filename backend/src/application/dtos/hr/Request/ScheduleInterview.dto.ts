@@ -1,22 +1,13 @@
 import { InterviewType } from "@domain/enums/InterviewType.enum";
+import { InterviewDifficulty } from "@domain/enums/InterviewDifficulty.enum";
 import { Expose } from "class-transformer";
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class SheduleInterviewDto {
     @Expose()
     @IsString()
     @IsNotEmpty()
-    applicationId!: string
-
-    @Expose()
-    @IsString()
-    @IsOptional()
-    interviewerId?: string
-
-    @Expose()
-    @IsString()
-    @IsNotEmpty()
-    title!: string;
+    applicationId!: string;
 
     @Expose()
     @IsEnum(InterviewType)
@@ -24,9 +15,19 @@ export class SheduleInterviewDto {
     type!: InterviewType;
 
     @Expose()
-    @IsNumber()
-    @IsNotEmpty()
-    roundNumber!: number;
+    @IsOptional()
+    @IsArray()
+    types?: InterviewType[];
+
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    selectedTypes?: InterviewType[];
+
+    @Expose()
+    @IsOptional()
+    @IsEnum(InterviewDifficulty)
+    difficulty?: InterviewDifficulty;
 
     @Expose()
     @IsDateString()
@@ -39,8 +40,36 @@ export class SheduleInterviewDto {
     durationMinutes!: number;
 
     @Expose()
-    @IsString()
     @IsOptional()
-    meetingLink?: string;
+    @IsNumber()
+    totalQuestions?: number;
 
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    skills?: string[];
+
+    @Expose()
+    @IsOptional()
+    questionDistribution?: {
+        technical?: number;
+        behavioral?: number;
+        hr?: number;
+        custom?: number;
+    };
+
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    customInstructions?: string[];
+
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    prohibitedTopics?: string[];
+
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    evaluationCriteria?: string[];
 }
