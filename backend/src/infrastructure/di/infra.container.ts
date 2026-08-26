@@ -23,6 +23,8 @@ import { SubscriptionRepository } from "@infrastructure/repositories/subscriptio
 import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
 import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
 
+import { AIInterviewRepository } from "@infrastructure/repositories/ai-interview.repository";
+
 export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
 export const studentRepository = new StudentRepository();
@@ -64,3 +66,4 @@ export const interviewRepository = new InterviewRepository();
 export const paymentGateway = new RazorpayGateway();
 
 // ─── AI Interview Infrastructure ──────────────────────────────────────────────
+export const aiInterviewRepository = new AIInterviewRepository();

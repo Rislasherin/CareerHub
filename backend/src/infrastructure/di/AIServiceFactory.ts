@@ -1,8 +1,8 @@
 import { IAIService } from "@application/interfaces/IAIService";
-import { GeminiService } from "@infrastructure/services/AI/Gemini.service";
-import { OpenAIService } from "@infrastructure/services/AI/OpenAI.service";
-import { GroqService } from "@infrastructure/services/AI/Groq.service";
-import { FallbackAIService } from "@infrastructure/services/AI/FallbackAI.service";
+import { GeminiService } from "@infrastructure/services/Resume/Gemini.service";
+import { OpenAIService } from "@infrastructure/services/Resume/OpenAI.service";
+import { GroqService } from "@infrastructure/services/Resume/Groq.service";
+import { FallbackAIService } from "@infrastructure/services/Resume/FallbackAI.service";
 
 export class AIServiceFactory {
     static createdService(): IAIService {

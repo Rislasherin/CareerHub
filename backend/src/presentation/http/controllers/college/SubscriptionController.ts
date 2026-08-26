@@ -6,6 +6,7 @@ import { sendSuccess } from '@shared/utils/response.util';
 import { MESSAGES } from '@shared/constants/messages.constants';
 
 import { IGetCollegeSubscriptionUseCase } from '@application/usecases/college/interfaces/IGetCollegeSubscription.usecase';
+import { Logger, LogCategory } from '../../../../infrastructure/logger/logger';
 
 export class SubscriptionController {
   constructor(
@@ -34,7 +35,7 @@ export class SubscriptionController {
     } catch (error: unknown) {
       const errObj = error as { error?: { description?: string }; message?: string };
       const message = errObj?.error?.description || errObj?.message || MESSAGES.ERROR.INTERNAL_SERVER_ERROR;
-      console.error("Subscription Error:", message);
+      Logger.error(LogCategory.SYSTEM_ERROR, "Subscription Error:", message);
       res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
     }
   };
@@ -53,7 +54,7 @@ export class SubscriptionController {
       res.status(HttpStatus.OK).send(MESSAGES.SUCCESS.UPDATED);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERROR.VALIDATION_ERROR;
-      console.error("Webhook Error:", msg);
+      Logger.error(LogCategory.SYSTEM_ERROR, "Webhook Error:", msg);
       res.status(HttpStatus.BAD_REQUEST).send(MESSAGES.ERROR.VALIDATION_ERROR);
     }
   };

@@ -1,7 +1,7 @@
 import { AnalyzeResumeUseCase } from "@application/usecases/student/AI/implementations/AnalyzeResume.usecase";
 import { AutoFixResumeUseCase } from "@application/usecases/student/AI/implementations/AutoFixResume.usecase";
 import { SyncProfileToResumeUseCase } from "@application/usecases/student/AI/implementations/SyncProfileToResume.usecase";
-import { AIServiceFactory } from "@infrastructure/factories/AIServiceFactory";
+import { AIServiceFactory } from "@infrastructure/di/AIServiceFactory";
 import { ResumeRepository } from "@infrastructure/repositories/Resume.repository";
 import { ResumeController } from "@presentation/http/controllers/student/Resume.controller";
 import { StudentRepository } from "@infrastructure/repositories/student.repository";
@@ -29,7 +29,7 @@ export class ResumeFactory {
         const syncProfileUseCase = new SyncProfileToResumeUseCase(studentRepository, resumeRepository);
         const updateSettingsUseCase = new UpdateResumeSettingsUseCase(resumeRepository)
         const exportPdfUseCase = new ExportResumePdfUseCase(resumeRepository);
-        const previewHtmlUseCase  = new PreviewResumeHtmlUseCase(resumeRepository);
+        const previewHtmlUseCase = new PreviewResumeHtmlUseCase(resumeRepository);
         const autoFixTextUseCase = new AutoFixTextUseCase(aiService);
         const rewriteEntireResumeUseCase = new RewriteEntireResumeUseCase(aiService, studentRepository, resumeRepository);
         const createResumeUseCase = new CreateResumeUseCase(studentRepository, resumeRepository);

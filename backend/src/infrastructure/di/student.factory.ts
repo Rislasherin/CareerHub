@@ -16,7 +16,7 @@ import { GetStudentOffersUseCase } from "@application/usecases/student/implement
 import { RespondToOfferUseCase } from "@application/usecases/student/implementations/RespondToOffer.usecase";
 import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOfferPdf.usecase";
 import { ParseResumeUseCase } from "@application/usecases/student/AI/implementations/ParseResume.usecase";
-import { AIServiceFactory } from "@infrastructure/factories/AIServiceFactory";
+import { AIServiceFactory } from "@infrastructure/di/AIServiceFactory";
 import { GenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/implementations/GenerateProfessionalSummary.usecase";
 
 export const makeUploadStudentVerificationUseCase = () => {
@@ -58,7 +58,7 @@ export const makeGetStudentApplicationsUseCase = () => {
 };
 
 export const makeGetStudentInterviewsUseCase = () => {
-  return new GetStudentInterviewsUseCase(interviewRepository,companyRepository)
+  return new GetStudentInterviewsUseCase(interviewRepository, companyRepository)
 }
 
 export const makeGetStudentOffersUseCase = () => {
@@ -81,7 +81,7 @@ export const makeStudentController = () => {
     makeApplyToJobUseCase(),
     makeGetStudentFullProfileUseCase(),
     makeGetStudentNoticesUseCase(),
-    makeUploadResumeUseCase(),  
+    makeUploadResumeUseCase(),
     makeDeleteResumeUseCase(),
     makeGetStudentApplicationsUseCase(),
     makeGetStudentInterviewsUseCase(),

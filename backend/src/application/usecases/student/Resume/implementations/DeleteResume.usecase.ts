@@ -5,6 +5,7 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Student } from "@domain/entities/student";
+import { Logger, LogCategory } from '../../../../../infrastructure/logger/logger';
 
 export class DeleteResumeUseCase implements IDeleteResumeUseCase {
     constructor(
@@ -20,7 +21,7 @@ export class DeleteResumeUseCase implements IDeleteResumeUseCase {
         try {
             await this._storageService.deleteFile(student.resume!.publicId);
         } catch (error) {
-            console.warn('Could not delete file from Cloudinary, proceeding to clear DB:', error);
+            Logger.warn(LogCategory.SYSTEM_INFO, 'Could not delete file from Cloudinary, proceeding to clear DB:', error);
         }
         
         const updatedProps = student.toJSON();

@@ -3,7 +3,7 @@ import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { AIServiceFactory } from "@infrastructure/factories/AIServiceFactory";
+import { AIServiceFactory } from "@infrastructure/di/AIServiceFactory";
 
 export class GenerateProfessionalSummaryUseCase implements IGenerateProfessionalSummaryUseCase {
     private readonly _aiService = AIServiceFactory.createdService();

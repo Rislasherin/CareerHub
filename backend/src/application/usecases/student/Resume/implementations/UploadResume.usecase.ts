@@ -6,6 +6,7 @@ import { ResumeMetadata, Student } from "@domain/entities/student";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
+import { Logger, LogCategory } from '../../../../../infrastructure/logger/logger';
 
 export class UploadResumeUseCase implements IUploadResumeUseCase {
     constructor(
@@ -29,7 +30,7 @@ export class UploadResumeUseCase implements IUploadResumeUseCase {
             try {
                 await this._storageService.deleteFile(student.resume.publicId);
             } catch (error) {
-                console.warn('Could not delete old file from Cloudinary, proceeding with upload:', error);
+                Logger.warn(LogCategory.SYSTEM_INFO, 'Could not delete old file from Cloudinary, proceeding with upload:', error);
             }
         }
 
@@ -52,7 +53,7 @@ export class UploadResumeUseCase implements IUploadResumeUseCase {
         try {
             parsedData = await this._parseResumeUseCase.execute(studentId, file.buffer, file.mimetype);
         } catch (error) {
-            console.warn('Failed to parse resume with AI, continuing without parsed data', error);
+            Logger.warn(LogCategory.SYSTEM_INFO, 'Failed to parse resume with AI, continuing without parsed data', error);
         }
 
         return {

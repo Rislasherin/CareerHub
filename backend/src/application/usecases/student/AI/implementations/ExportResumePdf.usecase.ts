@@ -6,6 +6,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IResumeRepository } from '@domain/repositories/IResumeRepository';
 import { ResumeTemplateContext } from '../templates/ResumeTemplateContext';
 import { puppeteerPool } from "@infrastructure/services/pdf/PuppeteerPool";
+import { Logger, LogCategory } from '../../../../../infrastructure/logger/logger';
 
 export class ExportResumePdfUseCase implements IExportResumePdfUseCase {
     private readonly _templateContext = new ResumeTemplateContext();
@@ -40,7 +41,7 @@ export class ExportResumePdfUseCase implements IExportResumePdfUseCase {
 
             return Buffer.from(pdfBuffer);
         } catch (error) {
-            console.error("PDF Generation Error:", error);
+            Logger.error(LogCategory.SYSTEM_ERROR, "PDF Generation Error:", error);
             throw new AppError("Failed to generate PDF", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
         }
     }
