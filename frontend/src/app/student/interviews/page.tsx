@@ -11,13 +11,34 @@ import { toast } from 'sonner';
 
 type TabType = 'All' | 'Upcoming' | 'Completed' | 'Cancelled';
 
+import { StudentInterviewService } from '@/services/student/interview.service';
+
 export default function StudentInterviewsPage() {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [startingId, setStartingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const handleStartInterview = async (interviewId: string) => {
+    if (startingId) return; // Prevent duplicate clicks
+    
+    setStartingId(interviewId);
+    try {
+      const result = await StudentInterviewService.startInterview(interviewId);
+      if (result.success && result.sessionId) {
+        window.location.href = `/student/interviews/session/${result.sessionId}`;
+      } else {
+        toast.error('Failed to start AI interview');
+        setStartingId(null);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to start AI interview');
+      setStartingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -189,6 +210,10 @@ export default function StudentInterviewsPage() {
                           <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider">
                             Upcoming
                           </span>
+                        ) : inv.status === 'IN_PROGRESS' || inv.status === 'WAITING' ? (
+                          <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider">
+                            In Progress
+                          </span>
                         ) : isPendingReview ? (
                           <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider">
                             Under Review
@@ -231,12 +256,20 @@ export default function StudentInterviewsPage() {
                           </p>
                           
                           {/* Join Link Overlay (Hover) */}
-                          {isUpcoming && (
+                          {(isUpcoming || inv.status === 'IN_PROGRESS' || inv.status === 'WAITING') && (
                             <button 
-                              onClick={() => window.location.href = `/student/interviews/${inv.id}`}
-                              className="absolute inset-0 bg-rose-500 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none"
+                              onClick={() => handleStartInterview(inv.id)}
+                              disabled={Boolean(startingId)}
+                              className="absolute inset-0 bg-rose-500 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none disabled:opacity-100 disabled:bg-rose-400"
                             >
-                              Join AI Interview
+                              {startingId === inv.id ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  Joining Interview...
+                                </span>
+                              ) : (
+                                "Join AI Interview"
+                              )}
                             </button>
                           )}
                         </div>
