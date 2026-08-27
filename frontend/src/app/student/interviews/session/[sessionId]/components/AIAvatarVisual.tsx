@@ -10,14 +10,7 @@ interface IAIAvatarVisualProps {
   studentStream?: MediaStream | null;
 }
 
-export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state, studentStream }) => {
-  const studentVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    if (studentVideoRef.current && studentStream) {
-      studentVideoRef.current.srcObject = studentStream;
-    }
-  }, [studentStream]);
+export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state }) => {
 
   const getStatusLabel = () => {
     switch (state) {
@@ -77,27 +70,6 @@ export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state, studentS
         <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">CareerHub AI Evaluator</span>
       </div>
 
-      {/* Bottom Right: Student Live Camera Tile (Picture-in-Picture) */}
-      <div className="absolute bottom-4 right-4 w-36 sm:w-48 aspect-video rounded-2xl overflow-hidden bg-slate-950 border-2 border-slate-700/80 shadow-2xl shadow-black">
-        {studentStream ? (
-          <video
-            ref={studentVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover -scale-x-100"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
-            <User size={20} />
-            <span className="text-[9px] font-bold mt-0.5">Camera Off</span>
-          </div>
-        )}
-        <div className="absolute bottom-1.5 left-1.5 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          <span className="text-[9px] font-black uppercase tracking-wider text-white">You</span>
-        </div>
-      </div>
     </div>
   );
 };
