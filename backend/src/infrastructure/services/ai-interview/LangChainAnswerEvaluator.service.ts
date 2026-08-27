@@ -9,6 +9,7 @@ import { LLMProviderFactory } from "./LLMProvider.factory";
 
 import { Metrics } from "../../observability/Metrics";
 import { ProviderRateLimiter } from "./ProviderRateLimiter";
+import { OllamaPriorityQueue } from "./OllamaPriorityQueue";
 import { Logger, LogCategory } from '../../logger/logger';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -43,7 +44,12 @@ export class LangChainAnswerEvaluator implements IAnswerEvaluator {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const release = await ProviderRateLimiter.acquire("EVALUATION_LLM", 10);
+        let release: () => void;
+        if (config.provider === 'OLLAMA') {
+          release = await OllamaPriorityQueue.acquire('LOW');
+        } else {
+          release = await ProviderRateLimiter.acquire("EVALUATION_LLM", 10);
+        }
         try {
           const chain = EVALUATION_PROMPT.pipe(this.llm.withStructuredOutput(evaluationSchema));
           const result = await chain.invoke({

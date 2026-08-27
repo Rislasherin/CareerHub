@@ -13,6 +13,10 @@ class RedisClientService {
     return this.client!;
   }
 
+  public isReady(): boolean {
+    return this.client?.status === 'ready';
+  }
+
   public connect(): Promise<void> {
     if (this.client) return Promise.resolve();
     if (this.connectPromise) return this.connectPromise;
@@ -39,8 +43,8 @@ class RedisClientService {
       }
     });
 
-    this.client.on('connect', () => {
-      Logger.info(LogCategory.SYSTEM_INFO, `[RedisClient] Successfully connected to Redis.`);
+    this.client.on('ready', () => {
+      Logger.info(LogCategory.SYSTEM_INFO, `[RedisClient] Successfully connected and ready to accept commands.`);
       this.isConnecting = false;
       resolve();
     });

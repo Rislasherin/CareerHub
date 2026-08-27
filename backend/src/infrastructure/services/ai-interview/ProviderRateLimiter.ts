@@ -5,6 +5,8 @@ import { DistributedLock } from "../../distributed/DistributedLock";
 export class ProviderRateLimiter {
   private static pauses = new Map<string, number>();
 
+  private static localSemaphores = new Map<string, { active: number; queue: (() => void)[] }>();
+
   static async acquire(providerType: string, maxConcurrent: number): Promise<() => void> {
     const pauseUntil = this.pauses.get(providerType) || 0;
     if (pauseUntil > Date.now()) {
@@ -14,13 +16,46 @@ export class ProviderRateLimiter {
       await new Promise(res => setTimeout(res, waitMs));
     }
 
-    const release = await DistributedLock.acquireProviderSemaphore(providerType, maxConcurrent, 30000);
-    if (!release) {
-      Logger.error(LogCategory.SYSTEM_ERROR, `[RateLimiter] Timed out waiting for distributed semaphore for ${providerType}`);
-      return () => {};
-    }
+    // Import RedisClient dynamically or rely on it being imported above
+    const { RedisClient } = require("../../redis/RedisClient");
 
-    return release;
+    if (RedisClient.isReady()) {
+      const release = await DistributedLock.acquireProviderSemaphore(providerType, maxConcurrent, 30000);
+      if (!release) {
+        Logger.error(LogCategory.SYSTEM_ERROR, `[RateLimiter] Timed out waiting for distributed semaphore for ${providerType}`);
+        return () => {};
+      }
+      return release;
+    } else {
+      Logger.warn(LogCategory.SYSTEM_INFO, `[RateLimiter] Redis is not ready. Using local in-memory semaphore for ${providerType}.`);
+      return this.acquireLocal(providerType, maxConcurrent);
+    }
+  }
+
+  private static acquireLocal(providerType: string, maxConcurrent: number): Promise<() => void> {
+    return new Promise((resolve) => {
+      let sem = this.localSemaphores.get(providerType);
+      if (!sem) {
+        sem = { active: 0, queue: [] };
+        this.localSemaphores.set(providerType, sem);
+      }
+
+      const release = () => {
+        sem!.active--;
+        if (sem!.queue.length > 0) {
+          const next = sem!.queue.shift();
+          sem!.active++;
+          if (next) next();
+        }
+      };
+
+      if (sem.active < maxConcurrent) {
+        sem.active++;
+        resolve(release);
+      } else {
+        sem.queue.push(() => resolve(release));
+      }
+    });
   }
 
   static applyProviderPause(providerType: string, retryAfterSeconds: number) {

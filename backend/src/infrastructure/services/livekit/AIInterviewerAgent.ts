@@ -1,5 +1,7 @@
 import { Room, RoomEvent, RemoteParticipant, AudioSource, LocalAudioTrack, AudioFrame, RemoteTrack, RemoteTrackPublication, RemoteAudioTrack, AudioStream, TrackSource, TrackPublishOptions } from '@livekit/rtc-node';
 import { IAudioTransport } from '@application/interfaces/ai-interview/IAudioTransport';
+import { env } from "@infrastructure/config/env.validator";
+import * as crypto from "crypto";
 import { Logger, LogCategory } from '../../logger/logger';
 
 export class AIInterviewerAgent implements IAudioTransport {
@@ -77,22 +79,106 @@ export class AIInterviewerAgent implements IAudioTransport {
     }
   }
 
+  private pcmRemainder: Int16Array | null = null;
+  private streamWriter?: any;
+  private _tavusFirstChunkSent = false;
+  private _tavusChunksSent = 0;
+  private _tavusBytesSent = 0;
+  private _tavusLastErrorTime = 0;
+
   async publishAudioChunk(buffer: Int16Array): Promise<void> {
-    const samplesPerFrame = 240;
-    for (let i = 0; i < buffer.length; i += samplesPerFrame) {
-      const end = Math.min(i + samplesPerFrame, buffer.length);
-      const frame = buffer.slice(i, end);
-      let finalFrame = frame;
-      if (frame.length < samplesPerFrame) {
-        finalFrame = new Int16Array(samplesPerFrame);
-        finalFrame.set(frame);
+    if (!buffer || buffer.length === 0) return;
+
+    if (env.AI_AVATAR_ENABLED === 'true' && !this.streamWriter && this.room?.localParticipant) {
+      // Safety: Only initialize the stream if the Tavus avatar has actually joined the room.
+      // If we initialize too early, the data channel might not reach the avatar.
+      let isAvatarPresent = false;
+      this.room.remoteParticipants.forEach((p) => {
+        if (p.identity === 'tavus-avatar-agent') isAvatarPresent = true;
+      });
+
+      if (isAvatarPresent) {
+        try {
+          Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] Tavus participant detected/available`);
+          Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] audio output initialized`);
+          this.streamWriter = await this.room.localParticipant.streamBytes({
+            name: 'AUDIO_' + crypto.randomUUID().substring(0, 8),
+            topic: 'lk.audio_stream',
+            destinationIdentities: ['tavus-avatar-agent'],
+            attributes: {
+              sample_rate: '24000',
+              num_channels: '1'
+            }
+          });
+        } catch (err) {
+          Logger.error(LogCategory.SYSTEM_ERROR, "[Tavus] audio stream failed to initialize for avatar", err);
+        }
       }
-      const audioFrame = new AudioFrame(finalFrame, 24000, 1, samplesPerFrame);
+    }
+
+    let combined: Int16Array;
+    if (this.pcmRemainder && this.pcmRemainder.length > 0) {
+      combined = new Int16Array(this.pcmRemainder.length + buffer.length);
+      combined.set(this.pcmRemainder, 0);
+      combined.set(buffer, this.pcmRemainder.length);
+      this.pcmRemainder = null;
+    } else {
+      combined = buffer;
+    }
+
+    const samplesPerFrame = 240; // 10ms frame at 24000Hz
+    const completeFramesCount = Math.floor(combined.length / samplesPerFrame);
+
+    for (let i = 0; i < completeFramesCount; i++) {
+      const start = i * samplesPerFrame;
+      const frameSlice = combined.slice(start, start + samplesPerFrame);
+      const audioFrame = new AudioFrame(frameSlice, 24000, 1, samplesPerFrame);
       await this.audioSource.captureFrame(audioFrame);
+      
+      if (this.streamWriter) {
+        if (!this._tavusFirstChunkSent) {
+          this._tavusFirstChunkSent = true;
+          Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] first AI audio chunk sent`);
+        }
+        
+        this._tavusChunksSent++;
+        this._tavusBytesSent += frameSlice.byteLength;
+        
+        if (this._tavusChunksSent % 100 === 0) {
+          Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] audio delivery active: chunks=${this._tavusChunksSent}, bytes=${this._tavusBytesSent}`);
+        }
+
+        // Send the exact same 10ms frame to Tavus. Fire-and-forget to avoid blocking real audio.
+        this.streamWriter.write(new Uint8Array(frameSlice.buffer, frameSlice.byteOffset, frameSlice.byteLength)).catch((err: any) => {
+          const now = Date.now();
+          if (now - this._tavusLastErrorTime > 5000) {
+             Logger.error(LogCategory.SYSTEM_ERROR, "[Tavus] audio delivery failed", err);
+             this._tavusLastErrorTime = now;
+          }
+        });
+      }
+    }
+
+    const remainingSamples = combined.length % samplesPerFrame;
+    if (remainingSamples > 0) {
+      const remainderStart = completeFramesCount * samplesPerFrame;
+      this.pcmRemainder = combined.slice(remainderStart);
     }
   }
 
   async waitForPlayout(): Promise<void> {
+    if (this.pcmRemainder && this.pcmRemainder.length > 0) {
+      const samplesPerFrame = 240;
+      const finalFrame = new Int16Array(samplesPerFrame);
+      finalFrame.set(this.pcmRemainder, 0);
+      this.pcmRemainder = null;
+      const audioFrame = new AudioFrame(finalFrame, 24000, 1, samplesPerFrame);
+      await this.audioSource.captureFrame(audioFrame);
+      
+      if (this.streamWriter) {
+        this.streamWriter.write(new Uint8Array(finalFrame.buffer, finalFrame.byteOffset, finalFrame.byteLength)).catch(() => {});
+      }
+    }
     await this.audioSource.waitForPlayout();
   }
 
@@ -121,6 +207,13 @@ export class AIInterviewerAgent implements IAudioTransport {
   async disconnect(): Promise<void> {
     try {
       Logger.info(LogCategory.SYSTEM_INFO, "[AI_WORKER] Disconnecting from LiveKit room cleanly...");
+      
+      if (this.streamWriter) {
+        await this.streamWriter.close().catch(() => {});
+        Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] audio output closed`);
+        this.streamWriter = undefined;
+      }
+
       if (this.room) {
         await this.room.disconnect();
       }

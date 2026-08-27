@@ -2,7 +2,9 @@ import 'dotenv/config';
 import process from 'process';
 import mongoose from 'mongoose';
 import { env } from "./infrastructure/config/env.validator";
-import { makeAIWorkerOrchestrator, liveKitService, rabbitMQBroker, aiInterviewRepository, aiAnswerEvaluator } from './infrastructure/di/ai-interview.factory';
+import { AnswerEvaluation } from './domain/value-objects/AnswerEvaluation';
+import { AnswerQuality } from './domain/enums/AnswerQuality.enum';
+import { makeAIWorkerOrchestrator, makeGenerateInterviewEvaluationUseCase, liveKitService, rabbitMQBroker, aiInterviewRepository, aiInterviewEvaluationRepository, aiAnswerEvaluator } from './infrastructure/di/ai-interview.factory';
 import { connectDB } from './infrastructure/database/mongoose/connect';
 import { InterviewPhase } from './domain/enums/InterviewPhase.enum';
 import { Logger, LogCategory } from "./infrastructure/logger/logger";
@@ -37,8 +39,8 @@ async function main() {
   }
 
   try {
-    await RedisClient.connect();
-    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Redis connected.`);
+    await RedisClient.connect(); // This now waits for the 'ready' event
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Redis connected and ready.`);
   } catch (err) {
     Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Failed to connect to Redis:`, err);
     process.exit(1);
@@ -109,7 +111,18 @@ async function main() {
         // We only acknowledge the job after the interview is completely finished.
         await orchestrator.startWorker(livekitUrl, token, sessionId);
         
-        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Finished processing session ${sessionId}`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Finished processing session ${sessionId}. Publishing full evaluation job...`);
+        try {
+          await rabbitMQBroker.publish('ai_interview_evaluations', {
+            type: 'GENERATE_FULL_EVALUATION',
+            sessionId,
+            interviewId: session.interviewId.toString(),
+            enqueuedAt: Date.now()
+          });
+        } catch (evalPubErr) {
+          Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Failed to enqueue full evaluation for session ${sessionId}:`, evalPubErr);
+        }
+
         ack(); // Acknowledge completion ONLY when finished
       } catch (err: unknown) {
         Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error in startWorker for session ${sessionId}:`, err);
@@ -130,7 +143,9 @@ async function main() {
 
   Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Listening for jobs on 'ai_interview_jobs' (Prefetch: ${MAX_CONCURRENT_SESSIONS})...`);
 
-  const MAX_CONCURRENT_EVALS = 10;
+  const MAX_CONCURRENT_EVALS = 1;
+  const generateInterviewEvaluationUseCase = makeGenerateInterviewEvaluationUseCase();
+
   await rabbitMQBroker.subscribe('ai_interview_evaluations', async (msg: unknown, ack: () => void, nack: (requeue?: boolean, allUpTo?: boolean) => void) => {
     try {
       if (!msg || typeof msg !== 'object') {
@@ -141,6 +156,8 @@ async function main() {
       const evalMsg = msg as {
         type?: string;
         sessionId?: string;
+        interviewId?: string;
+        forceRegenerate?: boolean;
         questionId?: string;
         questionText?: string;
         candidateAnswer?: string;
@@ -150,6 +167,73 @@ async function main() {
         enqueuedAt?: number;
         retries?: number;
       };
+
+      if (evalMsg.type === 'GENERATE_FULL_EVALUATION') {
+        const { sessionId, interviewId, forceRegenerate, retries = 0 } = evalMsg;
+        if (!sessionId) {
+          Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Missing sessionId in GENERATE_FULL_EVALUATION job`, new Error('Invalid payload'));
+          return nack(false, false);
+        }
+
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_EVALUATION_WORKER] Processing full interview evaluation for session ${sessionId} (Attempt ${retries + 1})`);
+        try {
+          const result = await generateInterviewEvaluationUseCase.execute({
+            sessionId,
+            interviewId,
+            forceRegenerate: !!forceRegenerate,
+          });
+          
+          if (result.status === 'STARTED_AND_COMPLETED') {
+            Logger.info(LogCategory.SYSTEM_INFO, `[AI_EVALUATION_WORKER] Full interview evaluation completed for session ${sessionId}`);
+            return ack();
+          } else if (result.status === 'ALREADY_COMPLETED') {
+            Logger.info(LogCategory.SYSTEM_INFO, `[AI_EVALUATION_WORKER] Evaluation already completed for session ${sessionId}`);
+            return ack();
+          } else if (result.status === 'ALREADY_IN_PROGRESS') {
+            Logger.info(LogCategory.SYSTEM_INFO, `[AI_EVALUATION_WORKER] Evaluation already in progress, skipping duplicate for session ${sessionId}`);
+            return ack();
+          } else if (result.status === 'WAITING_FOR_ANSWERS') {
+            Logger.warn(LogCategory.SYSTEM_INFO, `[AI_EVALUATION_WORKER] Waiting for background answer evaluations to complete for session ${sessionId}... (Attempt ${retries + 1})`);
+            
+            if (retries < 36) {
+              setTimeout(async () => {
+                try {
+                  await rabbitMQBroker.publish('ai_interview_evaluations', {
+                    ...(msg as object),
+                    retries: retries + 1,
+                    enqueuedAt: Date.now()
+                  });
+                } catch (err) {
+                  Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Failed to delayed-publish full evaluation retry for session ${sessionId}`, err);
+                }
+              }, 5000);
+              return ack();
+            } else {
+               Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Timeout waiting for answer evaluations for session ${sessionId}`);
+               
+               // Mark full evaluation as FAILED so the HR UI stops polling forever
+               try {
+                 const evaluationRepository = aiInterviewEvaluationRepository;
+                 let existingEval = await evaluationRepository.findBySessionId(sessionId);
+                 if (existingEval) {
+                   existingEval.markAsFailed('Timeout waiting for background answer evaluations to complete.');
+                   await evaluationRepository.update(existingEval);
+                 }
+               } catch (failErr) {
+                 Logger.error(LogCategory.SYSTEM_ERROR, `Failed to update full evaluation to FAILED after timeout for session ${sessionId}:`, failErr);
+               }
+               
+               return nack(false, false);
+            }
+          } else {
+             Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Evaluation failed for session ${sessionId}: ${result.message}`);
+             return nack(false, false);
+          }
+        } catch (fullEvalErr: any) {
+           Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Unexpected error during full interview evaluation for session ${sessionId}`, fullEvalErr);
+           return nack(false, false);
+        }
+      }
 
       if (evalMsg.type !== 'EVALUATE_ANSWER') {
         Logger.warn(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Unknown evaluation job type: ${evalMsg.type}, acknowledging and ignoring.`);
@@ -225,7 +309,7 @@ async function main() {
       }
       ack();
     } catch (err: unknown) {
-      const evalMsg = msg as { questionId?: string; retries?: number } | null;
+      const evalMsg = msg as { questionId?: string; retries?: number; sessionId?: string } | null;
       const questionId = evalMsg?.questionId || 'unknown';
       const retries = evalMsg?.retries || 0;
       Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Evaluation job failed for question ${questionId} (Attempt ${retries + 1})`, err);
@@ -246,6 +330,27 @@ async function main() {
       } else {
         Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Permanent failure for evaluation job ${questionId} after 3 attempts. Discarding to avoid queue blockage.`, err);
         nack(false); // DLX
+        
+        // Mark the individual answer evaluation as FAILED so it doesn't block the full evaluation
+        const sessionIdStr = evalMsg?.sessionId || (msg as any)?.sessionId;
+        if (sessionIdStr) {
+          try {
+            const bgSession = await aiInterviewRepository.findById(sessionIdStr);
+            if (bgSession) {
+               const failedEval = new AnswerEvaluation({
+                  score: 0,
+                  quality: AnswerQuality.POOR,
+                  feedback: "EVALUATION_FAILED_PERMANENTLY",
+                  needsFollowUp: false
+               });
+               bgSession.saveAnswerEvaluation(questionId, failedEval);
+               await aiInterviewRepository.update(bgSession.id, bgSession);
+               Logger.info(LogCategory.SYSTEM_INFO, `Marked individual evaluation for question ${questionId} as FAILED.`);
+            }
+          } catch (updateErr) {
+            Logger.error(LogCategory.AI_INTERVIEW_DB_FAILURE, `Failed to update question ${questionId} to FAILED`, updateErr);
+          }
+        }
       }
     }
   }, MAX_CONCURRENT_EVALS);

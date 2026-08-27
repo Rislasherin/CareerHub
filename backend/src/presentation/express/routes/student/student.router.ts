@@ -75,6 +75,7 @@ router.post("/interviews/:interviewId/start", aiInterviewController.startIntervi
 router.get("/interviews/session/:sessionId/token", aiInterviewController.getLiveKitToken);
 router.get("/interviews/session/:sessionId/status", aiInterviewController.getSessionStatus);
 router.post("/interviews/:sessionId/questions/:questionId/answer", aiInterviewController.processAnswer);
+router.post("/interviews/session/:sessionId/integrity-event", aiInterviewController.recordIntegrityEvent);
 
 export default router;
 

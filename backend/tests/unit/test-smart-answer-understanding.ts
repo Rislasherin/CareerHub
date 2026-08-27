@@ -1,7 +1,5 @@
-import { 
-  assessCandidateAnswerQuality,
-  LangGraphInterviewAIOrchestrator 
-} from "../../src/infrastructure/services/ai-interview/LangGraphInterviewAIOrchestrator.service";
+import { assessCandidateAnswerQuality } from "../../src/shared/utils/answerQuality.util";
+import { LangGraphInterviewAIOrchestrator } from "../../src/infrastructure/services/ai-interview/LangGraphInterviewAIOrchestrator.service";
 import { 
   CandidateAnswerQuality,
   AIOrchestrationAction 
@@ -184,6 +182,8 @@ async function runSmartAnswerUnderstandingTests() {
 
   if (failed > 0) {
     process.exit(1);
+  } else {
+    process.exit(0);
   }
 }
 

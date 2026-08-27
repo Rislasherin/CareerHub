@@ -12,6 +12,7 @@ import { InterviewDifficulty } from "@domain/enums/InterviewDifficulty.enum";
 import { LLMProviderFactory } from "./LLMProvider.factory";
 import { Metrics } from "../../observability/Metrics";
 import { ProviderRateLimiter } from "./ProviderRateLimiter";
+import { OllamaPriorityQueue } from "./OllamaPriorityQueue";
 import { Logger, LogCategory } from '../../logger/logger';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -137,17 +138,20 @@ export class LangChainQuestionGenerator implements IQuestionGenerator {
 		previousQuestions: string[] = []
 	): IGeneratedQuestionResult {
 		const cleanTopic = topic.trim();
+		const isGenericTopic = cleanTopic.toLowerCase() === "all skills welcome";
+		const displayTopic = isGenericTopic ? "your core technical skills" : cleanTopic;
+		
 		let fallbackCandidates: string[] = [];
 
 		if (category === InterviewType.BEHAVIORAL) {
 			fallbackCandidates = [
-				`Can you describe a challenging project situation involving ${cleanTopic} and how you resolved it?`,
-				`How do you typically collaborate with team members when working on complex ${cleanTopic} tasks?`,
-				`Can you share an experience where you had to quickly adapt to changes while working with ${cleanTopic}?`
+				`Can you describe a challenging project situation involving ${displayTopic} and how you resolved it?`,
+				`How do you typically collaborate with team members when working on complex ${displayTopic} tasks?`,
+				`Can you share an experience where you had to quickly adapt to changes while working with ${displayTopic}?`
 			];
 		} else if (category === InterviewType.HR) {
 			fallbackCandidates = [
-				`What inspired you to pursue your current career path and work with ${cleanTopic}?`,
+				`What inspired you to pursue your current career path and work with ${displayTopic}?`,
 				`How do your career goals align with the responsibilities of this role?`,
 				`What environment or team culture helps you do your best work when building systems?`
 			];
@@ -168,14 +172,14 @@ export class LangChainQuestionGenerator implements IQuestionGenerator {
 				];
 			} else if (topicLower.includes("postgres") || topicLower.includes("mongo") || topicLower.includes("database")) {
 				fallbackCandidates = [
-					`How do you design database schemas and optimize query performance when working with ${cleanTopic}?`,
+					`How do you design database schemas and optimize query performance when working with ${displayTopic}?`,
 					`How do you handle database transactions and data consistency in high-traffic applications?`
 				];
 			} else {
 				fallbackCandidates = [
-					`How do you approach designing and implementing scalable solutions using ${cleanTopic}?`,
-					`What are some common performance bottlenecks in ${cleanTopic}, and how do you resolve them?`,
-					`Can you walk me through the key architectural considerations when building with ${cleanTopic}?`
+					`How do you approach designing and implementing scalable solutions using ${displayTopic}?`,
+					`What are some common performance bottlenecks in ${displayTopic}, and how do you resolve them?`,
+					`Can you walk me through the key architectural considerations when building with ${displayTopic}?`
 				];
 			}
 		}
@@ -243,7 +247,12 @@ export class LangChainQuestionGenerator implements IQuestionGenerator {
 					? input.mentionedTechnologies.join(", ")
 					: "None mentioned yet";
 
-				const release = await ProviderRateLimiter.acquire("QUESTION_LLM", 10);
+				let release: () => void;
+				if (config.provider === 'OLLAMA') {
+					release = await OllamaPriorityQueue.acquire('HIGH');
+				} else {
+					release = await ProviderRateLimiter.acquire("QUESTION_LLM", 10);
+				}
 				let stream;
 				try {
 					stream = await textChain.stream({
@@ -395,7 +404,12 @@ export class LangChainQuestionGenerator implements IQuestionGenerator {
 					? input.mentionedTechnologies.join(", ")
 					: "None mentioned yet";
 
-				const release = await ProviderRateLimiter.acquire("QUESTION_LLM", 10);
+				let release: () => void;
+				if (config.provider === 'OLLAMA') {
+					release = await OllamaPriorityQueue.acquire('HIGH');
+				} else {
+					release = await ProviderRateLimiter.acquire("QUESTION_LLM", 10);
+				}
 				let stream;
 				try {
 					stream = await textChain.stream({
@@ -509,12 +523,15 @@ export class LangChainQuestionGenerator implements IQuestionGenerator {
 		Logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] All LLM follow-up attempts failed. Skipping follow-up.`);
 		Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] LATENCY question_generation_total_duration (Failed): ${(performance.now() - t_start).toFixed(2)}ms`);
 
+		const isGenericTopic = input.topic.toLowerCase() === "all skills welcome";
+		const displayTopic = isGenericTopic ? "your core technical skills" : input.topic;
+
 		// Safe fallback follow-up
-		let fallbackText = `Can you expand on the architectural trade-offs and error handling strategies you used with ${input.topic}?`;
+		let fallbackText = `Can you expand on the architectural trade-offs and error handling strategies you used with ${displayTopic}?`;
 		if (input.interviewType === InterviewType.BEHAVIORAL) {
-			fallbackText = `Can you share more details about your specific actions during that situation with ${input.topic} and what the outcome was?`;
+			fallbackText = `Can you share more details about your specific actions during that situation with ${displayTopic} and what the outcome was?`;
 		} else if (input.interviewType === InterviewType.HR) {
-			fallbackText = `How has your experience with ${input.topic} influenced your long-term career goals and role expectations?`;
+			fallbackText = `How has your experience with ${displayTopic} influenced your long-term career goals and role expectations?`;
 		}
 		Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Using safe fallback follow-up: "${fallbackText}"`);
 		if (input.onSentenceGenerated) {

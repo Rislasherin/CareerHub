@@ -1,0 +1,6 @@
+export enum AIRecommendation {
+  STRONG_PROCEED = 'STRONG_PROCEED',
+  PROCEED = 'PROCEED',
+  CONSIDER = 'CONSIDER',
+  DO_NOT_PROCEED = 'DO_NOT_PROCEED',
+}

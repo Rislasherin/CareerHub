@@ -8,6 +8,7 @@ export interface IStudentInterviewService {
   startInterview(interviewId: string): Promise<{ success: boolean; phase: string; sessionId: string }>;
   getSessionToken(sessionId: string): Promise<ISessionTokenDTO>;
   getSessionStatus(sessionId: string): Promise<ISessionStatusDTO>;
+  recordIntegrityEvent(sessionId: string, eventType: string, metadata?: Record<string, any>): Promise<void>;
 }
 
 class StudentInterviewServiceImpl implements IStudentInterviewService {
@@ -26,6 +27,13 @@ class StudentInterviewServiceImpl implements IStudentInterviewService {
   async getSessionStatus(sessionId: string): Promise<ISessionStatusDTO> {
     const response = await apiClient.get<ISessionStatusDTO>(`/student/interviews/session/${sessionId}/status`);
     return response.data;
+  }
+
+  async recordIntegrityEvent(sessionId: string, eventType: string, metadata?: Record<string, any>): Promise<void> {
+    await apiClient.post(`/student/interviews/session/${sessionId}/integrity-event`, {
+      eventType,
+      metadata,
+    });
   }
 }
 

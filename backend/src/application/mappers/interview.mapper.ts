@@ -16,7 +16,7 @@ export const toInterviewEntity = (doc: InterviewDocument): Interview => {
       types,
       difficulty: (doc.configuration.difficulty as InterviewDifficulty) || InterviewDifficulty.MID,
       durationMinutes: doc.configuration.durationMinutes || doc.durationMinutes,
-      totalQuestions: (doc.configuration as any)?.totalQuestions,
+
       skills: (doc.configuration.skills as string[]) || [],
       questionDistribution: doc.configuration.questionDistribution as any,
       customInstructions: (doc.configuration.customInstructions as string[]) || [],

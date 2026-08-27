@@ -22,6 +22,7 @@
     "@langchain/langgraph": "^1.4.12",
     "@langchain/ollama": "^1.3.0",
     "@langchain/openai": "^1.5.10",
+    "@livekit/agents-plugin-tavus": "^1.7.1",
     "@livekit/rtc-node": "^0.13.34",
     "@qdrant/js-client-rest": "^1.19.0",
     "@supabase/supabase-js": "^2.49.4",

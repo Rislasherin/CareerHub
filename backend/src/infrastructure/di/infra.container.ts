@@ -24,6 +24,8 @@ import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGatewa
 import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
 
 import { AIInterviewRepository } from "@infrastructure/repositories/ai-interview.repository";
+import { AIInterviewEvaluationRepository } from "@infrastructure/repositories/ai-interview-evaluation.repository";
+import { MongoInterviewIntegrityEventRepository } from "@infrastructure/repositories/ai-interview/MongoInterviewIntegrityEventRepository";
 
 export const notificationRepository = new NotificationRepository(NotificationModel);
 export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
@@ -67,3 +69,5 @@ export const paymentGateway = new RazorpayGateway();
 
 // ─── AI Interview Infrastructure ──────────────────────────────────────────────
 export const aiInterviewRepository = new AIInterviewRepository();
+export const aiInterviewEvaluationRepository = new AIInterviewEvaluationRepository();
+export const interviewIntegrityEventRepository = new MongoInterviewIntegrityEventRepository();

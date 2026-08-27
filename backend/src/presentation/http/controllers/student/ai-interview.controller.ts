@@ -10,12 +10,15 @@ import { Request, Response } from "express";
 import { ILiveKitService } from "@application/interfaces/ai-interview/ILiveKitService";
 import { IAIInterviewRepository } from "@domain/repositories/ai-interview/IAIInterviewRepository";
 
+import { IRecordInterviewIntegrityEventUseCase } from "@application/usecases/ai-interview/interfaces/IRecordInterviewIntegrityEventUseCase";
+
 export class AIInterviewController {
 	constructor(
 		private readonly _startAIInterviewUseCase: IStartAIInterviewUseCase,
 		private readonly _processStudentAnswerUseCase: IProcessStudentAnswerUseCase,
 		private readonly _liveKitService: ILiveKitService,
-		private readonly _aiInterviewRepository: IAIInterviewRepository
+		private readonly _aiInterviewRepository: IAIInterviewRepository,
+		private readonly _recordInterviewIntegrityEventUseCase?: IRecordInterviewIntegrityEventUseCase
 	) { }
 
 	public getLiveKitToken = asyncHandler(async (req: Request, res: Response) => {
@@ -122,5 +125,30 @@ export class AIInterviewController {
 		});
 
 		sendSuccess(res, result, "Answer processed successfully.", HttpStatus.OK);
-	})
+	});
+
+	public recordIntegrityEvent = asyncHandler(async (req: Request, res: Response) => {
+		const { sessionId } = req.params;
+		const authUser = req.user as { id?: string; _id?: string } | undefined;
+		const studentId = authUser?.id || authUser?._id;
+		
+		if (!studentId) {
+			throw new AppError("Unauthorized", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+		}
+
+		if (!this._recordInterviewIntegrityEventUseCase) {
+			throw new AppError("Integrity monitoring is not configured.", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
+		}
+
+		const { eventType, metadata } = req.body;
+		
+		const event = await this._recordInterviewIntegrityEventUseCase.execute({
+			sessionId,
+			studentId: studentId.toString(),
+			eventType,
+			metadata
+		});
+
+		sendSuccess(res, event.toJSON(), "Integrity event recorded.", HttpStatus.CREATED);
+	});
 }

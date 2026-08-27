@@ -14,6 +14,8 @@ import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { ILogger, LogCategory } from "../../../interfaces/observability/ILogger";
 import { CandidateUtteranceIntent } from "@domain/enums/CandidateUtteranceIntent.enum";
 import { classifyCandidateUtterance, getCandidateQuestionResponse } from "../../../services/ai-interview/CandidateUtteranceClassifier";
+import { classifyTurnIntent, CandidateTurnIntent } from "../../../../shared/utils/turnIntent.util";
+import { IMessageBroker } from "@application/interfaces/messaging/IMessageBroker";
 
 
 
@@ -69,7 +71,8 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
     private readonly _interviewRepository: IInterviewRepository,
     private readonly _studentRepository?: IStudentRepository,
     private readonly _jobRepository?: IJobRepository,
-    private readonly _logger?: ILogger
+    private readonly _logger?: ILogger,
+    private readonly _messageBroker?: IMessageBroker
   ) {}
 
   private resolveSessionCompletion(): void {
@@ -673,6 +676,21 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                          phase: 'COMPLETED',
                          timestamp: Date.now()
                        });
+
+                       if (this._messageBroker && session) {
+                            try {
+                                await this._messageBroker.publish('ai_interview_evaluations', {
+                                    type: 'GENERATE_FULL_EVALUATION',
+                                    sessionId: session.id,
+                                    interviewId: session.interviewId,
+                                    enqueuedAt: Date.now()
+                                });
+                                if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, "[AI_WORKER] Published FULL_EVALUATION job");
+                            } catch (e) {
+                                if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Failed to publish FULL_EVALUATION job:`, e);
+                            }
+                       }
+
                        if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, "[AI_WORKER] Final TTS completed");
                        if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, "[AI_WORKER] Interview completed");
                        if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, "[AI_WORKER] Worker stopped");

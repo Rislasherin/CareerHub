@@ -13,7 +13,7 @@ export interface InterviewConfigurationProps {
   selectedTypes?: InterviewType[];
   difficulty?: InterviewDifficulty;
   durationMinutes: number;
-  totalQuestions?: number;
+
   skills?: string[];
   questionDistribution?: QuestionDistribution;
   customInstructions?: string[];
@@ -25,7 +25,7 @@ export class InterviewConfiguration {
   private readonly _types: InterviewType[];
   private readonly _difficulty: InterviewDifficulty;
   private readonly _durationMinutes: number;
-  private readonly _totalQuestions?: number;
+
   private readonly _skills: string[];
   private readonly _questionDistribution?: QuestionDistribution;
   private readonly _customInstructions: string[];
@@ -56,11 +56,7 @@ export class InterviewConfiguration {
       throw new Error('[InterviewConfiguration] durationMinutes must be greater than 0.');
     }
 
-    if (props.totalQuestions !== undefined && props.totalQuestions <= 0) {
-      throw new Error('[InterviewConfiguration] totalQuestions must be greater than 0.');
-    }
 
-    this._totalQuestions = props.totalQuestions;
     this._difficulty = props.difficulty ?? InterviewDifficulty.MID;
     this._durationMinutes = props.durationMinutes;
     this._skills = (props.skills ?? []).map(s => s.trim()).filter(Boolean);
@@ -133,7 +129,7 @@ export class InterviewConfiguration {
   get isMixed(): boolean { return this._types.length > 1; }
   get difficulty(): InterviewDifficulty { return this._difficulty; }
   get durationMinutes(): number { return this._durationMinutes; }
-  get totalQuestions(): number | undefined { return this._totalQuestions; }
+
   get skills(): ReadonlyArray<string> { return this._skills; }
   get questionDistribution(): QuestionDistribution | undefined { return this._questionDistribution; }
   get customInstructions(): ReadonlyArray<string> { return this._customInstructions; }
@@ -146,17 +142,17 @@ export class InterviewConfiguration {
    */
   public static calculateQuestionAllocation(
     types: ReadonlyArray<InterviewType>,
-    totalQuestions: number,
+    estimatedTotalQuestions: number,
     distribution?: QuestionDistribution
   ): Map<InterviewType, number> {
     const allocation = new Map<InterviewType, number>();
 
-    if (types.length === 0 || totalQuestions <= 0) {
+    if (types.length === 0 || estimatedTotalQuestions <= 0) {
       return allocation;
     }
 
     if (types.length === 1) {
-      allocation.set(types[0], totalQuestions);
+      allocation.set(types[0], estimatedTotalQuestions);
       return allocation;
     }
 
@@ -172,7 +168,7 @@ export class InterviewConfiguration {
     const remainders: Array<{ type: InterviewType; remainder: number }> = [];
 
     percentages.forEach(({ type, pct }) => {
-      const raw = (totalQuestions * pct) / 100;
+      const raw = (estimatedTotalQuestions * pct) / 100;
       const count = Math.floor(raw);
       allocation.set(type, count);
       allocatedTotal += count;
@@ -182,7 +178,7 @@ export class InterviewConfiguration {
     // Sort by largest remainder descending
     remainders.sort((a, b) => b.remainder - a.remainder);
 
-    let unallocated = totalQuestions - allocatedTotal;
+    let unallocated = estimatedTotalQuestions - allocatedTotal;
     let idx = 0;
     while (unallocated > 0) {
       const item = remainders[idx % remainders.length];
@@ -191,8 +187,8 @@ export class InterviewConfiguration {
       idx++;
     }
 
-    // If totalQuestions >= types.length, ensure every selected type receives at least 1 question
-    if (totalQuestions >= types.length) {
+    // If estimatedTotalQuestions >= types.length, ensure every selected type receives at least 1 question
+    if (estimatedTotalQuestions >= types.length) {
       for (const t of types) {
         if ((allocation.get(t) || 0) === 0) {
           // Borrow 1 from the type with highest count > 1
@@ -213,7 +209,7 @@ export class InterviewConfiguration {
       types: [...this._types],
       difficulty: this._difficulty,
       durationMinutes: this._durationMinutes,
-      totalQuestions: this._totalQuestions,
+
       skills: [...this._skills],
       questionDistribution: this._questionDistribution ? { ...this._questionDistribution } : undefined,
       customInstructions: [...this._customInstructions],
@@ -222,12 +218,12 @@ export class InterviewConfiguration {
     };
   }
 
-  static createDefault(type: InterviewType = InterviewType.TECHNICAL, durationMinutes: number = 30, totalQuestions?: number): InterviewConfiguration {
+  static createDefault(type: InterviewType = InterviewType.TECHNICAL, durationMinutes: number = 30): InterviewConfiguration {
     return new InterviewConfiguration({
       types: [type],
       difficulty: InterviewDifficulty.MID,
       durationMinutes,
-      totalQuestions,
+
       skills: [],
       customInstructions: [],
     });

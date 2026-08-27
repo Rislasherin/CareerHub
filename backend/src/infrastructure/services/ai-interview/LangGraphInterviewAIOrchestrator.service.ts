@@ -50,17 +50,19 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 			const history = [...(input.recentAnswerQualities || []), answerQuality];
 			const adaptiveDifficulty = input.adaptiveDifficulty || computeAdaptiveDifficulty(history);
 
-			// Plan completion check: When all planned questions are asked & answered, complete interview
-			if (input.interviewPlan && input.interviewPlan.isComplete()) {
+			// Safely complete interview on boundary if time has expired
+			if (input.timeRemainingMs !== undefined && input.timeRemainingMs <= 0) {
 				Metrics.recordLatency('langgraph_node_decide_action', performance.now() - t_start, 'local', { action: AIOrchestrationAction.COMPLETE_INTERVIEW });
 				return { 
 					action: AIOrchestrationAction.COMPLETE_INTERVIEW, 
 					answerQuality,
 					adaptiveDifficulty,
-					nextTopic: "Completed", 
+					nextTopic: "Time Expired", 
 					nextCategory: input.interviewType || InterviewType.TECHNICAL 
 				};
 			}
+
+
 
 			// Smart answer understanding action decision:
 			let action = AIOrchestrationAction.ASK_NEXT_QUESTION;

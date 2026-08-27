@@ -21,6 +21,12 @@ const envSchema = z.object({
   LIVEKIT_URL: z.string().url(),
   LIVEKIT_API_KEY: z.string().optional(),
   LIVEKIT_API_SECRET: z.string().optional(),
+
+  // Tavus optional Avatar
+  AI_AVATAR_ENABLED: z.enum(["true", "false"]).default("false"),
+  TAVUS_API_KEY: z.string().optional(),
+  TAVUS_REPLICA_ID: z.string().optional(),
+
   CARTESIA_API_KEY: z.string().optional(),
   CARTESIA_VOICE_ID: z.string().default("db6b0ed5-d5d3-463d-ae85-518a07d3c2b4"),
   CARTESIA_MODEL_ID: z.string().default("sonic-3.5"),
@@ -41,6 +47,12 @@ const envSchema = z.object({
   AI_EVALUATION_TEMPERATURE: z.coerce.number().default(0.1),
   AI_EVALUATION_MAX_TOKENS: z.coerce.number().default(160),
   AI_EVALUATION_TIMEOUT_MS: z.coerce.number().default(90000),
+  AI_FULL_EVALUATION_PROVIDER: z.enum(["OLLAMA", "GEMINI", "GROQ", "OPENAI"]).optional(),
+  AI_FULL_EVALUATION_MODEL: z.string().optional(),
+  AI_FULL_EVALUATION_BASE_URL: z.string().optional(),
+  AI_FULL_EVALUATION_TEMPERATURE: z.coerce.number().default(0.1),
+  AI_FULL_EVALUATION_MAX_TOKENS: z.coerce.number().default(4000),
+  AI_FULL_EVALUATION_TIMEOUT_MS: z.coerce.number().default(120000),
   AI_LLM_TIMEOUT_MS: z.coerce.number().default(25000),
   OLLAMA_BASE_URL: z.string().default("http://127.0.0.1:11434"),
   GEMINI_API_KEY: z.string().optional(),
@@ -48,7 +60,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   LIVEKIT_TOKEN_TTL: z.string().default("2h"),
   RABBITMQ_PREFETCH: z.coerce.number().default(1),
-  RABBITMQ_URL: z.string().default("amqp://localhost")
+  RABBITMQ_URL: z.string().default("amqp://127.0.0.1")
 });
 
 export const env = envSchema.parse(process.env);

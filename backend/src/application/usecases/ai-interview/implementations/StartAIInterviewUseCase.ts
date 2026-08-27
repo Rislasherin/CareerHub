@@ -9,6 +9,7 @@ import { AIInterviewSession } from "@domain/entities/ai-interview/AIInterviewSes
 import { InterviewPhase } from "@domain/enums/InterviewPhase.enum";
 import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { ILiveKitService } from "@application/interfaces/ai-interview/ILiveKitService";
+import { IInterviewAvatarService } from "@application/interfaces/ai-interview/IInterviewAvatarService";
 import { IMessageBroker } from "@application/interfaces/messaging/IMessageBroker";
 import { InterviewContextBuilder } from "@application/services/ai-interview/InterviewContextBuilder";
 
@@ -26,6 +27,7 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     private readonly _interviewRepository: IInterviewRepository,
     private readonly _questionGenerator: IQuestionGenerator,
     private readonly _liveKitService: ILiveKitService,
+    private readonly _avatarService: IInterviewAvatarService,
     private readonly _messageBroker: IMessageBroker,
     private readonly _jobRepository?: IJobRepository,
     private readonly _studentRepository?: IStudentRepository,
@@ -128,6 +130,13 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     await this._messageBroker.publish('ai_interview_jobs', {
       type: 'START_AI_INTERVIEW',
       sessionId: savedSession.id
+    });
+    
+    // 10. Start the Avatar in the background (Non-blocking)
+    this._avatarService.startAvatar(savedSession.id, this._liveKitUrl, token).catch(e => {
+        if (this._logger) {
+           this._logger.error(LogCategory.SYSTEM_ERROR, `[StartAIInterviewUseCase] Background avatar start failed:`, e);
+        }
     });
 
     return {

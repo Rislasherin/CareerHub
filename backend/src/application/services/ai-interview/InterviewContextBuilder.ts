@@ -64,10 +64,8 @@ export class InterviewContextBuilder {
     const interviewContext = contextSections.join("\n\n");
 
     // 2. Generate structured Interview Plan
-    // Respect configured totalQuestions or estimate ~1 question every 4.5 minutes
-    const totalQuestions = (configuration.totalQuestions && configuration.totalQuestions > 0)
-      ? configuration.totalQuestions
-      : Math.max(2, Math.round(configuration.durationMinutes / 4.5));
+    // Estimate ~1 question every 4.5 minutes to evenly distribute topics
+    const totalQuestions = Math.max(2, Math.round(configuration.durationMinutes / 4.5));
 
     const planItems: InterviewPlanItem[] = [];
     const types = configuration.types;

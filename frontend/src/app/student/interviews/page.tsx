@@ -78,11 +78,22 @@ export default function StudentInterviewsPage() {
   }).sort((a: any, b: any) => {
     const timeA = new Date(a.scheduledAt).getTime();
     const timeB = new Date(b.scheduledAt).getTime();
-    if (timeA === timeB) {
-      // Secondary sort by ID if dates are identical
-      return (b.id || '').localeCompare(a.id || '');
+    
+    const isUpcomingOrActiveA = ['SCHEDULED', 'RESCHEDULE_REQUESTED', 'CANCELLATION_REQUESTED', 'IN_PROGRESS', 'WAITING'].includes(a.status);
+    const isUpcomingOrActiveB = ['SCHEDULED', 'RESCHEDULE_REQUESTED', 'CANCELLATION_REQUESTED', 'IN_PROGRESS', 'WAITING'].includes(b.status);
+
+    if (isUpcomingOrActiveA && !isUpcomingOrActiveB) return -1;
+    if (!isUpcomingOrActiveA && isUpcomingOrActiveB) return 1;
+
+    if (isUpcomingOrActiveA && isUpcomingOrActiveB) {
+      // Both upcoming: nearest first
+      if (timeA === timeB) return (b.id || '').localeCompare(a.id || '');
+      return timeA - timeB;
+    } else {
+      // Both past: most recent first
+      if (timeA === timeB) return (b.id || '').localeCompare(a.id || '');
+      return timeB - timeA;
     }
-    return timeA - timeB;
   });
 
   // Pagination logic
@@ -257,20 +268,25 @@ export default function StudentInterviewsPage() {
                           
                           {/* Join Link Overlay (Hover) */}
                           {(isUpcoming || inv.status === 'IN_PROGRESS' || inv.status === 'WAITING') && (
-                            <button 
-                              onClick={() => handleStartInterview(inv.id)}
-                              disabled={Boolean(startingId)}
-                              className="absolute inset-0 bg-rose-500 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none disabled:opacity-100 disabled:bg-rose-400"
-                            >
+                            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none group-hover:pointer-events-auto">
                               {startingId === inv.id ? (
-                                <span className="flex items-center gap-2">
-                                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  Joining Interview...
-                                </span>
+                                <div className="absolute inset-0 bg-rose-500 text-white flex flex-col items-center justify-center text-center px-2 pointer-events-auto">
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span className="font-bold text-xs tracking-wide">Joining...</span>
+                                  </div>
+                                  <span className="text-[9px] text-white/90 font-semibold leading-tight">Preparing your AI interview...<br/>Please wait.</span>
+                                </div>
                               ) : (
-                                "Join AI Interview"
+                                <button 
+                                  onClick={() => handleStartInterview(inv.id)}
+                                  disabled={Boolean(startingId)}
+                                  className={`absolute inset-0 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center transition-opacity cursor-pointer border-none pointer-events-auto ${Boolean(startingId) ? 'opacity-0 !pointer-events-none' : 'opacity-0 group-hover:opacity-100'}`}
+                                >
+                                  Join AI Interview
+                                </button>
                               )}
-                            </button>
+                            </div>
                           )}
                         </div>
                       </div>

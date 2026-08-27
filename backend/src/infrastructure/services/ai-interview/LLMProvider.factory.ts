@@ -43,7 +43,7 @@ export class LLMProviderFactory {
     }
 
     let defaultModel = "llama3.2:3b";
-    if (provider === "GROQ") defaultModel = "allam-2-7b";
+    if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
     else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
@@ -85,7 +85,7 @@ export class LLMProviderFactory {
     }
 
     let defaultModel = "llama3.2:3b";
-    if (provider === "GROQ") defaultModel = "allam-2-7b";
+    if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
     else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
@@ -96,8 +96,35 @@ export class LLMProviderFactory {
       model,
       baseUrl: env.AI_EVALUATION_BASE_URL || env.OLLAMA_BASE_URL,
       temperature: env.AI_EVALUATION_TEMPERATURE,
+      
       maxTokens: env.AI_EVALUATION_MAX_TOKENS,
       timeoutMs: env.AI_EVALUATION_TIMEOUT_MS,
+    };
+  }
+
+  public static getFullEvaluationConfig(): ISingleLLMConfig {
+    let provider: LLMProviderType;
+
+    if (env.AI_FULL_EVALUATION_PROVIDER) {
+      provider = env.AI_FULL_EVALUATION_PROVIDER;
+    } else {
+      provider = "GROQ";
+    }
+
+    let defaultModel = "qwen/qwen3.8-27b";
+    if (provider === "OLLAMA") defaultModel = "llama3.2:3b";
+    else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
+    else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
+
+    const model = env.AI_FULL_EVALUATION_MODEL || defaultModel;
+
+    return {
+      provider,
+      model,
+      baseUrl: env.AI_FULL_EVALUATION_BASE_URL || env.OLLAMA_BASE_URL,
+      temperature: env.AI_FULL_EVALUATION_TEMPERATURE,
+      maxTokens: env.AI_FULL_EVALUATION_MAX_TOKENS,
+      timeoutMs: env.AI_FULL_EVALUATION_TIMEOUT_MS,
     };
   }
 
@@ -228,6 +255,64 @@ export class LLMProviderFactory {
       });
     }
 
+    return new ChatGoogleGenerativeAI({
+      model: config.model,
+      apiKey: env.GEMINI_API_KEY,
+      temperature: config.temperature,
+      maxOutputTokens: config.maxTokens,
+      maxRetries: 1,
+      streaming: false,
+    });
+  }
+
+  public static createFullEvaluationLLM(): BaseChatModel {
+    const config = this.getFullEvaluationConfig();
+    const fullMaxTokens = Math.max(config.maxTokens, 4000);
+    Logger.info(LogCategory.SYSTEM_INFO, `[LLMProviderFactory] Initialized Full Evaluation LLM -> Provider: ${config.provider}, Model: ${config.model}, Temp: ${config.temperature}, MaxTokens: ${fullMaxTokens}`);
+
+    if (config.provider === "OLLAMA") {
+      return new ChatOllama({
+        model: config.model,
+        baseUrl: config.baseUrl || "http://127.0.0.1:11434",
+        temperature: config.temperature,
+        numPredict: fullMaxTokens,
+        keepAlive: "30m",
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
+    if (config.provider === "GROQ") {
+      if (!env.GROQ_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing GROQ_API_KEY in environment for Evaluation LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.GROQ_API_KEY,
+        configuration: {
+          baseURL: "https://api.groq.com/openai/v1",
+        },
+        temperature: config.temperature,
+        maxTokens: fullMaxTokens,
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
+    if (config.provider === "OPENAI") {
+      if (!env.OPENAI_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing OPENAI_API_KEY in environment for Evaluation LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.OPENAI_API_KEY,
+        temperature: config.temperature,
+        maxTokens: fullMaxTokens,
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
     if (!env.GEMINI_API_KEY) {
       throw new Error("[LLMProviderFactory] Missing GEMINI_API_KEY in environment for Evaluation LLM.");
     }
@@ -236,7 +321,7 @@ export class LLMProviderFactory {
       model: config.model,
       apiKey: env.GEMINI_API_KEY,
       temperature: config.temperature,
-      maxOutputTokens: config.maxTokens,
+      maxOutputTokens: fullMaxTokens,
       maxRetries: 1,
       streaming: false,
     });

@@ -9,6 +9,8 @@ import { InterviewUIState, AIConversationState, ITranscriptMessage } from '@/typ
 import { DeviceCheckView } from './components/DeviceCheckView';
 import { LiveTranscript } from './components/LiveTranscript';
 import { AIAvatarVisual } from './components/AIAvatarVisual';
+import { InterviewAvatarRenderer } from './components/InterviewAvatarRenderer';
+import { CandidateVideoRenderer } from './components/CandidateVideoRenderer';
 import { Mic, MicOff, Clock, PhoneOff, CheckCircle2, AlertCircle, RefreshCw, Lock, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -48,6 +50,9 @@ interface IRoomContentProps {
   onExit: () => void;
 }
 
+import { useInterviewIntegrityMonitor } from './components/useInterviewIntegrityMonitor';
+import { InterviewIntegrityModal } from './components/InterviewIntegrityModal';
+
 function AIInterviewRoomContent({
   sessionId,
   durationMinutes,
@@ -60,6 +65,20 @@ function AIInterviewRoomContent({
   const [uiState, setUiState] = useState<InterviewUIState>('preparing');
   const [startedAt, setStartedAt] = useState<string | null>(initialStartedAt);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  
+  const { enabled: micEnabled, toggle: toggleMic } = useTrackToggle({ source: Track.Source.Microphone });
+  const { enabled: cameraEnabled, toggle: toggleCamera } = useTrackToggle({ source: Track.Source.Camera });
+
+  const { isIntegrityBlocked, blockingReason, showGazeWarning, clearIntegrityBlock } = useInterviewIntegrityMonitor({
+    sessionId,
+    isActive: uiState === 'ai_ready' || uiState === 'in_progress',
+    cameraEnabled,
+    micEnabled,
+    studentStream,
+  });
+
+  const isCompletedRef = useRef(false);
+
   const [currentQuestionText, setCurrentQuestionText] = useState<string>('Connecting to AI interviewer...');
   const [transcriptList, setTranscriptList] = useState<ITranscriptMessage[]>([]);
   const [interimText, setInterimText] = useState<string>('');
@@ -94,6 +113,21 @@ function AIInterviewRoomContent({
     const handleReconnected = () => {
       console.log('[AI_INTERVIEW] Room reconnected successfully.');
       setIsReconnecting(false);
+    };
+
+    const handleDisconnected = () => {
+      console.log('[AI_INTERVIEW] Room disconnected permanently.');
+      setIsReconnecting(false);
+      
+      if (isCompletedRef.current) {
+        console.log('[AI_INTERVIEW] Disconnected cleanly after interview completion.');
+        return;
+      }
+
+      setUiState('completed'); // Or set a new error state, but 'completed' with an alert is easiest
+      // We could use an alert or a specific UI state for disconnection. Let's just alert for now.
+      alert("Connection to the interview server was permanently lost. Please refresh or contact support.");
+      window.location.href = '/student/interviews';
     };
 
     const handleDataReceived = (payload: Uint8Array) => {
@@ -151,6 +185,7 @@ function AIInterviewRoomContent({
           } else if (data.state === 'PROCESSING') {
             setInterimText('');
           } else if (data.state === 'COMPLETED') {
+            isCompletedRef.current = true;
             setUiState('completed');
             setTimeLeft(0);
           }
@@ -158,6 +193,7 @@ function AIInterviewRoomContent({
           if (data.phase === 'CLOSING') {
             setUiState('ai_ready');
           } else if (data.phase === 'COMPLETED') {
+            isCompletedRef.current = true;
             setUiState('completed');
             setTimeLeft(0);
           }
@@ -170,11 +206,13 @@ function AIInterviewRoomContent({
     room.on(RoomEvent.DataReceived, handleDataReceived);
     room.on(RoomEvent.Reconnecting, handleReconnecting);
     room.on(RoomEvent.Reconnected, handleReconnected);
+    room.on(RoomEvent.Disconnected, handleDisconnected);
 
     return () => {
       room.off(RoomEvent.DataReceived, handleDataReceived);
       room.off(RoomEvent.Reconnecting, handleReconnecting);
       room.off(RoomEvent.Reconnected, handleReconnected);
+      room.off(RoomEvent.Disconnected, handleDisconnected);
     };
   }, [room]);
 
@@ -187,6 +225,7 @@ function AIInterviewRoomContent({
         if (isMounted && data) {
           if (data.startedAt) setStartedAt(data.startedAt);
           if (data.isCompleted || data.phase === 'COMPLETED') {
+            isCompletedRef.current = true;
             setUiState('completed');
             setTimeLeft(0);
           }
@@ -235,6 +274,7 @@ function AIInterviewRoomContent({
           const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
           setTimeLeft(remaining);
           if (remaining === 0) {
+            isCompletedRef.current = true;
             setUiState('completed');
           }
         } else {
@@ -339,9 +379,32 @@ function AIInterviewRoomContent({
         {/* Left Stage */}
         <div className="lg:col-span-8 flex flex-col gap-4 min-h-0 h-full">
           
-          {/* AI Visual Box with PiP Student Video */}
-          <div className="flex-1 min-h-0 flex flex-col">
-            <AIAvatarVisual state={conversationState} studentStream={studentStream} />
+          {/* Two-Pane Video Section */}
+          <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* AI INTERVIEWER */}
+            <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl flex flex-col items-center justify-center">
+              <InterviewAvatarRenderer />
+              <AIAvatarVisual state={conversationState} />
+              
+              {/* Overlay Label */}
+              <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 z-20">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-white">AI Interviewer</span>
+              </div>
+            </div>
+
+            {/* YOU (Candidate) */}
+            <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl flex flex-col items-center justify-center">
+               <CandidateVideoRenderer stream={studentStream} />
+               
+               {/* Overlay Label */}
+               <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 z-20">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                 <span className="text-[10px] font-black uppercase tracking-wider text-white">You</span>
+               </div>
+            </div>
+
           </div>
 
           {/* Current Question Box */}
@@ -401,6 +464,7 @@ function AIInterviewRoomContent({
                 </button>
                 <button
                   onClick={() => {
+                    isCompletedRef.current = true; // prevent false alert on intentional exit
                     setShowExitConfirm(false);
                     onExit();
                   }}
@@ -413,6 +477,14 @@ function AIInterviewRoomContent({
           </div>
         )}
       </AnimatePresence>
+
+      <InterviewIntegrityModal
+        blockingReason={isIntegrityBlocked ? blockingReason : null}
+        showGazeWarning={showGazeWarning}
+        clearIntegrityBlock={clearIntegrityBlock}
+        toggleCamera={toggleCamera}
+        toggleMicrophone={toggleMic}
+      />
 
       <RoomAudioRenderer />
     </div>

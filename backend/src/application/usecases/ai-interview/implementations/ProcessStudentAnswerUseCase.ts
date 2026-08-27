@@ -99,32 +99,56 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
       .slice(-5);
 
     // 4. Call LangGraph AI Orchestrator (Deterministic Realtime Interaction Path)
-    const aiResult = await this._orchestrator.processAnswer({
-      sessionId: session.id,
-      candidateAnswer: input.answer,
-      currentQuestion: {
-        id: currentQuestion.id,
-        text: currentQuestion.text,
-        type: currentQuestion.type,
-        context: currentQuestion.context,
-      },
-      interviewContext,
-      onSentenceGenerated: input.onSentenceGenerated,
-      currentTopic: session.currentTopic || "None",
-      coveredTopics: [...session.coveredTopics],
-      followUpCount: session.followUpCount,
-      recentQuestions,
-      recentAnswers,
-      recentAnswerQualities,
-      mentionedTechnologies,
-      interviewPlan: session.interviewPlan,
-      interviewType: session.interviewPlan?.getNextItem()?.category || config?.primaryType,
-      difficulty: config?.difficulty,
-      customInstructions: config ? [...config.customInstructions] : [],
-      prohibitedTopics: config ? [...config.prohibitedTopics] : [],
-      timeRemainingMs,
-      abortSignal: input.abortSignal
-    });
+    let aiResult;
+    try {
+      aiResult = await this._orchestrator.processAnswer({
+        sessionId: session.id,
+        candidateAnswer: input.answer,
+        currentQuestion: {
+          id: currentQuestion.id,
+          text: currentQuestion.text,
+          type: currentQuestion.type,
+          context: currentQuestion.context,
+        },
+        interviewContext,
+        onSentenceGenerated: input.onSentenceGenerated,
+        currentTopic: session.currentTopic || "None",
+        coveredTopics: [...session.coveredTopics],
+        followUpCount: session.followUpCount,
+        recentQuestions,
+        recentAnswers,
+        recentAnswerQualities,
+        mentionedTechnologies,
+        interviewPlan: session.interviewPlan,
+        interviewType: session.interviewPlan?.getNextItem()?.category || config?.primaryType,
+        difficulty: config?.difficulty,
+        customInstructions: config ? [...config.customInstructions] : [],
+        prohibitedTopics: config ? [...config.prohibitedTopics] : [],
+        timeRemainingMs,
+        abortSignal: input.abortSignal
+      });
+    } finally {
+      // 3.5 Background Evaluation via Dedicated RabbitMQ Queue Isolation
+      // Publish immediately after recording the answer to guarantee evaluation isn't lost if realtime orchestration aborts/throws
+      // NOTE: Deferred to run AFTER realtime Question LLM finishes to prevent Ollama resource contention
+      if (this._messageBroker) {
+        this._messageBroker.publish('ai_interview_evaluations', {
+          type: 'EVALUATE_ANSWER',
+          sessionId: session.id,
+          questionId: input.questionId,
+          questionText: currentQuestion.text,
+          candidateAnswer: input.answer,
+          interviewContext,
+          interviewType: currentQuestion.category || config?.primaryType || InterviewType.TECHNICAL,
+          difficulty: config?.difficulty,
+          enqueuedAt: Date.now()
+        }).catch(err => {
+          if (this._logger) {
+            this._logger.error(LogCategory.SYSTEM_ERROR, "[ProcessStudentAnswerUseCase] Failed to publish evaluation job to RabbitMQ:", err);
+          }
+        });
+      }
+    }
 
     if (input.abortSignal?.aborted) {
        if (this._logger) {
@@ -178,25 +202,6 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
           [InterviewPhase.ASKING_QUESTION, InterviewPhase.ASKING_FOLLOW_UP, InterviewPhase.EVALUATING],
           InterviewPhase.CLOSING
       );
-    }
-
-    // 7. Background Evaluation via Dedicated RabbitMQ Queue Isolation
-    if (this._messageBroker) {
-      this._messageBroker.publish('ai_interview_evaluations', {
-        type: 'EVALUATE_ANSWER',
-        sessionId: session.id,
-        questionId: input.questionId,
-        questionText: currentQuestion.text,
-        candidateAnswer: input.answer,
-        interviewContext,
-        interviewType: currentQuestion.category || config?.primaryType || InterviewType.TECHNICAL,
-        difficulty: config?.difficulty,
-        enqueuedAt: Date.now()
-      }).catch(err => {
-        if (this._logger) {
-          this._logger.error(LogCategory.SYSTEM_ERROR, "[ProcessStudentAnswerUseCase] Failed to publish evaluation job to RabbitMQ:", err);
-        }
-      });
     }
 
     return {

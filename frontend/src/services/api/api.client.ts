@@ -6,7 +6,7 @@ const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return `http://${window.location.hostname}:5000/api`;
   }
-  return 'http://localhost:5000/api';
+  return 'http://127.0.0.1:5000/api';
 };
 
 const BASE_URL = getBaseUrl();
