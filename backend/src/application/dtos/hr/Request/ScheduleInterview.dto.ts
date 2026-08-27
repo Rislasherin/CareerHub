@@ -39,10 +39,6 @@ export class SheduleInterviewDto {
     @IsNotEmpty()
     durationMinutes!: number;
 
-    @Expose()
-    @IsOptional()
-    @IsNumber()
-    totalQuestions?: number;
 
     @Expose()
     @IsOptional()

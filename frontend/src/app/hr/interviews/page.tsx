@@ -9,12 +9,14 @@ import { API_ROUTES } from '@/constants/api.routes';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
+import { AIInterviewEvaluationModal } from './components/AIInterviewEvaluationModal';
 
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReschedule, setSelectedReschedule] = useState<any | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
+  const [selectedAIEvaluationInterview, setSelectedAIEvaluationInterview] = useState<any | null>(null);
   const [selectedReassign, setSelectedReassign] = useState<any | null>(null);
   const [interviewers, setInterviewers] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'TODAY' | 'FEEDBACK' | 'COMPLETED' | 'RESCHEDULES'>('ALL');
@@ -292,7 +294,20 @@ export default function InterviewsPage() {
                               <UserCircle size={12} /> Reassign
                             </button>
                           ) : interview.status === 'COMPLETED' ? (
-                            <button onClick={() => setSelectedFeedback(interview)} className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white">
+                            <button 
+                              onClick={() => {
+                                const isAI = interview.interviewer?.name?.toLowerCase().includes('ai') || 
+                                             interview.interviewer?.role?.toLowerCase().includes('ai') || 
+                                             interview.type === 'AI' ||
+                                             !interview.feedback; // Default completed AI interviews to AI evaluation modal
+                                if (isAI) {
+                                  setSelectedAIEvaluationInterview(interview);
+                                } else {
+                                  setSelectedFeedback(interview);
+                                }
+                              }} 
+                              className="px-3 py-1.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white cursor-pointer"
+                            >
                               <FileText size={12} /> View Feedback
                             </button>
                           ) : null}
@@ -453,6 +468,19 @@ export default function InterviewsPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* AI Interview Evaluation & Evidence Modal */}
+      {selectedAIEvaluationInterview && (
+        <AIInterviewEvaluationModal
+          interviewId={selectedAIEvaluationInterview.id}
+          candidateName={selectedAIEvaluationInterview.candidate?.name || 'Candidate'}
+          jobTitle={selectedAIEvaluationInterview.title || 'Technical Role'}
+          onClose={() => setSelectedAIEvaluationInterview(null)}
+          onDecisionRecorded={() => {
+            fetchInterviews();
+          }}
+        />
       )}
 
       {/* Reassign Modal */}

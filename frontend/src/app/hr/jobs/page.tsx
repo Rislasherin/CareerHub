@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
@@ -27,6 +28,7 @@ import { toast } from 'sonner';
 import { PLATFORM_DEGREES, PLATFORM_BRANCHES } from '@/constants/academic';
 
 export default function HRJobsPage() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -670,7 +672,7 @@ export default function HRJobsPage() {
                     className="w-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.location.href = `/hr/jobs/${job.id}/applicants`;
+                      router.push(`/hr/jobs/${job.id}/applicants`);
                     }}
                   >
                     Manage Pipeline

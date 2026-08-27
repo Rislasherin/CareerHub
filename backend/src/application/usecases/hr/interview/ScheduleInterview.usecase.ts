@@ -33,7 +33,7 @@ export class ScheduleInterviewUseCase {
       types: rawTypes,
       difficulty: payload.difficulty,
       durationMinutes: payload.durationMinutes,
-      totalQuestions: payload.totalQuestions,
+
       skills: payload.skills,
       questionDistribution: payload.questionDistribution,
       customInstructions: payload.customInstructions,

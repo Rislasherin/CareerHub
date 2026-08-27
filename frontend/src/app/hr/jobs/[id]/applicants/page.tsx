@@ -64,7 +64,6 @@ function JobApplicantsContent() {
     difficulty: 'MID',
     scheduledAt: '',
     durationMinutes: '30',
-    totalQuestions: '6',
     distribution: { technical: 100, behavioral: 0, hr: 0 } as Record<string, number>,
     skills: '',
     customInstructions: '',
@@ -150,7 +149,6 @@ function JobApplicantsContent() {
         type: interviewForm.types[0] || 'TECHNICAL',
         types: interviewForm.types,
         selectedTypes: interviewForm.types,
-        totalQuestions: parseInt(interviewForm.totalQuestions, 10) || undefined,
         questionDistribution,
         difficulty: interviewForm.difficulty,
         scheduledAt: interviewForm.scheduledAt,
@@ -178,7 +176,6 @@ function JobApplicantsContent() {
           difficulty: 'MID',
           scheduledAt: '',
           durationMinutes: '30',
-          totalQuestions: '6',
           distribution: { technical: 100, behavioral: 0, hr: 0 },
           skills: '',
           customInstructions: '',
@@ -733,19 +730,6 @@ function JobApplicantsContent() {
                         <option value="60">60 min</option>
                       </select>
                       {errors.durationMinutes && <p className="text-red-500 text-[10px] mt-1">{errors.durationMinutes}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-800 mb-1">Questions</label>
-                      <input
-                        type="number"
-                        min="2"
-                        max="20"
-                        name="totalQuestions"
-                        value={interviewForm.totalQuestions}
-                        onChange={(e) => setInterviewForm({ ...interviewForm, totalQuestions: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent text-sm bg-white font-medium"
-                      />
                     </div>
                   </div>
 

@@ -4,6 +4,7 @@ import { notificationController } from "@infrastructure/di/notification.factory"
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { PostJobDto } from "@application/dtos/hr/Request/PostJob.dto";
+import { RecordHRDecisionDto } from "@application/dtos/ai-interview/RecordHRDecision.dto";
 
 const router = Router();
 const hrDashboardController = makeHRDashboardController();
@@ -35,6 +36,9 @@ router.get("/offers/:id/pdf", hrOfferController.downloadOfferPdf);
 
 router.post("/interviews", hrInterviewController.scheduleInterview);
 router.get("/interviews", hrInterviewController.getInterviews);
+router.get("/interviews/:interviewId/evaluation", hrInterviewController.getInterviewEvaluation);
+router.post("/interviews/:interviewId/evaluation/decision", validateDto(RecordHRDecisionDto), hrInterviewController.recordHRDecision);
+router.post("/interviews/:interviewId/evaluation/regenerate", hrInterviewController.regenerateInterviewEvaluation);
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
