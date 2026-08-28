@@ -7,6 +7,7 @@ export const API_ROUTES = {
     INTERVIEWERS: '/super-admin/interviewers',
     MANAGEMENT: '/super-admin/management',
     BILLING: '/super-admin/billing',
+    REVENUE_ANALYTICS: '/super-admin/revenue/analytics',
   },
   STUDENT: {
     PROFILE: '/student/profile',
@@ -20,6 +21,7 @@ export const API_ROUTES = {
     JOBS: '/hr/jobs',
     INTERVIEWERS: '/hr/interviewers',
     DASHBOARD_STATS: '/hr/dashboard/stats',
+    ANALYTICS: '/hr/insights',
     CANDIDATES: '/hr/candidates',
     APPLICATIONS: '/hr/applications',
     INTERVIEWS: '/hr/interviews',
@@ -32,6 +34,9 @@ export const API_ROUTES = {
     STUDENTS_PENDING: '/college/students/pending',
     STUDENTS_BULK_INVITE: '/college/students/bulk-invite',
     STATUS_TOGGLE: '/college/status-toggle',
+    INTERVIEWS: '/college/interviews',
+    OFFERS: '/college/offers',
+    REPORTS_ANALYTICS: '/college/reports/insights',
   },
   INTERVIEWER: {
     ACTIVATE: '/auth/interviewer/activate',

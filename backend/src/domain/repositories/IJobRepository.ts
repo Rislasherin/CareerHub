@@ -18,5 +18,6 @@ export interface IJobRepository extends IBaseRepository<Job> {
 
 
   ): Promise<{ jobs: Job[]; total: number }>;
-
+  
+  getSkillDemand(companyId: string, startDate?: Date, endDate?: Date): Promise<{ skill: string, demand: number }[]>;
 }

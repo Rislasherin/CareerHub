@@ -64,7 +64,7 @@ const super_adminNav: NavCategory[] = [
       { label: 'Colleges', icon: GraduationCap, href: '/admin/colleges' },
       { label: 'Companies', icon: Building2, href: '/admin/companies' },
       { label: 'Subscriptions', icon: CreditCard, href: '/admin/subscriptions' },
-      { label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
+      
     ]
   },
   {
@@ -73,7 +73,14 @@ const super_adminNav: NavCategory[] = [
       { label: 'Revenue', icon: BarChart3, href: '/admin/revenue' },
       { label: 'Billing & Invoices', icon: FileText, href: '/admin/billing' },
     ]
+  },
+    {
+    title: 'PLATFORM',
+    items: [
+      { label: 'Settings', icon: Settings, href: '/admin/settings' },
+    ]
   }
+
 ];
 
 const collegeAdminNav: NavCategory[] = [
@@ -87,9 +94,28 @@ const collegeAdminNav: NavCategory[] = [
     title: 'MANAGEMENT',
     items: [
       { label: 'Student Directory', icon: Users, href: '/college/students' },
-      { label: 'Drive Approvals', icon: FileCheck, href: '/college/jobs' },
       { label: 'Notice Board', icon: Bell, href: '/college/notices' },
       { label: 'Plan & Billing', icon: CreditCard, href: '/college/subscription' }
+    ]
+  },
+  {
+    title: 'PLACEMENT',
+    items: [
+      { label: 'Drive Approvals', icon: FileCheck, href: '/college/jobs' },
+      { label: 'Interview Tracker', icon: Calendar, href: '/college/interviews' },
+      { label: 'Offer Letters', icon: FileText, href: '/college/offers' },
+    ]
+  },
+  {
+    title: 'INSIGHTS',
+    items: [
+      { label: 'Reports & Analytics', icon: BarChart3, href: '/college/reports' },
+    ]
+  },
+  {
+    title: 'ACCOUNT',
+    items: [
+      { label: 'Settings', icon: Settings, href: '/college/settings' },
     ]
   }
 ];
@@ -107,12 +133,23 @@ const hrNav: NavCategory[] = [
     items: [
       { label: 'Campus Drives', icon: Briefcase, href: '/hr/jobs' },
       { label: 'Post a Job', icon: Plus, href: '/hr/jobs?action=post-job' },
-      { label: 'Interviewers', icon: Users, href: '/hr/interviewers' },
       { label: 'Interviews', icon: Calendar, href: '/hr/interviews' },
       { label: 'Hire Requests', icon: FileCheck, href: '/hr/hire-requests' },
       { label: 'Offer Letters', icon: FileText, href: '/hr/offers' },
     ]
-  }
+  },
+    {
+    title: 'INSIGHTS',
+    items: [
+      { label: 'Analytics', icon: BarChart3, href: '/hr/analytics' },
+    ]
+  },
+  {
+    title: 'ACCOUNT',
+    items: [
+      { label: 'Settings', icon: Settings, href: '/hr/settings' },
+    ]
+  },
 ];
 
 const studentNav: NavCategory[] = [

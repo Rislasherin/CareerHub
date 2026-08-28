@@ -24,6 +24,7 @@ export const toOrganizationEntity = (doc: OrganizationDocument): Organization =>
         logoUrl: doc.logoUrl || undefined,
         onboardingStep: doc.onboardingStep || 0,
         website: doc.website || undefined,
+        instituteType: (doc as any).instituteType || undefined,
         status: doc.status as UserStatus,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
@@ -52,6 +53,7 @@ export const toOrganizationPersistence = (entity: Organization) => {
         logoUrl: props.logoUrl,
         onboardingStep: props.onboardingStep,
         website: props.website,
+        instituteType: props.instituteType,
         status: props.status
     }
 }

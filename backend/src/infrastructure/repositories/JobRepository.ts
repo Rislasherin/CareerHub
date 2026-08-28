@@ -109,5 +109,32 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
       total
     };
   }
+
+  async getSkillDemand(companyId: string, startDate?: Date, endDate?: Date): Promise<{ skill: string, demand: number }[]> {
+    const match: any = { companyId };
+    if (startDate || endDate) {
+      match.createdAt = {};
+      if (startDate) match.createdAt.$gte = startDate;
+      if (endDate) match.createdAt.$lte = endDate;
+    }
+
+    const result = await this.model.aggregate([
+      { $match: match },
+      { $unwind: "$requiredSkills" },
+      {
+        $group: {
+          _id: "$requiredSkills",
+          demand: { $sum: 1 }
+        }
+      },
+      { $sort: { demand: -1 } },
+      { $limit: 10 }
+    ]);
+
+    return result.map(r => ({
+      skill: r._id,
+      demand: r.demand
+    }));
+  }
 }
 

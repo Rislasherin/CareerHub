@@ -37,6 +37,7 @@ export const organizationSchema = new Schema(
 
     onboardingStep: { type: Number, default: 0 },
     website: { type: String, required: false },
+    instituteType: { type: String, required: false },
     status: {
       type: String,
       required: true,

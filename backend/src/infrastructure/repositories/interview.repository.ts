@@ -44,4 +44,44 @@ export class InterviewRepository extends BaseRepository<Interview,InterviewDocum
 
         return docs.map(doc => this.toEntity(doc as InterviewDocument))
     }
+
+    async getPopulatedCollegeInterviews(collegeId: string): Promise<Record<string, unknown>[]> {
+        const docs = await this.model.aggregate([
+            { $match: { isDeleted: { $ne: true } } },
+            {
+                $lookup: {
+                    from: "students",
+                    localField: "studentId",
+                    foreignField: "_id",
+                    as: "student"
+                }
+            },
+            { $unwind: "$student" },
+            { $match: { "student.collegeId": collegeId } },
+            {
+                $lookup: {
+                    from: "jobs",
+                    localField: "jobId",
+                    foreignField: "_id",
+                    as: "job"
+                }
+            },
+            { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: "companies",
+                    localField: "companyId",
+                    foreignField: "_id",
+                    as: "company"
+                }
+            },
+            { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+            { $sort: { scheduledAt: -1 } }
+        ]);
+
+        return docs.map(doc => ({
+            ...doc,
+            id: doc._id.toString()
+        }));
+    }
 }

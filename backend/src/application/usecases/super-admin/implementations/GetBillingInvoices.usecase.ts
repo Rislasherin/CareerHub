@@ -1,7 +1,6 @@
 import { ISubscriptionRepository } from "@domain/repositories/ISubscriptionRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
-import { SubscriptionModel } from "@infrastructure/database/models/organizer/subscription.model";
-import { OrganizationModel } from "@infrastructure/database/models/organizer/organization.model";
+import { SubscriptionStatus } from "@domain/enums/SubscriptionStatus.enum";
 
 export class GetBillingInvoicesUseCase {
   constructor(
@@ -9,46 +8,44 @@ export class GetBillingInvoicesUseCase {
     private readonly orgRepo: IOrganizationRepository
   ) {}
 
-  async execute(page: number, limit: number) {
-    
-    const skip = (page - 1) * limit;
+  async execute(page: number, limit: number, filters?: { search?: string, status?: string, planType?: string }) {
+    const { subscriptions, total } = await this.subRepo.findAll(page, limit, filters);
 
-    const subscriptions = await SubscriptionModel.find({})
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Calculate renewals due from all subscriptions
+    const overdueCount = await this.subRepo.countRenewalsDue(30);
 
-    const total = await SubscriptionModel.countDocuments();
+    // Get billing stats from repository
+    const billingStats = await this.subRepo.getBillingStats();
 
-    // Calculate YTD and Outstanding stats
-    const allSubs = await SubscriptionModel.find({}).lean();
-    let totalCollected = 0;
-    let outstanding = 0;
-    let overdueCount = 0;
-
-    const invoices = await Promise.all(subscriptions.map(async (sub: any, index: number) => {
-      const org = await OrganizationModel.findById(sub.collegeId).lean();
+    const invoices = await Promise.all(subscriptions.map(async (sub) => {
+      const org = await this.orgRepo.findById(sub.collegeId);
       
-      const issueDate = new Date(sub.createdAt);
+      const issueDate = sub.createdAt;
       const dueDate = new Date(issueDate);
-      dueDate.setDate(dueDate.getDate() + 10); // 10 day payment window
-      
+      dueDate.setDate(dueDate.getDate() + 10);
+
       const amount = sub.planType === 'PRO' ? 240000 : 99000;
-      let status = 'PAID';
-      
-      if (sub.status === 'PENDING') {
-        if (new Date() > dueDate) {
-          status = 'OVERDUE';
+      const invoiceNumber = `INV-${issueDate.getFullYear()}-${sub.id.substring(0, 6).toUpperCase()}`;
+
+      // Determine the business status authoritatively
+      let status = "PENDING";
+      const now = new Date();
+      if (sub.status === SubscriptionStatus.ACTIVE) {
+        status = "PAID";
+      } else if (sub.status === SubscriptionStatus.PENDING) {
+        if (now > dueDate) {
+          status = "OVERDUE";
         } else {
-          status = 'PENDING';
+          status = "PENDING";
         }
+      } else if (sub.status === SubscriptionStatus.CANCELLED) {
+        status = "CANCELLED";
       }
 
       return {
-        id: sub._id.toString(),
-        invoiceNumber: `INV-${issueDate.getFullYear()}-${(skip + index + 1).toString().padStart(3, '0')}`,
-        collegeName: (org as any)?.name || 'Unknown College',
+        id: sub.id,
+        invoiceNumber,
+        collegeName: org?.name || 'Unknown College',
         plan: sub.planType,
         amount,
         issueDate: issueDate.toISOString(),
@@ -56,33 +53,15 @@ export class GetBillingInvoicesUseCase {
         status
       };
     }));
-    
-    // Add real stats from all subs
-    allSubs.forEach((sub: any) => {
-        const issueDate = new Date(sub.createdAt);
-        const dueDate = new Date(issueDate);
-        dueDate.setDate(dueDate.getDate() + 10);
-
-        const amount = sub.planType === 'PRO' ? 240000 : 99000;
-        
-        if (sub.status === 'PENDING') {
-            outstanding += amount;
-            if (new Date() > dueDate) {
-                overdueCount++;
-            }
-        } else if (sub.status === 'ACTIVE') {
-            totalCollected += amount;
-        }
-    });
 
     return {
       invoices,
       total,
       stats: {
-        totalCollected,
-        outstanding,
+        totalCollected: billingStats.totalCollected,
+        outstanding: billingStats.outstanding,
         overdueCount,
-        invoicesIssued: total
+        invoicesIssued: billingStats.invoicesIssued
       }
     };
   }

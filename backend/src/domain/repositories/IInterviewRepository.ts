@@ -6,4 +6,5 @@ export interface IInterviewRepository extends IBaseRepository<Interview> {
   findByStudentId(studentId:string): Promise<Interview[]>
   findByJobId(jobId:string): Promise<Interview[]>
   findByCompanyId(companyId:string): Promise<Interview[]>;
+  getPopulatedCollegeInterviews(collegeId: string): Promise<Record<string, unknown>[]>;
 }

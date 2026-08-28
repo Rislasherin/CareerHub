@@ -1,4 +1,5 @@
 import { Metrics } from "../../observability/Metrics";
+import { RedisClient } from "../../redis/RedisClient";
 import { Logger, LogCategory } from "../../logger/logger";
 import { DistributedLock } from "../../distributed/DistributedLock";
 
@@ -17,7 +18,7 @@ export class ProviderRateLimiter {
     }
 
     // Import RedisClient dynamically or rely on it being imported above
-    const { RedisClient } = require("../../redis/RedisClient");
+    // Using static imported RedisClient
 
     if (RedisClient.isReady()) {
       const release = await DistributedLock.acquireProviderSemaphore(providerType, maxConcurrent, 30000);

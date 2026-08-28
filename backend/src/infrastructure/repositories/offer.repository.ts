@@ -1,4 +1,5 @@
 import { IOfferRepository } from "@domain/repositories/IOfferRepository";
+import { Types } from "mongoose";
 import { BaseRepository } from "./BaseRepository";
 import { OfferDocument, OfferModel } from "@infrastructure/database/models/company/offer.model";
 import { Offer } from "@domain/entities/Offer";
@@ -71,5 +72,73 @@ export class OfferRepository extends BaseRepository<Offer, OfferDocument> implem
                 job: doc.jobId
             };
         });
+    }
+
+    async getOfferOutcomes(companyId: string, startDate?: Date, endDate?: Date): Promise<{ accepted: number, pending: number, declined: number }> {
+        const match: any = { companyId: new Types.ObjectId(companyId) };
+        if (startDate || endDate) {
+            match.createdAt = {};
+            if (startDate) match.createdAt.$gte = startDate;
+            if (endDate) match.createdAt.$lte = endDate;
+        }
+
+        const result = await this.model.aggregate([
+            { $match: match },
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const outcomes = { accepted: 0, pending: 0, declined: 0 };
+        for (const r of result) {
+            if (r._id === 'ACCEPTED') outcomes.accepted = r.count;
+            if (r._id === 'PENDING') outcomes.pending = r.count;
+            if (r._id === 'REJECTED') outcomes.declined = r.count;
+        }
+
+        return outcomes;
+    }
+
+    async getPopulatedCollegeOffers(collegeId: string): Promise<Record<string, unknown>[]> {
+        const docs = await this.model.aggregate([
+            { $match: { isDeleted: { $ne: true } } },
+            {
+                $lookup: {
+                    from: "students",
+                    localField: "studentId",
+                    foreignField: "_id",
+                    as: "student"
+                }
+            },
+            { $unwind: "$student" },
+            { $match: { "student.collegeId": collegeId } },
+            {
+                $lookup: {
+                    from: "jobs",
+                    localField: "jobId",
+                    foreignField: "_id",
+                    as: "job"
+                }
+            },
+            { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: "companies",
+                    localField: "companyId",
+                    foreignField: "_id",
+                    as: "company"
+                }
+            },
+            { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+            { $sort: { createdAt: -1 } }
+        ]);
+
+        return docs.map(doc => ({
+            ...doc,
+            id: doc._id.toString()
+        }));
     }
 }

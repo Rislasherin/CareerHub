@@ -11,7 +11,7 @@ export class EmailService implements IEmailService {
     this._transporter = nodemailer.createTransport({
       host: env.EMAIL_HOST,
       port: env.EMAIL_PORT,
-      secure: env.EMAIL_PORT === 465, // true for 465, false for other ports
+      secure: env.EMAIL_PORT === 465, 
       auth: {
         user: env.EMAIL_USER,
         pass: env.EMAIL_PASS,
@@ -215,6 +215,43 @@ export class EmailService implements IEmailService {
       });
     } catch (err) {
       logger.error("Nodemailer Failed to send offer email:", err);
+    }
+  }
+
+  async sendRenewalReminder(email: string, collegeName: string, planName: string, expiryDate: Date): Promise<boolean> {
+    try {
+      const replyTo = await this.getContactEmail();
+      const formattedDate = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      await this._transporter.sendMail({
+        from: env.EMAIL_FROM,
+        replyTo,
+        to: email,
+        subject: `Renewal Reminder: Your CareerHub ${planName} Subscription`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Subscription Renewal Reminder</h2>
+            <p style="color: #334155; font-size: 16px;">
+              Hello placement team at <strong>${collegeName}</strong>,
+            </p>
+            <p style="color: #334155; font-size: 16px;">
+              This is a friendly reminder that your CareerHub <strong>${planName}</strong> plan subscription is expiring on <strong>${formattedDate}</strong>.
+            </p>
+            <p style="color: #334155; font-size: 16px;">
+              To ensure uninterrupted access to all placement drives, student profiles, and AI features, please renew your subscription.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${env.FRONTEND_URL}/college/subscription" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Renew Subscription</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">
+              If you have any questions or need assistance, please feel free to reply directly to this email.
+            </p>
+          </div>
+        `,
+      });
+      return true;
+    } catch (err) {
+      logger.error("Nodemailer Failed to send renewal reminder email:", err);
+      return false;
     }
   }
 }

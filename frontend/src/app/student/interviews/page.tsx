@@ -1,6 +1,7 @@
 'use client';
 import { API_ROUTES } from '@/constants/api.routes';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Pagination } from '@/components/shared/Pagination';
@@ -18,6 +19,7 @@ export default function StudentInterviewsPage() {
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('All');
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -29,7 +31,7 @@ export default function StudentInterviewsPage() {
     try {
       const result = await StudentInterviewService.startInterview(interviewId);
       if (result.success && result.sessionId) {
-        window.location.href = `/student/interviews/session/${result.sessionId}`;
+        router.push(`/student/interviews/session/${result.sessionId}`);
       } else {
         toast.error('Failed to start AI interview');
         setStartingId(null);

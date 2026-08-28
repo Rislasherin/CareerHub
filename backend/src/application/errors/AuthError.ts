@@ -25,3 +25,9 @@ export class TokenExpiredCustomError extends AppError {
     super("Token has expired", HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED);
   }
 }
+
+export class ForbiddenError extends AppError {
+  constructor(message = "Access Denied") {
+    super(message, HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
+  }
+}

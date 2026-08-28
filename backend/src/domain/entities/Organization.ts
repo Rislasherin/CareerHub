@@ -23,6 +23,7 @@ export interface OrganizationProps {
 
   onboardingStep?: number;
   website?: string;
+  instituteType?: string;
   description?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -66,6 +67,10 @@ export class Organization {
     return this._props.onboardingStep;
   }
 
+  get instituteType(): string | undefined {
+    return this._props.instituteType;
+  }
+
   get activeBranches(): string[] {
     return this._props.activeBranches || [];
   }
@@ -76,6 +81,18 @@ export class Organization {
 
   get plan(): string | undefined {
     return this._props.plan;
+  }
+
+  get placementContactPhone(): string | undefined {
+    return this._props.placementContactPhone;
+  }
+
+  get website(): string | undefined {
+    return this._props.website;
+  }
+
+  get address(): string | undefined {
+    return this._props.address;
   }
 
   get isTrialActive(): boolean {

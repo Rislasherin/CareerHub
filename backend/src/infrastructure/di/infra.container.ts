@@ -67,6 +67,9 @@ export const crossRoleAuthService = new CrossRoleAuthService(
 export const interviewRepository = new InterviewRepository();
 export const paymentGateway = new RazorpayGateway();
 
+import { CollegeAnalyticsRepository } from "@infrastructure/repositories/college-analytics.repository";
+export const collegeAnalyticsRepository = new CollegeAnalyticsRepository();
+
 // ─── AI Interview Infrastructure ──────────────────────────────────────────────
 export const aiInterviewRepository = new AIInterviewRepository();
 export const aiInterviewEvaluationRepository = new AIInterviewEvaluationRepository();
