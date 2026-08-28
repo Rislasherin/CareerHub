@@ -16,7 +16,8 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  Plus
+  Plus,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { superAdminService } from '@/services/super-admin/super-admin.service';
@@ -51,6 +52,42 @@ export default function CollegesManagement() {
     onConfirm: () => { },
     isLoading: false
   });
+
+  const handleExportCSV = async () => {
+    try {
+      const res = await superAdminService.getOrganizations('', 1, 1000, '');
+      const colleges = res.organizations || [];
+      
+      if (colleges.length === 0) {
+        toast.info("No records to export");
+        return;
+      }
+
+      const headers = ['Institution Name', 'City', 'State', 'Placement Contact Email', 'Placement Contact Phone', 'Registered Students', 'Status'];
+      const rows = colleges.map((col: any) => [
+        `"${col.name?.replace(/"/g, '""') || ''}"`,
+        `"${col.city || ''}"`,
+        `"${col.state || ''}"`,
+        `"${col.placementContactEmail || col.email || ''}"`,
+        `"${col.placementContactPhone || ''}"`,
+        col.countOfStudents || 0,
+        `"${col.status || 'ACTIVE'}"`
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `careerhub_colleges_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Colleges list exported successfully");
+    } catch (err) {
+      toast.error("Failed to export colleges list");
+    }
+  };
 
   const fetchColleges = async () => {
     setIsLoading(true);
@@ -158,6 +195,13 @@ export default function CollegesManagement() {
             <option value="PENDING">Pending Approval</option>
             <option value="BLOCKED">Blocked</option>
           </select>
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 border border-slate-800 text-sm font-bold text-slate-400 hover:text-white transition-all hover:bg-slate-800"
+          >
+            <Download size={16} className="text-cyan-400" />
+            Export CSV
+          </button>
         </div>
         {/* Table Content */}
         <div className="bg-[#121520] border border-white/5 rounded-[2.5rem] overflow-hidden">
