@@ -60,11 +60,31 @@ export const makeHRAuthController = () => {
 
 
 export const makeGetHRDashboardStatsUseCase = () => {
-  return new GetHRDashboardStatsUseCase();
+  return new GetHRDashboardStatsUseCase(
+    jobApplicationRepository,
+    jobRepository,
+    interviewRepository,
+    offerRepository
+  );
 };
 
 export const makeHRDashboardController = () => {
   return new HRDashboardController(makeGetHRDashboardStatsUseCase());
+};
+
+import { GetHRAnalyticsUseCase } from "@application/usecases/hr/analytics/implementations/GetHRAnalytics.usecase";
+import { HRAnalyticsController } from "@presentation/http/controllers/hr/hr.analytics.controller";
+
+export const makeGetHRAnalyticsUseCase = () => {
+  return new GetHRAnalyticsUseCase(
+    jobApplicationRepository,
+    jobRepository,
+    offerRepository
+  );
+};
+
+export const makeHRAnalyticsController = () => {
+  return new HRAnalyticsController(makeGetHRAnalyticsUseCase());
 };
 
 export const makePostJobUseCase = () => {
@@ -156,3 +176,23 @@ export const makeHRInterviewController = () => {
   );
 };
 
+import { GetHRProfileUseCase } from "@application/usecases/hr/settings/implementations/GetHRProfile.usecase";
+import { UpdateHRProfileUseCase } from "@application/usecases/hr/settings/implementations/UpdateHRProfile.usecase";
+import { ChangeHRPasswordUseCase } from "@application/usecases/hr/settings/implementations/ChangeHRPassword.usecase";
+import { RequestHREmailChangeUseCase } from "@application/usecases/hr/settings/implementations/RequestHREmailChange.usecase";
+import { VerifyHREmailChangeUseCase } from "@application/usecases/hr/settings/implementations/VerifyHREmailChange.usecase";
+import { GetCompanyProfileUseCase } from "@application/usecases/hr/settings/implementations/GetCompanyProfile.usecase";
+import { UpdateCompanyProfileUseCase } from "@application/usecases/hr/settings/implementations/UpdateCompanyProfile.usecase";
+import { HRSettingsController } from "@presentation/http/controllers/hr/hr-settings.controller";
+
+export const makeHRSettingsController = () => {
+  return new HRSettingsController(
+    new GetHRProfileUseCase(hrUserRepository),
+    new UpdateHRProfileUseCase(hrUserRepository),
+    new ChangeHRPasswordUseCase(hrUserRepository, bcryptService),
+    new RequestHREmailChangeUseCase(hrUserRepository, otpRepository, emailService),
+    new VerifyHREmailChangeUseCase(hrUserRepository, otpRepository),
+    new GetCompanyProfileUseCase(companyRepository),
+    new UpdateCompanyProfileUseCase(companyRepository)
+  );
+};

@@ -1,23 +1,25 @@
 import { Router } from "express";
-import { makeHRDashboardController, makeHRJobController, makeHROfferController, makeHRInterviewController } from "@infrastructure/di/hr.factory";
+import { makeHRDashboardController, makeHRAnalyticsController, makeHRJobController, makeHROfferController, makeHRInterviewController, makeHRSettingsController } from "@infrastructure/di/hr.factory";
 import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { PostJobDto } from "@application/dtos/hr/Request/PostJob.dto";
 import { RecordHRDecisionDto } from "@application/dtos/ai-interview/RecordHRDecision.dto";
+import { ChangePasswordRequestDto, RequestEmailChangeDto, VerifyEmailChangeDto } from "@application/dtos/hr/settings/hr-settings.dto";
 
 const router = Router();
 const hrDashboardController = makeHRDashboardController();
+const hrAnalyticsController = makeHRAnalyticsController();
 const hrJobController = makeHRJobController();
 const hrOfferController = makeHROfferController();
 const hrInterviewController = makeHRInterviewController();
+const hrSettingsController = makeHRSettingsController();
 
 // Protect all HR routes
 router.use(authMiddleware.protect);
 
 router.get("/dashboard/stats", hrDashboardController.getDashboardStats);
-
-
+router.get("/insights", hrAnalyticsController.getAnalytics);
 router.post("/jobs", validateDto(PostJobDto), hrJobController.postJob);
 router.get("/jobs", hrJobController.getJobs);
 router.put("/jobs/:jobId", validateDto(PostJobDto), hrJobController.updateJob);
@@ -43,5 +45,13 @@ router.post("/interviews/:interviewId/evaluation/regenerate", hrInterviewControl
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
 router.patch("/notifications/:id/read", notificationController.markAsRead);
+
+router.get("/settings/account", hrSettingsController.getProfile);
+router.patch("/settings/account", hrSettingsController.updateProfile);
+router.patch("/settings/account/password", validateDto(ChangePasswordRequestDto), hrSettingsController.changePassword);
+router.post("/settings/account/email/request", validateDto(RequestEmailChangeDto), hrSettingsController.requestEmailChange);
+router.post("/settings/account/email/verify", validateDto(VerifyEmailChangeDto), hrSettingsController.verifyEmailChange);
+router.get("/settings/company", hrSettingsController.getCompanyProfile);
+router.patch("/settings/company", hrSettingsController.updateCompanyProfile);
 
 export default router;

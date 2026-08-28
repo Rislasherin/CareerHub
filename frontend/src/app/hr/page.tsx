@@ -23,7 +23,8 @@ import {
    ArrowUpRight,
    UserCheck,
    Zap,
-   Building2
+   Building2,
+   Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -227,8 +228,16 @@ export default function HRDashboard() {
                      <div className="space-y-8">
                         {loading ? (
                            <div className="text-xs font-bold text-slate-400">Loading activity feed...</div>
+                        ) : (!data?.recentActivity || data.recentActivity.length === 0) ? (
+                           <div className="flex flex-col items-center justify-center min-h-[150px] gap-4 text-center">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-2">
+                                 <Activity size={24} />
+                              </div>
+                              <p className="text-xs font-bold text-slate-400">No recent activity</p>
+                              <p className="text-[10px] font-medium text-slate-400 max-w-[180px]">Activity events will appear here once tracked.</p>
+                           </div>
                         ) : (
-                           (data?.recentActivity ?? []).map((act, i) => {
+                           data.recentActivity.map((act, i) => {
                               const IconComponent = iconMap[act.icon] || CheckCircle2;
                               return (
                                  <div key={i} className="flex gap-4 group">
@@ -279,11 +288,11 @@ export default function HRDashboard() {
                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Key Metrics</h3>
                         <div className="space-y-4">
                            {[
-                              { label: 'Avg. Interview Score', value: loading ? '...' : (data?.keyMetrics?.avgInterviewScore ?? '0/5'), color: 'text-indigo-600' },
-                              { label: 'Shortlist Rate', value: loading ? '...' : (data?.keyMetrics?.shortlistRate ?? '0%'), color: 'text-emerald-600' },
-                              { label: 'Avg. Time to Hire', value: loading ? '...' : (data?.keyMetrics?.avgTimeToHire ?? '0d'), color: 'text-slate-900' },
-                              { label: 'Offer Acceptance', value: loading ? '...' : (data?.keyMetrics?.offerAcceptance ?? '0%'), color: 'text-emerald-600' },
-                              { label: 'Active Interviewers', value: loading ? '...' : (data?.keyMetrics?.activeInterviewers ?? 0).toString(), color: 'text-slate-900' },
+                              { label: 'Avg. Interview Score', value: loading ? '...' : (data?.keyMetrics?.avgInterviewScore ?? 'N/A'), color: 'text-indigo-600' },
+                              { label: 'Shortlist Rate', value: loading ? '...' : (data?.keyMetrics?.shortlistRate ?? 'N/A'), color: 'text-emerald-600' },
+                              { label: 'Avg. Time to Hire', value: loading ? '...' : (data?.keyMetrics?.avgTimeToHire ?? 'N/A'), color: 'text-slate-900' },
+                              { label: 'Offer Acceptance', value: loading ? '...' : (data?.keyMetrics?.offerAcceptance ?? 'N/A'), color: 'text-emerald-600' },
+                              { label: 'Active Interviewers', value: loading ? '...' : (data?.keyMetrics?.activeInterviewers ?? '0').toString(), color: 'text-slate-900' },
                            ].map((m, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                  <span className="text-xs font-bold text-slate-500">{m.label}</span>

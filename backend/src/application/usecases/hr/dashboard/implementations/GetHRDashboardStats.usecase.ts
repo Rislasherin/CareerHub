@@ -1,40 +1,54 @@
 
+import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
+import { IJobRepository } from "@domain/repositories/IJobRepository";
+import { IInterviewRepository } from "@domain/repositories/IInterviewRepository";
+import { IOfferRepository } from "@domain/repositories/IOfferRepository";
 import { IGetHRDashboardStatsUseCase } from "../interfaces/IGetHRDashboardStats.usecase";
+import { JobStatus } from "@domain/enums/JobStatus.enum";
+import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 
 export class GetHRDashboardStatsUseCase implements IGetHRDashboardStatsUseCase {
-  constructor() { }
+  constructor(
+    private readonly applicationRepository: IJobApplicationRepository,
+    private readonly jobRepository: IJobRepository,
+    private readonly interviewRepository: IInterviewRepository,
+    private readonly offerRepository: IOfferRepository
+  ) { }
 
   async execute(companyId: string): Promise<any> {
-    // Retrieve actual active interviewer count from the database
-    const activeInterviewers = 0;
+    const [
+      totalCandidates,
+      activeJobs,
+      interviewsScheduled,
+      offerLettersSent,
+      funnel,
+      applicationsChart
+    ] = await Promise.all([
+      this.applicationRepository.countUniqueCandidates(companyId),
+      this.jobRepository.count({ companyId, status: JobStatus.ACTIVE }),
+      this.interviewRepository.count({ companyId, status: InterviewStatus.SCHEDULED }),
+      this.offerRepository.count({ companyId }),
+      this.applicationRepository.getHRFunnelStats(companyId),
+      this.applicationRepository.getApplicationsThisWeek(companyId)
+    ]);
 
     return {
       stats: {
-        totalCandidates: 24,       // Placeholder until Application Schema is created
-        activeJobs: 4,             // Placeholder until Job Schema is created
-        interviewsScheduled: 8,    // Placeholder
-        offerLettersSent: 3,       // Placeholder
+        totalCandidates,
+        activeJobs,
+        interviewsScheduled,
+        offerLettersSent,
       },
       keyMetrics: {
-        avgInterviewScore: "4.1/5",
-        shortlistRate: "25%",
-        avgTimeToHire: "11 days",
-        offerAcceptance: "100%",
-        activeInterviewers: activeInterviewers, // Live count from Mongoose!
+        avgInterviewScore: null,
+        shortlistRate: null,
+        avgTimeToHire: null,
+        offerAcceptance: null,
+        activeInterviewers: 0,
       },
-      funnel: [
-        { label: "Applied", value: 24, color: "bg-indigo-600" },
-        { label: "Reviewed", value: 16, color: "bg-indigo-400" },
-        { label: "Shortlisted", value: 8, color: "bg-amber-400" },
-        { label: "Interviewed", value: 4, color: "bg-emerald-500" },
-      ],
-      recentActivity: [
-        { title: "Antypea Sharma shortlisted for Software Engineer", time: "2 hours ago", icon: "CheckCircle2", color: "text-emerald-500", bg: "bg-emerald-50" },
-        { title: "Interview invite sent to Rohit Mehra", time: "4 hours ago", icon: "MessageSquare", color: "text-blue-500", bg: "bg-blue-50" },
-        { title: "8 new AI-matched candidates for Data Analyst", time: "Yesterday, 6:30 PM", icon: "Zap", color: "text-amber-500", bg: "bg-amber-50" },
-        { title: "Company profile viewed by IIT Bombay Placements", time: "Yesterday, 2:10 PM", icon: "Building2", color: "text-slate-500", bg: "bg-slate-50" },
-      ],
-      applicationsChart: [8, 12, 6, 15, 10, 4, 2] // MON to SUN applicants count
+      funnel,
+      recentActivity: [], // Empty dataset as per instruction if no reliable source exists
+      applicationsChart
     };
   }
 }
