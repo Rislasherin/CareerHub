@@ -4,13 +4,22 @@ import { GetStudentsUseCase } from "@application/usecases/super-admin/implementa
 import { GetCompaniesUseCase } from "@application/usecases/super-admin/implementations/GetCompanies.usecase";
 
 import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
+import { SendRenewalReminderUseCase } from "@application/usecases/super-admin/implementations/SendRenewalReminder.usecase";
+import { GetSuperAdminRevenueUseCase } from "@application/usecases/super-admin/implementations/GetSuperAdminRevenueUseCase";
+import { GetSuperAdminProfileUseCase } from "@application/usecases/super-admin/implementations/GetSuperAdminProfileUseCase";
+import { UpdateSuperAdminProfileUseCase } from "@application/usecases/super-admin/implementations/UpdateSuperAdminProfileUseCase";
+import { ChangeSuperAdminPasswordUseCase } from "@application/usecases/super-admin/implementations/ChangeSuperAdminPasswordUseCase";
+import { RequestSuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/implementations/RequestSuperAdminEmailChangeUseCase";
+import { VerifySuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/implementations/VerifySuperAdminEmailChangeUseCase";
 import {
   studentRepository,
   companyRepository,
-
   superAdminRepository,
   collegeAdminRepository,
-  hrUserRepository
+  hrUserRepository,
+  otpRepository,
+  crossRoleAuthService,
+  bcryptService
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
@@ -22,7 +31,7 @@ const orgRepository = new OrganizationRepository();
 const platformSettingsRepository = new PlatformSettingsRepository();
 
 export const makeGetDashboardStatsUseCase = () => {
-  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, hrUserRepository);
+  return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, subscriptionRepository);
 };
 
 export const makeGetOrganizationsUseCase = () => {
@@ -43,9 +52,17 @@ export const makeGetBillingInvoicesUseCase = () => {
   return new GetBillingInvoicesUseCase(subscriptionRepository, orgRepository);
 };
 
+export const makeSendRenewalReminderUseCase = () => {
+  return new SendRenewalReminderUseCase(subscriptionRepository, orgRepository, new EmailService(), collegeAdminRepository);
+};
+
+export const makeGetSuperAdminRevenueUseCase = () => {
+  return new GetSuperAdminRevenueUseCase(subscriptionRepository, orgRepository);
+};
+
 import { LoginSuperAdminUseCase } from "@application/usecases/auth/superadmin/implementations/LoginSuperAdmin.usecase";
 import { SuperAdminAuthController } from "@presentation/http/controllers/auth/superadmin/superadmin.auth.controller";
-import { bcryptService, jwtService } from "@infrastructure/di/infra.container";
+import { jwtService } from "@infrastructure/di/infra.container";
 
 export const makeLoginSuperAdminUseCase = () => {
   return new LoginSuperAdminUseCase(superAdminRepository, jwtService, bcryptService);
@@ -88,6 +105,26 @@ export const makeGetPlatformSettingsUseCase = () => {
 export const makeUpdatePlatformSettingsUseCase = () => {
     return new UpdatePlatformSettingsUseCase(platformSettingsRepository);
 };
+export const makeGetSuperAdminProfileUseCase = () => {
+  return new GetSuperAdminProfileUseCase(superAdminRepository);
+};
+
+export const makeUpdateSuperAdminProfileUseCase = () => {
+  return new UpdateSuperAdminProfileUseCase(superAdminRepository);
+};
+
+export const makeChangeSuperAdminPasswordUseCase = () => {
+  return new ChangeSuperAdminPasswordUseCase(superAdminRepository, bcryptService);
+};
+
+export const makeRequestSuperAdminEmailChangeUseCase = () => {
+  return new RequestSuperAdminEmailChangeUseCase(superAdminRepository, otpRepository, new EmailService(), crossRoleAuthService);
+};
+
+export const makeVerifySuperAdminEmailChangeUseCase = () => {
+  return new VerifySuperAdminEmailChangeUseCase(superAdminRepository, otpRepository, crossRoleAuthService);
+};
+
 export const makeSuperAdminController = () => {
   return new SuperAdminController(
     makeGetDashboardStatsUseCase(),
@@ -98,7 +135,14 @@ export const makeSuperAdminController = () => {
     makeDeleteUserUseCase(),
     makeUpdateOrganizationPlanUseCase(),
     makeExtendCollegeTrialUseCase(),
-    makeGetBillingInvoicesUseCase()
+    makeGetBillingInvoicesUseCase(),
+    makeSendRenewalReminderUseCase(),
+    makeGetSuperAdminRevenueUseCase(),
+    makeGetSuperAdminProfileUseCase(),
+    makeUpdateSuperAdminProfileUseCase(),
+    makeChangeSuperAdminPasswordUseCase(),
+    makeRequestSuperAdminEmailChangeUseCase(),
+    makeVerifySuperAdminEmailChangeUseCase()
   );
 };
 

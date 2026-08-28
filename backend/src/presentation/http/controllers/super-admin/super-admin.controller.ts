@@ -11,6 +11,16 @@ import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces
 import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
 import { ExtendCollegeTrialUseCase } from "@application/usecases/super-admin/implementations/ExtendCollegeTrial.usecase";
 import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
+import { ISendRenewalReminderUseCase } from "@application/usecases/super-admin/interfaces/ISendRenewalReminder.usecase";
+import { IGetSuperAdminRevenueUseCase } from "@application/usecases/super-admin/interfaces/IGetSuperAdminRevenueUseCase.usecase";
+import { IGetSuperAdminProfileUseCase } from "@application/usecases/super-admin/interfaces/IGetSuperAdminProfileUseCase.usecase";
+import { IUpdateSuperAdminProfileUseCase } from "@application/usecases/super-admin/interfaces/IUpdateSuperAdminProfileUseCase.usecase";
+import { IChangeSuperAdminPasswordUseCase } from "@application/usecases/super-admin/interfaces/IChangeSuperAdminPasswordUseCase.usecase";
+import { IRequestSuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IRequestSuperAdminEmailChangeUseCase.usecase";
+import { IVerifySuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IVerifySuperAdminEmailChangeUseCase.usecase";
+import { ForbiddenError } from "@application/errors/AuthError";
+import { ValidationError } from "@application/errors/validation.error";
+import { Role } from "@domain/enums/Roles.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
 
 export class SuperAdminController {
@@ -23,7 +33,14 @@ export class SuperAdminController {
     private readonly _deleteUserUseCase: IDeleteUserUseCase,
     private readonly _updatePlanUseCase: IUpdateOrganizationPlanUseCase,
     private readonly _extendTrialUseCase: ExtendCollegeTrialUseCase,
-    private readonly _getBillingInvoicesUseCase: GetBillingInvoicesUseCase
+    private readonly _getBillingInvoicesUseCase: GetBillingInvoicesUseCase,
+    private readonly _sendRenewalReminderUseCase: ISendRenewalReminderUseCase,
+    private readonly _getRevenueUseCase: IGetSuperAdminRevenueUseCase,
+    private readonly _getProfileUseCase: IGetSuperAdminProfileUseCase,
+    private readonly _updateProfileUseCase: IUpdateSuperAdminProfileUseCase,
+    private readonly _changePasswordUseCase: IChangeSuperAdminPasswordUseCase,
+    private readonly _requestEmailChangeUseCase: IRequestSuperAdminEmailChangeUseCase,
+    private readonly _verifyEmailChangeUseCase: IVerifySuperAdminEmailChangeUseCase
   ) { }
 
   updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -80,8 +97,80 @@ export class SuperAdminController {
   });
 
   getBillingInvoices = asyncHandler(async (req: Request, res: Response) => {
-    const { page = "1", limit = "10" } = req.query;
-    const result = await this._getBillingInvoicesUseCase.execute(parseInt(page as string), parseInt(limit as string));
+    if (req.user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenError("Access denied: Super Admin authorization required");
+    }
+    const { page = "1", limit = "10", search, status, planType } = req.query;
+    const filters = {
+      search: search ? String(search) : undefined,
+      status: status ? String(status) : undefined,
+      planType: planType ? String(planType) : undefined
+    };
+    const result = await this._getBillingInvoicesUseCase.execute(
+      parseInt(page as string), 
+      parseInt(limit as string), 
+      filters
+    );
     sendSuccess(res, result, "Billing invoices fetched successfully");
+  });
+
+  sendRenewalReminder = asyncHandler(async (req: Request, res: Response) => {
+    if (req.user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenError("Access denied: Super Admin authorization required");
+    }
+    const { id } = req.params;
+    if (!id) {
+      throw new ValidationError("Subscription ID is required");
+    }
+    await this._sendRenewalReminderUseCase.execute(id);
+    sendSuccess(res, null, "Renewal reminder sent successfully.");
+  });
+
+  getRevenueAnalytics = asyncHandler(async (req: Request, res: Response) => {
+    if (req.user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenError("Access denied: Super Admin authorization required");
+    }
+    const { page = "1", limit = "10", search, status, planType } = req.query;
+    const filters = {
+      search: search ? String(search) : undefined,
+      status: status ? String(status) : undefined,
+      planType: planType ? String(planType) : undefined
+    };
+    const result = await this._getRevenueUseCase.execute(
+      parseInt(page as string), 
+      parseInt(limit as string), 
+      filters
+    );
+    sendSuccess(res, result, "Revenue analytics fetched successfully");
+  });
+
+  getProfile = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const profile = await this._getProfileUseCase.execute(userId!);
+    res.status(200).json({ success: true, data: profile });
+  });
+
+  updateProfile = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const profile = await this._updateProfileUseCase.execute(userId!, req.body);
+    res.status(200).json({ success: true, data: profile, message: "Profile updated successfully" });
+  });
+
+  changePassword = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    await this._changePasswordUseCase.execute(userId!, req.body);
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  });
+
+  requestEmailChange = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    await this._requestEmailChangeUseCase.execute(userId!, req.body);
+    res.status(200).json({ success: true, message: "Verification email sent" });
+  });
+
+  verifyEmailChange = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    await this._verifyEmailChangeUseCase.execute(userId!, req.body);
+    res.status(200).json({ success: true, message: "Email updated successfully" });
   });
 }

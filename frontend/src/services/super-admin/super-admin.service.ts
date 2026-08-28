@@ -61,8 +61,55 @@ export const superAdminService = {
     return response.data;
   },
 
-  getBillingInvoices: async (page = 1, limit = 10) => {
-    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.BILLING}?page=${page}&limit=${limit}`);
+  getBillingInvoices: async (page = 1, limit = 10, search = '', status = '', planType = '') => {
+    const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (planType) params.append('planType', planType);
+    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.BILLING}?${params.toString()}`);
+    return response.data;
+  },
+
+  sendRenewalReminder: async (subscriptionId: string) => {
+    const response = await apiClient.post(`${API_ROUTES.SUPER_ADMIN.BILLING}/subscriptions/${subscriptionId}/remind`);
+    return response.data;
+  },
+
+  getRevenueAnalytics: async (page = 1, limit = 10, search = '', status = '', planType = '') => {
+    const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (planType) params.append('planType', planType);
+    const response = await apiClient.get(`${API_ROUTES.SUPER_ADMIN.REVENUE_ANALYTICS}?${params.toString()}`);
+    return response.data;
+  },
+
+  getProfile: async () => {
+    const response = await apiClient.get('/super-admin/profile');
+    return response;
+  },
+
+  updateProfile: async (data: { firstName: string; lastName: string }) => {
+    const response = await apiClient.patch('/super-admin/profile', data);
+    return response;
+  },
+
+  changePassword: async (data: any) => {
+    const response = await apiClient.post('/super-admin/change-password', data);
+    return response.data;
+  },
+
+  requestEmailChange: async (data: { newEmail: string }) => {
+    const response = await apiClient.post('/super-admin/request-email-change', data);
+    return response.data;
+  },
+
+  verifyEmailChange: async (data: { email: string; otp: string }) => {
+    const response = await apiClient.post('/super-admin/verify-email-change', data);
     return response.data;
   }
 };

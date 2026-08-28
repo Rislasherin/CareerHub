@@ -16,6 +16,15 @@ router.get("/students", superAdminController.getStudents);
 router.get("/companies", superAdminController.getCompanies);
 
 router.get("/billing", superAdminController.getBillingInvoices);
+router.post("/billing/subscriptions/:id/remind", superAdminController.sendRenewalReminder);
+router.get("/revenue/analytics", superAdminController.getRevenueAnalytics);
+
+// Super Admin Profile endpoints
+router.get("/profile", superAdminController.getProfile);
+router.patch("/profile", superAdminController.updateProfile);
+router.post("/change-password", superAdminController.changePassword);
+router.post("/request-email-change", superAdminController.requestEmailChange);
+router.post("/verify-email-change", superAdminController.verifyEmailChange);
 
 // Management actions
 router.patch("/management/:role/:id/status", superAdminController.updateStatus);
