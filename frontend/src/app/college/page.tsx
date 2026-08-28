@@ -22,7 +22,8 @@ import {
   ArrowUp,
   ExternalLink,
   Star,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -52,10 +53,9 @@ export default function CollegeDashboard() {
   }, []);
 
   const stats = [
-    { label: 'Total Registered', value: dynamicStats?.totalStudents || '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: 'Batch 2024-25' },
-    { label: 'Pending Verification', value: dynamicStats?.pendingVerification || '0', icon: ShieldCheck, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Review needed' },
-    { label: 'Active Companies', value: dynamicStats?.totalCompanies || '0', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: 'Onboarded' },
-    { label: 'Active Drives', value: '0', icon: Calendar, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'Coming Soon' },
+    { label: 'Total Registered', value: dynamicStats?.totalRegistered ?? '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: 'Batch 2024-25' },
+    { label: 'Pending Verification', value: dynamicStats?.pendingVerification ?? '0', icon: ShieldCheck, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Review needed' },
+    { label: 'Active Drives', value: dynamicStats?.activeDrives ?? '0', icon: Calendar, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'In Progress' },
   ];
 
   return (
@@ -83,7 +83,7 @@ export default function CollegeDashboard() {
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {stats.map((stat, i) => (
             <motion.div
               key={i}
@@ -127,44 +127,10 @@ export default function CollegeDashboard() {
               </div>
             </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Company Portal</h3>
-                <p className="text-slate-500 font-bold mb-8">
-                  Invite companies to register on CareerHub to start posting jobs and scheduling drives.
-                </p>
-                <Button fullWidth className="bg-slate-900 text-white hover:bg-slate-800 py-4 h-auto rounded-xl font-black text-[10px] uppercase tracking-widest border-none">Invite Company</Button>
-              </GlassCard>
-
-              <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Placement Drives</h3>
-                <div className="flex flex-col items-center justify-center py-4 text-center">
-                  <Calendar size={48} className="text-slate-200 mb-4" />
-                  <p className="text-xs font-bold text-slate-400">Drives will appear here once companies start posting requirements.</p>
-                </div>
-              </GlassCard>
-            </div>
           </div>
 
           {/* Quick Stats / Activity */}
           <div className="space-y-8">
-            <GlassCard className="p-10 rounded-[2.5rem] border-slate-100">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Recent Activity</h3>
-              <div className="space-y-8">
-                {[
-                  { text: 'System initialized for new academic year', time: 'Online' },
-                  { text: 'College profile verified', time: 'Active' },
-                ].map((act, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-700">{act.text}</p>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{act.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
 
             <div className="p-10 rounded-[2.5rem] bg-amber-500 text-[#0B0D17] flex flex-col gap-6">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">

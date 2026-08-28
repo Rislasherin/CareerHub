@@ -1,27 +1,26 @@
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
+import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IGetCollegeDashboardStatsUseCase } from "../interfaces/IGetCollegeDashboardStats.usecase";
 
 export class GetCollegeDashboardStatsUseCase implements IGetCollegeDashboardStatsUseCase {
-  constructor(private readonly studentRepository: IStudentRepository) { }
+  constructor(
+    private readonly studentRepository: IStudentRepository,
+    private readonly jobRepository: IJobRepository
+  ) { }
 
   async execute(orgId: string): Promise<any> {
-    const [totalStudents, placedStudents, inProcessStudents] = await Promise.all([
+    const [totalRegistered, pendingVerification, activeDrives] = await Promise.all([
       this.studentRepository.count({ collegeId: orgId }),
-      this.studentRepository.count({ collegeId: orgId, status: UserStatus.PLACED }),
-      this.studentRepository.count({ collegeId: orgId, status: UserStatus.IN_PROCESS }),
+      this.studentRepository.count({ collegeId: orgId, status: UserStatus.PENDING }),
+      this.jobRepository.count({ approvedColleges: orgId, status: JobStatus.ACTIVE }),
     ]);
 
-    // Dummy values for others as requested
     return {
-      totalStudents,
-      placedStudents,
-      inProcessStudents,
-      highestPackage: "₹24L", // Static as per request
-      recentPlacements: [], // Can be filled if needed
-      stats: {
-        placementRate: totalStudents > 0 ? ((placedStudents / totalStudents) * 100).toFixed(1) : 0,
-      }
+      totalRegistered,
+      pendingVerification,
+      activeDrives
     };
   }
 }

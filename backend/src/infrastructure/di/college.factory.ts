@@ -7,7 +7,7 @@ import { GetAllStudentsUseCase } from "@application/usecases/college/student-man
 import { ToggleStudentStatusUseCase } from "@application/usecases/college/student-management/implementations/ToggleStudentStatus.usecase";;
 import { GetCollegeDashboardStatsUseCase } from "@application/usecases/college/implementations/GetCollegeDashboardStats.usecase";;
 import { EmailService } from "@infrastructure/services/email/email.service";
-import { studentRepository, crossRoleAuthService, jobRepository, organizationRepository } from "@infrastructure/di/infra.container";
+import { studentRepository, crossRoleAuthService, jobRepository, organizationRepository, collegeAdminRepository, otpRepository, bcryptService } from "@infrastructure/di/infra.container";
 import { StudentManagementController } from "@presentation/http/controllers/college/student.management.controller";
 import { GetPendingJobsUseCase } from "@application/usecases/college/job-approvals/implementations/GetPendingJobs.usecase";;
 import { ApproveJobUseCase } from "@application/usecases/college/job-approvals/implementations/ApproveJob.usecase";;
@@ -47,7 +47,7 @@ export const makeApproveAccessRequestUseCase = () => {
 };
 
 export const makeGetCollegeDashboardStatsUseCase = () => {
-  return new GetCollegeDashboardStatsUseCase(studentRepository);
+  return new GetCollegeDashboardStatsUseCase(studentRepository, jobRepository);
 };
 
 export const makeGetAllStudentsUseCase = () => {
@@ -134,5 +134,89 @@ export const makeSubscriptionController = () => {
     makeCreateSubscriptionUseCase(),
     makeHandlePaymentWebhookUseCase(),
     makeGetCollegeSubscriptionUseCase()
+  );
+};
+
+import { GetCollegeInterviewsUseCase } from "@application/usecases/college/implementations/GetCollegeInterviews.usecase";
+import { GetCollegeOffersUseCase } from "@application/usecases/college/implementations/GetCollegeOffers.usecase";
+import { CollegePlacementController } from "@presentation/http/controllers/college/placement.controller";
+import { interviewRepository, offerRepository } from "@infrastructure/di/infra.container";
+
+export const makeGetCollegeInterviewsUseCase = () => {
+  return new GetCollegeInterviewsUseCase(interviewRepository);
+};
+
+export const makeGetCollegeOffersUseCase = () => {
+  return new GetCollegeOffersUseCase(offerRepository);
+};
+
+export const makeCollegePlacementController = () => {
+  return new CollegePlacementController(
+    makeGetCollegeInterviewsUseCase(),
+    makeGetCollegeOffersUseCase()
+  );
+};
+
+import { GetCollegeReportsAnalyticsUseCase } from "@application/usecases/college/implementations/GetCollegeReportsAnalytics.usecase";
+import { GenerateCollegeReportUseCase } from "@application/usecases/college/implementations/GenerateCollegeReport.usecase";
+import { CollegeReportsController } from "@presentation/http/controllers/college/reports.controller";
+import { collegeAnalyticsRepository } from "@infrastructure/di/infra.container";
+import { PdfReportGenerator } from "@infrastructure/services/reports/PdfReportGenerator";
+import { ExcelReportGenerator } from "@infrastructure/services/reports/ExcelReportGenerator";
+import { CsvReportGenerator } from "@infrastructure/services/reports/CsvReportGenerator";
+
+export const makeGetCollegeReportsAnalyticsUseCase = () => {
+  return new GetCollegeReportsAnalyticsUseCase(collegeAnalyticsRepository);
+};
+
+export const makeGenerateCollegeReportUseCase = () => {
+  const pdfGenerator = new PdfReportGenerator();
+  const excelGenerator = new ExcelReportGenerator();
+  const csvGenerator = new CsvReportGenerator();
+  return new GenerateCollegeReportUseCase(collegeAnalyticsRepository, pdfGenerator, excelGenerator, csvGenerator);
+};
+
+export const makeCollegeReportsController = () => {
+  return new CollegeReportsController(
+    makeGetCollegeReportsAnalyticsUseCase(),
+    makeGenerateCollegeReportUseCase()
+  );
+};
+
+import { GetCollegeProfileUseCase } from "@application/usecases/college/settings/implementations/GetCollegeProfile.usecase";
+import { UpdateCollegeProfileUseCase } from "@application/usecases/college/settings/implementations/UpdateCollegeProfile.usecase";
+import { ChangeCollegePasswordUseCase } from "@application/usecases/college/settings/implementations/ChangeCollegePassword.usecase";
+import { RequestCollegeEmailChangeUseCase } from "@application/usecases/college/settings/implementations/RequestCollegeEmailChange.usecase";
+import { VerifyCollegeEmailChangeUseCase } from "@application/usecases/college/settings/implementations/VerifyCollegeEmailChange.usecase";
+import { CollegeSettingsController } from "@presentation/http/controllers/college/college-settings.controller";
+
+export const makeGetCollegeProfileUseCase = () => {
+  return new GetCollegeProfileUseCase(organizationRepository, collegeAdminRepository);
+};
+
+export const makeUpdateCollegeProfileUseCase = () => {
+  return new UpdateCollegeProfileUseCase(organizationRepository, collegeAdminRepository);
+};
+
+export const makeChangeCollegePasswordUseCase = () => {
+  return new ChangeCollegePasswordUseCase(collegeAdminRepository, bcryptService);
+};
+
+export const makeRequestCollegeEmailChangeUseCase = () => {
+  const emailService = new EmailService();
+  return new RequestCollegeEmailChangeUseCase(collegeAdminRepository, otpRepository, emailService, crossRoleAuthService);
+};
+
+export const makeVerifyCollegeEmailChangeUseCase = () => {
+  return new VerifyCollegeEmailChangeUseCase(collegeAdminRepository, otpRepository, crossRoleAuthService);
+};
+
+export const makeCollegeSettingsController = () => {
+  return new CollegeSettingsController(
+    makeGetCollegeProfileUseCase(),
+    makeUpdateCollegeProfileUseCase(),
+    makeChangeCollegePasswordUseCase(),
+    makeRequestCollegeEmailChangeUseCase(),
+    makeVerifyCollegeEmailChangeUseCase()
   );
 };
