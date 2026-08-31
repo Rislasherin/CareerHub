@@ -3,8 +3,9 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { MESSAGES } from "@shared/constants/messages.constants";
+import { IExtendCollegeTrialUseCase } from "../interfaces/IExtendCollegeTrial.usecase";
 
-export class ExtendCollegeTrialUseCase {
+export class ExtendCollegeTrialUseCase implements IExtendCollegeTrialUseCase {
   constructor(private readonly orgRepo: IOrganizationRepository) {}
 
   async execute(orgId: string, days: number): Promise<void> {

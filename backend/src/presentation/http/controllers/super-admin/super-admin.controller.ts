@@ -9,8 +9,8 @@ import { IGetCompaniesUseCase } from "@application/usecases/super-admin/interfac
 import { IUpdateUserStatusUseCase } from "@application/usecases/super-admin/interfaces/IUpdateUserStatus.usecase";
 import { IDeleteUserUseCase } from "@application/usecases/super-admin/interfaces/IDeleteUser.usecase";
 import { IUpdateOrganizationPlanUseCase } from "@application/usecases/super-admin/interfaces/IUpdateOrganizationPlan.usecase";
-import { ExtendCollegeTrialUseCase } from "@application/usecases/super-admin/implementations/ExtendCollegeTrial.usecase";
-import { GetBillingInvoicesUseCase } from "@application/usecases/super-admin/implementations/GetBillingInvoices.usecase";
+import { IExtendCollegeTrialUseCase } from "@application/usecases/super-admin/interfaces/IExtendCollegeTrial.usecase";
+import { IGetBillingInvoicesUseCase } from "@application/usecases/super-admin/interfaces/IGetBillingInvoices.usecase";
 import { ISendRenewalReminderUseCase } from "@application/usecases/super-admin/interfaces/ISendRenewalReminder.usecase";
 import { IGetSuperAdminRevenueUseCase } from "@application/usecases/super-admin/interfaces/IGetSuperAdminRevenueUseCase.usecase";
 import { IGetSuperAdminProfileUseCase } from "@application/usecases/super-admin/interfaces/IGetSuperAdminProfileUseCase.usecase";
@@ -32,8 +32,8 @@ export class SuperAdminController {
     private readonly _updateStatusUseCase: IUpdateUserStatusUseCase,
     private readonly _deleteUserUseCase: IDeleteUserUseCase,
     private readonly _updatePlanUseCase: IUpdateOrganizationPlanUseCase,
-    private readonly _extendTrialUseCase: ExtendCollegeTrialUseCase,
-    private readonly _getBillingInvoicesUseCase: GetBillingInvoicesUseCase,
+    private readonly _extendTrialUseCase: IExtendCollegeTrialUseCase,
+    private readonly _getBillingInvoicesUseCase: IGetBillingInvoicesUseCase,
     private readonly _sendRenewalReminderUseCase: ISendRenewalReminderUseCase,
     private readonly _getRevenueUseCase: IGetSuperAdminRevenueUseCase,
     private readonly _getProfileUseCase: IGetSuperAdminProfileUseCase,

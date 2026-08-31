@@ -9,8 +9,9 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import mongoose from "mongoose";
 import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
+import { IScheduleInterviewUseCase } from "./interfaces/IScheduleInterview.usecase";
 
-export class ScheduleInterviewUseCase {
+export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
   constructor(
     private readonly _interviewRepository: IInterviewRepository,
     private readonly _applicationRepository: IJobApplicationRepository

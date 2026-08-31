@@ -4,8 +4,8 @@ import { sendSuccess } from "@shared/utils/response.util";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
-import { ScheduleInterviewUseCase } from "@application/usecases/hr/interview/ScheduleInterview.usecase";
-import { GetHRInterviewsUseCase } from "@application/usecases/hr/interview/GetHRInterviews.usecase";
+import { IScheduleInterviewUseCase } from "@application/usecases/hr/interview/interfaces/IScheduleInterview.usecase";
+import { IGetHRInterviewsUseCase } from "@application/usecases/hr/interview/interfaces/IGetHRInterviews.usecase";
 import { IGetInterviewEvaluationUseCase } from "@application/usecases/ai-interview/interfaces/IGetInterviewEvaluationUseCase";
 import { IRecordHRDecisionUseCase } from "@application/usecases/ai-interview/interfaces/IRecordHRDecisionUseCase";
 import { IMessageBroker } from "@application/interfaces/messaging/IMessageBroker";
@@ -18,8 +18,8 @@ import { AIInterviewEvaluation } from "@domain/entities/ai-interview/AIInterview
 
 export class HRInterviewController {
   constructor(
-    private readonly _scheduleInterviewUseCase: ScheduleInterviewUseCase,
-    private readonly _getHRInterviewsUseCase: GetHRInterviewsUseCase,
+    private readonly _scheduleInterviewUseCase: IScheduleInterviewUseCase,
+    private readonly _getHRInterviewsUseCase: IGetHRInterviewsUseCase,
     private readonly _getInterviewEvaluationUseCase?: IGetInterviewEvaluationUseCase,
     private readonly _recordHRDecisionUseCase?: IRecordHRDecisionUseCase,
     private readonly _messageBroker?: IMessageBroker,

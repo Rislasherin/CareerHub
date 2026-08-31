@@ -1,8 +1,9 @@
 import { ISubscriptionRepository } from "@domain/repositories/ISubscriptionRepository";
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 import { SubscriptionStatus } from "@domain/enums/SubscriptionStatus.enum";
+import { IGetBillingInvoicesUseCase } from "../interfaces/IGetBillingInvoices.usecase";
 
-export class GetBillingInvoicesUseCase {
+export class GetBillingInvoicesUseCase implements IGetBillingInvoicesUseCase {
   constructor(
     private readonly subRepo: ISubscriptionRepository,
     private readonly orgRepo: IOrganizationRepository

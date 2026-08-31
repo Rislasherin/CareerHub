@@ -2,8 +2,9 @@ import { IInterviewRepository } from "@domain/repositories/IInterviewRepository"
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { Interview } from "@domain/entities/Interview";
+import { IGetHRInterviewsUseCase } from "./interfaces/IGetHRInterviews.usecase";
 
-export class GetHRInterviewsUseCase {
+export class GetHRInterviewsUseCase implements IGetHRInterviewsUseCase {
   constructor(
     private readonly _interviewRepository: IInterviewRepository,
     private readonly _studentRepository: IStudentRepository,
