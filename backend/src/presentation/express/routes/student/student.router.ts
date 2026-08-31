@@ -12,6 +12,7 @@ const studentController = makeStudentController();
 const upload = multer({ storage: multer.memoryStorage() });
 const resumeController = ResumeFactory.createResumeController();
 const aiInterviewController = makeAIInterviewController();
+const aiPracticeController = makeAIPracticeController()
 
 // Use authMiddleware.protect for all routes in this router
 router.use(authMiddleware.protect);
@@ -51,6 +52,9 @@ import {
   AnalyzeSchema
 } from "@application/dtos/student/resume.dto";
 import { makeAIInterviewController } from "@infrastructure/di/ai-interview.factory";
+import { makeAIPracticeController } from "@infrastructure/di/ai-practice.factory";
+import { CreateAIPracticeInterviewRequestDto } from "@application/dtos/ai-practice/CreateAIPracticeInterviewRequest";
+import { SubmitAnswerRequestDto } from "@application/dtos/ai-practice/SubmitAnswerRequest.dto";
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
@@ -76,6 +80,16 @@ router.get("/interviews/session/:sessionId/token", aiInterviewController.getLive
 router.get("/interviews/session/:sessionId/status", aiInterviewController.getSessionStatus);
 router.post("/interviews/:sessionId/questions/:questionId/answer", aiInterviewController.processAnswer);
 router.post("/interviews/session/:sessionId/integrity-event", aiInterviewController.recordIntegrityEvent);
+
+
+//ai-practice
+router.get("/ai-practice/user/latest-completed", aiPracticeController.getLatestCompletedPractice);
+router.post("/ai-practice", validateDto(CreateAIPracticeInterviewRequestDto), aiPracticeController.createPracticeInterview);
+router.get("/ai-practice/:id", aiPracticeController.getPracticeInterview);
+router.post("/ai-practice/:id/start", aiPracticeController.startPracticeInterview);
+router.get("/ai-practice/:id/room-token", aiPracticeController.getPracticeRoomToken);
+router.post("/ai-practice/:id/answer", validateDto(SubmitAnswerRequestDto), aiPracticeController.submitPracticeAnswer);
+
 
 export default router;
 
