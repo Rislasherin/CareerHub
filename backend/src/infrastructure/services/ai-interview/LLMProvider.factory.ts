@@ -44,7 +44,7 @@ export class LLMProviderFactory {
 
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
-    else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
+    else if (provider === "GEMINI") defaultModel = "gemini-3.6-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
     const model = env.AI_QUESTION_MODEL || defaultModel;
@@ -86,7 +86,7 @@ export class LLMProviderFactory {
 
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
-    else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
+    else if (provider === "GEMINI") defaultModel = "gemini-3.6-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
     const model = env.AI_EVALUATION_MODEL || defaultModel;
@@ -113,7 +113,7 @@ export class LLMProviderFactory {
 
     let defaultModel = "qwen/qwen3.8-27b";
     if (provider === "OLLAMA") defaultModel = "llama3.2:3b";
-    else if (provider === "GEMINI") defaultModel = "gemini-2.5-flash";
+    else if (provider === "GEMINI") defaultModel = "gemini-3.6-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
     const model = env.AI_FULL_EVALUATION_MODEL || defaultModel;
@@ -126,6 +126,85 @@ export class LLMProviderFactory {
       maxTokens: env.AI_FULL_EVALUATION_MAX_TOKENS,
       timeoutMs: env.AI_FULL_EVALUATION_TIMEOUT_MS,
     };
+  }
+
+  public static createBrainLLM(): BaseChatModel {
+    // The interview brain needs withStructuredOutput which requires a complete JSON object.
+    // The question LLM has AI_QUESTION_MAX_TOKENS=48 (suitable for short questions only).
+    // The brain decision schema (action + responseText + nextQuestion + topic + reason)
+    // needs ~200-400 tokens minimum. We use the evaluation provider but bump tokens to 512.
+    const config = this.getEvaluationConfig();
+    const brainTokens = Math.max(config.maxTokens, 512);
+
+    Logger.info(LogCategory.SYSTEM_INFO,
+      `[LLMProviderFactory] Initialized Brain LLM -> Provider: ${config.provider}, Model: ${config.model}, Temp: 0.4, MaxTokens: ${brainTokens}`
+    );
+
+    if (config.provider === "OLLAMA") {
+      return new ChatOllama({
+        model: config.model,
+        baseUrl: config.baseUrl || "http://127.0.0.1:11434",
+        temperature: 0.4,
+        numPredict: brainTokens,
+        keepAlive: "30m",
+        maxRetries: 1,
+        streaming: false, // Structured output requires non-streaming on Ollama
+      });
+    }
+
+    if (config.provider === "GROQ") {
+      if (!env.GROQ_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing GROQ_API_KEY for Brain LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.GROQ_API_KEY,
+        configuration: { baseURL: "https://api.groq.com/openai/v1" },
+        temperature: 0.4,
+        maxTokens: brainTokens,
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
+    if (config.provider === "OPENAI") {
+      if (!env.OPENAI_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing OPENAI_API_KEY for Brain LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.OPENAI_API_KEY,
+        temperature: 0.4,
+        maxTokens: brainTokens,
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
+    if (config.provider === "GEMINI") {
+      if (!env.GEMINI_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing GEMINI_API_KEY for Brain LLM.");
+      }
+      return new ChatGoogleGenerativeAI({
+        model: config.model,
+        apiKey: env.GEMINI_API_KEY,
+        temperature: 0.4,
+        maxOutputTokens: brainTokens,
+        maxRetries: 1,
+        streaming: false,
+      });
+    }
+
+    // Fallback: Ollama
+    return new ChatOllama({
+      model: config.model,
+      baseUrl: config.baseUrl || "http://127.0.0.1:11434",
+      temperature: 0.4,
+      numPredict: brainTokens,
+      keepAlive: "30m",
+      maxRetries: 1,
+      streaming: false,
+    });
   }
 
   public static createQuestionLLM(): BaseChatModel {

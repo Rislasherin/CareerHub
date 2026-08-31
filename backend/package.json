@@ -5,12 +5,14 @@
   "description": "CareerHub B2B SaaS Placement Management Platform - Backend",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec tsx src/server.ts",
+    "dev": "concurrently \"npm run dev:server\" \"npm run start:worker\" \"npm run start:practice-worker\"",
+    "dev:server": "nodemon --exec tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "start:worker": "npx tsx src/worker.ts",
+    "start:practice-worker": "npx tsx src/practice-worker.ts",
     "test:e2e": "npx tsx tests/e2e/test-production-validation.ts"
   },
   "dependencies": {
@@ -67,6 +69,7 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
+    "concurrently": "^10.0.5",
     "eslint": "^9.17.0",
     "nodemon": "^3.1.9",
     "tsx": "^4.21.0",

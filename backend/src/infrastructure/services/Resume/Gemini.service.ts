@@ -15,7 +15,7 @@ export class GeminiService implements IAIService {
 
     async analyzeResume(resumeData: unknown): Promise<IAtsAnalysisResult> {
         try {
-            const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = this.genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
             const prompt = `${AIPromptRegistry.getAnalyzeResumePrompt("")}\nResume data: ${JSON.stringify(resumeData)}`;
             const result = await model.generateContent(prompt);
             const responseText = result.response.text();
@@ -30,7 +30,7 @@ export class GeminiService implements IAIService {
 
     async autoFixText(text: string, instructions: string): Promise<string> {
         try {
-            const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = this.genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
             const prompt = `${AIPromptRegistry.getAutoFixTextSystemPrompt(instructions)}\n\nOriginal text: ${text}`;
             const result = await model.generateContent(prompt);
             return result.response.text().trim();
@@ -44,7 +44,7 @@ export class GeminiService implements IAIService {
     async coachSection(sectionName: string, sectionData: unknown, instructions: string, targetRole: string): Promise<ISectionCoachResult> {
         try {
             const model = this.genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash",
+                model: "gemini-3.6-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
             const prompt = `${AIPromptRegistry.getSectionCoachSystemPrompt(sectionName, targetRole, instructions)}\nOriginal Data: ${JSON.stringify(sectionData)}`;
@@ -62,7 +62,7 @@ export class GeminiService implements IAIService {
     async extractResumeFromDocument(fileBuffer: Buffer, mimeType: string): Promise<Record<string, unknown>> {
         try {
             const model = this.genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
+                model: "gemini-3.6-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
 
@@ -88,7 +88,7 @@ export class GeminiService implements IAIService {
     async rewriteEntireResume(resumeData: unknown, targetRole: string): Promise<Record<string, unknown>> {
         try {
             const model = this.genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash",
+                model: "gemini-3.6-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
             const prompt = `${AIPromptRegistry.getRewriteResumeSystemPrompt(targetRole)}\nOriginal Resume JSON: ${JSON.stringify(resumeData)}`;
@@ -106,7 +106,7 @@ export class GeminiService implements IAIService {
     async matchJobDescription(resumeData: unknown, jobDescription: string): Promise<IJobMatchReport> {
         try {
             const model = this.genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash",
+                model: "gemini-3.6-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
             const prompt = `${AIPromptRegistry.getJobMatchSystemPrompt()}\nJob Description:\n${jobDescription}\n\nResume Data:\n${JSON.stringify(resumeData)}`;
@@ -124,7 +124,7 @@ export class GeminiService implements IAIService {
     async generateProfessionalSummary(profileData: unknown): Promise<string> {
         try {
             const model = this.genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash",
+                model: "gemini-3.6-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
             const prompt = `${AIPromptRegistry.getProfessionalSummarySystemPrompt()}\nProfile Data:\n${JSON.stringify(profileData)}`;
