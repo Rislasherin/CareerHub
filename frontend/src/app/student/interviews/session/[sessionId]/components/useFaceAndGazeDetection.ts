@@ -36,7 +36,7 @@ export function useFaceAndGazeDetection(
         const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-            delegate: "GPU"
+            delegate: "CPU"
           },
           outputFaceBlendshapes: true,
           runningMode: "VIDEO",
@@ -76,12 +76,18 @@ export function useFaceAndGazeDetection(
     video.playsInline = true;
     video.muted = true;
     video.srcObject = stream;
+    video.play().catch(e => console.warn('Video play error:', e));
     videoRef.current = video;
 
     const detectFrame = () => {
       if (!videoRef.current || !faceLandmarkerRef.current) return;
       
-      if (videoRef.current.readyState < 2 || typeof faceLandmarkerRef.current.detectForVideo !== 'function') {
+      if (
+        videoRef.current.readyState < 2 || 
+        videoRef.current.videoWidth === 0 || 
+        videoRef.current.videoHeight === 0 ||
+        typeof faceLandmarkerRef.current.detectForVideo !== 'function'
+      ) {
         requestRef.current = requestAnimationFrame(detectFrame);
         return;
       }
@@ -91,7 +97,7 @@ export function useFaceAndGazeDetection(
       // Throttle to roughly ~500ms intervals (2 FPS)
       if (videoRef.current.currentTime !== lastVideoTimeRef.current && (now - lastInferenceTimeRef.current) > 500) {
         try {
-          const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, now);
+          const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, Math.floor(now));
           lastVideoTimeRef.current = videoRef.current.currentTime;
           lastInferenceTimeRef.current = now;
 

@@ -168,9 +168,15 @@ const studentNav: NavCategory[] = [
       { label: 'My Applications', icon: Calendar, href: '/student/applications'},
       { label: 'My Interviews', icon: Calendar, href: '/student/interviews'},
       { label: 'My Offers', icon: FileText, href: '/student/offers' },
-      { label: 'Resume Builder', icon: FileCheck, href: '/student/resume' }
     ]
-  }
+  },
+    {
+    title: 'AI TOOLS',
+    items: [
+      { label: 'Resume Builder', icon: FileCheck, href: '/student/resume' },
+      { label: 'Mock Interview', icon: Star, href: '/student/ai-practice' }
+    ]
+  },
 ];
 
 const interviewerNav: NavCategory[] = [

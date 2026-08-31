@@ -78,24 +78,9 @@ export default function StudentInterviewsPage() {
 
     return matchesSearch && matchesTab;
   }).sort((a: any, b: any) => {
-    const timeA = new Date(a.scheduledAt).getTime();
-    const timeB = new Date(b.scheduledAt).getTime();
-    
-    const isUpcomingOrActiveA = ['SCHEDULED', 'RESCHEDULE_REQUESTED', 'CANCELLATION_REQUESTED', 'IN_PROGRESS', 'WAITING'].includes(a.status);
-    const isUpcomingOrActiveB = ['SCHEDULED', 'RESCHEDULE_REQUESTED', 'CANCELLATION_REQUESTED', 'IN_PROGRESS', 'WAITING'].includes(b.status);
-
-    if (isUpcomingOrActiveA && !isUpcomingOrActiveB) return -1;
-    if (!isUpcomingOrActiveA && isUpcomingOrActiveB) return 1;
-
-    if (isUpcomingOrActiveA && isUpcomingOrActiveB) {
-      // Both upcoming: nearest first
-      if (timeA === timeB) return (b.id || '').localeCompare(a.id || '');
-      return timeA - timeB;
-    } else {
-      // Both past: most recent first
-      if (timeA === timeB) return (b.id || '').localeCompare(a.id || '');
-      return timeB - timeA;
-    }
+    const timeA = new Date(a.createdAt || a.scheduledAt).getTime();
+    const timeB = new Date(b.createdAt || b.scheduledAt).getTime();
+    return timeB - timeA;
   });
 
   // Pagination logic

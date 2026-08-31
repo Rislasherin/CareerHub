@@ -39,6 +39,9 @@ const iconMap: Record<string, any> = {
    MessageSquare: MessageSquare,
    Zap: Zap,
    Building2: Building2,
+   UserCheck: UserCheck,
+   FileText: FileText,
+   Briefcase: Briefcase
 };
 
 export default function HRDashboard() {
