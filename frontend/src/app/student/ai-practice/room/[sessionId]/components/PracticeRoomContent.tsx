@@ -76,21 +76,21 @@ const PracticeTimer: React.FC<PracticeTimerProps> = ({ durationMinutes, startedA
     return () => clearInterval(interval);
   }, [startedAt, durationMinutes]);
 
-  let containerClass = "flex items-center gap-2.5 bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 shadow-inner";
+  let containerClass = "flex items-center gap-2 bg-white/[0.04] px-3.5 py-1.5 rounded-lg border border-white/[0.06]";
   let iconClass = "text-slate-400";
   let textClass = "text-white";
 
   if (remainingSeconds !== null) {
     if (remainingSeconds === 0) {
-      containerClass = "flex items-center gap-2.5 bg-rose-950/40 px-4 py-2 rounded-xl border border-rose-800/60 shadow-inner";
+      containerClass = "flex items-center gap-2 bg-rose-500/10 px-3.5 py-1.5 rounded-lg border border-rose-500/30";
       iconClass = "text-rose-400";
       textClass = "text-rose-400";
     } else if (remainingSeconds <= 10) {
-      containerClass = "flex items-center gap-2.5 bg-rose-900/50 px-4 py-2 rounded-xl border border-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.3)] animate-pulse";
+      containerClass = "flex items-center gap-2 bg-rose-500/15 px-3.5 py-1.5 rounded-lg border border-rose-500/50 shadow-[0_0_15px_rgba(225,29,72,0.25)] animate-pulse";
       iconClass = "text-rose-300";
       textClass = "text-rose-100";
     } else if (remainingSeconds <= 60) {
-      containerClass = "flex items-center gap-2.5 bg-amber-950/40 px-4 py-2 rounded-xl border border-amber-800/60 shadow-inner";
+      containerClass = "flex items-center gap-2 bg-amber-500/10 px-3.5 py-1.5 rounded-lg border border-amber-500/30";
       iconClass = "text-amber-400";
       textClass = "text-amber-400";
     }
@@ -98,8 +98,8 @@ const PracticeTimer: React.FC<PracticeTimerProps> = ({ durationMinutes, startedA
 
   return (
     <div className={containerClass}>
-      <Clock size={16} className={iconClass} />
-      <span className={`font-mono font-black text-sm tracking-wider ${textClass}`}>
+      <Clock size={14} className={iconClass} />
+      <span className={`font-mono font-bold text-[13px] tracking-wider ${textClass}`}>
         {timeLeft}
       </span>
     </div>
@@ -168,6 +168,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
   }, [room, localParticipant]);
 
   React.useEffect(() => {
+    isLeavingRef.current = false;
     return () => {
       if (!isLeavingRef.current) {
         isLeavingRef.current = true;
@@ -182,7 +183,6 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
         console.log('[INTERVIEW_CLEANUP] unmount cleanup completed');
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally empty — we want this to run once on unmount with stable refs
 
   // Tab switch detection
@@ -212,7 +212,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
 
     if ('FaceDetector' in window) {
       try {
-        // @ts-ignore
+        // @ts-expect-error - FaceDetector is an experimental web API
         faceDetector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
       } catch (e) {
         console.log("FaceDetector not supported or failed to initialize", e);
@@ -456,29 +456,33 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
   // ── Completed View ───────────────────────────────────────────────────────────
   if (isCompleted) {
     return (
-      <div className="w-full max-w-3xl mx-auto flex flex-col gap-6 p-4 md:p-8 min-h-screen items-center justify-center text-slate-100">
+      <div className="h-screen w-screen bg-[#0B0B10] flex flex-col items-center justify-center p-6 text-slate-100 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full bg-indigo-600/10 blur-[120px]" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="w-full flex flex-col items-center gap-8 p-8 md:p-12 bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-xl text-center shadow-2xl"
+          className="relative w-full max-w-md flex flex-col items-center gap-7 p-10 bg-[#131318] border border-white/[0.06] rounded-2xl text-center shadow-2xl"
         >
           <div className="relative">
-            <div className="w-20 h-20 rounded-3xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-xl mx-auto">
-              <Bot size={40} className="text-indigo-400" />
+            <div className="w-16 h-16 rounded-2xl bg-indigo-600/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mx-auto">
+              <Bot size={30} />
             </div>
-            <Loader2 size={24} className="animate-spin text-indigo-400 absolute -bottom-2 -right-2" />
+            <Loader2 size={20} className="animate-spin text-indigo-400 absolute -bottom-1.5 -right-1.5" />
           </div>
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-3xl font-black text-white tracking-tight">
-              Time's up!
+          <div className="flex flex-col gap-2.5">
+            <h2
+              className="text-2xl font-medium text-white"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              Time&apos;s up
             </h2>
-            <p className="text-lg text-slate-300 font-medium">
+            <p className="text-[15px] text-slate-300 font-medium">
               Your practice interview has ended.
             </p>
-            <p className="text-sm text-slate-400 max-w-md leading-relaxed mx-auto">
-              Preparing your results...
+            <p className="text-[13px] text-slate-500 leading-relaxed">
+              Preparing your results…
             </p>
           </div>
         </motion.div>
@@ -488,7 +492,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
 
   // ── Active Interview View ─────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col gap-4 p-3 md:p-5 min-h-screen text-slate-100">
+    <div className="h-screen w-screen bg-[#0B0B10] text-slate-100 overflow-hidden flex flex-col p-3 md:p-4 gap-3">
 
       {/* ── Audio Rendering ── */}
       {/*
@@ -503,19 +507,24 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
       {/* ── Leave Confirmation Dialog ── */}
       <AnimatePresence>
         {showLeaveConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl flex flex-col gap-5 text-center"
+              className="bg-[#131318] border border-white/[0.06] rounded-2xl p-7 max-w-md w-full shadow-2xl flex flex-col gap-5 text-center"
             >
-              <div className="w-14 h-14 rounded-2xl bg-amber-950/60 border border-amber-800/60 flex items-center justify-center text-amber-400 mx-auto">
-                <LogOut size={28} />
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 mx-auto">
+                <LogOut size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Leave Mock Interview?</h3>
-                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                <h3
+                  className="text-lg font-medium text-white"
+                  style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                >
+                  Leave mock interview?
+                </h3>
+                <p className="text-[13px] text-slate-400 mt-1.5 leading-relaxed">
                   Your answered questions and scores will be preserved in your dashboard.
                 </p>
               </div>
@@ -523,17 +532,17 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowLeaveConfirm(false)}
-                  className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer"
+                  className="flex-1 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] text-slate-300 font-semibold text-[13px] transition-colors cursor-pointer"
                 >
-                  Stay in Room
+                  Stay in room
                 </button>
                 <button
                   type="button"
                   disabled={isLeaving}
                   onClick={() => handleLeaveWithCleanup()}
-                  className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-[13px] transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isLeaving ? <><Loader2 size={14} className="animate-spin" /> Leaving...</> : 'Leave Interview'}
+                  {isLeaving ? <><Loader2 size={14} className="animate-spin" /> Leaving…</> : 'Leave interview'}
                 </button>
               </div>
             </motion.div>
@@ -542,25 +551,25 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
       </AnimatePresence>
 
       {/* ── Top Header Bar ── */}
-      <header className="h-16 w-full bg-slate-900/90 border border-slate-800/90 px-6 rounded-2xl flex items-center justify-between shadow-xl backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md">
-            <Sparkles size={16} />
+      <header className="h-14 w-full bg-[#131318] border border-white/[0.06] px-5 rounded-xl flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <Sparkles size={14} />
           </div>
           <div>
-            <h2 className="text-xs md:text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
+            <h2 className="text-[12px] font-semibold text-slate-200 leading-tight">
               AI Practice Interview
             </h2>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-slate-400">
-                Live Session Active
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] font-medium text-slate-500">
+                Live session active
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {session.durationMinutes && (
              <PracticeTimer
                 durationMinutes={session.durationMinutes}
@@ -570,19 +579,19 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
           )}
           <button
             onClick={() => setShowLeaveConfirm(true)}
-            className="px-4 py-2 bg-slate-800 hover:bg-rose-950/60 hover:text-rose-400 hover:border-rose-800/60 text-slate-400 text-xs font-bold rounded-xl border border-slate-700/80 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-1.5 bg-white/[0.04] hover:bg-rose-500/10 hover:text-rose-400 text-slate-400 text-[12px] font-semibold rounded-lg border border-white/[0.06] hover:border-rose-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <LogOut size={14} /> Leave
+            <LogOut size={13} /> Leave
           </button>
         </div>
       </header>
 
-      {/* ── Main Grid ── */}
-      <div className="flex flex-col gap-5 flex-1 mt-4">
-        
-        {/* Top: Video Panes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[40vh] min-h-[300px]">
-          
+      {/* ── Main Area (fills remaining viewport, no page scroll) ── */}
+      <div className="flex-1 min-h-0 flex flex-col gap-3">
+
+        {/* Video Panes */}
+        <div className="relative basis-[56%] min-h-0 grid grid-cols-1 md:grid-cols-2 gap-3">
+
           {/* Tab Switch Warning Overlay */}
           <AnimatePresence>
             {tabSwitchWarning && (
@@ -590,47 +599,47 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-white px-4 py-2 rounded-full font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2"
+                className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-white px-4 py-2 rounded-full font-semibold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2"
               >
                 <span>⚠️ Tab switch detected. Please stay focused on the interview!</span>
                 <button onClick={() => setTabSwitchWarning(false)} className="ml-2 bg-amber-600 px-2 py-0.5 rounded-full hover:bg-amber-700">✕</button>
               </motion.div>
             )}
-            
+
             {eyeContactWarning && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-indigo-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full font-bold text-xs shadow-lg shadow-indigo-500/20 flex items-center gap-2 border border-indigo-400"
+                className="absolute top-14 left-1/2 -translate-x-1/2 z-50 bg-indigo-600/90 backdrop-blur-md text-white px-4 py-2 rounded-full font-semibold text-xs shadow-lg shadow-indigo-500/20 flex items-center gap-2 border border-indigo-400/40"
               >
                 <span>👁️ Try to maintain eye contact with the camera!</span>
-                <button onClick={() => setEyeContactWarning(false)} className="ml-2 bg-indigo-600 px-2 py-0.5 rounded-full hover:bg-indigo-700">✕</button>
+                <button onClick={() => setEyeContactWarning(false)} className="ml-2 bg-indigo-700 px-2 py-0.5 rounded-full hover:bg-indigo-800">✕</button>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* AI INTERVIEWER */}
-          <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl flex flex-col items-center justify-center">
-            
+          <div className="relative rounded-2xl overflow-hidden bg-[#131318] border border-white/[0.06] flex flex-col items-center justify-center min-h-0">
+
             <AnimatePresence>
               {isEvaluating && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-slate-950/85 backdrop-blur-sm rounded-3xl"
+                  className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/80 backdrop-blur-sm rounded-2xl"
                 >
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
-                        <Bot size={30} className="text-indigo-400" />
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+                        <Bot size={26} className="text-indigo-400" />
                       </div>
-                      <Loader2 size={18} className="animate-spin text-indigo-400 absolute -bottom-1.5 -right-1.5" />
+                      <Loader2 size={16} className="animate-spin text-indigo-400 absolute -bottom-1 -right-1" />
                     </div>
                     <div className="text-center">
-                      <p className="text-white font-bold text-sm">
-                        {isTimeUp ? "Time's up! Preparing your results..." : "Preparing next question…"}
+                      <p className="text-white font-medium text-[13px]">
+                        {isTimeUp ? "Time's up! Preparing your results…" : "Preparing next question…"}
                       </p>
                     </div>
                   </div>
@@ -638,37 +647,38 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
               )}
             </AnimatePresence>
 
-            <div className="flex-1 w-full flex items-center justify-center p-8">
+            <div className="flex-1 w-full flex items-center justify-center p-6 min-h-0">
                <PracticeAIAvatarVisual isSpeaking={isAISpeaking} topic={activeQuestion?.topic || session.topics[0]} />
             </div>
 
-            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 z-20">
+            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 flex items-center gap-1.5 z-20">
               <span className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-400 animate-ping' : 'bg-slate-400'}`}></span>
-              <span className="text-[10px] font-black uppercase tracking-wider text-white">AI Interviewer</span>
+              <span className="text-[10px] font-semibold tracking-wide text-white">AI Interviewer</span>
             </div>
           </div>
 
           {/* YOU (Candidate) */}
-          <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl flex flex-col items-center justify-center">
+          <div className="relative rounded-2xl overflow-hidden bg-black border border-white/[0.06] flex flex-col items-center justify-center min-h-0">
             <div className="absolute inset-0">
                <PracticeCameraPreview />
             </div>
-            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 z-20">
+            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 flex items-center gap-1.5 z-20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] font-black uppercase tracking-wider text-white">You</span>
+              <span className="text-[10px] font-semibold tracking-wide text-white">You</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom: Question & Voice Panel */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 md:p-6 backdrop-blur-xl shadow-xl flex flex-col gap-4">
+        {/* Question & Transcript Panel */}
+        <div className="flex-1 min-h-0 bg-[#131318] border border-white/[0.06] rounded-2xl p-4 md:p-5 flex flex-col gap-3">
+
            {/* Current Question Box */}
-           <div className="flex flex-col gap-2">
+           <div className="flex flex-col gap-2 shrink-0">
              <div className="flex items-center justify-between">
-               <div className="flex items-center gap-2 text-indigo-400">
-                 <span className="text-[10px] font-black uppercase tracking-widest">Question {answeredCount + 1} • {activeQuestion?.topic}</span>
-               </div>
-               
+               <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-400">
+                 Question {answeredCount + 1} · {activeQuestion?.topic}
+               </span>
+
                <AnimatePresence mode="wait">
                  {isAISpeaking ? (
                    <motion.span
@@ -676,9 +686,9 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                      initial={{ opacity: 0 }}
                      animate={{ opacity: 1 }}
                      exit={{ opacity: 0 }}
-                     className="text-[10px] font-bold text-indigo-300 bg-indigo-950/60 border border-indigo-800/60 px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                     className="text-[10px] font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-1 rounded-full"
                    >
-                     AI Speaking
+                     AI speaking
                    </motion.span>
                  ) : (
                    <motion.span
@@ -686,45 +696,46 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                      initial={{ opacity: 0 }}
                      animate={{ opacity: 1 }}
                      exit={{ opacity: 0 }}
-                     className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                     className="text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full"
                    >
-                     Your Turn
+                     Your turn
                    </motion.span>
                  )}
                </AnimatePresence>
              </div>
-             
+
              {activeQuestion ? (
-               <p className="text-white font-semibold text-lg md:text-xl leading-relaxed bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                 "{activeQuestion.text}"
+               <p
+                 className="text-white font-medium text-[16px] md:text-[17px] leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/[0.05]"
+                 style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+               >
+                 “{activeQuestion.text}”
                </p>
              ) : (
-               <div className="h-16 bg-slate-800/40 rounded-2xl border border-slate-700/40 animate-pulse" />
+               <div className="h-12 bg-white/[0.03] rounded-xl border border-white/[0.05] animate-pulse" />
              )}
-             
+
              {/* Invisible TTS Speaker (Removed to avoid browser fallback) */}
            </div>
 
            {/* Divider */}
-           <div className="h-px w-full bg-slate-800 my-2" />
+           <div className="h-px w-full bg-white/[0.06] shrink-0" />
 
-           {/* Realtime Transcript Panel */}
-           <div className="flex flex-col gap-3 min-h-[120px] max-h-[250px] overflow-y-auto">
-             <div className="flex items-center justify-between">
-               <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-                 Live Transcript
-               </span>
-             </div>
-             <div className="flex flex-col gap-4 text-sm leading-relaxed">
+           {/* Realtime Transcript Panel — internal scroll only, page never scrolls */}
+           <div className="flex flex-col gap-2 flex-1 min-h-0">
+             <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 shrink-0">
+               Live transcript
+             </span>
+             <div className="flex flex-col gap-3 text-[13.5px] leading-relaxed overflow-y-auto flex-1 min-h-0 pr-1">
                {transcriptHistory.map((entry, idx) => (
-                 <div key={idx} className="flex flex-col gap-1">
-                   <span className={`text-[10px] font-bold tracking-wider ${entry.speaker === 'AI' ? 'text-indigo-400' : 'text-emerald-400'}`}>{entry.speaker}</span>
+                 <div key={idx} className="flex flex-col gap-0.5">
+                   <span className={`text-[10px] font-semibold tracking-wider ${entry.speaker === 'AI' ? 'text-indigo-400' : 'text-emerald-400'}`}>{entry.speaker}</span>
                    <p className="text-slate-300">{entry.text}</p>
                  </div>
                ))}
                {(interimTranscript || (!isAISpeaking && !isEvaluating)) && (
-                 <div className="flex flex-col gap-1">
-                   <span className="text-[10px] font-bold tracking-wider text-emerald-400">YOU</span>
+                 <div className="flex flex-col gap-0.5">
+                   <span className="text-[10px] font-semibold tracking-wider text-emerald-400">YOU</span>
                    <p className="text-emerald-300/80 italic">
                      {interimTranscript}
                      {!isAISpeaking && !isEvaluating && (
@@ -744,13 +755,11 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
       </div>
 
       {/* ── Bottom Controls Bar ── */}
-      <footer className="h-16 mt-4 w-full bg-slate-900/90 border border-slate-800/90 px-6 rounded-2xl flex items-center justify-between shadow-xl backdrop-blur-md shrink-0">
+      <footer className="h-12 w-full bg-[#131318] border border-white/[0.06] px-5 rounded-xl flex items-center justify-between shrink-0">
         <PracticeConnectionStatus />
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-slate-400 italic">
-            {isAISpeaking ? 'AI speaking • Microphone standby' : 'Voice active • Speak clearly into your mic'}
-          </span>
-        </div>
+        <span className="text-[11.5px] font-medium text-slate-500 italic">
+          {isAISpeaking ? 'AI speaking · microphone standby' : 'Voice active · speak clearly into your mic'}
+        </span>
       </footer>
 
     </div>

@@ -199,7 +199,6 @@ export const AIQuestionSpeaker: React.FC<AIQuestionSpeakerProps> = ({
       // Ensure parent isAISpeaking is always cleared on unmount
       onSpeakingChange?.(false);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────────

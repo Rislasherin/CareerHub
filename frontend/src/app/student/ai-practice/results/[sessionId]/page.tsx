@@ -44,7 +44,6 @@ export default function AIPracticeResultsPage() {
   useEffect(() => {
     if (!sessionId) return;
     let isSubscribed = true;
-    let pollInterval: NodeJS.Timeout;
 
     const fetchSession = async () => {
       try {
@@ -72,7 +71,7 @@ export default function AIPracticeResultsPage() {
     };
 
     fetchSession();
-    pollInterval = setInterval(fetchSession, 3000);
+    const pollInterval = setInterval(fetchSession, 3000);
 
     return () => {
       isSubscribed = false;

@@ -12,7 +12,7 @@ import {
 } from '@/types/ai-practice';
 import { PracticeRoomContent } from './components/PracticeRoomContent';
 import { PracticeDeviceCheck } from './components/PracticeDeviceCheck';
-import { Loader2, AlertCircle, ArrowLeft, Video, Mic, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PageProps {
@@ -76,17 +76,28 @@ export default function AIPracticeRoomPage({ params }: PageProps) {
   // ── Loading state ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
-        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Sparkles size={28} className="animate-pulse" />
+      <div className="min-h-screen bg-[#0B0B10] flex flex-col items-center justify-center p-6 text-slate-100 relative overflow-hidden">
+        {/* ambient glow */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full bg-indigo-600/10 blur-[120px]" />
+
+        <div className="relative flex flex-col items-center gap-5 text-center max-w-sm">
+          <div className="relative flex items-center justify-center">
+            <span className="absolute w-20 h-20 rounded-full border border-indigo-500/20 animate-ping" />
+            <div className="relative w-16 h-16 rounded-2xl bg-indigo-600/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <Sparkles size={26} className="animate-pulse" />
             </div>
-            <Loader2 size={24} className="animate-spin text-indigo-500 absolute -bottom-2 -right-2" />
           </div>
           <div>
-            <h2 className="font-extrabold text-xl text-white">Loading Arena</h2>
-            <p className="text-xs text-slate-400 mt-1">Initializing practice environment…</p>
+            <h2
+              className="font-medium text-xl text-white mb-1.5"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              Loading arena
+            </h2>
+            <p className="text-[13px] text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 size={13} className="animate-spin text-indigo-400" />
+              Initializing your practice environment…
+            </p>
           </div>
         </div>
       </div>
@@ -96,29 +107,36 @@ export default function AIPracticeRoomPage({ params }: PageProps) {
   // ── Error state ──
   if (error || !session || !roomData) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
-        <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800 max-w-md w-full text-center flex flex-col items-center gap-5 shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
-            <AlertCircle size={28} />
+      <div className="min-h-screen bg-[#0B0B10] flex flex-col items-center justify-center p-6 text-slate-100 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full bg-rose-600/10 blur-[120px]" />
+
+        <div className="relative p-8 rounded-2xl bg-[#131318] border border-white/[0.06] max-w-md w-full text-center flex flex-col items-center gap-5 shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400">
+            <AlertCircle size={26} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Unable to Join Room</h2>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            <h2
+              className="text-lg font-medium text-white mb-1.5"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              Unable to join room
+            </h2>
+            <p className="text-[13px] text-slate-400 leading-relaxed">
               {error || 'Something went wrong while connecting to the practice room.'}
             </p>
           </div>
-          <div className="flex items-center gap-3 w-full pt-2">
+          <div className="flex items-center gap-3 w-full pt-1">
             <button
               type="button"
               onClick={() => handleLeave()}
-              className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] text-slate-300 font-semibold text-[13px] transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ArrowLeft size={14} /> Back to Arena
+              <ArrowLeft size={14} /> Back to arena
             </button>
             <button
               type="button"
               onClick={fetchSessionAndToken}
-              className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[13px] transition-colors cursor-pointer"
             >
               Retry
             </button>
@@ -129,7 +147,7 @@ export default function AIPracticeRoomPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen w-screen bg-slate-950 text-slate-100 overflow-x-hidden font-sans">
+    <div className="min-h-screen w-screen bg-[#0B0B10] text-slate-100 overflow-x-hidden font-sans">
       {step === 'check' && (
         <PracticeDeviceCheck
           topic={session.topics[0]}
