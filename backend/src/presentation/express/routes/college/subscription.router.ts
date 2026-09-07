@@ -11,6 +11,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), controller.we
 
 // Create subscription route (Requires college to be logged in)
 router.post('/create', express.json(), authMiddleware.protect, controller.create);
+router.post('/verify', express.json(), authMiddleware.protect, controller.verifyPayment);
 router.get('/my-plan', express.json(), authMiddleware.protect, controller.getMyPlan);
 
 export default router;

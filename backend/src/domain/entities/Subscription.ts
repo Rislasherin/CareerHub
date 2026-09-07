@@ -4,10 +4,13 @@ import { SubscriptionStatus } from "@domain/enums/SubscriptionStatus.enum";
 export interface SubscriptionProps {
     id: string;
     collegeId: string;
-    planType: PlanType;
+    planId: string;
+    planType?: PlanType;
     status: SubscriptionStatus;
-    gatewaySubscriptionId: string;
-    aiTokensAllocated: number;
+    providerOrderId: string;
+    providerPaymentId?: string;
+    aiCreditsAllocated: number;
+    aiCreditsConsumed: number;
     startDate?: Date;
     endDate?: Date;
     createdAt: Date;
@@ -19,18 +22,23 @@ export class Subscription {
 
     get id(): string { return this._props.id; }
     get collegeId(): string { return this._props.collegeId; }
-    get planType(): PlanType { return this._props.planType; }
+    get planId(): string { return this._props.planId; }
+    get planType(): PlanType | undefined { return this._props.planType; }
     get status(): SubscriptionStatus { return this._props.status; }
-    get gatewaySubscriptionId(): string { return this._props.gatewaySubscriptionId; }
-    get aiTokensAllocated(): number { return this._props.aiTokensAllocated; }
+    get providerOrderId(): string { return this._props.providerOrderId; }
+    get providerPaymentId(): string | undefined { return this._props.providerPaymentId; }
+    get aiCreditsAllocated(): number { return this._props.aiCreditsAllocated; }
+    get aiCreditsConsumed(): number { return this._props.aiCreditsConsumed; }
     get startDate(): Date | undefined { return this._props.startDate; }
     get endDate(): Date | undefined { return this._props.endDate; }
     get createdAt(): Date { return this._props.createdAt; }
     get updatedAt(): Date { return this._props.updatedAt; }
 
-    public activate(tokens: number): void {
+    public activatePayment(providerPaymentId: string, aiCredits: number): void {
         this._props.status = SubscriptionStatus.ACTIVE;
-        this._props.aiTokensAllocated = tokens;
+        this._props.providerPaymentId = providerPaymentId;
+        this._props.aiCreditsAllocated = aiCredits;
+        this._props.aiCreditsConsumed = 0;
         this._props.startDate = new Date();
         const endDate = new Date();
         endDate.setFullYear(endDate.getFullYear() + 1);

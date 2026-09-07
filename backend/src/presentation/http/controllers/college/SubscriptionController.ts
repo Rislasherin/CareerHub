@@ -12,12 +12,13 @@ export class SubscriptionController {
   constructor(
     private readonly createSubscriptionUseCase: ICreateSubscriptionUseCase,
     private readonly handleWebhookUseCase: IHandlePaymentWebhookUseCase,
-    private readonly getCollegeSubscriptionUseCase: IGetCollegeSubscriptionUseCase
+    private readonly getCollegeSubscriptionUseCase: IGetCollegeSubscriptionUseCase,
+    private readonly verifyPaymentUseCase?: any
   ) {}
 
   public getMyPlan = async (req: Request, res: Response): Promise<void> => {
     try {
-      const collegeId = (req as any).user?.id;
+      const collegeId = (req as any).user?.orgId;
       const sub = await this.getCollegeSubscriptionUseCase.execute(collegeId);
       sendSuccess(res, sub, "Subscription fetched");
     } catch (error: any) {
@@ -28,15 +29,28 @@ export class SubscriptionController {
   public create = async (req: Request, res: Response): Promise<void> => {
     try {
       const { planType } = req.body;
-      const collegeId = req.user?.id || req.body.collegeId;
+      const collegeId = req.user?.orgId || req.body.collegeId;
 
       const result = await this.createSubscriptionUseCase.execute(collegeId, planType);
-      sendSuccess(res, result, MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
+      // Return gatewayOrderId for frontend checkout
+      sendSuccess(res, { gatewayOrderId: result.gatewayOrderId }, MESSAGES.SUCCESS.CREATED, HttpStatus.CREATED);
     } catch (error: unknown) {
       const errObj = error as { error?: { description?: string }; message?: string };
       const message = errObj?.error?.description || errObj?.message || MESSAGES.ERROR.INTERNAL_SERVER_ERROR;
       Logger.error(LogCategory.SYSTEM_ERROR, "Subscription Error:", message);
       res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    }
+  };
+
+  public verifyPayment = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { orderId, paymentId, signature } = req.body;
+      await (this as any).verifyPaymentUseCase.execute(orderId, paymentId, signature);
+      sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED, HttpStatus.OK);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : MESSAGES.ERROR.VALIDATION_ERROR;
+      Logger.error(LogCategory.SYSTEM_ERROR, "Verify Payment Error:", msg);
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: msg });
     }
   };
 
@@ -47,9 +61,12 @@ export class SubscriptionController {
 
       const payload = JSON.parse(rawBody.toString());
       const eventType = payload.event;
-      const gatewaySubId = payload.payload.subscription.entity.id;
+      const gatewaySubId = payload.payload?.subscription?.entity?.id;
+      const paymentId = payload.payload?.payment?.entity?.id;
+      const paymentAmount = payload.payload?.payment?.entity?.amount; // in paise
+      const currency = payload.payload?.payment?.entity?.currency;
 
-      await this.handleWebhookUseCase.execute(rawBody.toString(), signature, eventType, gatewaySubId);
+      await this.handleWebhookUseCase.execute(rawBody.toString(), signature, eventType, gatewaySubId, paymentId, paymentAmount, currency);
 
       res.status(HttpStatus.OK).send(MESSAGES.SUCCESS.UPDATED);
     } catch (error: unknown) {

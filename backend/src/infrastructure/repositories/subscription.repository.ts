@@ -18,13 +18,13 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   }
 
   async findByGatewayId(gatewayId: string): Promise<Subscription | null> {
-    const doc = await SubscriptionModel.findOne({ gatewaySubscriptionId: gatewayId });
+    const doc = await SubscriptionModel.findOne({ providerOrderId: gatewayId });
     if (!doc) return null;
     return SubscriptionMapper.toDomain(doc);
   }
 
   async findByCollegeId(collegeId: string): Promise<Subscription | null> {
-    const doc = await SubscriptionModel.findOne({ collegeId: collegeId });
+    const doc = await SubscriptionModel.findOne({ collegeId: collegeId, status: 'ACTIVE' }).sort({ createdAt: -1 });
     if (!doc) return null;
     return SubscriptionMapper.toDomain(doc);
   }
@@ -123,5 +123,25 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async getAllSubscriptions(): Promise<Subscription[]> {
     const docs = await SubscriptionModel.find({});
     return docs.map(doc => SubscriptionMapper.toDomain(doc));
+  }
+
+  async atomicConsumeCredits(id: string, requiredCredits: number): Promise<boolean> {
+    const result = await SubscriptionModel.findOneAndUpdate(
+      {
+        id,
+        status: "ACTIVE",
+        $expr: { $gte: [ "$aiCreditsAllocated", { $add: ["$aiCreditsConsumed", requiredCredits] } ] }
+      },
+      { $inc: { aiCreditsConsumed: requiredCredits } },
+      { new: true }
+    );
+    return !!result;
+  }
+
+  async atomicReleaseCredits(id: string, creditsToRelease: number): Promise<void> {
+    await SubscriptionModel.updateOne(
+      { id },
+      { $inc: { aiCreditsConsumed: -creditsToRelease } }
+    );
   }
 }
