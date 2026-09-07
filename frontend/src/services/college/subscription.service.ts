@@ -3,11 +3,16 @@ import { apiClient } from '@/services/api/api.client';
 import { ApiResponse } from '@/types/api';
 
 export interface CreateSubscriptionResponse {
-  gatewaySubscriptionId: string;
+  gatewayOrderId: string;
 }
 
 export const createSubscription = async (planType: 'BASIC' | 'PRO'): Promise<CreateSubscriptionResponse> => {
   const response = await apiClient.post(API_ROUTES.SUBSCRIPTION.CREATE, { planType }) as ApiResponse<CreateSubscriptionResponse>;
+  return response.data;
+};
+
+export const verifyPayment = async (orderId: string, paymentId: string, signature: string): Promise<any> => {
+  const response = await apiClient.post(API_ROUTES.SUBSCRIPTION.VERIFY, { orderId, paymentId, signature }) as ApiResponse<any>;
   return response.data;
 };
 

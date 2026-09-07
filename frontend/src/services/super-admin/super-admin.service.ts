@@ -88,6 +88,16 @@ export const superAdminService = {
     return response.data;
   },
 
+  getAILedger: async (filters: { collegeId?: string, feature?: string, startDate?: Date, endDate?: Date } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.collegeId) params.append('collegeId', filters.collegeId);
+    if (filters.feature) params.append('feature', filters.feature);
+    if (filters.startDate) params.append('startDate', filters.startDate.toISOString());
+    if (filters.endDate) params.append('endDate', filters.endDate.toISOString());
+    const response = await apiClient.get(`/super-admin/ai-usage?${params.toString()}`);
+    return response.data;
+  },
+
   getProfile: async () => {
     const response = await apiClient.get('/super-admin/profile');
     return response;

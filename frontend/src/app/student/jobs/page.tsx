@@ -3,11 +3,11 @@ import { API_ROUTES } from '@/constants/api.routes';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Pagination } from '@/components/shared/Pagination';
-import { NotificationBell } from '@/components/shared/NotificationBell';
 import {
   Briefcase,
   Calendar,
@@ -258,13 +258,12 @@ export default function StudentJobsFeed() {
               />
             </div>
 
-            {/* Notification Bell */}
-            <NotificationBell role="student" />
-
-            {/* Upload Resume Button */}
-            <button className="h-10 bg-[#E11D48] hover:bg-[#BE123C] text-white px-5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-500/20 transition-all">
-              <Sparkles size={14} className="animate-pulse" /> Upload Resume
-            </button>
+            {/* Practice Now Button */}
+            <Link href="/student/ai-practice">
+              <button className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all">
+                <Sparkles size={14} className="animate-pulse" /> Practice Now
+              </button>
+            </Link>
           </div>
         </header>
 

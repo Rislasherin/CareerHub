@@ -25,6 +25,13 @@ export interface HRDashboardStats {
     bg: string;
   }>;
   applicationsChart: number[];
+  todaysSchedule?: Array<{
+    id: string;
+    candidateName: string;
+    role: string;
+    time: string;
+    status: string;
+  }>;
 }
 
 export interface CollegeDashboardStats {

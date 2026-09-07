@@ -28,13 +28,14 @@ import {
 
 const Logo = ({ white = false }: { white?: boolean }) => (
   <div className="flex items-center gap-3 group cursor-pointer">
-    <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30 overflow-hidden group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
-      <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] group-hover:bg-transparent transition-all duration-300"></div>
+    <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30 overflow-hidden group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] group-hover:bg-transparent transition-colors duration-300"></div>
       <Briefcase className="text-white z-10 w-5 h-5 relative right-[-2px] bottom-[-2px]" />
       <GraduationCap className="text-white/90 z-10 w-5 h-5 absolute top-1.5 left-1.5 -rotate-12" />
     </div>
-    <span className={`text-2xl font-black tracking-tight transition-colors duration-300 ${white ? 'text-white' : 'text-slate-900'}`}>
-      CareerHub
+    <span className="text-2xl lg:text-[1.7rem] font-black tracking-tighter">
+      <span className={white ? 'text-white' : 'text-slate-900'}>Career</span>
+      <span className={white ? 'text-indigo-300' : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600'}>Hub</span>
     </span>
   </div>
 );

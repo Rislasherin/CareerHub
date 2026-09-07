@@ -180,7 +180,7 @@ export default function ResumeBuilderPage() {
    const hasProjects = !!(user?.projects && user.projects.length > 0);
    const projectCount = user?.projects?.length || 0;
 
-   const previewApiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/student/resume/preview?resumeId=${activeResumeId}&template=${settings.templateId}&t=${previewKey}`;
+   const previewApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/student/resume/preview?resumeId=${activeResumeId}&template=${settings.templateId}&t=${previewKey}`;
 
    return (
       <DashboardLayout>

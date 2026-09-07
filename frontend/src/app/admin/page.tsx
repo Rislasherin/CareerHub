@@ -287,7 +287,7 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Bottom Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                {/* Renewals */}
                <div className="p-8 lg:p-10 rounded-[2.5rem] bg-[#121520] border border-white/5 flex flex-col min-h-[300px]">
                   <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">RENEWALS DUE SOON</h3>
@@ -344,26 +344,6 @@ export default function SuperAdminDashboard() {
                   </div>
                </div>
 
-               {/* Quick Actions */}
-               <div className="p-8 lg:p-10 rounded-[2.5rem] bg-[#121520] border border-white/5">
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-8">QUICK ACTIONS</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                     <Button fullWidth className="bg-cyan-500 text-[#0B0D17] hover:bg-cyan-400 rounded-xl h-12 font-black text-xs uppercase tracking-widest border-none">
-                        <Plus size={16} className="mr-2" /> Add College
-                     </Button>
-                     {[
-                        { label: 'Manage AI Tokens', icon: Cpu },
-                        { label: 'View Subscriptions', icon: Star },
-                        { label: 'Broadcast to Colleges', icon: ShieldCheck },
-                        { label: 'Platform Analytics', icon: BarChart3 },
-                     ].map((item, i) => (
-                        <button key={i} className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all text-xs font-bold border border-transparent hover:border-white/5">
-                           <item.icon size={16} className="text-cyan-500/50" />
-                           {item.label}
-                        </button>
-                     ))}
-                  </div>
-               </div>
             </div>
 
             {/* Registered Colleges List Section with Search, Filtering & CSV Export */}

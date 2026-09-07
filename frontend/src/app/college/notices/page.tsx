@@ -156,11 +156,6 @@ export default function NoticeBoardPage() {
             <Button className="rounded-xl bg-[#092215] hover:bg-[#092215]/90 text-white h-10 px-4 text-xs font-black gap-2 shadow-sm border-none">
               <ArrowUp size={14} /> Upgrade
             </Button>
-
-            {/* Notification Bell */}
-            <button className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 hover:bg-amber-100 transition-all shadow-sm">
-              <Bell size={18} />
-            </button>
           </div>
         </header>
 
@@ -184,10 +179,6 @@ export default function NoticeBoardPage() {
               </button>
             ))}
           </div>
-
-          <Button onClick={() => setIsModalOpen(true)} className="rounded-xl bg-[#092215] hover:bg-[#092215]/90 text-white h-10 px-5 text-xs font-black gap-2 shadow-sm border-none">
-            <Plus size={14} /> Post Notice
-          </Button>
         </div>
 
         {/* Notices List */}

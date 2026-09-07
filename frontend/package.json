@@ -16,6 +16,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.19.0",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.23",
     "framer-motion": "^12.38.0",
     "livekit-client": "^2.22.0",
     "lucide-react": "^1.31.0",

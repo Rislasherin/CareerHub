@@ -13,7 +13,6 @@ import { clearInterviewerDetails } from '@/redux/slices/interviewerSlice';
 import { clearSuperAdminDetails } from '@/redux/slices/superAdminSlice';
 import { logoutUser } from '@/services/auth/auth.service';
 import { ConfirmModal } from '../shared/ConfirmModal';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -55,35 +54,27 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   return (
     <div className={`flex min-h-screen ${isSuperAdmin ? 'bg-[#0B0D17]' : 'bg-slate-50'} selection:bg-cyan-500/30 relative`}>
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {/*
+        FIX: Sidebar is now the single owner of the mobile drawer's fixed
+        positioning, transform, and backdrop. We only pass it `isOpen` and
+        let it render itself — no duplicate wrapper/backdrop here anymore.
+      */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogoutRequest={() => setIsLogoutModalOpen(true)}
+      />
 
-      {/* Sidebar - Desktop (Fixed) & Mobile (Drawer) */}
-      <div className={`
-        fixed inset-y-0 left-0 z-[60] transform transition-transform duration-300 lg:translate-x-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <Sidebar
-          onClose={() => setIsSidebarOpen(false)}
-          onLogoutRequest={() => setIsLogoutModalOpen(true)}
-        />
-      </div>
-
-      <div className={`flex-1 flex flex-col min-h-screen max-w-full overflow-hidden ${!isSidebarOpen ? 'lg:pl-80' : 'lg:pl-80'}`}>
+      {/*
+        FIX: this used to be `${!isSidebarOpen ? 'lg:pl-80' : 'lg:pl-80'}`,
+        a ternary where both branches were identical (always 'lg:pl-80').
+        lg:pl-80 only matters at the desktop breakpoint, where the sidebar
+        is permanently docked — it should never depend on mobile drawer state.
+      */}
+      <div className="flex-1 flex flex-col min-h-screen max-w-full overflow-hidden lg:pl-80">
         {/* Top Header */}
         {!isSuperAdmin && (
-          <header className={`px-6 lg:px-10 flex items-center justify-between bg-white border-b border-slate-100 sticky top-0 z-50 ${role === 'student' ? 'lg:hidden h-16' : 'h-20'
-            }`}>
+          <header className={`px-6 lg:px-10 flex items-center justify-between bg-white border-b border-slate-100 sticky top-0 z-50 h-16 lg:h-20`}>
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
@@ -91,9 +82,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               <Menu size={24} />
             </button>
 
-            {role === 'student' && <span className="font-black text-slate-800 text-sm lg:hidden absolute left-1/2 -translate-x-1/2">CareerHub</span>}
+            {role === 'student' && (
+              <span className="font-black text-sm lg:hidden absolute left-1/2 -translate-x-1/2 tracking-tighter flex items-center">
+                <span className="text-slate-800">Career</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Hub</span>
+              </span>
+            )}
 
-            <div className={`items-center gap-3 ml-auto ${role === 'student' ? 'hidden' : 'flex'}`}>
+            <div className="items-center gap-3 ml-auto flex">
               {role && (
                 <NotificationBell role={role as 'student' | 'hr' | 'interviewer' | 'college_admin' | 'super_admin'} />
               )}

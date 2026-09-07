@@ -366,9 +366,6 @@ export default function StudentDirectoryPage() {
               <Plus size={16} /> Add Student
             </Button>
 
-            <button className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-              <Bell size={18} />
-            </button>
           </div>
         </header>
 

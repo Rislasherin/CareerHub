@@ -16,7 +16,7 @@ export default function StudentOffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 6;
 
   const fetchOffers = async () => {
     setLoading(true);

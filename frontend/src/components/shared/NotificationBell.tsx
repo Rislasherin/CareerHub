@@ -69,6 +69,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ role }) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD'>('ALL');
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -178,6 +179,22 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ role }) => {
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="flex border-b border-slate-100 bg-white px-4 pt-2">
+            <button
+              onClick={() => setActiveTab('ALL')}
+              className={`pb-2 text-xs font-bold transition-colors border-b-2 mr-4 ${activeTab === 'ALL' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setActiveTab('UNREAD')}
+              className={`pb-2 text-xs font-bold transition-colors border-b-2 ${activeTab === 'UNREAD' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            >
+              Unread
+            </button>
+          </div>
+
           {/* Body */}
           <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-50">
             {isLoading && notifications.length === 0 ? (
@@ -194,8 +211,22 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ role }) => {
                   <p className="text-xs text-slate-400 mt-0.5">No notifications yet.</p>
                 </div>
               </div>
-            ) : (
-              notifications.map(notification => {
+            ) : (() => {
+              const filtered = activeTab === 'UNREAD' ? notifications.filter(n => !n.isRead) : notifications;
+              if (filtered.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                      <Bell size={20} className="text-slate-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">All caught up!</p>
+                      <p className="text-xs text-slate-400 mt-0.5">No {activeTab === 'UNREAD' ? 'unread ' : ''}notifications yet.</p>
+                    </div>
+                  </div>
+                );
+              }
+              return filtered.map(notification => {
                 const config = typeConfig[notification.type] ?? typeConfig.INFO;
                 return (
                   <div
@@ -207,10 +238,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ role }) => {
                   >
                     <div className="flex-shrink-0 mt-0.5">{config.icon}</div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm text-slate-800 truncate ${!notification.isRead ? 'font-bold' : 'font-medium'}`}>
+                      <p className={`text-sm text-slate-800 ${!notification.isRead ? 'font-bold' : 'font-medium'} whitespace-normal break-words`}>
                         {notification.title}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed whitespace-normal break-words">
                         {notification.message}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
@@ -222,8 +253,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ role }) => {
                     )}
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
       )}

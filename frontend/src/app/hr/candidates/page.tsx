@@ -255,12 +255,6 @@ export default function CandidatesPage() {
                   <Plus size={16} className="mr-2" /> Post Drive
                 </Button>
               </Link>
-              <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 relative transition-all shadow-sm">
-                <Bell size={20} />
-              </button>
-              <div className="w-11 h-11 rounded-xl bg-indigo-900 text-white flex items-center justify-center font-black text-xs shadow-lg overflow-hidden border border-slate-100">
-                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${hrDetails?.companyName || 'C'}`} alt="logo" />
-              </div>
             </div>
           </header>
 
@@ -272,9 +266,7 @@ export default function CandidatesPage() {
                 AI-matched candidates across all your active job postings
               </p>
             </div>
-            <Button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white font-black text-xs uppercase tracking-wider rounded-2xl px-6 py-3.5 h-auto border-none flex items-center gap-2 shadow-md shadow-indigo-600/10">
-              <Download size={16} /> Export List
-            </Button>
+
           </div>
 
           {/* Filters & Sorting Bar */}

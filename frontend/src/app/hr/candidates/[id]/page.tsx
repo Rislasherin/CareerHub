@@ -128,6 +128,22 @@ export default function CandidateProfilePage() {
       }
    });
 
+   const handleReject = () => {
+      const storedRejected = localStorage.getItem('rejected_candidates');
+      let rejectedIds: string[] = [];
+      if (storedRejected) {
+         try {
+            rejectedIds = JSON.parse(storedRejected);
+         } catch (e) { }
+      }
+      if (!rejectedIds.includes(String(id))) {
+         rejectedIds.push(String(id));
+         localStorage.setItem('rejected_candidates', JSON.stringify(rejectedIds));
+      }
+      toast.success('Candidate rejected successfully');
+      router.push('/hr/candidates');
+   };
+
    if (loading) {
       return (
          <DashboardLayout>
@@ -190,8 +206,8 @@ export default function CandidateProfilePage() {
                            </div>
 
                            <div className="flex flex-wrap gap-2 mt-4">
-                              {Profile.skills?.slice(0, 7).map((skill: string) => (
-                                 <span key={skill} className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl border border-indigo-100">
+                              {Profile.skills?.slice(0, 7).map((skill: string, idx: number) => (
+                                 <span key={`${skill}-${idx}`} className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl border border-indigo-100">
                                     {skill}
                                  </span>
                               ))}
@@ -215,19 +231,16 @@ export default function CandidateProfilePage() {
                         <button onClick={() => setShowInterviewModal(true)} className="whitespace-nowrap px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm">
                            <Calendar size={14} /> Schedule AI Interview
                         </button>
-                        <button className="whitespace-nowrap px-4 py-2.5 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
+                        <a href={`mailto:${Profile.email || ''}`} className="whitespace-nowrap px-4 py-2.5 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
                            <Mail size={14} /> Send Email
-                        </button>
+                        </a>
                         {Profile.resumeUrl && (
                            <a href={Profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap px-4 py-2.5 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
                               <Download size={14} /> Download Resume
                            </a>
                         )}
-                        <button className="whitespace-nowrap px-4 py-2.5 bg-white text-slate-600 border border-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm">
-                           <Plus size={14} /> Add Note
-                        </button>
                         <div className="flex-1"></div>
-                        <button className="whitespace-nowrap px-4 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-rose-100 transition-colors">
+                        <button onClick={handleReject} className="whitespace-nowrap px-4 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 text-xs font-bold rounded-xl flex items-center gap-2 hover:bg-rose-100 transition-colors">
                            <X size={14} /> Reject
                         </button>
                      </div>
@@ -267,18 +280,7 @@ export default function CandidateProfilePage() {
                   </div>
                   <p className="text-xs text-slate-400 mt-2 font-medium">{Profile.collegeName || 'University'}</p>
                </div>
-               <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-500">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Resume Score</p>
-                  <div className="flex items-center gap-3">
-                     <h3 className="text-3xl font-black text-emerald-600 leading-none">{Profile.resumeScore || "N/A"}</h3>
-                     {Profile.resumeScore && (
-                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-md">
-                           {Profile.resumeScore >= 80 ? 'Strong' : 'Average'}
-                        </span>
-                     )}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-2 font-medium">System Evaluation</p>
-               </div>
+
                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-amber-500">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Availability</p>
                   <h3 className="text-xl font-black text-amber-600 leading-none mt-1">{Profile.preferences?.noticePeriod || "Immediate"}</h3>
@@ -303,7 +305,7 @@ export default function CandidateProfilePage() {
                      {Profile.skills?.length ? Profile.skills.slice(0, 6).map((skill: string, index: number) => {
                         const percent = Math.max(65, 95 - (index * 5));
                         return (
-                           <div key={skill}>
+                           <div key={`${skill}-${index}`}>
                               <div className="flex justify-between items-center mb-2">
                                  <span className="text-xs font-bold text-slate-700">{skill}</span>
                                  <span className="text-xs font-black text-indigo-500">{percent}%</span>
@@ -426,8 +428,8 @@ export default function CandidateProfilePage() {
                   <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Soft Skills & Languages</h3>
                      <div className="flex flex-wrap gap-2 mb-6">
-                        {Profile.softSkills?.length ? Profile.softSkills.map((skill: string) => (
-                           <span key={skill} className="px-3 py-1.5 bg-indigo-50/50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100/50">{skill}</span>
+                        {Profile.softSkills?.length ? Profile.softSkills.map((skill: string, idx: number) => (
+                           <span key={`${skill}-${idx}`} className="px-3 py-1.5 bg-indigo-50/50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100/50">{skill}</span>
                         )) : <span className="text-xs text-slate-400">No soft skills added.</span>}
                      </div>
                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Languages</h3>

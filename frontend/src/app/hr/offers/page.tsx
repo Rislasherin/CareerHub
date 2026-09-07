@@ -12,6 +12,9 @@ import { toast } from 'sonner';
 export default function HROffersPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchOffers = async () => {
     setLoading(true);
@@ -85,6 +88,28 @@ export default function HROffersPage() {
     }).format(amount);
   };
 
+  const filteredOffers = offers.filter((offer) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    
+    // Name
+    const firstName = offer.studentId?.firstName || offer.student?.user?.firstName || '';
+    const lastName = offer.studentId?.lastName || offer.student?.user?.lastName || '';
+    const fullName = `${firstName} ${lastName}`.toLowerCase();
+    
+    // Role
+    const role = (offer.role || '').toLowerCase();
+    
+    // Dates
+    const joiningDate = new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+    const sentDate = new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+
+    return fullName.includes(query) || role.includes(query) || joiningDate.includes(query) || sentDate.includes(query);
+  });
+
+  const totalPages = Math.ceil(filteredOffers.length / itemsPerPage);
+  const paginatedOffers = filteredOffers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
@@ -101,16 +126,12 @@ export default function HROffersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text"
-                placeholder="Search candidates, jobs..."
+                placeholder="Search candidates, roles, dates..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none shadow-sm"
               />
             </div>
-            <button className="p-2 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-600 transition-colors">
-              <Bell size={20} />
-            </button>
-            <Button className="flex items-center gap-2">
-              <Plus size={18} /> Create Offer Letter
-            </Button>
           </div>
         </div>
 
@@ -126,7 +147,9 @@ export default function HROffersPage() {
         <div className="space-y-4">
           {loading ? (
             <div className="text-center py-12 text-slate-500">Loading offers...</div>
-          ) : offers.map((offer) => (
+          ) : paginatedOffers.length === 0 ? (
+            <div className="text-center py-12 text-slate-500">No offers found matching your search.</div>
+          ) : paginatedOffers.map((offer) => (
             <div key={offer.id} className="bg-white rounded-[20px] border border-slate-200 shadow-sm p-6 relative">
               
               {/* Card Header */}
@@ -203,6 +226,33 @@ export default function HROffersPage() {
             </div>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between pt-6 mt-6 border-t border-slate-200">
+            <span className="text-sm font-medium text-slate-500">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredOffers.length)} of {filteredOffers.length} offers
+            </span>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                variant="secondary"
+                className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              >
+                Previous
+              </Button>
+              <Button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                variant="secondary"
+                className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -33,6 +33,7 @@ import { useAppSelector } from '@/redux/hooks';
 import { RootState } from '@/redux/store';
 import { getHRDashboardStats } from '@/services/hr/dashboard.service';
 import { HRDashboardStats } from '@/types/dashboard';
+import { apiClient } from '@/services/api/api.client';
 
 const iconMap: Record<string, any> = {
    CheckCircle2: CheckCircle2,
@@ -47,20 +48,27 @@ const iconMap: Record<string, any> = {
 export default function HRDashboard() {
    const hrDetails = useAppSelector((state: RootState) => state.hr.details);
    const [data, setData] = useState<HRDashboardStats | null>(null);
+   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
    const [loading, setLoading] = useState<boolean>(true);
 
    useEffect(() => {
-      const fetchStats = async () => {
+      const fetchData = async () => {
          try {
-            const statsData = await getHRDashboardStats();
+            const [statsData, hireReqRes] = await Promise.all([
+               getHRDashboardStats(),
+               apiClient.get('/hr/hire-requests') as any
+            ]);
             setData(statsData);
+            if (hireReqRes.success) {
+               setPendingRequests(hireReqRes.data?.applications || (Array.isArray(hireReqRes.data) ? hireReqRes.data : []));
+            }
          } catch (error) {
             // Silently handle error as apiClient interceptor will show a toast if necessary
          } finally {
             setLoading(false);
          }
       };
-      fetchStats();
+      fetchData();
    }, []);
 
    const stats = [
@@ -120,25 +128,12 @@ export default function HRDashboard() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                     <div className="relative group w-80">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
-                        <input
-                           type="text"
-                           placeholder="Search candidates, jobs..."
-                           className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all"
-                        />
-                     </div>
                      <Link href="/hr/jobs?action=post-job">
                         <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-black text-xs rounded-xl px-6 h-11 border-none shadow-lg">
                            <Plus size={16} className="mr-2" /> Post Job
                         </Button>
                      </Link>
-                     <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 relative transition-all">
-                        <Bell size={20} />
-                     </button>
-                     <div className="w-11 h-11 rounded-xl bg-indigo-900 text-white flex items-center justify-center font-black text-xs shadow-lg overflow-hidden">
-                        <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${hrDetails?.companyName || 'C'}`} alt="logo" />
-                     </div>
+
                   </div>
                </header>
 
@@ -156,7 +151,6 @@ export default function HRDashboard() {
                         <Link href="/hr/jobs?action=post-job">
                            <Button className="bg-white text-[#1b1430] hover:bg-slate-100 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest border-none shadow-lg">Post First Job <ChevronRight size={16} className="ml-1" /></Button>
                         </Link>
-                        <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-4 h-auto rounded-2xl font-black text-xs uppercase tracking-widest">Guidebook</Button>
                      </div>
                   </div>
                </section>
@@ -189,34 +183,102 @@ export default function HRDashboard() {
                   <div className="space-y-8">
                      <div className="flex items-center justify-between px-2">
                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Pending Hire Requests</h3>
-                        <button className="text-[10px] font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1">View All <ChevronRight size={12} /></button>
+                        <Link href="/hr/hire-requests">
+                           <button className="text-[10px] font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1">View All <ChevronRight size={12} /></button>
+                        </Link>
                      </div>
 
-                     <div className="flex flex-col items-center justify-center p-20 rounded-[2rem] border-2 border-dashed border-slate-100 bg-white/50 text-center">
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-200 mb-6">
-                           <Clock size={32} />
+                     {loading ? (
+                        <div className="flex flex-col items-center justify-center p-20 rounded-[2rem] border border-slate-100 bg-white/50 text-center">
+                           <div className="text-xs font-bold text-slate-400">Loading requests...</div>
                         </div>
-                        <p className="text-slate-400 font-bold text-xs max-w-[200px]">
-                           No pending hire requests at the moment.
-                        </p>
-                     </div>
+                     ) : pendingRequests.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-20 rounded-[2rem] border-2 border-dashed border-slate-100 bg-white/50 text-center">
+                           <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-200 mb-6">
+                              <Clock size={32} />
+                           </div>
+                           <p className="text-slate-400 font-bold text-xs max-w-[200px]">
+                              No pending hire requests at the moment.
+                           </p>
+                        </div>
+                     ) : (
+                        <div className="space-y-4">
+                           {pendingRequests.slice(0, 3).map((req, i) => (
+                              <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-4 group">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                       <UserCheck size={20} />
+                                    </div>
+                                    <div>
+                                       <h4 className="text-sm font-black text-slate-900">{req.studentId?.name || 'Candidate'}</h4>
+                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                          {req.jobId?.title || 'Position'}
+                                       </p>
+                                    </div>
+                                 </div>
+                                 <div className="flex flex-col items-end gap-2">
+                                    <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black rounded-lg border border-amber-100">
+                                       PENDING
+                                    </span>
+                                    <span className="text-[10px] font-medium text-slate-400">
+                                       {new Date(req.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </span>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
                   </div>
 
                   {/* Right: Today's Schedule */}
                   <div className="space-y-8">
                      <div className="flex items-center justify-between px-2">
                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Today's Schedule</h3>
-                        <button className="text-[10px] font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1">Full Calendar <ChevronRight size={12} /></button>
+                        <Link href="/hr/interviews">
+                           <button className="text-[10px] font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1">Full Calendar <ChevronRight size={12} /></button>
+                        </Link>
                      </div>
 
-                     <GlassCard className="p-10 rounded-[2.5rem] border-slate-100 shadow-sm flex flex-col items-center justify-center text-center py-20">
-                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mb-6">
-                           <Calendar size={32} />
+                     {loading ? (
+                        <div className="flex flex-col items-center justify-center p-20 rounded-[2.5rem] border border-slate-100 bg-white/50 text-center">
+                           <div className="text-xs font-bold text-slate-400">Loading schedule...</div>
                         </div>
-                        <p className="text-slate-400 font-bold text-xs max-w-[200px]">
-                           Your interview schedule for today is clear.
-                        </p>
-                     </GlassCard>
+                     ) : !data?.todaysSchedule || data.todaysSchedule.length === 0 ? (
+                        <GlassCard className="p-10 rounded-[2.5rem] border-slate-100 shadow-sm flex flex-col items-center justify-center text-center py-20">
+                           <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mb-6">
+                              <Calendar size={32} />
+                           </div>
+                           <p className="text-slate-400 font-bold text-xs max-w-[200px]">
+                              Your interview schedule for today is clear.
+                           </p>
+                        </GlassCard>
+                     ) : (
+                        <div className="space-y-4">
+                           {data.todaysSchedule.map((interview, i) => (
+                              <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-4">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                       <Calendar size={20} />
+                                    </div>
+                                    <div>
+                                       <h4 className="text-sm font-black text-slate-900">{interview.candidateName}</h4>
+                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                          {interview.role}
+                                       </p>
+                                    </div>
+                                 </div>
+                                 <div className="flex flex-col items-end gap-2">
+                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-lg border border-emerald-100">
+                                       {interview.status}
+                                    </span>
+                                    <span className="text-[10px] font-medium text-slate-400">
+                                       {new Date(interview.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
                   </div>
                </div>
 
@@ -249,7 +311,7 @@ export default function HRDashboard() {
                                     </div>
                                     <div className="space-y-1">
                                        <p className="text-sm font-bold text-slate-900 leading-snug">{act.title}</p>
-                                       <p className="text-[10px] font-medium text-slate-400">{act.time}</p>
+                                       <p className="text-[10px] font-medium text-slate-400">{new Date(act.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                                     </div>
                                  </div>
                               );
@@ -265,20 +327,28 @@ export default function HRDashboard() {
                         {loading ? (
                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400">Loading chart data...</div>
                         ) : (
-                           (data?.applicationsChart ?? [0, 0, 0, 0, 0, 0, 0]).map((v, i) => {
-                              const maxVal = Math.max(...(data?.applicationsChart ?? [15]), 1);
-                              return (
+                           (() => {
+                              const chartData = data?.applicationsChart ?? [0, 0, 0, 0, 0, 0, 0];
+                              const maxVal = Math.max(...chartData, 1);
+                              const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                              const labels = Array.from({ length: 7 }).map((_, i) => {
+                                 const d = new Date();
+                                 d.setDate(d.getDate() - (6 - i));
+                                 return days[d.getDay()];
+                              });
+                              
+                              return chartData.map((v, i) => (
                                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
                                     <div
                                        className="w-full bg-[#1b1430] rounded-t-lg transition-all hover:bg-[#2d244a]"
                                        style={{ height: `${(v / maxVal) * 100}%` }}
                                     />
                                     <span className="text-[8px] font-black text-slate-400">
-                                       {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][i]}
+                                       {labels[i]}
                                     </span>
                                  </div>
-                              );
-                           })
+                              ));
+                           })()
                         )}
                      </div>
                   </div>
@@ -335,9 +405,8 @@ export default function HRDashboard() {
                      <div className="space-y-6 relative z-10">
                         <h3 className="text-2xl font-black tracking-tight">Enterprise Scaling</h3>
                         <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
-                           Need to hire for multiple departments? Upgrade your plan to unlock bulk candidate exports and AI-powered interviewer scheduling.
+                           Managing candidates across multiple teams? Use CareerHub’s hiring tools to organize job openings, interviews, candidate pipelines, and recruitment activity across departments.
                         </p>
-                        <Button className="bg-[#1b1430] hover:bg-[#2d244a] px-8 py-3.5 h-auto rounded-xl font-black text-xs uppercase tracking-widest border-none shadow-xl">View Plans</Button>
                      </div>
                      <div className="hidden md:block relative z-10">
                         <div className="w-40 h-40 rounded-full border-4 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">

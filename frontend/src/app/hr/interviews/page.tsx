@@ -21,6 +21,7 @@ export default function InterviewsPage() {
   const [interviewers, setInterviewers] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'TODAY' | 'FEEDBACK' | 'COMPLETED' | 'RESCHEDULES'>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 8;
   const router = useRouter();
 
@@ -114,6 +115,26 @@ export default function InterviewsPage() {
 
   const filteredAndSortedInterviews = (interviews || [])
     .filter((interview: any) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const candidateName = interview.candidate?.name?.toLowerCase() || '';
+        const jobTitle = interview.title?.toLowerCase() || '';
+        
+        let dateStr = '';
+        let timeStr = '';
+        if (interview.scheduledAt) {
+          const date = new Date(interview.scheduledAt);
+          dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase();
+          timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+        }
+
+        if (!candidateName.includes(query) && 
+            !jobTitle.includes(query) && 
+            !dateStr.includes(query) && 
+            !timeStr.includes(query)) {
+          return false;
+        }
+      }
       if (activeFilter === 'ALL') return true;
       if (activeFilter === 'RESCHEDULES') return interview.status === 'RESCHEDULE_REQUESTED';
       if (activeFilter === 'COMPLETED') return interview.status === 'COMPLETED';
@@ -163,10 +184,15 @@ export default function InterviewsPage() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Interviews</h1>
           <p className="text-slate-500 font-medium mt-1">Manage all scheduled rounds · Current Season</p>
         </div>
-        <div className="flex gap-3">
-          <Button className="bg-[#1b1430] hover:bg-[#2d244a] text-white font-bold px-6 flex items-center gap-2 border-transparent">
-            <Calendar size={18} /> Schedule Interview
-          </Button>
+        <div className="relative group w-72">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search candidates, roles, dates..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all shadow-sm"
+          />
         </div>
       </div>
 

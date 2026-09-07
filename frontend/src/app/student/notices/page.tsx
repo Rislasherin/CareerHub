@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/shared/Button';
 import { Pagination } from '@/components/shared/Pagination';
+import Link from 'next/link';
 import { Search, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { NoticeResponse } from '@/types/notice';
@@ -47,6 +48,7 @@ export default function StudentNoticeBoardPage() {
   const [notices, setNotices] = useState<NoticeResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
@@ -71,9 +73,19 @@ export default function StudentNoticeBoardPage() {
 
   const tabs = ['All', 'Urgent', 'Important', 'Normal'];
 
-  const filteredNotices = activeTab === 'All'
-    ? notices
-    : notices.filter(n => n.priority === activeTab);
+  let filteredNotices = notices;
+
+  if (activeTab !== 'All') {
+    filteredNotices = filteredNotices.filter(n => n.priority === activeTab);
+  }
+
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    filteredNotices = filteredNotices.filter(n => 
+      n.title?.toLowerCase().includes(query) || 
+      n.content?.toLowerCase().includes(query)
+    );
+  }
 
   const totalPages = Math.ceil(filteredNotices.length / ITEMS_PER_PAGE);
   const paginatedNotices = filteredNotices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -100,15 +112,19 @@ export default function StudentNoticeBoardPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
-                placeholder="Search jobs, companies..."
+                placeholder="Search notices..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="h-12 pl-12 pr-4 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 w-72 shadow-sm"
               />
             </div>
 
             {/* Practice Now Button */}
-            <Button className="rounded-xl bg-rose-500 hover:bg-rose-600 text-white h-12 px-6 text-sm font-black gap-2 shadow-md shadow-rose-500/20 border-none transition-all">
-              <Sparkles size={16} /> Practice Now
-            </Button>
+            <Link href="/student/ai-practice">
+              <Button className="rounded-xl bg-rose-500 hover:bg-rose-600 text-white h-12 px-6 text-sm font-black gap-2 shadow-md shadow-rose-500/20 border-none transition-all">
+                <Sparkles size={16} /> Practice Now
+              </Button>
+            </Link>
           </div>
         </header>
 

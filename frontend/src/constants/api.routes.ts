@@ -38,6 +38,7 @@ export const API_ROUTES = {
     INTERVIEWS: '/college/interviews',
     OFFERS: '/college/offers',
     REPORTS_ANALYTICS: '/college/reports/insights',
+    PLACEMENT_READINESS: '/college/placement-readiness',
   },
   INTERVIEWER: {
     ACTIVATE: '/auth/interviewer/activate',
@@ -73,8 +74,9 @@ export const API_ROUTES = {
     SUPER_ADMIN: '/super-admin/notifications',
   },
   SUBSCRIPTION: {
-    CREATE: '/subscription/create',
-    GET_MY_PLAN: '/subscription/my-plan'
+    CREATE: '/billing/plan/create',
+    VERIFY: '/billing/plan/verify',
+    GET_MY_PLAN: '/billing/plan/my-plan'
   }
 };
 

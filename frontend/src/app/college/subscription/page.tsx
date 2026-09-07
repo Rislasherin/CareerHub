@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAppSelector } from '@/redux/hooks';
-import { createSubscription, getMyPlan } from '@/services/college/subscription.service';
+import { createSubscription, getMyPlan, verifyPayment } from '@/services/college/subscription.service';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Script from 'next/script';
@@ -57,18 +57,24 @@ export default function CollegeSubscriptionPage() {
       
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        subscription_id: response.gatewaySubscriptionId,
+        order_id: response.gatewayOrderId,
         name: 'CareerHub',
         description: `${planType} Plan Subscription`,
-        handler: function (response: any) {
-          toast.success('Payment successful! Your subscription is active.');
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+        handler: async function (response: any) {
+          try {
+            await verifyPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
+            toast.success('Payment successful! Your subscription is active.');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } catch (error: any) {
+            toast.error(error.message || 'Payment verification failed.');
+          }
         },
         prefill: {
           name: collegeName,
           email: collegeAdmin?.email || 'admin@college.edu',
+          contact: '9999999999' // Required by Razorpay for UPI AutoPay support
         },
         theme: {
           color: '#16a34a' // Green color to match new UI

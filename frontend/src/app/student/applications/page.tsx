@@ -2,6 +2,7 @@
 import { API_ROUTES } from '@/constants/api.routes';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Pagination } from '@/components/shared/Pagination';
@@ -62,11 +63,17 @@ export default function StudentApplicationsPage() {
     fetchApplications();
   }, []);
 
-  const filteredApplications = applications.filter(app => {
-    const jobTitle = app.job?.title?.toLowerCase() || '';
-    const companyName = app.job?.companyName?.toLowerCase() || '';
-    return jobTitle.includes(searchQuery.toLowerCase()) || companyName.includes(searchQuery.toLowerCase());
-  });
+  const filteredApplications = [...applications]
+    .filter(app => {
+      const jobTitle = app.job?.title?.toLowerCase() || '';
+      const companyName = app.job?.companyName?.toLowerCase() || '';
+      return jobTitle.includes(searchQuery.toLowerCase()) || companyName.includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.appliedAt || a.createdAt || Date.now()).getTime();
+      const dateB = new Date(b.appliedAt || b.createdAt || Date.now()).getTime();
+      return dateB - dateA;
+    });
 
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
   const paginatedApplications = filteredApplications.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -106,19 +113,11 @@ export default function StudentApplicationsPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search jobs, companies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all outline-none"
-              />
-            </div>
-            <button className="h-10 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-rose-500/20">
-              <Lightbulb size={14} /> Practice Now
-            </button>
+            <Link href="/student/ai-practice">
+              <button className="h-10 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-rose-500/20">
+                <Lightbulb size={14} /> Practice Now
+              </button>
+            </Link>
           </div>
         </header>
 

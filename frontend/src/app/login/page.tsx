@@ -34,9 +34,22 @@ import { z } from 'zod';
 const roles: { id: UserRole; label: string; icon: any }[] = [
   { id: 'student', label: 'Student', icon: GraduationCap },
   { id: 'hr', label: 'Company', icon: Building2 },
-  { id: 'college_admin', label: 'Institution', icon: ShieldCheck },
-  { id: 'interviewer', label: 'Interviewer', icon: Briefcase },
+  { id: 'college_admin', label: 'Institution', icon: ShieldCheck }
 ];
+
+const Logo = () => (
+  <div className="flex items-center gap-3 group cursor-pointer">
+    <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30 overflow-hidden group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] group-hover:bg-transparent transition-colors duration-300"></div>
+      <Briefcase className="text-white z-10 w-5 h-5 relative right-[-2px] bottom-[-2px]" />
+      <GraduationCap className="text-white/90 z-10 w-5 h-5 absolute top-1.5 left-1.5 -rotate-12" />
+    </div>
+    <span className="text-2xl lg:text-[1.7rem] font-black tracking-tighter">
+      <span className="text-slate-900">Career</span>
+      <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Hub</span>
+    </span>
+  </div>
+);
 
 const roleContent: Record<UserRole, { title: string; subtitle: string; quote: string; author: string; position: string }> = {
   student: {
@@ -136,7 +149,7 @@ function LoginContent() {
   // Pre-select role from query param
   useEffect(() => {
     const roleParam = searchParams.get('role') as UserRole;
-    const validRoles: UserRole[] = ['student', 'hr', 'interviewer', 'college_admin'];
+    const validRoles: UserRole[] = ['student', 'hr', 'college_admin'];
 
     if (roleParam && validRoles.includes(roleParam)) {
       setActiveRole(roleParam);
@@ -211,7 +224,7 @@ function LoginContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full min-h-screen">
 
         {/* Left Side: Dynamic Branding Content */}
-        <div className="hidden lg:flex flex-col bg-slate-50 relative p-16 xl:p-24 overflow-hidden border-r border-slate-100">
+        <div className="hidden lg:flex flex-col bg-slate-50 relative p-8 lg:p-12 xl:p-16 overflow-hidden border-r border-slate-100">
           {/* Background Gradient */}
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.06),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.04),transparent_60%)]" />
@@ -219,9 +232,8 @@ function LoginContent() {
 
           {/* Logo */}
           <div className="relative z-10 mb-auto">
-            <Link href="/" className="flex items-center gap-3 text-2xl font-black group">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white">CH</div>
-              <span className="tracking-tighter">CareerHub</span>
+            <Link href="/">
+              <Logo />
             </Link>
           </div>
 
@@ -235,20 +247,20 @@ function LoginContent() {
                 exit={{ opacity: 0, y: -30 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/50 text-indigo-700 text-[10px] font-black uppercase tracking-widest mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/50 text-indigo-700 text-[10px] font-black uppercase tracking-widest mb-6">
                   Enterprise Solution
                 </div>
-                <h1 className="text-6xl xl:text-7xl font-black leading-tight mb-8 tracking-tighter">
+                <h1 className="text-5xl xl:text-6xl font-black leading-tight mb-6 tracking-tighter">
                   {content.title}
                 </h1>
-                <p className="text-xl text-slate-500 leading-relaxed font-medium mb-12">
+                <p className="text-lg text-slate-500 leading-relaxed font-medium mb-8">
                   {content.subtitle}
                 </p>
 
                 {/* Testimonial Card */}
-                <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.05)] relative">
-                  <div className="absolute -top-4 -left-4 w-10 h-10 bg-indigo-600 text-white flex items-center justify-center rounded-xl font-serif text-3xl italic shadow-lg shadow-indigo-500/20">"</div>
-                  <p className="text-lg font-medium text-slate-700 italic mb-8 leading-relaxed">
+                <div className="p-6 rounded-3xl bg-white border border-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.05)] relative">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 bg-indigo-600 text-white flex items-center justify-center rounded-xl font-serif text-2xl italic shadow-lg shadow-indigo-500/20">"</div>
+                  <p className="text-base font-medium text-slate-700 italic mb-6 leading-relaxed">
                     {content.quote}
                   </p>
                   <div className="flex items-center gap-4">
@@ -271,26 +283,27 @@ function LoginContent() {
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="flex items-center justify-center p-8 lg:p-16 xl:p-24 relative bg-white">
+        <div className="flex items-center justify-center p-6 lg:p-12 xl:p-16 relative bg-white">
           {/* Mobile Logo */}
           <div className="absolute top-8 left-8 lg:hidden">
-            <Link href="/" className="flex items-center gap-2 text-2xl font-black">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg" />
-              <span className="tracking-tighter">CH</span>
+            <Link href="/">
+              <Logo />
             </Link>
           </div>
 
           <div className="w-full max-w-md">
-            <div className="text-center lg:text-left mb-12">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-8 mx-auto lg:mx-0 shadow-sm border border-indigo-100/30">
-                {React.createElement(roles.find(r => r.id === activeRole)!.icon, { size: 32, strokeWidth: 2.5 })}
+            <div className="text-center lg:text-left mb-8">
+              <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30 overflow-hidden mb-6 mx-auto lg:mx-0">
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
+                <Briefcase className="text-white z-10 w-7 h-7 relative right-[-3px] bottom-[-3px]" />
+                <GraduationCap className="text-white/90 z-10 w-7 h-7 absolute top-2 left-2 -rotate-12" />
               </div>
-              <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter leading-none">Welcome back</h2>
-              <p className="text-slate-500 font-medium text-lg leading-relaxed">Log in to manage your enterprise placements.</p>
+              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-3 tracking-tighter leading-none">Welcome back</h2>
+              <p className="text-slate-500 font-medium text-base lg:text-lg leading-relaxed">Log in to manage your enterprise placements.</p>
             </div>
 
             {/* Role Switcher Tabs */}
-            <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-10 gap-1 border border-slate-100">
+            <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-8 gap-1 border border-slate-100">
               {roles.map(role => (
                 <button
                   key={role.id}
