@@ -45,6 +45,25 @@ export class InterviewRepository extends BaseRepository<Interview,InterviewDocum
         return docs.map(doc => this.toEntity(doc as InterviewDocument))
     }
 
+    async getTodaysInterviews(companyId: string): Promise<Interview[]> {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const docs = await this.model
+        .find({
+            companyId,
+            isDeleted: {$ne: true},
+            scheduledAt: { $gte: startOfDay, $lte: endOfDay }
+        })
+        .sort({scheduledAt: 1})
+        .populate('studentId')
+        .populate('jobId');
+
+        return docs.map(doc => this.toEntity(doc as InterviewDocument));
+    }
+
     async getPopulatedCollegeInterviews(collegeId: string): Promise<Record<string, unknown>[]> {
         const docs = await this.model.aggregate([
             { $match: { isDeleted: { $ne: true } } },

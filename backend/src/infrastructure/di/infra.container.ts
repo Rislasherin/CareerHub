@@ -17,7 +17,15 @@ import { InterviewRepository } from "@infrastructure/repositories/interview.repo
 import { OfferRepository } from "@infrastructure/repositories/offer.repository";
 
 import { NotificationModel } from "@infrastructure/database/models/common/notification.model";
+import { PlanModel } from "@infrastructure/database/models/organizer/plan.model";
+import { PaymentModel } from "@infrastructure/database/models/organizer/payment.model";
+import { InvoiceModel } from "@infrastructure/database/models/organizer/invoice.model";
+import { AIUsageRecordModel } from "@infrastructure/database/models/ai/aiUsageRecord.model";
 import { NotificationRepository } from "@infrastructure/repositories/notification.repository";
+import { PlanRepository } from "@infrastructure/repositories/plan.repository";
+import { PaymentRepository } from "@infrastructure/repositories/payment.repository";
+import { InvoiceRepository } from "@infrastructure/repositories/invoice.repository";
+import { AIUsageRepository } from "@infrastructure/repositories/aiUsage.repository";
 import { CreateSystemNotificationUseCase } from "@application/usecases/common/notifications/implementations/CreateSystemNotification.usecase";
 import { SubscriptionRepository } from "@infrastructure/repositories/subscription.repository";
 import { RazorpayGateway } from "@infrastructure/services/payment/RazorpayGateway.payment";
@@ -28,9 +36,21 @@ import { AIInterviewEvaluationRepository } from "@infrastructure/repositories/ai
 import { MongoInterviewIntegrityEventRepository } from "@infrastructure/repositories/ai-interview/MongoInterviewIntegrityEventRepository";
 
 export const notificationRepository = new NotificationRepository(NotificationModel);
-export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
+import { AICreditService } from "@infrastructure/services/ai-practice/AICreditService";
+
+import { EntitlementGuardService } from "@infrastructure/services/entitlements/EntitlementGuardService";
+
 export const studentRepository = new StudentRepository();
 export const superAdminRepository = new SuperAdminRepository();
+
+export const planRepository = new PlanRepository(PlanModel);
+export const paymentRepository = new PaymentRepository(PaymentModel);
+export const invoiceRepository = new InvoiceRepository(InvoiceModel);
+export const aiUsageRepository = new AIUsageRepository(AIUsageRecordModel);
+export const subscriptionRepository = new SubscriptionRepository();
+export const aiCreditService = new AICreditService(aiUsageRepository, subscriptionRepository);
+export const entitlementGuardService = new EntitlementGuardService(subscriptionRepository, planRepository, studentRepository);
+export const createSystemNotificationUseCase = new CreateSystemNotificationUseCase(notificationRepository);
 export const companyRepository = new CompanyRepository();
 export const hrUserRepository = new HRUserRepository();
 
@@ -43,7 +63,6 @@ export const jobApplicationRepository = new JobApplicationRepository();
 export const jwtService = new JwtService();
 export const bcryptService = new BcryptService();
 export const offerRepository = new OfferRepository();
-export const subscriptionRepository = new SubscriptionRepository();
 export const getCollegeSubscriptionUseCase = new GetCollegeSubscriptionUseCase();
 export const authMiddleware = new AuthMiddleware(
     jwtService,

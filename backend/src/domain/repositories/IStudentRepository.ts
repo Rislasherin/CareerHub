@@ -8,4 +8,5 @@ export interface IStudentRepository extends IBaseRepository<Student> {
   updateStatus(id: string, status: string, blockedBy?: string): Promise<void>;
   searchAllStudents(query: string, page: number, limit: number, collegeId?: string): Promise<{ students: Student[], total: number }>;
   findByInvitationToken(token: string): Promise<Student | null>;
+  countByCollegeId(collegeId: string): Promise<number>;
 }

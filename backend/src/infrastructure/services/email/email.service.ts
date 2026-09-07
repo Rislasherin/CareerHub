@@ -254,4 +254,36 @@ export class EmailService implements IEmailService {
       return false;
     }
   }
+
+  async sendPlacementReadinessReminder(email: string, studentName: string, action: string): Promise<boolean> {
+    try {
+      const replyTo = await this.getContactEmail();
+      await this._transporter.sendMail({
+        from: env.EMAIL_FROM,
+        replyTo,
+        to: email,
+        subject: "Action Required: Placement Readiness Update",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Hello ${studentName},</h2>
+            <p style="color: #334155; font-size: 16px;">
+              Your college placement cell has reviewed your placement readiness profile and noticed an area that needs your attention.
+            </p>
+            <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0;">
+              <strong>Recommended Action:</strong><br/>
+              ${action}
+            </div>
+            <p style="color: #64748b; font-size: 14px;">
+              Please log in to your CareerHub dashboard and take the necessary steps to improve your placement readiness score.
+            </p>
+          </div>
+        `,
+      });
+      return true;
+    } catch (error) {
+      logger.error("Failed to send placement readiness reminder email", error);
+      return false;
+    }
+  }
 }
+

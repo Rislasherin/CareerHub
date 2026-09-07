@@ -8,10 +8,13 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IApproveAccessRequestUseCase } from "../interfaces/IApproveAccessRequest.usecase";
 
+import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
+
 export class ApproveAccessRequestUseCase implements IApproveAccessRequestUseCase {
   constructor(
     private readonly _studentRepository: IStudentRepository,
-    private readonly _emailService: IEmailService
+    private readonly _emailService: IEmailService,
+    private readonly _entitlementGuard: IEntitlementGuardService
   ) {}
 
   async execute(studentId: string): Promise<void> {
@@ -22,6 +25,11 @@ export class ApproveAccessRequestUseCase implements IApproveAccessRequestUseCase
 
     if (student.status !== UserStatus.ACCESS_REQUESTED) {
       throw new AppError("Student is not in ACCESS_REQUESTED status", HttpStatus.BAD_REQUEST, ErrorCode.INTERNAL_ERROR);
+    }
+
+    const canAdd = await this._entitlementGuard.canAddStudent(student.collegeId);
+    if (!canAdd) {
+      throw new AppError("Student limit reached for the active subscription plan. Cannot approve this request.", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
     }
 
     const invitationToken = uuidv4();

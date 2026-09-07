@@ -22,7 +22,8 @@ class RedisClientService {
     if (this.connectPromise) return this.connectPromise;
     
     this.isConnecting = true;
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) throw new Error("REDIS_URL environment variable is missing");
     
     Logger.info(LogCategory.SYSTEM_INFO, `[RedisClient] Connecting to Redis at ${redisUrl}`);
     

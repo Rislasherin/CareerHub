@@ -12,30 +12,32 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
         private readonly paymentGateway: IPaymentGateway
     ) { }
 
-    async execute(collegeId: string, planType: PlanType): Promise<{ gatewaySubscriptionId: string; }> {
-        const planId = planType === PlanType.PRO
-            ? process.env.RAZORPAY_PRO_PLAN_ID! 
-            : process.env.RAZORPAY_BASIC_PLAN_ID!;
+    async execute(collegeId: string, planType: PlanType): Promise<{ gatewayOrderId: string; }> {
+        // Use test mode price of ₹1000 for Pro plan
+        const amount = planType === PlanType.PRO ? 100000 : 9900000;
+        const currency = "INR";
+        const receipt = `receipt_${uuidv4().substring(0, 8)}`;
 
-        const gatewayResponse = await this.paymentGateway.createSubscription({
-                    planId: planId,
-                    totalCount: 12
-                });
+        const gatewayResponse = await this.paymentGateway.createOrder(amount, currency, receipt);
+
+        const internalPlanId = planType === PlanType.PRO ? 'plan_pro' : 'plan_basic';
 
         const subscription = new Subscription({
             id: uuidv4(),
             collegeId: collegeId,
+            planId: internalPlanId,
             planType: planType,
             status: SubscriptionStatus.PENDING,
-            gatewaySubscriptionId: gatewayResponse.subscriptionId,
-            aiTokensAllocated: 0, // Tokens allocated only upon successful payment (webhook)
+            providerOrderId: gatewayResponse.orderId,
+            aiCreditsAllocated: 0,
+            aiCreditsConsumed: 0,
             createdAt: new Date(),
             updatedAt: new Date()
         });
 
         await this.subscriptionRepo.save(subscription);
         return {
-            gatewaySubscriptionId: gatewayResponse.subscriptionId
+            gatewayOrderId: gatewayResponse.orderId
         }
     }
 }

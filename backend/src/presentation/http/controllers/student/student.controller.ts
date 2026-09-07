@@ -20,6 +20,8 @@ import { IGenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/
 import { IGenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/interfaces/IGenerateProfessionalSummary.usecase";
 import { IGetStudentOffersUseCase } from "@application/usecases/student/interfaces/IGetStudentOffers.usecase";
 import { IRespondToOfferUseCase } from "@application/usecases/student/interfaces/IRespondToOffer.usecase";
+import { IGetStudentDashboardStatsUseCase } from "@application/usecases/student/dashboard/interfaces/IGetStudentDashboardStats.usecase";
+import { GetStudentEntitlementsUseCase } from "@application/usecases/student/implementations/GetStudentEntitlements.usecase";
 
 export class StudentController {
   constructor(
@@ -38,8 +40,28 @@ export class StudentController {
     private readonly _getStudentOffersUseCase: IGetStudentOffersUseCase,
     private readonly _respondToOfferUseCase: IRespondToOfferUseCase,
     private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase,
-    private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase
+    private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase,
+    private readonly _getStudentDashboardStatsUseCase: IGetStudentDashboardStatsUseCase,
+    private readonly _getStudentEntitlementsUseCase: GetStudentEntitlementsUseCase
   ) { }
+
+  getEntitlements = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const entitlements = await this._getStudentEntitlementsUseCase.execute(studentId);
+    sendSuccess(res, entitlements, "Entitlements fetched successfully");
+  });
+
+  getDashboard = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const dashboardData = await this._getStudentDashboardStatsUseCase.execute(studentId);
+    sendSuccess(res, dashboardData, "Dashboard stats fetched successfully");
+  });
 
   generateProfessionalSummary = asyncHandler(async (req: Request, res: Response) => {
     const studentId = req.user?.id;

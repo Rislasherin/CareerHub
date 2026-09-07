@@ -7,12 +7,13 @@ import { Logger, LogCategory } from '../infrastructure/logger/logger';
 // Load env vars
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/careerhub';
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) throw new Error("MONGODB_URI environment variable is missing");
 
 async function seedAdmin() {
   try {
     Logger.info(LogCategory.SYSTEM_INFO, 'Connecting to MongoDB...');
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI as string);
     Logger.info(LogCategory.SYSTEM_INFO, 'Connected successfully.');
 
     const email = 'admin@careerhub.com';

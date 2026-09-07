@@ -8,6 +8,7 @@ export interface IJobApplicationRepository extends IBaseRepository<JobApplicatio
   findByJobAndStudent(jobId: string, studentId: string): Promise<JobApplication | null>;
   getHRFunnelStats(companyId: string, startDate?: Date, endDate?: Date): Promise<{ label: string, value: number, color: string }[]>;
   getApplicationsThisWeek(companyId: string): Promise<number[]>;
+  getRecentApplications(companyId: string, limit: number): Promise<JobApplication[]>;
   countUniqueCandidates(companyId: string): Promise<number>;
   
   // HR Analytics Additions
@@ -18,4 +19,7 @@ export interface IJobApplicationRepository extends IBaseRepository<JobApplicatio
   
   getAverageTimeToHire(companyId: string, startDate?: Date, endDate?: Date): Promise<number | null>;
   getAverageCandidateScore(companyId: string, startDate?: Date, endDate?: Date): Promise<number | null>;
+
+  // College Analytics
+  getCollegeApplicationStats(collegeId: string): Promise<{ total: number; underReview: number; interviewStage: number; selected: number; rejected: number }>;
 }

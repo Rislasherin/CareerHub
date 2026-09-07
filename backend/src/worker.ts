@@ -106,9 +106,10 @@ async function main() {
       try {
         Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Joining LiveKit and starting orchestration for ${sessionId}...`);
         
+        // Acknowledge immediately to prevent RabbitMQ PRECONDITION-FAILED timeouts on long interviews (>30m)
+        ack();
+        
         // Wait until startWorker resolves or rejects. 
-        // This holds the RabbitMQ consumer from receiving a new job until this one finishes!
-        // We only acknowledge the job after the interview is completely finished.
         await orchestrator.startWorker(livekitUrl, token, sessionId);
         
         Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Finished processing session ${sessionId}. Publishing full evaluation job...`);
@@ -122,12 +123,9 @@ async function main() {
         } catch (evalPubErr) {
           Logger.error(LogCategory.AI_INTERVIEW_RABBIT_FAILURE, `Failed to enqueue full evaluation for session ${sessionId}:`, evalPubErr);
         }
-
-        ack(); // Acknowledge completion ONLY when finished
       } catch (err: unknown) {
         Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error in startWorker for session ${sessionId}:`, err);
-        // Nack so another worker can try, or DLQ if it fails too many times
-        nack(true); 
+        // If it failed before we acked, we could nack, but we already acked above so nack() is a no-op which is fine.
       } finally {
         await orchestrator.stopWorker().catch((e: unknown) => Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error stopping orchestrator during cleanup:`, e));
       }

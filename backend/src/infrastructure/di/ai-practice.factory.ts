@@ -74,8 +74,10 @@ export const makeGetAIPracticeInterviewUseCase = () => {
   return new GetAIPracticeInterviewUseCase(aiPracticeInterviewRepository);
 };
 
+import { studentRepository, aiCreditService, entitlementGuardService } from "@infrastructure/di/infra.container";
+
 export const makeStartPracticeSessionUseCase = () => {
-  return new StartPracticeSessionUseCase(aiPracticeInterviewRepository, practiceQuestionGenerator);
+  return new StartPracticeSessionUseCase(aiPracticeInterviewRepository, practiceQuestionGenerator, studentRepository, aiCreditService, entitlementGuardService);
 };
 
 export const makeSubmitPracticeAnswerUseCase = () => {

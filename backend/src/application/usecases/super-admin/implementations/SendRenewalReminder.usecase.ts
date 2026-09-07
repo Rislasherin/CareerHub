@@ -45,7 +45,7 @@ export class SendRenewalReminderUseCase implements ISendRenewalReminderUseCase {
     const emailSent = await this.emailService.sendRenewalReminder(
       contactEmail,
       organization.name,
-      subscription.planType,
+      String(subscription.planType ?? 'BASIC'),
       subscription.endDate || new Date()
     );
 

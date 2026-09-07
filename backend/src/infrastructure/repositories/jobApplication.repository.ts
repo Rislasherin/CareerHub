@@ -133,6 +133,16 @@ export class JobApplicationRepository
     return result.length;
   }
 
+  async getRecentApplications(companyId: string, limit: number): Promise<JobApplication[]> {
+    const docs = await this.model.find({ companyId: new Types.ObjectId(companyId) })
+      .sort({ appliedAt: -1 })
+      .limit(limit)
+      .populate('studentId')
+      .populate('jobId')
+      .exec();
+    return docs.map(doc => this.toEntity(doc as IJobApplicationDocument));
+  }
+
   async countApplicationsInDateRange(companyId: string, startDate?: Date, endDate?: Date): Promise<number> {
     return this.model.countDocuments(this.buildDateMatch(companyId, startDate, endDate)).exec();
   }
@@ -267,5 +277,60 @@ export class JobApplicationRepository
       return Math.round(result[0].avgScore);
     }
     return null;
+  }
+
+  async getCollegeApplicationStats(collegeId: string): Promise<{ total: number; underReview: number; interviewStage: number; selected: number; rejected: number }> {
+    const result = await this.model.aggregate([
+      {
+        $lookup: {
+          from: "students",
+          localField: "studentId",
+          foreignField: "_id",
+          as: "student"
+        }
+      },
+      { $unwind: "$student" },
+      {
+        $match: {
+          "student.collegeId": collegeId
+        }
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const stats = {
+      total: 0,
+      underReview: 0,
+      interviewStage: 0,
+      selected: 0,
+      rejected: 0
+    };
+
+    for (const r of result) {
+      stats.total += r.count;
+      switch (r._id) {
+        case JobApplicationStatus.UNDER_REVIEW:
+        case JobApplicationStatus.SHORTLISTED:
+          stats.underReview += r.count;
+          break;
+        case JobApplicationStatus.INTERVIEWING:
+          stats.interviewStage += r.count;
+          break;
+        case JobApplicationStatus.OFFERED:
+        case JobApplicationStatus.HIRED:
+          stats.selected += r.count;
+          break;
+        case JobApplicationStatus.REJECTED:
+          stats.rejected += r.count;
+          break;
+      }
+    }
+
+    return stats;
   }
 }

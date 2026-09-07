@@ -7,7 +7,7 @@ import { GetAllStudentsUseCase } from "@application/usecases/college/student-man
 import { ToggleStudentStatusUseCase } from "@application/usecases/college/student-management/implementations/ToggleStudentStatus.usecase";;
 import { GetCollegeDashboardStatsUseCase } from "@application/usecases/college/implementations/GetCollegeDashboardStats.usecase";;
 import { EmailService } from "@infrastructure/services/email/email.service";
-import { studentRepository, crossRoleAuthService, jobRepository, organizationRepository, collegeAdminRepository, otpRepository, bcryptService } from "@infrastructure/di/infra.container";
+import { studentRepository, crossRoleAuthService, jobRepository, organizationRepository, collegeAdminRepository, otpRepository, bcryptService, jobApplicationRepository, companyRepository } from "@infrastructure/di/infra.container";
 import { StudentManagementController } from "@presentation/http/controllers/college/student.management.controller";
 import { GetPendingJobsUseCase } from "@application/usecases/college/job-approvals/implementations/GetPendingJobs.usecase";;
 import { ApproveJobUseCase } from "@application/usecases/college/job-approvals/implementations/ApproveJob.usecase";;
@@ -22,7 +22,7 @@ import { DeleteNoticeUseCase } from "@application/usecases/college/notices/imple
 import { CreateSubscriptionUseCase } from "@application/usecases/college/implementations/CreateSubscription.usecase";
 import { HandlePaymentWebhookUseCase } from "@application/usecases/college/implementations/HandlePaymentWebhook.usecase";
 import { SubscriptionController } from "@presentation/http/controllers/college/SubscriptionController";
-import { subscriptionRepository, paymentGateway } from "@infrastructure/di/infra.container";
+import { subscriptionRepository, paymentGateway, paymentRepository, invoiceRepository, planRepository } from "@infrastructure/di/infra.container";
 
 export const makeGetPendingStudentsUseCase = () => {
   return new GetPendingStudentsUseCase(studentRepository);
@@ -36,18 +36,26 @@ export const makeRejectStudentUseCase = () => {
   return new RejectStudentUseCase(studentRepository);
 };
 
+import { entitlementGuardService } from "@infrastructure/di/infra.container";
+
 export const makeBulkInviteStudentsUseCase = () => {
   const emailService = new EmailService();
-  return new BulkInviteStudentsUseCase(studentRepository, emailService, crossRoleAuthService);
+  return new BulkInviteStudentsUseCase(studentRepository, emailService, crossRoleAuthService, entitlementGuardService);
 };
 
 export const makeApproveAccessRequestUseCase = () => {
   const emailService = new EmailService();
-  return new ApproveAccessRequestUseCase(studentRepository, emailService);
+  return new ApproveAccessRequestUseCase(studentRepository, emailService, entitlementGuardService);
 };
 
 export const makeGetCollegeDashboardStatsUseCase = () => {
-  return new GetCollegeDashboardStatsUseCase(studentRepository, jobRepository);
+  return new GetCollegeDashboardStatsUseCase(
+    studentRepository,
+    jobRepository,
+    jobApplicationRepository,
+    companyRepository,
+    makeGetPlacementReadinessUseCase()
+  );
 };
 
 export const makeGetAllStudentsUseCase = () => {
@@ -120,7 +128,7 @@ export const makeCreateSubscriptionUseCase = () => {
 };
 
 export const makeHandlePaymentWebhookUseCase = () => {
-  return new HandlePaymentWebhookUseCase(subscriptionRepository, paymentGateway);
+  return new HandlePaymentWebhookUseCase(subscriptionRepository, paymentGateway, paymentRepository, invoiceRepository, planRepository);
 };
 
 import { GetCollegeSubscriptionUseCase } from "@application/usecases/college/implementations/GetCollegeSubscription.usecase";
@@ -129,11 +137,18 @@ export const makeGetCollegeSubscriptionUseCase = () => {
   return new GetCollegeSubscriptionUseCase();
 };
 
+import { VerifyPaymentUseCase } from "@application/usecases/college/implementations/VerifyPayment.usecase";
+
+export const makeVerifyPaymentUseCase = () => {
+  return new VerifyPaymentUseCase(subscriptionRepository, paymentGateway, paymentRepository, invoiceRepository, planRepository);
+};
+
 export const makeSubscriptionController = () => {
   return new SubscriptionController(
     makeCreateSubscriptionUseCase(),
     makeHandlePaymentWebhookUseCase(),
-    makeGetCollegeSubscriptionUseCase()
+    makeGetCollegeSubscriptionUseCase(),
+    makeVerifyPaymentUseCase()
   );
 };
 
@@ -219,4 +234,23 @@ export const makeCollegeSettingsController = () => {
     makeRequestCollegeEmailChangeUseCase(),
     makeVerifyCollegeEmailChangeUseCase()
   );
+};
+
+import { GetPlacementReadinessUseCase } from "@application/usecases/college/implementations/GetPlacementReadiness.usecase";
+import { PlacementReadinessController } from "@presentation/http/controllers/college/placement.readiness.controller";
+
+export const makeGetPlacementReadinessUseCase = () => {
+  return new GetPlacementReadinessUseCase();
+};
+
+import { SendPlacementReadinessReminderUseCase } from "@application/usecases/college/implementations/SendPlacementReadinessReminder.usecase";
+import { notificationRepository } from "@infrastructure/di/infra.container";
+
+export const makeSendPlacementReadinessReminderUseCase = () => {
+  const emailService = new EmailService();
+  return new SendPlacementReadinessReminderUseCase(emailService, notificationRepository);
+};
+
+export const makePlacementReadinessController = () => {
+  return new PlacementReadinessController(makeGetPlacementReadinessUseCase());
 };

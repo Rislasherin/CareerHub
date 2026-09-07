@@ -27,7 +27,7 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
         email: admin?.email || 'No email',
         placementContactEmail: admin?.email || 'No email',
         placementContactPhone: (admin as unknown as { phoneNumber?: string })?.phoneNumber || 'No phone',
-        realPlan: (sub as any)?.planType || 'BASIC',
+        realPlan: ((sub as any)?.planType) || ((sub as any)?.planId === 'plan_pro' ? 'PRO' : 'BASIC'),
         realPlanEndDate: (sub as any)?.endDate || null
       };
     }));

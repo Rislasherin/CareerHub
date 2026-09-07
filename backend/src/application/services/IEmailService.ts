@@ -6,4 +6,5 @@ export interface IEmailService {
   sendAccountApprovalEmail(email: string, name: string): Promise<void>;
   sendOfferEmail(email: string, candidateName: string, role: string, companyName: string): Promise<void>;
   sendRenewalReminder(email: string, collegeName: string, planName: string, expiryDate: Date): Promise<boolean>;
+  sendPlacementReadinessReminder(email: string, studentName: string, action: string): Promise<boolean>;
 }

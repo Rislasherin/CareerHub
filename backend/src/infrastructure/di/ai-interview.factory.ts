@@ -36,6 +36,7 @@ export const rabbitMQBroker = new RabbitMQBroker();
 
 // 2. Inject them into the Application Use Cases
 import { logger } from "@infrastructure/logger/logger";
+import { aiCreditService, entitlementGuardService } from "@infrastructure/di/infra.container";
 
 export const makeStartAIInterviewUseCase = () => {
   return new StartAIInterviewUseCase(
@@ -48,6 +49,8 @@ export const makeStartAIInterviewUseCase = () => {
     jobRepository, 
     studentRepository,
     logger,
+    aiCreditService,
+    entitlementGuardService,
     env.LIVEKIT_URL
   );
 };
@@ -75,7 +78,8 @@ export const makeCompleteAIInterviewUseCase = () => {
     aiInterviewRepository, 
     interviewRepository, 
     liveKitService,
-    logger
+    logger,
+    aiCreditService
   );
 };
 

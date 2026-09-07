@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { makeStudentManagementController, makeCollegeJobApprovalController, makeNoticeController, makeCollegePlacementController, makeCollegeReportsController, makeCollegeSettingsController } from "@infrastructure/di/college.factory";
+import { makeStudentManagementController, makeCollegeJobApprovalController, makeNoticeController, makeCollegePlacementController, makeCollegeReportsController, makeCollegeSettingsController, makePlacementReadinessController } from "@infrastructure/di/college.factory";
 import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
@@ -14,6 +14,7 @@ const noticeController = makeNoticeController();
 const collegePlacementController = makeCollegePlacementController();
 const collegeReportsController = makeCollegeReportsController();
 const collegeSettingsController = makeCollegeSettingsController();
+const placementReadinessController = makePlacementReadinessController();
 
 router.get("/test", (req, res) => res.json({ success: true, message: "College router is active" }));
 
@@ -28,6 +29,9 @@ router.patch("/students/:studentId/reject", studentManagementController.rejectSt
 router.patch("/students/:studentId/approve-access", studentManagementController.approveAccessRequest);
 router.get("/dashboard/stats", studentManagementController.getDashboardStats);
 router.get("/students", studentManagementController.getAllStudents);
+
+router.get("/placement-readiness", placementReadinessController.getPlacementReadiness);
+router.post("/placement-readiness/:studentId/remind", placementReadinessController.sendReminder);
 
 router.get("/interviews", collegePlacementController.getInterviews.bind(collegePlacementController));
 router.get("/offers", collegePlacementController.getOffers.bind(collegePlacementController));

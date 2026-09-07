@@ -10,4 +10,6 @@ export interface ISubscriptionRepository {
     findAll(page: number, limit: number, filters?: { search?: string, status?: string, planType?: string }): Promise<{ subscriptions: Subscription[], total: number }>;
     getBillingStats(): Promise<{ totalCollected: number, outstanding: number, invoicesIssued: number }>;
     getAllSubscriptions(): Promise<Subscription[]>;
+    atomicConsumeCredits(id: string, requiredCredits: number): Promise<boolean>;
+    atomicReleaseCredits(id: string, creditsToRelease: number): Promise<void>;
 }

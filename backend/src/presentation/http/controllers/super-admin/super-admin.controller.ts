@@ -18,6 +18,7 @@ import { IUpdateSuperAdminProfileUseCase } from "@application/usecases/super-adm
 import { IChangeSuperAdminPasswordUseCase } from "@application/usecases/super-admin/interfaces/IChangeSuperAdminPasswordUseCase.usecase";
 import { IRequestSuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IRequestSuperAdminEmailChangeUseCase.usecase";
 import { IVerifySuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IVerifySuperAdminEmailChangeUseCase.usecase";
+import { IGetAILedgerUseCase } from "@application/usecases/super-admin/interfaces/IGetAILedgerUseCase";
 import { ForbiddenError } from "@application/errors/AuthError";
 import { ValidationError } from "@application/errors/validation.error";
 import { Role } from "@domain/enums/Roles.enum";
@@ -40,7 +41,8 @@ export class SuperAdminController {
     private readonly _updateProfileUseCase: IUpdateSuperAdminProfileUseCase,
     private readonly _changePasswordUseCase: IChangeSuperAdminPasswordUseCase,
     private readonly _requestEmailChangeUseCase: IRequestSuperAdminEmailChangeUseCase,
-    private readonly _verifyEmailChangeUseCase: IVerifySuperAdminEmailChangeUseCase
+    private readonly _verifyEmailChangeUseCase: IVerifySuperAdminEmailChangeUseCase,
+    private readonly _getAILedgerUseCase: IGetAILedgerUseCase
   ) { }
 
   updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -172,5 +174,25 @@ export class SuperAdminController {
     const userId = req.user?.id;
     await this._verifyEmailChangeUseCase.execute(userId!, req.body);
     res.status(200).json({ success: true, message: "Email updated successfully" });
+  });
+
+  getAILedger = asyncHandler(async (req: Request, res: Response) => {
+    if (req.user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenError("Access denied: Super Admin authorization required");
+    }
+    const { collegeId, feature, startDate, endDate } = req.query;
+    const filters = {
+      collegeId: collegeId ? String(collegeId) : undefined,
+      feature: feature ? String(feature) : undefined,
+      startDate: startDate ? new Date(String(startDate)) : undefined,
+      endDate: endDate ? new Date(String(endDate)) : undefined
+    };
+    
+    const [ledger, stats] = await Promise.all([
+      this._getAILedgerUseCase.execute(filters),
+      this._getAILedgerUseCase.getAggregatedStats()
+    ]);
+    
+    sendSuccess(res, { ledger, stats }, "AI Usage Ledger fetched successfully");
   });
 }

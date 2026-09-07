@@ -7,13 +7,16 @@ import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 import { InterviewPhase } from "@domain/enums/InterviewPhase.enum";
 import { ILiveKitService } from "@application/interfaces/ai-interview/ILiveKitService";
 import { ILogger, LogCategory } from "../../../interfaces/observability/ILogger";
+import { IAICreditService } from "@domain/services/IAICreditService";
+import { AICreditPolicy } from "@infrastructure/config/ai-credit.policy";
 
 export class CompleteAIInterviewUseCase implements ICompleteAIInterviewUseCase {
 	constructor(
 		private readonly _repository: IAIInterviewRepository,
 		private readonly _interviewRepository: IInterviewRepository,
         private readonly _liveKitService?: ILiveKitService,
-        private readonly _logger?: ILogger
+        private readonly _logger?: ILogger,
+        private readonly _aiCreditService?: IAICreditService
 	){}
 
 	async execute(input: CompleteAIInterviewInputDTO): Promise<CompleteAIInterviewOutput> {
@@ -29,6 +32,26 @@ export class CompleteAIInterviewUseCase implements ICompleteAIInterviewUseCase {
         );
 
         if (advanced) {
+            // Commit AI Credits if reserved
+            if (this._aiCreditService && session.configuration?.metadata?.reservationId) {
+                try {
+                    const reservationId = session.configuration.metadata.reservationId;
+                    const durationMinutes = session.getDurationMinutes();
+                    
+                    // Product Decision: Use policy configuration to determine final cost
+                    const finalCredits = AICreditPolicy.features.ai_interview.calculateFinalCredits(durationMinutes);
+                    
+                    await this._aiCreditService.commitCredits(reservationId, finalCredits, {
+                        durationMinutes,
+                        completedAt: new Date()
+                    });
+                } catch (err) {
+                    if (this._logger) {
+                        this._logger.error(LogCategory.SYSTEM_ERROR, `Failed to commit AI credits for session ${session.id}`, err);
+                    }
+                }
+            }
+
 		    if (session.phase === InterviewPhase.EVALUATING) {
                 session.closeInterview();
             }

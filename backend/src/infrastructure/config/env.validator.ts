@@ -4,7 +4,7 @@ import { z } from "zod";
 const envSchema = z.object({
   PORT: z.string().transform(Number),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  CLIENT_URL: z.string().default("http://localhost:3000"),
+  CLIENT_URL: z.string().url("CLIENT_URL must be a valid URL"),
   MONGODB_URI: z.string().nonempty("MONGODB_URI is required"),
   JWT_ACCESS_SECRET: z.string().nonempty("JWT_ACCESS_SECRET is required"),
   JWT_ACCESS_EXPIRES_IN: z.string(),
@@ -17,7 +17,7 @@ const envSchema = z.object({
   EMAIL_USER: z.string().nonempty("EMAIL_USER is required"),
   EMAIL_PASS: z.string().nonempty("EMAIL_PASS is required"),
   EMAIL_FROM: z.string().default("CareerHub <no-reply@careerhub.com>"),
-  FRONTEND_URL: z.string().default("http://localhost:3000"),
+  FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
   LIVEKIT_URL: z.string().url(),
   LIVEKIT_API_KEY: z.string().optional(),
   LIVEKIT_API_SECRET: z.string().optional(),

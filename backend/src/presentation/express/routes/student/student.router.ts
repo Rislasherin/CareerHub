@@ -18,6 +18,8 @@ const aiPracticeController = makeAIPracticeController()
 router.use(authMiddleware.protect);
 
 router.get("/me", studentController.getMe);
+router.get("/entitlements", studentController.getEntitlements.bind(studentController));
+router.get("/dashboard", studentController.getDashboard.bind(studentController));
 router.post("/verify", upload.single('file'), studentController.uploadVerification);
 
 router.get("/profile", studentController.getProfile);

@@ -1,6 +1,5 @@
 import { Subscription } from '@domain/entities/Subscription';
 import { SubscriptionDocument } from '@infrastructure/database/models/organizer/subscription.model';
-import { PlanType } from '@domain/enums/PlanType.enum';
 import { SubscriptionStatus } from '@domain/enums/SubscriptionStatus.enum';
 
 export class SubscriptionMapper {
@@ -8,10 +7,13 @@ export class SubscriptionMapper {
     return new Subscription({
       id: raw.id,
       collegeId: raw.collegeId,
-      planType: raw.planType as PlanType,
+      planId: raw.planId || (raw as any).get?.('planId') || (raw as any).planId,
+      planType: (raw as any).planType || (raw as any).get?.('planType'),
       status: raw.status as SubscriptionStatus,
-      gatewaySubscriptionId: raw.gatewaySubscriptionId,
-      aiTokensAllocated: raw.aiTokensAllocated,
+      providerOrderId: raw.providerOrderId,
+      providerPaymentId: (raw as any).providerPaymentId,
+      aiCreditsAllocated: (raw as any).aiCreditsAllocated || 0,
+      aiCreditsConsumed: (raw as any).aiCreditsConsumed || 0,
       startDate: (raw as any).startDate,
       endDate: (raw as any).endDate,
       createdAt: raw.createdAt as Date,
@@ -23,14 +25,17 @@ export class SubscriptionMapper {
     return {
       id: subscription.id,
       collegeId: subscription.collegeId,
+      planId: subscription.planId,
       planType: subscription.planType,
       status: subscription.status,
-      gatewaySubscriptionId: subscription.gatewaySubscriptionId,
-      aiTokensAllocated: subscription.aiTokensAllocated,
+      providerOrderId: subscription.providerOrderId,
+      providerPaymentId: subscription.providerPaymentId,
+      aiCreditsAllocated: subscription.aiCreditsAllocated,
+      aiCreditsConsumed: subscription.aiCreditsConsumed,
       startDate: subscription.startDate,
       endDate: subscription.endDate,
       createdAt: subscription.createdAt,
       updatedAt: subscription.updatedAt,
-    };
+    } as any;
   }
 }

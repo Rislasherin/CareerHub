@@ -29,6 +29,18 @@ export class RazorpayGateway implements IPaymentGateway {
         }
     }
 
+    async createOrder(amount: number, currency: string, receipt: string): Promise<{ orderId: string; }> {
+        const response = await this.instance.orders.create({
+            amount,
+            currency,
+            receipt
+        });
+
+        return {
+            orderId: response.id
+        };
+    }
+
     verifyWebhookSignature(payload: string, signature: string): boolean {
         const expirctedSignature = crypto
         .createHmac('sha256',this.webhookSecret)
@@ -37,5 +49,14 @@ export class RazorpayGateway implements IPaymentGateway {
 
 
         return expirctedSignature === signature
+    }
+
+    verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+            .update(orderId + "|" + paymentId)
+            .digest('hex');
+
+        return expectedSignature === signature;
     }
 }

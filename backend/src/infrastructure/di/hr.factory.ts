@@ -167,7 +167,7 @@ import {
 
 export const makeHRInterviewController = () => {
   return new HRInterviewController(
-    new ScheduleInterviewUseCase(interviewRepository, jobApplicationRepository),
+    new ScheduleInterviewUseCase(interviewRepository, jobApplicationRepository, createSystemNotificationUseCase),
     new GetHRInterviewsUseCase(interviewRepository, studentRepository, jobRepository),
     makeGetInterviewEvaluationUseCase(),
     makeRecordHRDecisionUseCase(),

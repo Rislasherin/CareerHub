@@ -79,4 +79,7 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
     return doc ? this.toEntity(doc as StudentDocument) : null;
   }
 
+  async countByCollegeId(collegeId: string): Promise<number> {
+    return await this.model.countDocuments({ collegeId, isDeleted: { $ne: true } });
+  }
 }

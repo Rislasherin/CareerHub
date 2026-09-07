@@ -106,6 +106,9 @@ async function main() {
           LIVEKIT_ROOM_NAME: roomName
         });
         
+        // Acknowledge immediately to prevent RabbitMQ PRECONDITION-FAILED timeouts on long interviews (>30m)
+        ack();
+        
         const durationMs = (session.durationMinutes || 15) * 60 * 1000;
         Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_WORKER] Starting timer for session ${sessionId} (${session.durationMinutes} min)`);
         const timer = setTimeout(() => {
@@ -134,11 +137,9 @@ async function main() {
         } catch (evalPubErr) {
           Logger.error(LogCategory.SYSTEM_ERROR, `Failed to complete and evaluate session ${sessionId}:`, evalPubErr);
         }
-
-        ack();
       } catch (err: unknown) {
         Logger.error(LogCategory.SYSTEM_ERROR, `[PRACTICE_WORKER] Error in startWorker for session ${sessionId}:`, err);
-        nack(true); 
+        // nack(true); // removed since we already acked
       } finally {
         await orchestrator.stopWorker().catch((e: unknown) => Logger.error(LogCategory.SYSTEM_ERROR, `[PRACTICE_WORKER] Error stopping orchestrator:`, e));
       }

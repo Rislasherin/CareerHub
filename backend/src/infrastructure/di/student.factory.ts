@@ -18,6 +18,8 @@ import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/i
 import { ParseResumeUseCase } from "@application/usecases/student/AI/implementations/ParseResume.usecase";
 import { AIServiceFactory } from "@infrastructure/di/AIServiceFactory";
 import { GenerateProfessionalSummaryUseCase } from "@application/usecases/student/AI/implementations/GenerateProfessionalSummary.usecase";
+import { GetStudentDashboardStatsUseCase } from "@application/usecases/student/dashboard/implementations/GetStudentDashboardStats.usecase";
+import { aiPracticeInterviewRepository } from "@infrastructure/di/ai-practice.factory";
 
 export const makeUploadStudentVerificationUseCase = () => {
   const cloudinaryService = new CloudinaryService();
@@ -44,10 +46,12 @@ export const makeGetStudentNoticesUseCase = () => {
   return new GetStudentNoticesUseCase(studentRepository, makeGetCollegeNoticeUseCase());
 };
 
+import { aiCreditService, entitlementGuardService } from "@infrastructure/di/infra.container";
+
 export const makeUploadResumeUseCase = () => {
   const aiService = AIServiceFactory.createdService();
   const parseResumeUseCase = new ParseResumeUseCase(aiService);
-  return new UploadResumeUseCase(studentRepository, new CloudinaryService(), parseResumeUseCase);
+  return new UploadResumeUseCase(studentRepository, new CloudinaryService(), parseResumeUseCase, aiCreditService, entitlementGuardService);
 };
 export const makeDeleteResumeUseCase = () => {
   return new DeleteResumeUseCase(studentRepository, new CloudinaryService());
@@ -73,6 +77,24 @@ export const makeGenerateProfessionalSummaryUseCase = () => {
   return new GenerateProfessionalSummaryUseCase(studentRepository);
 };
 
+export const makeGetStudentDashboardStatsUseCase = () => {
+  return new GetStudentDashboardStatsUseCase(
+    studentRepository,
+    jobRepository,
+    jobApplicationRepository,
+    interviewRepository,
+    aiPracticeInterviewRepository,
+    companyRepository
+  );
+};
+
+import { planRepository, subscriptionRepository } from "@infrastructure/di/infra.container";
+import { GetStudentEntitlementsUseCase } from "@application/usecases/student/implementations/GetStudentEntitlements.usecase";
+
+export const makeGetStudentEntitlementsUseCase = () => {
+  return new GetStudentEntitlementsUseCase(subscriptionRepository, planRepository, studentRepository);
+};
+
 export const makeStudentController = () => {
   return new StudentController(
     makeUploadStudentVerificationUseCase(),
@@ -88,6 +110,8 @@ export const makeStudentController = () => {
     makeGetStudentOffersUseCase(),
     makeRespondToOfferUseCase(),
     new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository),
-    makeGenerateProfessionalSummaryUseCase()
+    makeGenerateProfessionalSummaryUseCase(),
+    makeGetStudentDashboardStatsUseCase(),
+    makeGetStudentEntitlementsUseCase()
   );
 };

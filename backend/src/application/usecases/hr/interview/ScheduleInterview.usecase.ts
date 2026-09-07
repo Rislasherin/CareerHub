@@ -10,11 +10,15 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import mongoose from "mongoose";
 import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
 import { IScheduleInterviewUseCase } from "./interfaces/IScheduleInterview.usecase";
+import { ICreateSystemNotificationUseCase } from "@application/usecases/common/notifications/interfaces/ICreateSystemNotification.usecase";
+import { NotificationRole } from "@domain/enums/NotificationRole.enum";
+import { NotificationType } from "@domain/enums/NotificationType.enum";
 
 export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
   constructor(
     private readonly _interviewRepository: IInterviewRepository,
-    private readonly _applicationRepository: IJobApplicationRepository
+    private readonly _applicationRepository: IJobApplicationRepository,
+    private readonly _createSystemNotificationUseCase: ICreateSystemNotificationUseCase
   ) {}
 
   async execute(hrId: string, companyId: string, payload: SheduleInterviewDto): Promise<Interview> {
@@ -55,6 +59,18 @@ export class ScheduleInterviewUseCase implements IScheduleInterviewUseCase {
       configuration,
     });
 
-    return await this._interviewRepository.create(interview);
+    const savedInterview = await this._interviewRepository.create(interview);
+
+    // Notify Student
+    await this._createSystemNotificationUseCase.execute({
+      recipientId: application.studentId,
+      role: NotificationRole.STUDENT,
+      title: "Interview Scheduled",
+      message: `An interview has been scheduled for your application on ${new Date(payload.scheduledAt).toLocaleString()}.`,
+      type: NotificationType.INFO,
+      link: "/student/interviews"
+    });
+
+    return savedInterview;
   }
 }

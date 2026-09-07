@@ -149,4 +149,37 @@ export class DistributedLock {
 
     return null; // Timed out
   }
+
+  /**
+   * Acquires a generic lock for a given key.
+   */
+  static async acquireLock(key: string, ttlMs: number = 5000): Promise<boolean> {
+    try {
+      const redis = RedisClient.getClient();
+      const result = await redis.set(key, this.workerId, 'PX', ttlMs, 'NX');
+      return result === 'OK';
+    } catch (err) {
+      Logger.error(LogCategory.SYSTEM_ERROR, `[DistributedLock] Error acquiring lock for ${key}`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Releases a generic lock.
+   */
+  static async releaseLock(key: string): Promise<void> {
+    try {
+      const redis = RedisClient.getClient();
+      const script = `
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+          return redis.call("del", KEYS[1])
+        else
+          return 0
+        end
+      `;
+      await redis.eval(script, 1, key, this.workerId);
+    } catch (err) {
+      Logger.error(LogCategory.SYSTEM_ERROR, `[DistributedLock] Error releasing lock for ${key}`, err);
+    }
+  }
 }

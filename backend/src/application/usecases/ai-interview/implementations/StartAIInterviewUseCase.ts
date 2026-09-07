@@ -20,6 +20,9 @@ import { Types } from "mongoose";
 import * as crypto from "crypto";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { ILogger, LogCategory } from "../../../interfaces/observability/ILogger";
+import { IAICreditService } from "@domain/services/IAICreditService";
+import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
+import { AICreditPolicy } from "@infrastructure/config/ai-credit.policy";
 
 export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
   constructor(
@@ -32,6 +35,8 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     private readonly _jobRepository?: IJobRepository,
     private readonly _studentRepository?: IStudentRepository,
     private readonly _logger?: ILogger,
+    private readonly _aiCreditService?: IAICreditService,
+    private readonly _entitlementGuard?: IEntitlementGuardService,
     private readonly _liveKitUrl: string = ''
   ) { }
 
@@ -59,6 +64,9 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
       interview.markAsInProgress();
       await this._interviewRepository.update(interview.id, interview);
     }
+
+    // Subscription checks disabled for HR interviews as per requirement
+    let reservationId: string | undefined;
 
     // 3. Create or Retrieve the Runtime AI Session
     let session = await this._repository.findByInterviewId(interview.id);
@@ -124,20 +132,40 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
         studentName = `${student.firstName} ${student.lastName || ''}`.trim();
       }
     }
-    const token = await this._liveKitService.generateToken(savedSession.id, input.studentId, studentName);
     
-    // 9. Publish job to worker
-    await this._messageBroker.publish('ai_interview_jobs', {
-      type: 'START_AI_INTERVIEW',
-      sessionId: savedSession.id
-    });
+    let token: string;
+    try {
+      token = await this._liveKitService.generateToken(savedSession.id, input.studentId, studentName);
+      
+      // 9. Publish job to worker
+      await this._messageBroker.publish('ai_interview_jobs', {
+        type: 'START_AI_INTERVIEW',
+        sessionId: savedSession.id
+      });
+      
+      // 10. Start the Avatar in the background (Non-blocking)
+      this._avatarService.startAvatar(savedSession.id, this._liveKitUrl, token).catch(e => {
+          if (this._logger) {
+             this._logger.error(LogCategory.SYSTEM_ERROR, `[StartAIInterviewUseCase] Background avatar start failed:`, e);
+          }
+      });
+    } catch (error) {
+      // If LiveKit generation or initialization fails, release the reservation!
+      if (reservationId && this._aiCreditService) {
+        if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `Releasing AI credits due to startup failure`, error);
+        await this._aiCreditService.releaseCredits(reservationId);
+      }
+      throw new AppError("Failed to initialize LiveKit room for AI Interview.", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
+    }
     
-    // 10. Start the Avatar in the background (Non-blocking)
-    this._avatarService.startAvatar(savedSession.id, this._liveKitUrl, token).catch(e => {
-        if (this._logger) {
-           this._logger.error(LogCategory.SYSTEM_ERROR, `[StartAIInterviewUseCase] Background avatar start failed:`, e);
-        }
-    });
+    // Attach reservation ID to session metadata so we can complete it later
+    if (reservationId && savedSession.configuration) {
+       savedSession.configuration.metadata = {
+         ...(savedSession.configuration.metadata || {}),
+         reservationId
+       };
+       await this._repository.update(savedSession.id, savedSession);
+    }
 
     return {
       success: true,

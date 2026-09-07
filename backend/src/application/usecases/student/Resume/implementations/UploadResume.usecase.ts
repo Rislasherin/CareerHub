@@ -8,11 +8,16 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Logger, LogCategory } from '../../../../../infrastructure/logger/logger';
 
+import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
+import { IAICreditService } from "@domain/services/IAICreditService";
+
 export class UploadResumeUseCase implements IUploadResumeUseCase {
     constructor(
         private _studentRepository: StudentRepository,
         private _storageService: IStorageService,
-        private _parseResumeUseCase: IParseResumeUseCase
+        private _parseResumeUseCase: IParseResumeUseCase,
+        private _aiCreditService: IAICreditService,
+        private _entitlementGuard: IEntitlementGuardService
     ) { }
 
     async execute(studentId: string, file: Express.Multer.File): Promise<IUploadResumeResponse> {
@@ -51,9 +56,16 @@ export class UploadResumeUseCase implements IUploadResumeUseCase {
         // Parse the resume for AI Data Sync
         let parsedData = null;
         try {
+            await this._aiCreditService.consumeCredits(
+                student.collegeId!,
+                student.id!,
+                'resume_parser',
+                1,
+                'openai'
+            );
             parsedData = await this._parseResumeUseCase.execute(studentId, file.buffer, file.mimetype);
-        } catch (error) {
-            Logger.warn(LogCategory.SYSTEM_INFO, 'Failed to parse resume with AI, continuing without parsed data', error);
+        } catch (error: any) {
+            Logger.warn(LogCategory.SYSTEM_INFO, 'Failed to parse resume with AI (either insufficient credits or AI error), continuing without parsed data', error);
         }
 
         return {

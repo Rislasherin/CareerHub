@@ -7,11 +7,14 @@ import { Student } from "@domain/entities/student";
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
 import { IBulkInviteStudentsUseCase } from "../interfaces/IBulkInviteStudents.usecase";
 
+import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
+
 export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
   constructor(
     private readonly _studentRepository: IStudentRepository,
     private readonly _emailService: IEmailService,
-    private readonly _crossRoleAuthService: CrossRoleAuthService
+    private readonly _crossRoleAuthService: CrossRoleAuthService,
+    private readonly _entitlementGuard: IEntitlementGuardService
   ) { }
 
   async execute(collegeId: string, dto: InviteStudentsDto): Promise<any> {
@@ -23,6 +26,12 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
 
     for (const studentData of dto.students) {
       try {
+        const canAdd = await this._entitlementGuard.canAddStudent(collegeId);
+        if (!canAdd) {
+            results.errors.push(`Student limit reached for the active subscription plan. Could not add ${studentData.email}.`);
+            continue;
+        }
+
         const globalCheck = await this._crossRoleAuthService.isEmailInUse(studentData.email);
         if (globalCheck.inUse) {
           results.errors.push(`Email ${studentData.email} is already registered as a ${globalCheck.role}`);

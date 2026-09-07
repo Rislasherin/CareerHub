@@ -32,7 +32,7 @@ router.use("/student", studentRouter);
 router.use("/super-admin", superAdminRouter);
 router.use("/skills", skillRouter);
 
-router.use('/subscription', subscriptionRouter);
+router.use('/billing/plan', subscriptionRouter);
 
 
 export default router;

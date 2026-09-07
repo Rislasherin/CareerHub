@@ -23,7 +23,7 @@ import {
 } from "@infrastructure/di/infra.container";
 import { OrganizationRepository } from "@infrastructure/repositories/organization.repository";
 import { SuperAdminController } from "@presentation/http/controllers/super-admin/super-admin.controller";
-import { studentRepository as studentRepo, subscriptionRepository } from "@infrastructure/di/infra.container";
+import { studentRepository as studentRepo, subscriptionRepository, invoiceRepository, planRepository } from "@infrastructure/di/infra.container";
 import { PlatformSettingsController } from "@presentation/http/controllers/super-admin/platformSettings.controller";
 import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
@@ -49,15 +49,17 @@ export const makeGetCompaniesUseCase = () => {
 
 
 export const makeGetBillingInvoicesUseCase = () => {
-  return new GetBillingInvoicesUseCase(subscriptionRepository, orgRepository);
+  return new GetBillingInvoicesUseCase(subscriptionRepository, orgRepository, invoiceRepository, planRepository);
 };
 
 export const makeSendRenewalReminderUseCase = () => {
   return new SendRenewalReminderUseCase(subscriptionRepository, orgRepository, new EmailService(), collegeAdminRepository);
 };
 
+import { paymentRepository } from "@infrastructure/di/infra.container";
+
 export const makeGetSuperAdminRevenueUseCase = () => {
-  return new GetSuperAdminRevenueUseCase(subscriptionRepository, orgRepository);
+  return new GetSuperAdminRevenueUseCase(paymentRepository, orgRepository, subscriptionRepository);
 };
 
 import { LoginSuperAdminUseCase } from "@application/usecases/auth/superadmin/implementations/LoginSuperAdmin.usecase";
@@ -125,6 +127,13 @@ export const makeVerifySuperAdminEmailChangeUseCase = () => {
   return new VerifySuperAdminEmailChangeUseCase(superAdminRepository, otpRepository, crossRoleAuthService);
 };
 
+import { GetAILedgerUseCase } from "@application/usecases/super-admin/implementations/GetAILedgerUseCase";
+import { aiUsageRepository } from "@infrastructure/di/infra.container";
+
+export const makeGetAILedgerUseCase = () => {
+  return new GetAILedgerUseCase(aiUsageRepository);
+};
+
 export const makeSuperAdminController = () => {
   return new SuperAdminController(
     makeGetDashboardStatsUseCase(),
@@ -142,7 +151,8 @@ export const makeSuperAdminController = () => {
     makeUpdateSuperAdminProfileUseCase(),
     makeChangeSuperAdminPasswordUseCase(),
     makeRequestSuperAdminEmailChangeUseCase(),
-    makeVerifySuperAdminEmailChangeUseCase()
+    makeVerifySuperAdminEmailChangeUseCase(),
+    makeGetAILedgerUseCase()
   );
 };
 

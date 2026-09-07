@@ -19,6 +19,8 @@ router.get("/billing", superAdminController.getBillingInvoices);
 router.post("/billing/subscriptions/:id/remind", superAdminController.sendRenewalReminder);
 router.get("/revenue/analytics", superAdminController.getRevenueAnalytics);
 
+router.get("/ai-usage", superAdminController.getAILedger);
+
 // Super Admin Profile endpoints
 router.get("/profile", superAdminController.getProfile);
 router.patch("/profile", superAdminController.updateProfile);

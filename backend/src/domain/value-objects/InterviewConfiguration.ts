@@ -19,6 +19,7 @@ export interface InterviewConfigurationProps {
   customInstructions?: string[];
   prohibitedTopics?: string[];
   evaluationCriteria?: string[];
+  metadata?: Record<string, any>;
 }
 
 export class InterviewConfiguration {
@@ -31,6 +32,7 @@ export class InterviewConfiguration {
   private readonly _customInstructions: string[];
   private readonly _prohibitedTopics: string[];
   private readonly _evaluationCriteria: string[];
+  private _metadata?: Record<string, any>;
 
   constructor(props: InterviewConfigurationProps) {
     const rawTypes = props.selectedTypes || props.types;
@@ -63,6 +65,7 @@ export class InterviewConfiguration {
     this._customInstructions = (props.customInstructions ?? []).map(i => i.trim()).filter(Boolean);
     this._prohibitedTopics = (props.prohibitedTopics ?? []).map(p => p.trim()).filter(Boolean);
     this._evaluationCriteria = (props.evaluationCriteria ?? []).map(e => e.trim()).filter(Boolean);
+    this._metadata = props.metadata;
 
     // Validate and normalize question distribution
     this._questionDistribution = this.validateAndNormalizeDistribution(this._types, props.questionDistribution);
@@ -135,6 +138,8 @@ export class InterviewConfiguration {
   get customInstructions(): ReadonlyArray<string> { return this._customInstructions; }
   get prohibitedTopics(): ReadonlyArray<string> { return this._prohibitedTopics; }
   get evaluationCriteria(): ReadonlyArray<string> { return this._evaluationCriteria; }
+  get metadata(): Record<string, any> | undefined { return this._metadata; }
+  set metadata(value: Record<string, any> | undefined) { this._metadata = value; }
 
   /**
    * Deterministically allocates question counts per InterviewType using the Largest Remainder (Hamilton-Hare) method.
@@ -215,6 +220,7 @@ export class InterviewConfiguration {
       customInstructions: [...this._customInstructions],
       prohibitedTopics: [...this._prohibitedTopics],
       evaluationCriteria: [...this._evaluationCriteria],
+      metadata: this._metadata,
     };
   }
 
