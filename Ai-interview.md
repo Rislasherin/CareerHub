@@ -1,3 +1,5 @@
+…\frontend > Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+
 THE COMPLETE ARCHITECTURE
 
                     CAREERHUB
