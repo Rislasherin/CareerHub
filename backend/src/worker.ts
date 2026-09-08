@@ -6,6 +6,9 @@ import { AnswerEvaluation } from './domain/value-objects/AnswerEvaluation';
 import { AnswerQuality } from './domain/enums/AnswerQuality.enum';
 import { makeAIWorkerOrchestrator, makeGenerateInterviewEvaluationUseCase, liveKitService, rabbitMQBroker, aiInterviewRepository, aiInterviewEvaluationRepository, aiAnswerEvaluator } from './infrastructure/di/ai-interview.factory';
 import { connectDB } from './infrastructure/database/mongoose/connect';
+import { InterviewType } from "./domain/enums/InterviewType.enum";
+import { InterviewDifficulty } from "./domain/enums/InterviewDifficulty.enum";
+import { FinalInterviewResult } from "./domain/entities/ai-interview/AIInterviewSession";
 import { InterviewPhase } from './domain/enums/InterviewPhase.enum';
 import { Logger, LogCategory } from "./infrastructure/logger/logger";
 import { Metrics } from "./infrastructure/observability/Metrics";
@@ -127,7 +130,9 @@ async function main() {
         Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error in startWorker for session ${sessionId}:`, err);
         // If it failed before we acked, we could nack, but we already acked above so nack() is a no-op which is fine.
       } finally {
-        await orchestrator.stopWorker().catch((e: unknown) => Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error stopping orchestrator during cleanup:`, e));
+        if (orchestrator.stopWorker) {
+            await orchestrator.stopWorker().catch((e: unknown) => Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error stopping orchestrator during cleanup:`, e));
+        }
       }
 
     } catch (err) {
@@ -238,7 +243,7 @@ async function main() {
         return ack();
       }
 
-      const { sessionId, questionId, questionText, candidateAnswer, interviewContext, interviewType, difficulty, enqueuedAt, retries = 0 } = evalMsg;
+      const { sessionId, questionId, interviewContext, interviewType, difficulty, enqueuedAt, retries = 0 } = evalMsg;
       const t_eval_start = performance.now();
       const queueWaitMs = enqueuedAt ? (Date.now() - enqueuedAt) : 0;
       
@@ -255,42 +260,46 @@ async function main() {
         return ack();
       }
 
-      const q = bgSession.questions.find((q: { id: string }) => q.id === questionId);
-      if (!q) {
+      const question = bgSession.questions.find((q: { id: string }) => q.id === questionId);
+      if (!question) {
          Logger.error(LogCategory.AI_INTERVIEW_DB_FAILURE, `Question ${questionId} not found in session.`);
          return ack();
       }
 
-      if (q.evaluation) {
+      if (question.evaluation) {
          Logger.info(LogCategory.SYSTEM_INFO, `Question ${questionId} is already evaluated. Skipping duplicate delivery.`);
          return ack();
       }
 
-      // Security Isolation: Read directly from DB to prevent payload spoofing
-      const authoritativeQuestionText = q.text;
-      const authoritativeCandidateAnswer = q.candidateAnswer || candidateAnswer; // fallback to payload only if empty (should never happen)
+        const authoritativeCandidateAnswer = question.candidateAnswer || "";
+        const interviewContextStr = interviewContext || "";
+        const typeEnum = interviewType as InterviewType | undefined;
+        const diffEnum = difficulty as InterviewDifficulty | undefined;
 
-      const t_llm_start = performance.now();
-      const evalResult = await aiAnswerEvaluator.evaluateAnswer({
-        questionText: authoritativeQuestionText,
-        candidateAnswer: authoritativeCandidateAnswer,
-        interviewContext,
-        interviewType,
-        difficulty,
-      });
+        const t_llm_start = performance.now();
+        // Perform the AI evaluation
+        const evalResult = await aiAnswerEvaluator.evaluateAnswer({
+            questionText: question.text,
+            candidateAnswer: authoritativeCandidateAnswer,
+            interviewContext: interviewContextStr,
+            interviewType: typeEnum,
+            difficulty: diffEnum,
+        });
       const t_llm_end = performance.now();
       Metrics.recordLatency('worker_answer_evaluation_duration', t_llm_end - t_llm_start, 'evaluator', { queueWaitMs, attempt: retries + 1 });
 
-      if (evalResult) {
+        const evaluationObject = new AnswerEvaluation({
+            score: evalResult.score,
+            quality: evalResult.quality,
+            feedback: evalResult.feedback,
+            needsFollowUp: evalResult.needsFollowUp,
+        });
+
+        // 3. Persist the evaluation securely using the repository
         const attached = await aiInterviewRepository.attachEvaluationAtomically(
             sessionId,
             questionId,
-            {
-               score: evalResult.score,
-               quality: evalResult.quality,
-               feedback: evalResult.feedback,
-               needsFollowUp: evalResult.needsFollowUp,
-            }
+            evaluationObject
         );
         if (attached) {
             Metrics.recordEvent('evaluation_attached_successfully');
@@ -304,7 +313,6 @@ async function main() {
         if (bgSession.phase === InterviewPhase.COMPLETED) {
            Logger.info(LogCategory.SYSTEM_INFO, `Session ${sessionId} was already completed. Late evaluation recorded successfully.`);
         }
-      }
       ack();
     } catch (err: unknown) {
       const evalMsg = msg as { questionId?: string; retries?: number; sessionId?: string } | null;
@@ -335,14 +343,18 @@ async function main() {
           try {
             const bgSession = await aiInterviewRepository.findById(sessionIdStr);
             if (bgSession) {
-               const failedEval = new AnswerEvaluation({
-                  score: 0,
-                  quality: AnswerQuality.POOR,
-                  feedback: "EVALUATION_FAILED_PERMANENTLY",
-                  needsFollowUp: false
-               });
-               bgSession.saveAnswerEvaluation(questionId, failedEval);
-               await aiInterviewRepository.update(bgSession.id, bgSession);
+                const failedEval = new AnswerEvaluation({
+                    score: 0,
+                    quality: AnswerQuality.POOR,
+                    feedback: "EVALUATION_FAILED_PERMANENTLY",
+                    needsFollowUp: false
+                });
+
+                await aiInterviewRepository.attachEvaluationAtomically(
+                    sessionIdStr,
+                    questionId,
+                    failedEval
+                );
                Logger.info(LogCategory.SYSTEM_INFO, `Marked individual evaluation for question ${questionId} as FAILED.`);
             }
           } catch (updateErr) {

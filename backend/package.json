@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run start:worker\" \"npm run start:practice-worker\"",
     "dev:server": "nodemon --exec tsx src/server.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
@@ -72,6 +72,7 @@
     "concurrently": "^10.0.5",
     "eslint": "^9.17.0",
     "nodemon": "^3.1.9",
+    "tsc-alias": "^1.9.4",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   }

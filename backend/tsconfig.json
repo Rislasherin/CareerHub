@@ -52,6 +52,5 @@
     "dist",
     "scratch",
     ".gemini",
-    "src/worker.ts"
   ]
 }

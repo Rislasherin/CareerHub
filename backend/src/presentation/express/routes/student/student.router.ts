@@ -6,6 +6,21 @@ import { validateDto } from "@presentation/express/middlewares/validateDto";
 import { UpdateStudentProfileDto } from "@application/dtos/student/UpdateStudentProfile.dto";
 import multer from "multer";
 import { ResumeFactory } from "@infrastructure/di/resume.factory";
+import { validateSchema } from "@presentation/express/middlewares/validateSchema";
+import {
+  SyncProfileSchema,
+  UpdateSettingsSchema,
+  AutoFixSchema,
+  RewriteAllSchema,
+  CreateResumeSchema,
+  MatchJobSchema,
+  CoachSectionSchema,
+  AnalyzeSchema
+} from "@application/dtos/student/resume.dto";
+import { makeAIInterviewController } from "@infrastructure/di/ai-interview.factory";
+import { makeAIPracticeController } from "@infrastructure/di/ai-practice.factory";
+import { CreateAIPracticeInterviewRequestDto } from "@application/dtos/ai-practice/CreateAIPracticeInterviewRequest";
+import { SubmitAnswerRequestDto } from "@application/dtos/ai-practice/SubmitAnswerRequest.dto";
 
 const router = Router();
 const studentController = makeStudentController();
@@ -40,23 +55,6 @@ router.post('/profile/resume', upload.single('resume'), studentController.upload
 router.delete('/profile/resume', studentController.deleteResume.bind(studentController));
 
 router.get("/interviews", studentController.getInterviews.bind(studentController));
-
-
-import { validateSchema } from "@presentation/express/middlewares/validateSchema";
-import {
-  SyncProfileSchema,
-  UpdateSettingsSchema,
-  AutoFixSchema,
-  RewriteAllSchema,
-  CreateResumeSchema,
-  MatchJobSchema,
-  CoachSectionSchema,
-  AnalyzeSchema
-} from "@application/dtos/student/resume.dto";
-import { makeAIInterviewController } from "@infrastructure/di/ai-interview.factory";
-import { makeAIPracticeController } from "@infrastructure/di/ai-practice.factory";
-import { CreateAIPracticeInterviewRequestDto } from "@application/dtos/ai-practice/CreateAIPracticeInterviewRequest";
-import { SubmitAnswerRequestDto } from "@application/dtos/ai-practice/SubmitAnswerRequest.dto";
 
 router.get("/notifications", notificationController.getMyNotifications);
 router.patch("/notifications/mark-all-read", notificationController.markAllAsRead);
