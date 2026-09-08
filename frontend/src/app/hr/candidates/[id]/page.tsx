@@ -110,7 +110,7 @@ export default function CandidateProfilePage() {
             selectedTypes: interviewForm.types,
             questionDistribution,
             difficulty: interviewForm.difficulty,
-            scheduledAt: interviewForm.scheduledAt,
+            scheduledAt: new Date(interviewForm.scheduledAt).toISOString(),
             durationMinutes: parseInt(interviewForm.durationMinutes, 10),
             skills: skillsList.length > 0 ? skillsList : undefined,
             customInstructions: customInstructionsList.length > 0 ? customInstructionsList : undefined,
