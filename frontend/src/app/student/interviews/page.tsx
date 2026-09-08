@@ -25,8 +25,19 @@ export default function StudentInterviewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const handleStartInterview = async (interviewId: string) => {
+  const handleStartInterview = async (interviewId: string, scheduledAt?: string) => {
     if (startingId) return; // Prevent duplicate clicks
+
+    if (scheduledAt) {
+      const scheduledTime = new Date(scheduledAt).getTime();
+      const now = new Date().getTime();
+      // Strictly prevent joining before the scheduled time
+      if (scheduledTime > now) {
+        const timeString = new Date(scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        toast.info(`This interview is scheduled for ${timeString}. You can only join when it starts.`);
+        return;
+      }
+    }
     
     setStartingId(interviewId);
     try {
@@ -281,7 +292,7 @@ export default function StudentInterviewsPage() {
                                 </div>
                               ) : (
                                 <button 
-                                  onClick={() => handleStartInterview(inv.id)}
+                                  onClick={() => handleStartInterview(inv.id, inv.scheduledAt)}
                                   disabled={Boolean(startingId)}
                                   className={`absolute inset-0 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center transition-opacity cursor-pointer border-none pointer-events-auto ${Boolean(startingId) ? 'opacity-0 !pointer-events-none' : 'opacity-0 group-hover:opacity-100'}`}
                                 >
