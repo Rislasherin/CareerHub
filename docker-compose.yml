@@ -1,0 +1,78 @@
+services:
+  redis:
+    image: redis:7
+    container_name: careerhub-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: careerhub-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: careerhub-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - rabbitmq
+
+  ai-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: careerhub-ai-worker
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      - redis
+      - rabbitmq
+
+  practice-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: careerhub-practice-worker
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    command: ["node", "dist/practice-worker.js"]
+    depends_on:
+      - redis
+      - rabbitmq
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: careerhub-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend      
