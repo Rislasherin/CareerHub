@@ -42,6 +42,10 @@ export class LLMProviderFactory {
       );
     }
 
+    if (provider === "OLLAMA" && env.NODE_ENV === "production") {
+      throw new Error("[LLMProviderFactory] CRITICAL: Ollama is strictly for local development and cannot be used in production.");
+    }
+
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
     else if (provider === "GEMINI") defaultModel = "gemini-1.5-flash";
@@ -84,6 +88,10 @@ export class LLMProviderFactory {
       );
     }
 
+    if (provider === "OLLAMA" && env.NODE_ENV === "production") {
+      throw new Error("[LLMProviderFactory] CRITICAL: Ollama is strictly for local development and cannot be used in production.");
+    }
+
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
     else if (provider === "GEMINI") defaultModel = "gemini-1.5-flash";
@@ -109,6 +117,10 @@ export class LLMProviderFactory {
       provider = env.AI_FULL_EVALUATION_PROVIDER;
     } else {
       provider = "GROQ";
+    }
+
+    if (provider === "OLLAMA" && env.NODE_ENV === "production") {
+      throw new Error("[LLMProviderFactory] CRITICAL: Ollama is strictly for local development and cannot be used in production.");
     }
 
     let defaultModel = "qwen/qwen3.8-27b";
