@@ -84,14 +84,14 @@ export class RefreshTokenController {
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: env.COOKIE_MAX_AGE_MS, // using standard cookie max age
     });
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:true,
       sameSite: "none",
       maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
     });

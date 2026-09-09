@@ -22,16 +22,16 @@ export class CollegeAdminAuthController {
 
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
       maxAge: env.COOKIE_MAX_AGE_MS,
     });
 
     if (result.refreshToken) {
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
       });
     }
@@ -57,8 +57,8 @@ export class CollegeAdminAuthController {
     if (result.refreshToken) {
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
       });
     }

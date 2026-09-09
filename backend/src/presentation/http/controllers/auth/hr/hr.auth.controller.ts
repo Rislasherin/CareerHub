@@ -24,7 +24,7 @@ export class HRAuthController {
 
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: env.COOKIE_MAX_AGE_MS,
     });
@@ -32,7 +32,7 @@ export class HRAuthController {
     if (result.refreshToken) {
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "none",
         maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
       });
@@ -51,7 +51,7 @@ export class HRAuthController {
 
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: env.COOKIE_MAX_AGE_MS,
     });
@@ -59,7 +59,7 @@ export class HRAuthController {
     if (result.refreshToken) {
       res.cookie("refreshToken", result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "none",
         maxAge: env.REFRESH_COOKIE_MAX_AGE_MS,
       });
