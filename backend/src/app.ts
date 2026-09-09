@@ -7,6 +7,7 @@ import routes from "@presentation/express/routes";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 
 const app: Application = express();
+app.set("trust proxy", 1);
 
 import { tracingMiddleware } from "@presentation/express/middlewares/tracing.middleware";
 import rateLimit from "express-rate-limit";
