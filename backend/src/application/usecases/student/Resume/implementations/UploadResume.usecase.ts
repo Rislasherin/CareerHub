@@ -30,6 +30,16 @@ export class UploadResumeUseCase implements IUploadResumeUseCase {
 
         const student = await this._studentRepository.findById(studentId);
         if(!student) throw new AppError('Student not found', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
+        
+        const collegeId = student.collegeId;
+        if (collegeId) {
+            // Check storage limit
+            const currentStorageBytes = await this._studentRepository.getTotalStorageUsedByCollege(collegeId);
+            const currentStorageGB = currentStorageBytes / (1024 * 1024 * 1024);
+            const fileSizeGB = file.size / (1024 * 1024 * 1024);
+            
+            await this._entitlementGuard.assertWithinLimit(collegeId, 'STORAGE_GB', currentStorageGB, fileSizeGB);
+        }
 
         if(student.resume?.publicId) {
             try {

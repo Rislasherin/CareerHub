@@ -9,4 +9,5 @@ export interface IStudentRepository extends IBaseRepository<Student> {
   searchAllStudents(query: string, page: number, limit: number, collegeId?: string): Promise<{ students: Student[], total: number }>;
   findByInvitationToken(token: string): Promise<Student | null>;
   countByCollegeId(collegeId: string): Promise<number>;
+  getTotalStorageUsedByCollege(collegeId: string): Promise<number>;
 }

@@ -82,4 +82,12 @@ export class StudentRepository extends BaseRepository<Student, StudentDocument> 
   async countByCollegeId(collegeId: string): Promise<number> {
     return await this.model.countDocuments({ collegeId, isDeleted: { $ne: true } });
   }
+
+  async getTotalStorageUsedByCollege(collegeId: string): Promise<number> {
+    const result = await this.model.aggregate([
+      { $match: { collegeId, isDeleted: { $ne: true } } },
+      { $group: { _id: null, totalSize: { $sum: "$resume.fileSize" } } }
+    ]);
+    return result.length > 0 ? (result[0].totalSize || 0) : 0;
+  }
 }
