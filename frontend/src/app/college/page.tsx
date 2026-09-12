@@ -96,7 +96,7 @@ export default function CollegeDashboard() {
             <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
               Good morning, {collegeName || 'Admin'}
             </h1>
-            <p className="text-slate-500 font-medium">Here's what needs your attention today and veryday.</p>
+            <p className="text-slate-500 font-medium">Here's what needs your attention today.</p>
           </div>
         </header>
 
