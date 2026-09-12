@@ -25,7 +25,7 @@ export class EntitlementGuardService implements IEntitlementGuardService {
     const plan = await this.planRepo.findById(subscription.planId);
     if (!plan) return false;
 
-    if (plan.maxStudents === null) return true; // Unlimited
+    if (plan.maxStudents === null || plan.maxStudents === -1) return true; // Unlimited
 
     const currentStudentCount = await this.studentRepo.countByCollegeId(collegeId);
     return (currentStudentCount + count) <= plan.maxStudents;
