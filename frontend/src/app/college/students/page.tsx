@@ -293,22 +293,13 @@ export default function StudentDirectoryPage() {
     setIsProcessing(true);
     try {
       const studentToInvite = { firstName, lastName, email, rollNumber, department };
-      const response: any = await apiClient.post(API_ROUTES.COLLEGE.STUDENTS_BULK_INVITE, { students: [studentToInvite] });
+      const response: any = await apiClient.post(API_ROUTES.COLLEGE.STUDENTS_INVITE, studentToInvite);
       if (response.success) {
-        const { invited, skipped, errors } = response.data;
-        if (invited > 0) {
-          toast.success('Student invited successfully!');
-          setIsAddModalOpen(false);
-          setNewStudent({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
-          resetValidation();
-          fetchStudents();
-        } else if (skipped > 0) {
-          toast.warning('A student with this email already exists.');
-        } else if (errors && errors.length > 0) {
-          toast.error(errors[0]);
-        } else {
-          toast.error('Failed to invite student. Please try again.');
-        }
+        toast.success('Student invited successfully!');
+        setIsAddModalOpen(false);
+        setNewStudent({ firstName: '', lastName: '', email: '', rollNumber: '', department: '' });
+        resetValidation();
+        fetchStudents();
       }
     } catch (err: unknown) {
       const errMsg = (err as any)?.error?.message || (err as Error)?.message || 'An error occurred while adding student';

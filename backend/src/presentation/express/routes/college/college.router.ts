@@ -3,7 +3,7 @@ import { makeStudentManagementController, makeCollegeJobApprovalController, make
 import { notificationController } from "@infrastructure/di/notification.factory";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { validateDto } from "@presentation/express/middlewares/validateDto";
-import { InviteStudentsDto } from "@application/dtos/auth/student/Request/InviteStudents.dto";
+import { InviteStudentItemDto, InviteStudentsDto } from "@application/dtos/auth/student/Request/InviteStudents.dto";
 import { UpdateCollegeProfileRequestDto } from "@application/dtos/college/settings/college-settings.dto";
 import { ChangePasswordRequestDto, RequestEmailChangeDto, VerifyEmailChangeDto } from "@application/dtos/hr/settings/hr-settings.dto";
 
@@ -23,6 +23,7 @@ router.use(authMiddleware.protect);
 
 router.patch("/status-toggle/:studentId", studentManagementController.toggleStatus);
 router.get("/students/pending", studentManagementController.getPendingStudents);
+router.post("/students/invite", validateDto(InviteStudentItemDto), studentManagementController.inviteStudent);
 router.post("/students/bulk-invite", validateDto(InviteStudentsDto), studentManagementController.bulkInvite);
 router.patch("/students/:studentId/approve", studentManagementController.approveStudent);
 router.patch("/students/:studentId/reject", studentManagementController.rejectStudent);

@@ -33,6 +33,7 @@ export const API_ROUTES = {
     DASHBOARD_STATS: '/college/dashboard/stats',
     STUDENTS: '/college/students',
     STUDENTS_PENDING: '/college/students/pending',
+    STUDENTS_INVITE: '/college/students/invite',
     STUDENTS_BULK_INVITE: '/college/students/bulk-invite',
     STATUS_TOGGLE: '/college/status-toggle',
     INTERVIEWS: '/college/interviews',

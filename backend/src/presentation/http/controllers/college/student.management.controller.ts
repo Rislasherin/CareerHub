@@ -60,6 +60,26 @@ export class StudentManagementController {
     sendSuccess(res, result, MESSAGES.SUCCESS.CREATED);
   });
 
+  inviteStudent = asyncHandler(async (req: Request, res: Response) => {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    
+    // Reuse bulk invite use case for a single student
+    const result = await this._bulkInviteUseCase.execute(orgId, { students: [req.body] });
+    
+    if (result.errors && result.errors.length > 0) {
+      throw new AppError(result.errors[0], HttpStatus.BAD_REQUEST, ErrorCode.BAD_REQUEST);
+    }
+    
+    if (result.skipped > 0) {
+      throw new AppError("A student with this email already exists.", HttpStatus.CONFLICT, ErrorCode.BAD_REQUEST);
+    }
+    
+    sendSuccess(res, null, "Student invited successfully");
+  });
+
   approveAccessRequest = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     await this._approveAccessRequestUseCase.execute(studentId);
