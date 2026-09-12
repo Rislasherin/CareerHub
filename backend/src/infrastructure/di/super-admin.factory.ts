@@ -34,8 +34,10 @@ export const makeGetDashboardStatsUseCase = () => {
   return new GetDashboardStatsUseCase(orgRepository, studentRepository, companyRepository, subscriptionRepository);
 };
 
+import { entitlementGuardService } from "@infrastructure/di/infra.container";
+
 export const makeGetOrganizationsUseCase = () => {
-  return new GetOrganizationsUseCase(orgRepository, studentRepository, collegeAdminRepository);
+  return new GetOrganizationsUseCase(orgRepository, studentRepository, collegeAdminRepository, entitlementGuardService);
 };
 
 export const makeGetStudentsUseCase = () => {
