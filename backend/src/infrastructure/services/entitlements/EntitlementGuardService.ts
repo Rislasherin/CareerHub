@@ -6,12 +6,14 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { FeatureKey } from "@domain/enums/FeatureKey.enum";
+import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
 
 export class EntitlementGuardService implements IEntitlementGuardService {
   constructor(
     private readonly subscriptionRepo: ISubscriptionRepository,
     private readonly planRepo: IPlanRepository,
-    private readonly studentRepo: IStudentRepository
+    private readonly studentRepo: IStudentRepository,
+    private readonly organizationRepo: IOrganizationRepository
   ) {}
 
   async canAddStudent(collegeId: string): Promise<boolean> {
@@ -19,6 +21,12 @@ export class EntitlementGuardService implements IEntitlementGuardService {
   }
 
   async canAddStudents(collegeId: string, count: number): Promise<boolean> {
+    const org = await this.organizationRepo.findById(collegeId);
+    if (org && org.isTrialActive) {
+      // Allow unlimited students during free trial
+      return true;
+    }
+
     const subscription = await this.subscriptionRepo.findByCollegeId(collegeId);
     if (!subscription || subscription.status !== 'ACTIVE') return false;
 
@@ -41,6 +49,11 @@ export class EntitlementGuardService implements IEntitlementGuardService {
   }
 
   async assertFeatureEntitlement(collegeId: string, feature: FeatureKey): Promise<void> {
+    const org = await this.organizationRepo.findById(collegeId);
+    if (org && org.isTrialActive) {
+      return; // Trial gives access to everything
+    }
+
     const subscription = await this.subscriptionRepo.findByCollegeId(collegeId);
     if (!subscription) {
       throw new AppError("Subscription not found", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
