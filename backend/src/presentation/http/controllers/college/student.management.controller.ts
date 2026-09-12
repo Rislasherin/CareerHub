@@ -70,11 +70,11 @@ export class StudentManagementController {
     const result = await this._bulkInviteUseCase.execute(orgId, { students: [req.body] });
     
     if (result.errors && result.errors.length > 0) {
-      throw new AppError(result.errors[0], HttpStatus.BAD_REQUEST, ErrorCode.BAD_REQUEST);
+      throw new AppError(result.errors[0], HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
     
     if (result.skipped > 0) {
-      throw new AppError("A student with this email already exists.", HttpStatus.CONFLICT, ErrorCode.BAD_REQUEST);
+      throw new AppError("A student with this email already exists.", HttpStatus.CONFLICT, ErrorCode.RESOURCE_EXISTS);
     }
     
     sendSuccess(res, null, "Student invited successfully");

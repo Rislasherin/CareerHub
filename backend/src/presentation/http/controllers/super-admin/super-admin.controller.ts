@@ -64,8 +64,8 @@ export class SuperAdminController {
   });
 
   getStudents = asyncHandler(async (req: Request, res: Response) => {
-    const { query = "", page = 1, limit = 10 } = req.query;
-    const result = await this._getStudentsUseCase.execute(query as string, Number(page), Number(limit));
+    const { query = "", page = 1, limit = 10, studentId = "", interviewId = "" } = req.query;
+    const result = await this._getStudentsUseCase.execute(query as string, Number(page), Number(limit), studentId as string, interviewId as string);
     sendSuccess(res, result, MESSAGES.SUCCESS.FETCHED);
   });
 
