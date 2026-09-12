@@ -32,6 +32,7 @@ export const AIPracticeInterviewSchema = new Schema(
     startedAt: { type: Date },
     completedAt: { type: Date },
     finalFeedback: { type: Object },
+    creditReservationId: { type: String },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }

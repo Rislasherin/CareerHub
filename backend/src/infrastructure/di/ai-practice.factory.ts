@@ -96,7 +96,7 @@ export const makeGetPracticeRoomTokenUseCase = () => {
 };
 
 export const makeCompletePracticeInterviewUseCase = () => {
-  return new CompletePracticeInterviewUseCase(aiPracticeInterviewRepository);
+  return new CompletePracticeInterviewUseCase(aiPracticeInterviewRepository, aiCreditService);
 };
 
 export const makeGeneratePracticeFeedbackUseCase = () => {

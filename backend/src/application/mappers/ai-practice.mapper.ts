@@ -25,6 +25,7 @@ export const toAIPracticeInterviewEntity = (doc: AIPracticeInterviewDocument): A
     completedAt: doc.completedAt || undefined,
     finalFeedback: doc.finalFeedback || undefined,
     status: doc.status as PracticeInterviewStatus,
+    creditReservationId: doc.creditReservationId || undefined,
     questions,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
@@ -50,6 +51,7 @@ export const toAIPracticeInterviewPersistence = (entity: AIPracticeInterview): R
       feedback: q.feedback,
       createdAt: q.createdAt,
       answeredAt: q.answeredAt
-    }))
+    })),
+    creditReservationId: entity.creditReservationId
   };
 };

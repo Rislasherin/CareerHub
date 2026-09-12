@@ -27,12 +27,13 @@ export interface AIPracticeInterviewProps {
   studentId: string;
   difficulty: PracticeDifficulty;
   topics: string[];
-  durationMinutes?: number; // New for phase 5
-  startedAt?: Date; // New for phase 5
-  completedAt?: Date; // New for phase 5
+  durationMinutes?: number;
+  startedAt?: Date;
+  completedAt?: Date;
   finalFeedback?: PracticeFeedback;
   status: PracticeInterviewStatus;
   questions: AIPracticeQuestion[];
+  creditReservationId?: string; // Track AI credit reservation
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -48,6 +49,7 @@ export class AIPracticeInterview {
   private _startedAt?: Date;
   private _completedAt?: Date;
   private _finalFeedback?: PracticeFeedback;
+  private _creditReservationId?: string;
   private readonly _createdAt?: Date;
   private _updatedAt?: Date;
 
@@ -62,6 +64,7 @@ export class AIPracticeInterview {
     this._startedAt = props.startedAt;
     this._completedAt = props.completedAt;
     this._finalFeedback = props.finalFeedback;
+    this._creditReservationId = props.creditReservationId;
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
   }
@@ -123,6 +126,15 @@ export class AIPracticeInterview {
 
   get finalFeedback(): PracticeFeedback | undefined {
     return this._finalFeedback;
+  }
+
+  get creditReservationId(): string | undefined {
+    return this._creditReservationId;
+  }
+
+  set creditReservationId(id: string | undefined) {
+    this._creditReservationId = id;
+    this._updatedAt = new Date();
   }
 
   public getTimeRemainingMs(): number {

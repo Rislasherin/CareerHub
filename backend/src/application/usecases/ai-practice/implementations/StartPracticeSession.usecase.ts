@@ -33,15 +33,16 @@ export class StartPracticeSessionUseCase {
 
     await this._entitlementGuard.assertFeatureEntitlement(student.collegeId!, FeatureKey.MOCK_INTERVIEW);
 
-    // Attempt to consume 5 credits for a practice session
+    // Reserve 5 credits for a practice session
     try {
-      await this._aiCreditService.consumeCredits(
+      const reservationId = await this._aiCreditService.reserveCredits(
         student.collegeId!, 
         student.id!, 
         'mock_interview', 
         5, 
         'livekit'
       );
+      session.creditReservationId = reservationId;
     } catch (err: any) {
       throw new AppError(err.message, HttpStatus.FORBIDDEN, ErrorCode.INSUFFICIENT_CREDITS);
     }
