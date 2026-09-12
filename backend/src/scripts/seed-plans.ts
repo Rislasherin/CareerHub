@@ -35,6 +35,19 @@ const plans = [
     storageLimit: 50,
     features: ['Notice Board', 'Broadcast Emails', 'Full AI Resume Builder', 'Mock Interview Bot', 'Advanced Analytics', 'Interview Calendar View'],
     isActive: true,
+  },
+  {
+    id: 'plan_trial',
+    name: '14-Day Free Trial',
+    code: 'TRIAL',
+    price: 0,
+    currency: 'INR',
+    billingInterval: 'monthly',
+    maxStudents: 50,
+    aiCredits: 500,
+    storageLimit: 5,
+    features: ['Notice Board', 'Broadcast Emails', 'Full AI Resume Builder', 'Mock Interview Bot', 'Advanced Analytics', 'Interview Calendar View'],
+    isActive: true,
   }
 ];
 
