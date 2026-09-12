@@ -18,6 +18,13 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
   ) { }
 
   async execute(collegeId: string, dto: InviteStudentsDto): Promise<any> {
+    // PRE-CHECK: Validate total student limit before processing any invites
+    const currentStudentCount = await this._studentRepository.countByCollegeId(collegeId);
+    const requestedCount = dto.students.length;
+    
+    // This will throw a structured AppError (STUDENT_LIMIT_REACHED context) if the limit is exceeded
+    await this._entitlementGuard.assertWithinLimit(collegeId, 'MAX_STUDENTS', currentStudentCount, requestedCount);
+
     const results = {
       invited: 0,
       skipped: 0,
@@ -26,12 +33,6 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
 
     for (const studentData of dto.students) {
       try {
-        const canAdd = await this._entitlementGuard.canAddStudent(collegeId);
-        if (!canAdd) {
-            results.errors.push(`Student limit reached for the active subscription plan. Could not add ${studentData.email}.`);
-            continue;
-        }
-
         const globalCheck = await this._crossRoleAuthService.isEmailInUse(studentData.email);
         if (globalCheck.inUse) {
           results.errors.push(`Email ${studentData.email} is already registered as a ${globalCheck.role}`);
