@@ -64,6 +64,52 @@ export class LLMProviderFactory {
   }
 
   /**
+   * Deterministic Practice Question Provider Precedence:
+   * 1. env.AI_QUESTION_PROVIDER
+   * 2. env.USE_LOCAL_LLM === true -> OLLAMA
+   * 3. env.AI_PROVIDER
+   * 4. env.AI_LLM_PROVIDER
+   * 5. Fallback default: OLLAMA
+   */
+  public static getPracticeQuestionConfig(): ISingleLLMConfig {
+    let provider: LLMProviderType;
+
+    if (env.AI_QUESTION_PROVIDER) {
+      provider = env.AI_QUESTION_PROVIDER;
+    } else if (env.USE_LOCAL_LLM) {
+      provider = "OLLAMA";
+    } else if (env.AI_PROVIDER) {
+      provider = env.AI_PROVIDER;
+    } else if (env.AI_LLM_PROVIDER) {
+      provider = env.AI_LLM_PROVIDER;
+    } else {
+      throw new Error(
+        "[LLMProviderFactory] No LLM provider explicitly configured for Practice Question LLM. Set AI_QUESTION_PROVIDER, AI_PROVIDER, or USE_LOCAL_LLM=true in environment."
+      );
+    }
+
+    if (provider === "OLLAMA" && env.NODE_ENV === "production") {
+      throw new Error("[LLMProviderFactory] CRITICAL: Ollama is strictly for local development and cannot be used in production.");
+    }
+
+    let defaultModel = "llama3.2:3b";
+    if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
+    else if (provider === "GEMINI") defaultModel = "gemini-3.6-flash";
+    else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
+
+    const model = env.AI_QUESTION_MODEL || defaultModel;
+
+    return {
+      provider,
+      model,
+      baseUrl: env.AI_QUESTION_BASE_URL || env.OLLAMA_BASE_URL,
+      temperature: env.AI_QUESTION_TEMPERATURE,
+      maxTokens: env.AI_QUESTION_MAX_TOKENS,
+      timeoutMs: env.AI_QUESTION_TIMEOUT_MS,
+    };
+  }
+
+  /**
    * Deterministic Evaluation Provider Precedence:
    * 1. env.AI_EVALUATION_PROVIDER (explicit override: OLLAMA | GROQ | GEMINI | OPENAI)
    * 2. env.USE_LOCAL_LLM === true -> OLLAMA
@@ -277,6 +323,86 @@ export class LLMProviderFactory {
     if (config.provider === "GEMINI") {
       if (!env.GEMINI_API_KEY) {
         throw new Error("[LLMProviderFactory] Missing GEMINI_API_KEY in environment for Question LLM.");
+      }
+      return new ChatGoogleGenerativeAI({
+        model: config.model,
+        apiKey: env.GEMINI_API_KEY,
+        temperature: config.temperature,
+        maxOutputTokens: config.maxTokens,
+        maxRetries: 1,
+        streaming: true,
+      });
+    }
+
+    return new ChatOllama({
+      model: config.model,
+      baseUrl: config.baseUrl || "http://127.0.0.1:11434",
+      temperature: config.temperature,
+      numPredict: config.maxTokens,
+      keepAlive: "30m",
+      maxRetries: 1,
+      streaming: true,
+    });
+  }
+
+  public static createPracticeQuestionLLM(): BaseChatModel {
+    const config = this.getPracticeQuestionConfig();
+    const evalConfig = this.getEvaluationConfig();
+
+    if (config.provider === "OLLAMA" && evalConfig.provider === "OLLAMA") {
+      Logger.warn(LogCategory.SYSTEM_INFO, 
+        "[LLMProviderFactory] WARNING: Realtime question LLM and background evaluation LLM share Ollama inference resources; realtime latency may be affected."
+      );
+    }
+
+    Logger.info(LogCategory.SYSTEM_INFO, `[LLMProviderFactory] Initialized Practice Question LLM -> Provider: ${config.provider}, Model: ${config.model}, Temp: ${config.temperature}, MaxTokens: ${config.maxTokens}, Timeout: ${config.timeoutMs}ms`);
+
+    if (config.provider === "OLLAMA") {
+      return new ChatOllama({
+        model: config.model,
+        baseUrl: config.baseUrl || "http://127.0.0.1:11434",
+        temperature: config.temperature,
+        numPredict: config.maxTokens,
+        keepAlive: "30m",
+        maxRetries: 1,
+        streaming: true,
+      });
+    }
+
+    if (config.provider === "GROQ") {
+      if (!env.GROQ_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing GROQ_API_KEY in environment for Practice Question LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.GROQ_API_KEY,
+        configuration: {
+          baseURL: "https://api.groq.com/openai/v1",
+        },
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        maxRetries: 1,
+        streaming: true,
+      });
+    }
+
+    if (config.provider === "OPENAI") {
+      if (!env.OPENAI_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing OPENAI_API_KEY in environment for Practice Question LLM.");
+      }
+      return new ChatOpenAI({
+        model: config.model,
+        apiKey: env.OPENAI_API_KEY,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        maxRetries: 1,
+        streaming: true,
+      });
+    }
+
+    if (config.provider === "GEMINI") {
+      if (!env.GEMINI_API_KEY) {
+        throw new Error("[LLMProviderFactory] Missing GEMINI_API_KEY in environment for Practice Question LLM.");
       }
       return new ChatGoogleGenerativeAI({
         model: config.model,

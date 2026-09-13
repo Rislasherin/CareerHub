@@ -33,68 +33,74 @@ export class PracticeWorkerOrchestratorUseCase {
     Logger.info(LogCategory.SYSTEM_INFO, `[PracticeWorker] Starting worker for session ${sessionId}`);
 
     const onParticipantConnected = async () => {
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] participant connected`);
-      
-      const session = await this._repository.findByIdAndStudentId(sessionId, studentId);
-      if (!session) {
-        Logger.error(LogCategory.SYSTEM_ERROR, `[PRACTICE_WORKER] Session not found on connect`);
-        return;
-      }
+      try {
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] participant connected`);
+        
+        const session = await this._repository.findByIdAndStudentId(sessionId, studentId);
+        if (!session) {
+          Logger.error(LogCategory.SYSTEM_ERROR, `[PRACTICE_WORKER] Session not found on connect`);
+          return;
+        }
 
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] locking candidate input`);
-      // Mark AI as speaking BEFORE any LLM generation or TTS plays,
-      // so STT does not process candidate background noise or echo.
-      this._isAISpeaking = true;
-      
-      let introText = "Hi, welcome to your AI practice interview. I'll be conducting the interview today. I'll ask you questions based on your selected topics. Let's get started.";
-      
-      if (session.questions.length === 0) {
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generating first question`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] locking candidate input`);
+        // Mark AI as speaking BEFORE any LLM generation or TTS plays,
+        // so STT does not process candidate background noise or echo.
+        this._isAISpeaking = true;
         
-        const firstTopic = session.topics[0] || "General";
+        let introText = "Hi, welcome to your AI practice interview. I'll be conducting the interview today. I'll ask you questions based on your selected topics. Let's get started.";
         
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM started`);
-        const firstQuestionText = await this._questionGenerator.generateQuestion({
-          difficulty: session.difficulty,
-          topics: session.topics,
-          previousQuestions: [],
-          previousAnswers: [],
-          currentTopic: firstTopic
-        });
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM completed`);
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generated question text`, { textLength: firstQuestionText.length });
+        if (session.questions.length === 0) {
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generating first question`);
+          
+          const firstTopic = session.topics[0] || "General";
+          
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM started`);
+          const firstQuestionText = await this._questionGenerator.generateQuestion({
+            difficulty: session.difficulty,
+            topics: session.topics,
+            previousQuestions: [],
+            previousAnswers: [],
+            currentTopic: firstTopic
+          });
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM completed`);
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generated question text`, { textLength: firstQuestionText.length });
+          
+          const qId = Math.random().toString(36).substring(7);
+          
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] saving first question`);
+          session.addQuestion(qId, firstQuestionText, firstTopic, false);
+          await this._repository.update(session.id!, session);
+          Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first question saved with ID`, { qId });
+          
+          introText += " " + firstQuestionText;
+        } else {
+          introText += " " + session.questions[0].text;
+        }
         
-        const qId = Math.random().toString(36).substring(7);
+        await this._audioTransport.publishDataMessage({ event: 'state_sync' });
+        await this._audioTransport.publishDataMessage({ event: 'ai_speaking', text: introText });
         
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] saving first question`);
-        session.addQuestion(qId, firstQuestionText, firstTopic, false);
-        await this._repository.update(session.id!, session);
-        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first question saved with ID`, { qId });
+        // Delay TTS slightly to allow frontend to disable the candidate microphone.
+        // disabling the mic causes an SDP renegotiation which can drop/buffer real-time incoming AI audio.
+        await new Promise((resolve) => setTimeout(resolve, 500));
         
-        introText += " " + firstQuestionText;
-      } else {
-        introText += " " + session.questions[0].text;
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] starting first-question TTS`);
+        // Note: playText now internally awaits waitForPlayout
+        await this.playText(introText);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question TTS completed`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question playout completed`);
+        
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] clearing STT buffer`);
+        this._sttService.clearBuffer(); // Clear any stale STT data (echo/buffer) before listening
+        this._isAISpeaking = false;
+        
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] unlocking candidate input`);
+        await this._audioTransport.publishDataMessage({ event: 'listening' });
+      } catch (err) {
+        Logger.error(LogCategory.SYSTEM_ERROR, `[Practice] onParticipantConnected initialization failed:`, err);
+        this._isAISpeaking = false;
+        await this.stopWorker();
       }
-      
-      await this._audioTransport.publishDataMessage({ event: 'state_sync' });
-      await this._audioTransport.publishDataMessage({ event: 'ai_speaking', text: introText });
-      
-      // Delay TTS slightly to allow frontend to disable the candidate microphone.
-      // disabling the mic causes an SDP renegotiation which can drop/buffer real-time incoming AI audio.
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] starting first-question TTS`);
-      // Note: playText now internally awaits waitForPlayout
-      await this.playText(introText);
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question TTS completed`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question playout completed`);
-      
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] clearing STT buffer`);
-      this._sttService.clearBuffer(); // Clear any stale STT data (echo/buffer) before listening
-      this._isAISpeaking = false;
-      
-      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] unlocking candidate input`);
-      await this._audioTransport.publishDataMessage({ event: 'listening' });
     };
 
     // IMPORTANT: Connect TTS BEFORE joining LiveKit.
@@ -295,13 +301,17 @@ export class PracticeWorkerOrchestratorUseCase {
             }
           }
         } else if (result.isInterim && result.text.trim().length > 0) {
-          // Interim result from Deepgram â€” forward to frontend for live display only
-          Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] DEEPGRAM_INTERIM`, { text: result.text });
-          await this._audioTransport.publishDataMessage({ event: 'interim_transcript', text: result.text });
+          if (!this._isAISpeaking) {
+            // Interim result from Deepgram â€” forward to frontend for live display only
+            Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] DEEPGRAM_INTERIM`, { text: result.text });
+            await this._audioTransport.publishDataMessage({ event: 'interim_transcript', text: result.text });
+          }
         } else if (!result.isEndpoint && !result.isInterim && result.text.trim().length > 0) {
-          // Non-endpoint final segment (is_final=true, speech_final=false) â€” logged for tracing
-          Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] DEEPGRAM_FINAL_SEGMENT_PASSTHROUGH`, { text: result.text });
-          await this._audioTransport.publishDataMessage({ event: 'interim_transcript', text: result.text });
+          if (!this._isAISpeaking) {
+            // Non-endpoint final segment (is_final=true, speech_final=false) â€” logged for tracing
+            Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] DEEPGRAM_FINAL_SEGMENT_PASSTHROUGH`, { text: result.text });
+            await this._audioTransport.publishDataMessage({ event: 'interim_transcript', text: result.text });
+          }
         }
       }
     } catch (err) {

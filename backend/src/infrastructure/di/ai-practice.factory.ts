@@ -25,7 +25,7 @@ export const aiPracticeInterviewRepository = new AIPracticeInterviewRepository()
 // These are the same provider instances used by the HR side;
 // Student AI Practice depends only on the shared infrastructure abstraction,
 // NOT on any HR interview business logic.
-const practiceQuestionLLM = LLMProviderFactory.createQuestionLLM();
+const practiceQuestionLLM = LLMProviderFactory.createPracticeQuestionLLM();
 const practiceEvaluationLLM = LLMProviderFactory.createEvaluationLLM();
 
 export const practiceQuestionGenerator = new LangChainPracticeQuestionGenerator(practiceQuestionLLM);
