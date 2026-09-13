@@ -56,6 +56,7 @@ const envSchema = z.object({
   OLLAMA_BASE_URL: z.string().default("http://127.0.0.1:11434"),
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
+  GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
   OPENAI_API_KEY: z.string().optional(),
   LIVEKIT_TOKEN_TTL: z.string().default("2h"),
   RABBITMQ_PREFETCH: z.coerce.number().default(1),

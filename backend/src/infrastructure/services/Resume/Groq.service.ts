@@ -5,6 +5,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Logger } from "@infrastructure/logger/logger";
 import { AIPromptRegistry } from "./prompts/AIPromptRegistry";
+import { env } from "@infrastructure/config/env.validator";
 
 export class GroqService implements IAIService {
     private _client: OpenAI;
@@ -128,7 +129,7 @@ export class GroqService implements IAIService {
     async generateProfessionalSummary(profileData: unknown): Promise<string> {
         try {
             const response = await this._client.chat.completions.create({
-                model: "llama-3.3-70b-versatile",
+                model: env.GROQ_MODEL,
                 response_format: { type: "json_object" },
                 messages: [
                     { role: "system", content: AIPromptRegistry.getProfessionalSummarySystemPrompt() },
