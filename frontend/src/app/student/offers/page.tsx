@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import SignatureCanvas from 'react-signature-canvas';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { Button } from '@/components/shared/Button';
 import { Pagination } from '@/components/shared/Pagination';
@@ -16,6 +17,8 @@ export default function StudentOffersPage() {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [savingSignature, setSavingSignature] = useState(false);
+  const sigCanvas = useRef<SignatureCanvas>(null);
   const ITEMS_PER_PAGE = 6;
 
   const fetchOffers = async () => {
@@ -38,14 +41,57 @@ export default function StudentOffersPage() {
 
   const handleRespond = async (offerId: string, status: 'ACCEPTED' | 'REJECTED') => {
     try {
+      if (status === 'ACCEPTED' && !selectedOffer?.signatureUrl) {
+        toast.error("Please sign the offer before accepting.");
+        return;
+      }
       const res = await apiClient.patch(`/student/offers/${offerId}/respond`, { status }) as any;
       if (res.success) {
         toast.success(`Offer ${status === 'ACCEPTED' ? 'accepted' : 'declined'} successfully!`);
         fetchOffers();
+        setShowOfferModal(false);
       }
-    } catch (err) {
-      toast.error('Could not update your offer response. Please try again.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not update your offer response. Please try again.');
     }
+  };
+
+  const handleSaveSignature = async () => {
+    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
+      toast.error("Please provide your signature before continuing.");
+      return;
+    }
+    
+    setSavingSignature(true);
+    try {
+      // Get base64 string
+      const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+      
+      // Convert base64 to blob
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      
+      const formData = new FormData();
+      formData.append('signature', blob, 'signature.png');
+      
+      const apiRes = await apiClient.post(`/student/offers/${selectedOffer.id}/sign`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }) as any;
+      
+      if (apiRes.success) {
+        toast.success("Signature saved successfully!");
+        setSelectedOffer({ ...selectedOffer, signatureUrl: apiRes.data.signatureUrl });
+        fetchOffers(); // refresh list behind modal
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not save signature. Please try again.');
+    } finally {
+      setSavingSignature(false);
+    }
+  };
+
+  const clearSignature = () => {
+    sigCanvas.current?.clear();
   };
 
   const handleDownloadPdf = async (offerId: string) => {
@@ -180,12 +226,12 @@ export default function StudentOffersPage() {
                 
                 {isPending && (
                   <>
-                    <Button onClick={() => handleRespond(offer.id, 'ACCEPTED')} className="bg-[#EF4444] hover:bg-red-600 text-white shadow-lg shadow-red-500/25 px-8 py-2.5 rounded-xl font-bold transition-all">
-                      Accept Offer
+                    <Button 
+                      onClick={() => { setSelectedOffer(offer); setShowOfferModal(true); }} 
+                      className="bg-[#EF4444] hover:bg-red-600 text-white shadow-lg shadow-red-500/25 px-8 py-2.5 rounded-xl font-bold transition-all"
+                    >
+                      Respond
                     </Button>
-                    <button onClick={() => handleRespond(offer.id, 'REJECTED')} className="text-sm font-bold text-slate-400 hover:text-rose-500 ml-2 transition-colors">
-                      Decline
-                    </button>
                   </>
                 )}
               </div>
@@ -286,19 +332,65 @@ export default function StudentOffersPage() {
                         <div className="text-xs text-slate-500 font-medium">
                           HR Manager • {selectedOffer.job?.companyId?.companyName}
                         </div>
-                        <div className="text-xs text-slate-500 font-medium text-right">
-                          Candidate Acceptance Signature
+                        <div className="text-xs text-slate-500 font-medium text-right flex flex-col items-end">
+                          <span className="mb-2">Candidate Acceptance Signature</span>
+                          {selectedOffer.signatureUrl ? (
+                            <div className="w-48 h-20 border border-slate-200 rounded flex items-center justify-center p-2 bg-slate-50">
+                               <img src={selectedOffer.signatureUrl} alt="Signature" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                            </div>
+                          ) : (
+                            selectedOffer.status === 'PENDING' && (
+                              <div className="flex flex-col items-end w-full max-w-xs">
+                                <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white w-full h-32 mb-2 relative overflow-hidden">
+                                  <SignatureCanvas 
+                                    ref={sigCanvas} 
+                                    canvasProps={{ className: 'w-full h-full absolute inset-0' }} 
+                                    backgroundColor="transparent"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button variant="secondary" onClick={clearSignature} className="px-3 py-1 text-xs">Clear</Button>
+                                  <Button onClick={handleSaveSignature} disabled={savingSignature} className="px-3 py-1 text-xs bg-slate-900 text-white hover:bg-slate-800">
+                                    {savingSignature ? 'Saving...' : 'Save Signature'}
+                                  </Button>
+                                </div>
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Fixed Mobile Download Button */}
-                <div className="p-4 bg-white border-t border-slate-200 md:hidden flex gap-3">
-                    <Button onClick={() => handleDownloadPdf(selectedOffer.id)} className="w-full bg-slate-900 text-white">
+                {/* Fixed Mobile Download Button & Accept/Reject Actions */}
+                <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row gap-3 justify-end items-center">
+                    <Button onClick={() => handleDownloadPdf(selectedOffer.id)} className="w-full sm:w-auto bg-slate-100 text-slate-700 hover:bg-slate-200">
                       <Download size={16} className="mr-2" /> Download PDF
                     </Button>
+                    
+                    {selectedOffer.status === 'PENDING' && (
+                      <div className="flex gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                        <Button 
+                          variant="secondary" 
+                          onClick={() => handleRespond(selectedOffer.id, 'REJECTED')}
+                          className="w-full sm:w-auto text-rose-500 hover:bg-rose-50 border border-rose-200"
+                        >
+                          Decline
+                        </Button>
+                        <Button 
+                          onClick={() => handleRespond(selectedOffer.id, 'ACCEPTED')}
+                          disabled={!selectedOffer.signatureUrl}
+                          className={`w-full sm:w-auto text-white shadow-md transition-all ${
+                            selectedOffer.signatureUrl 
+                              ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/25' 
+                              : 'bg-slate-300 cursor-not-allowed text-slate-500'
+                          }`}
+                        >
+                          {selectedOffer.signatureUrl ? 'Accept Offer' : 'Sign to Accept'}
+                        </Button>
+                      </div>
+                    )}
                 </div>
               </motion.div>
             </div>
