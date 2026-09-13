@@ -22,6 +22,7 @@ import { IGetStudentOffersUseCase } from "@application/usecases/student/interfac
 import { IRespondToOfferUseCase } from "@application/usecases/student/interfaces/IRespondToOffer.usecase";
 import { IGetStudentDashboardStatsUseCase } from "@application/usecases/student/dashboard/interfaces/IGetStudentDashboardStats.usecase";
 import { GetStudentEntitlementsUseCase } from "@application/usecases/student/implementations/GetStudentEntitlements.usecase";
+import { ISignOfferUseCase } from "@application/usecases/student/interfaces/ISignOffer.usecase";
 
 export class StudentController {
   constructor(
@@ -42,7 +43,8 @@ export class StudentController {
     private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase,
     private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase,
     private readonly _getStudentDashboardStatsUseCase: IGetStudentDashboardStatsUseCase,
-    private readonly _getStudentEntitlementsUseCase: GetStudentEntitlementsUseCase
+    private readonly _getStudentEntitlementsUseCase: GetStudentEntitlementsUseCase,
+    private readonly _signOfferUseCase: ISignOfferUseCase
   ) { }
 
   getEntitlements = asyncHandler(async (req: Request, res: Response) => {
@@ -210,6 +212,22 @@ export class StudentController {
 
     const offer = await this._respondToOfferUseCase.execute(studentId, id, status);
     sendSuccess(res, offer, `Offer ${status.toLowerCase()} successfully`);
+  });
+
+  signOffer = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      throw new AppError("Student ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { id } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      throw new AppError("Signature image is required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
+    const offer = await this._signOfferUseCase.execute(studentId, id, file);
+    sendSuccess(res, offer, "Offer signed successfully");
   });
 
   downloadOfferPdf = asyncHandler(async (req: Request, res: Response) => {

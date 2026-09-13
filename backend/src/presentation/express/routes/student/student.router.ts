@@ -47,6 +47,7 @@ router.post("/jobs/:id/apply", studentController.applyJob);
 router.get("/applications", studentController.getApplications.bind(studentController));
 router.get("/offers", studentController.getOffers.bind(studentController));
 router.patch("/offers/:id/respond", studentController.respondToOffer.bind(studentController));
+router.post("/offers/:id/sign", upload.single('signature'), studentController.signOffer.bind(studentController));
 router.get("/offers/:id/pdf", studentController.downloadOfferPdf.bind(studentController));
 
 router.get("/notices", studentController.getNotices.bind(studentController));

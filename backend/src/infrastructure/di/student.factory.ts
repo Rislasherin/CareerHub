@@ -14,6 +14,7 @@ import { GetStudentApplicationsUseCase } from "@application/usecases/student/imp
 import { GetStudentInterviewsUseCase } from "@application/usecases/student/implementations/GetStudentInterviews.usecase";
 import { GetStudentOffersUseCase } from "@application/usecases/student/implementations/GetStudentOffers.usecase";
 import { RespondToOfferUseCase } from "@application/usecases/student/implementations/RespondToOffer.usecase";
+import { SignOfferUseCase } from "@application/usecases/student/implementations/SignOffer.usecase";
 import { GenerateOfferPdfUseCase } from "@application/usecases/hr/offer-engine/implementations/GenerateOfferPdf.usecase";
 import { ParseResumeUseCase } from "@application/usecases/student/AI/implementations/ParseResume.usecase";
 import { AIServiceFactory } from "@infrastructure/di/AIServiceFactory";
@@ -73,6 +74,10 @@ export const makeRespondToOfferUseCase = () => {
   return new RespondToOfferUseCase(offerRepository, jobApplicationRepository, createSystemNotificationUseCase);
 };
 
+export const makeSignOfferUseCase = () => {
+  return new SignOfferUseCase(offerRepository, new CloudinaryService());
+};
+
 export const makeGenerateProfessionalSummaryUseCase = () => {
   return new GenerateProfessionalSummaryUseCase(studentRepository);
 };
@@ -112,6 +117,7 @@ export const makeStudentController = () => {
     new GenerateOfferPdfUseCase(offerRepository, studentRepository, companyRepository),
     makeGenerateProfessionalSummaryUseCase(),
     makeGetStudentDashboardStatsUseCase(),
-    makeGetStudentEntitlementsUseCase()
+    makeGetStudentEntitlementsUseCase(),
+    makeSignOfferUseCase()
   );
 };
