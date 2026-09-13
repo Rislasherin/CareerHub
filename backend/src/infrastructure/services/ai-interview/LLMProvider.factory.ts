@@ -48,7 +48,7 @@ export class LLMProviderFactory {
 
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
-    else if (provider === "GEMINI") defaultModel = "gemini-1.5" + "-flash";
+    else if (provider === "GEMINI") defaultModel = "gemini-1.5-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
     const model = env.AI_QUESTION_MODEL || defaultModel;

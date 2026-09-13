@@ -61,7 +61,7 @@ const envSchema = z.object({
   LIVEKIT_TOKEN_TTL: z.string().default("2h"),
   RABBITMQ_PREFETCH: z.coerce.number().default(1),
   RABBITMQ_URL: z.string().default("amqp://127.0.0.1"),
-  GEMINI_EVALUATION_MODEL: z.string().default("gemini-1.5-flash-latest")
+  GEMINI_EVALUATION_MODEL: z.string().default("gemini-2.5-flash")
 });
 
 export const env = envSchema.parse(process.env);
