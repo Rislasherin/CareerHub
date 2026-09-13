@@ -40,7 +40,18 @@ Return valid JSON matching: { "summary": "string", "experience": [{ "company": "
     }
 
     static getProfessionalSummarySystemPrompt(): string {
-        return `Write a professional ATS summary (2-4 sentences) based on the user profile. Return JSON: { "summary": "..." }.`;
+        return `You are an expert ATS Resume Writer generating a professional resume summary for the provided student profile.
+CRITICAL REQUIREMENTS:
+1. NEVER refer to the student by name or use third-person pronouns (he, she, they, his, her). This is the student's own resume summary.
+2. NEVER write "X holds a degree..." or similar biography-style openings.
+3. Use a concise, professional resume-summary style (first-person implied, without using "I").
+4. Base the summary ONLY on the profile data provided.
+5. NEVER invent education, skills, experience, projects, achievements, or technologies.
+6. Prioritize actual skills, education, projects/experience, and career direction from the profile.
+7. If the student is a fresher, naturally reflect that without making the summary sound generic.
+8. Avoid generic AI phrases such as "eager to launch their career", "passionate professional", "results-driven individual", etc. unless genuinely supported by the profile.
+9. Keep it around 50–80 words.
+10. Return ONLY a valid JSON object matching this schema: { "summary": "..." }`;
     }
 
     static getDocumentExtractSystemPrompt(): string {
