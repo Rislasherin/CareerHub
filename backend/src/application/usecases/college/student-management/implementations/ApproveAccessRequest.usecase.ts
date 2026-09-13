@@ -7,7 +7,7 @@ import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IApproveAccessRequestUseCase } from "../interfaces/IApproveAccessRequest.usecase";
-
+import { env } from "@infrastructure/config/env.validator";
 import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
 
 export class ApproveAccessRequestUseCase implements IApproveAccessRequestUseCase {
@@ -45,7 +45,7 @@ export class ApproveAccessRequestUseCase implements IApproveAccessRequestUseCase
 
     await this._studentRepository.update(studentId, updatedStudent);
 
-    const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/setup?token=${invitationToken}`;
+    const setupLink = `${env.FRONTEND_URL}/student/setup?token=${invitationToken}`;
     await this._emailService.sendStudentInvitationEmail(student.email, setupLink);
   }
 }

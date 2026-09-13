@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Student } from "@domain/entities/student";
 import { CrossRoleAuthService } from "@application/services/CrossRoleAuthService";
 import { IBulkInviteStudentsUseCase } from "../interfaces/IBulkInviteStudents.usecase";
-
+import { env } from "@infrastructure/config/env.validator";
 import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
 
 export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
@@ -66,7 +66,7 @@ export class BulkInviteStudentsUseCase implements IBulkInviteStudentsUseCase {
         await this._studentRepository.create(student);
 
         // Send invitation email
-        const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/setup?token=${invitationToken}`;
+        const setupLink = `${env.FRONTEND_URL}/student/setup?token=${invitationToken}`;
         await this._emailService.sendStudentInvitationEmail(student.email, setupLink);
 
         results.invited++;
