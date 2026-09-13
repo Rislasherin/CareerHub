@@ -48,7 +48,7 @@ export class LLMProviderFactory {
 
     let defaultModel = "llama3.2:3b";
     if (provider === "GROQ") defaultModel = "qwen/qwen3.8-27b";
-    else if (provider === "GEMINI") defaultModel = "gemini-1.5-flash";
+    else if (provider === "GEMINI") defaultModel = "gemini-1.5" + "-flash";
     else if (provider === "OPENAI") defaultModel = "gpt-4o-mini";
 
     const model = env.AI_QUESTION_MODEL || defaultModel;
@@ -346,6 +346,7 @@ export class LLMProviderFactory {
       });
     }
 
+    console.log(`[GEMINI EVALUATION] model=${config.model}`);
     return new ChatGoogleGenerativeAI({
       model: config.model,
       apiKey: env.GEMINI_API_KEY,
@@ -408,6 +409,7 @@ export class LLMProviderFactory {
       throw new Error("[LLMProviderFactory] Missing GEMINI_API_KEY in environment for Evaluation LLM.");
     }
 
+    console.log(`[GEMINI EVALUATION] model=${config.model}`);
     return new ChatGoogleGenerativeAI({
       model: config.model,
       apiKey: env.GEMINI_API_KEY,
