@@ -51,6 +51,11 @@ export class PracticeLiveKitAdapter implements IPracticeAudioTransport {
            identity: participant.identity,
            trackSid: track.sid
         });
+        
+        // Ensure participant connected flow runs when an audio track is found,
+        // acting as a failsafe if ParticipantConnected event was missed or fired late.
+        safeOnParticipantConnected();
+        
         const audioStream = new AudioStream(track, 24000, 1);
         
         (async () => {

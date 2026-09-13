@@ -14,7 +14,7 @@ export class PracticeWorkerOrchestratorUseCase {
   private _isStopping = false;
   // Prevents STT endpoint results from triggering answer submission while AI is speaking.
   // Set true immediately before TTS starts, cleared after TTS finishes and listening resumes.
-  private _isAISpeaking = false;
+  private _isAISpeaking = true;
   private _expirationInterval: NodeJS.Timeout | null = null;
 
   constructor(

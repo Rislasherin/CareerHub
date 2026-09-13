@@ -414,9 +414,11 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
       
       localParticipant.on(ParticipantEvent.LocalTrackPublished, onTrackPublished);
 
-      if (isAISpeaking) {
+      // The candidate is NOT allowed to speak if the AI is actively speaking OR if we are waiting for the very first question.
+      // effectiveIsAISpeaking guarantees the mic is muted immediately upon join before Question 1 arrives.
+      if (isAISpeaking || session.questions.length === 0) {
          localParticipant.setMicrophoneEnabled(false)
-           .then(() => console.log(`[PRACTICE_FLOW_FRONTEND] MICROPHONE_MUTED (AI speaking)`))
+           .then(() => console.log(`[PRACTICE_FLOW_FRONTEND] MICROPHONE_MUTED (AI speaking or initializing)`))
            .catch(err => console.error(`[PRACTICE_FLOW_FRONTEND] ERROR disabling mic`, err));
       } else {
          localParticipant.setMicrophoneEnabled(true)
@@ -430,16 +432,19 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
     } else {
       console.log(`[PRACTICE_FLOW_FRONTEND] LocalParticipant is undefined...`);
     }
-  }, [isAISpeaking, localParticipant]);
+  }, [isAISpeaking, localParticipant, session.questions.length]);
 
   const activeQuestion: IAIPracticeQuestion | undefined =
     session.questions.find((q) => !q.candidateAnswer);
   const answeredCount = session.questions.filter((q) => q.candidateAnswer !== undefined).length;
   const isCompleted = session.status === PracticeInterviewStatus.COMPLETED;
   const answeredQuestions = session.questions.filter((q) => q.candidateAnswer);
+  
+  const isWaitingForFirstQuestion = session.questions.length === 0;
+  const effectiveIsAISpeaking = isAISpeaking || isWaitingForFirstQuestion;
 
   // While submitting: AI is "thinking" — show evaluating overlay
-  const isEvaluating = submitting || isTimeUp;
+  const isEvaluating = submitting || isTimeUp || isWaitingForFirstQuestion;
 
   React.useEffect(() => {
     if (isCompleted) {
@@ -652,7 +657,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
             </div>
 
             <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 flex items-center gap-1.5 z-20">
-              <span className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-400 animate-ping' : 'bg-slate-400'}`}></span>
+              <span className={`w-1.5 h-1.5 rounded-full ${effectiveIsAISpeaking ? 'bg-indigo-400 animate-ping' : 'bg-slate-400'}`}></span>
               <span className="text-[10px] font-semibold tracking-wide text-white">AI Interviewer</span>
             </div>
           </div>
@@ -680,7 +685,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                </span>
 
                <AnimatePresence mode="wait">
-                 {isAISpeaking ? (
+                 {effectiveIsAISpeaking ? (
                    <motion.span
                      key="ai-turn"
                      initial={{ opacity: 0 }}
@@ -688,7 +693,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                      exit={{ opacity: 0 }}
                      className="text-[10px] font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/25 px-2.5 py-1 rounded-full"
                    >
-                     AI speaking
+                     {isWaitingForFirstQuestion ? 'AI preparing' : 'AI speaking'}
                    </motion.span>
                  ) : (
                    <motion.span
@@ -733,12 +738,12 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
                    <p className="text-slate-300">{entry.text}</p>
                  </div>
                ))}
-               {(interimTranscript || (!isAISpeaking && !isEvaluating)) && (
+               {(interimTranscript || (!effectiveIsAISpeaking && !isEvaluating)) && (
                  <div className="flex flex-col gap-0.5">
                    <span className="text-[10px] font-semibold tracking-wider text-emerald-400">YOU</span>
                    <p className="text-emerald-300/80 italic">
                      {interimTranscript}
-                     {!isAISpeaking && !isEvaluating && (
+                     {!effectiveIsAISpeaking && !isEvaluating && (
                        <motion.span
                          className="inline-block w-0.5 h-4 bg-emerald-400 ml-1 align-middle"
                          animate={{ opacity: [1, 0, 1] }}
@@ -758,7 +763,7 @@ export const PracticeRoomContent: React.FC<PracticeRoomContentProps> = ({
       <footer className="h-12 w-full bg-[#131318] border border-white/[0.06] px-5 rounded-xl flex items-center justify-between shrink-0">
         <PracticeConnectionStatus />
         <span className="text-[11.5px] font-medium text-slate-500 italic">
-          {isAISpeaking ? 'AI speaking · microphone standby' : 'Voice active · speak clearly into your mic'}
+          {effectiveIsAISpeaking ? 'AI speaking · microphone standby' : 'Voice active · speak clearly into your mic'}
         </span>
       </footer>
 
