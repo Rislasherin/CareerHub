@@ -33,7 +33,7 @@ export class PracticeWorkerOrchestratorUseCase {
     Logger.info(LogCategory.SYSTEM_INFO, `[PracticeWorker] Starting worker for session ${sessionId}`);
 
     const onParticipantConnected = async () => {
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_WORKER] Participant connected. Starting interview`);
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] participant connected`);
       
       const session = await this._repository.findByIdAndStudentId(sessionId, studentId);
       if (!session) {
@@ -41,6 +41,7 @@ export class PracticeWorkerOrchestratorUseCase {
         return;
       }
 
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] locking candidate input`);
       // Mark AI as speaking BEFORE any LLM generation or TTS plays,
       // so STT does not process candidate background noise or echo.
       this._isAISpeaking = true;
@@ -48,11 +49,11 @@ export class PracticeWorkerOrchestratorUseCase {
       let introText = "Hi, welcome to your AI practice interview. I'll be conducting the interview today. I'll ask you questions based on your selected topics. Let's get started.";
       
       if (session.questions.length === 0) {
-        Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_START`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generating first question`);
         
         const firstTopic = session.topics[0] || "General";
         
-        Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_LLM_REQUEST`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM started`);
         const firstQuestionText = await this._questionGenerator.generateQuestion({
           difficulty: session.difficulty,
           topics: session.topics,
@@ -60,41 +61,39 @@ export class PracticeWorkerOrchestratorUseCase {
           previousAnswers: [],
           currentTopic: firstTopic
         });
-        Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_LLM_RESPONSE`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question LLM completed`);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] generated question text`, { textLength: firstQuestionText.length });
         
         const qId = Math.random().toString(36).substring(7);
+        
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] saving first question`);
         session.addQuestion(qId, firstQuestionText, firstTopic, false);
         await this._repository.update(session.id!, session);
+        Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first question saved with ID`, { qId });
         
-        Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_STATE_UPDATED`);
         introText += " " + firstQuestionText;
       } else {
         introText += " " + session.questions[0].text;
       }
       
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] AI_INTRO_START`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_GENERATED`);
-      
       await this._audioTransport.publishDataMessage({ event: 'state_sync' });
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_PUBLISHED`);
-      
       await this._audioTransport.publishDataMessage({ event: 'ai_speaking', text: introText });
       
       // Delay TTS slightly to allow frontend to disable the candidate microphone.
       // disabling the mic causes an SDP renegotiation which can drop/buffer real-time incoming AI audio.
       await new Promise((resolve) => setTimeout(resolve, 500));
       
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] AI_INTRO_TTS_START`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_TTS_START`);
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] starting first-question TTS`);
+      // Note: playText now internally awaits waitForPlayout
       await this.playText(introText);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_TTS_COMPLETE`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] AI_INTRO_AUDIO_PUBLISHED`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_AUDIO_PUBLISHED`);
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_COMPLETE`);
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question TTS completed`);
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] first-question playout completed`);
       
-      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] LISTENING_FOR_CANDIDATE`);
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] clearing STT buffer`);
       this._sttService.clearBuffer(); // Clear any stale STT data (echo/buffer) before listening
       this._isAISpeaking = false;
+      
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] unlocking candidate input`);
       await this._audioTransport.publishDataMessage({ event: 'listening' });
     };
 
@@ -325,6 +324,7 @@ export class PracticeWorkerOrchestratorUseCase {
         }
         await this._audioTransport.publishAudioChunk(chunk);
       }
+      Logger.info(LogCategory.SYSTEM_INFO, `[Practice] waiting for playout`);
       await this._audioTransport.waitForPlayout();
     } catch (err) {
       Logger.error(LogCategory.SYSTEM_ERROR, `[PracticeWorker] Error generating/playing TTS:`, err);
