@@ -98,7 +98,10 @@ export class PracticeWorkerOrchestratorUseCase {
         await this._audioTransport.publishDataMessage({ event: 'listening' });
       } catch (err) {
         Logger.error(LogCategory.SYSTEM_ERROR, `[Practice] onParticipantConnected initialization failed:`, err);
-        this._isAISpeaking = false;
+        // DO NOT set _isAISpeaking = false. Keep it locked so STT discards buffered audio.
+        if (this._sttService) {
+          this._sttService.clearBuffer();
+        }
         await this.stopWorker();
       }
     };
@@ -181,6 +184,15 @@ export class PracticeWorkerOrchestratorUseCase {
             await this._audioTransport.publishDataMessage({ event: 'state_sync' });
             await this.stopWorker();
             break;
+          }
+
+          if (sessionSnapshot && sessionSnapshot.questions.length === 0) {
+            Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] STT_ENDPOINT_DISCARDED_NO_QUESTION`, {
+              sessionId,
+              text: result.text.substring(0, 80),
+            });
+            this._sttService.clearBuffer(); // discard stale accumulations
+            continue;
           }
 
           Logger.info(LogCategory.SYSTEM_INFO, `[INTERVIEW_FLOW] ANSWER_SUBMISSION_START`, {
