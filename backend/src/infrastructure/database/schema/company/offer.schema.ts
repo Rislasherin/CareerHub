@@ -12,6 +12,8 @@ export const OfferSchema = new Schema({
   joiningDate: { type: Date, required: true },
   status: { type: String, enum: Object.values(OfferStatus), default: OfferStatus.PENDING },
   expiresAt: { type: Date, required: true },
+  signatureUrl: { type: String },
+  signatureSignedAt: { type: Date },
   isDeleted: { type: Boolean, default: false }
 }, {
   timestamps: true

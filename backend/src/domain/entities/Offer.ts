@@ -12,6 +12,8 @@ export interface OfferProps {
     joiningDate: Date,
     status: OfferStatus,
     expiresAt: Date,
+    signatureUrl?: string,
+    signatureSignedAt?: Date,
     createdAt: Date,
     updatedAt: Date
 }
@@ -32,6 +34,16 @@ export class Offer {
     get joiningDate(): Date { return this._props.joiningDate; }
     get status(): OfferStatus { return this._props.status; }
     get expiresAt(): Date { return this._props.expiresAt; }
+    get signatureUrl(): string | undefined { return this._props.signatureUrl; }
+    get signatureSignedAt(): Date | undefined { return this._props.signatureSignedAt; }
+
+    sign(signatureUrl: string): void {
+        if (this._props.status !== OfferStatus.PENDING) {
+            throw new Error("Only pending offers can be signed.");
+        }
+        this._props.signatureUrl = signatureUrl;
+        this._props.signatureSignedAt = new Date();
+    }
 
     accept(): void {
         if (this._props.status !== OfferStatus.PENDING) throw new Error("Only pending offers can be accepted.");
