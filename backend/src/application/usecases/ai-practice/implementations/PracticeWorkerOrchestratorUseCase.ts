@@ -40,6 +40,10 @@ export class PracticeWorkerOrchestratorUseCase {
         Logger.error(LogCategory.SYSTEM_ERROR, `[PRACTICE_WORKER] Session not found on connect`);
         return;
       }
+
+      // Mark AI as speaking BEFORE any LLM generation or TTS plays,
+      // so STT does not process candidate background noise or echo.
+      this._isAISpeaking = true;
       
       let introText = "Hi, welcome to your AI practice interview. I'll be conducting the interview today. I'll ask you questions based on your selected topics. Let's get started.";
       
@@ -89,6 +93,8 @@ export class PracticeWorkerOrchestratorUseCase {
       Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] FIRST_QUESTION_COMPLETE`);
       
       Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] LISTENING_FOR_CANDIDATE`);
+      this._sttService.clearBuffer(); // Clear any stale STT data (echo/buffer) before listening
+      this._isAISpeaking = false;
       await this._audioTransport.publishDataMessage({ event: 'listening' });
     };
 
@@ -145,6 +151,7 @@ export class PracticeWorkerOrchestratorUseCase {
               sessionId,
               text: result.text.substring(0, 80),
             });
+            this._sttService.clearBuffer(); // discard stale accumulations
             continue;
           }
 
@@ -263,8 +270,9 @@ export class PracticeWorkerOrchestratorUseCase {
             Logger.info(LogCategory.SYSTEM_INFO, `[INTERVIEW_FLOW] NEXT_QUESTION_AUDIO_PUBLISHED`, { sessionId });
             Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] TTS_RESPONSE_AUDIO_PUBLISHED`);
 
-            // TTS complete â€” clear AI speaking flag BEFORE sending 'listening' signal
+            // TTS complete — clear AI speaking flag BEFORE sending 'listening' signal
             // so that any genuine student speech immediately after is accepted.
+            this._sttService.clearBuffer();
             this._isAISpeaking = false;
 
             // Notify frontend of state update (new question)

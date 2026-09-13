@@ -9,4 +9,6 @@ export interface IPracticeSTTService {
   transcribeStream(audioStream: AsyncIterable<Int16Array>): AsyncIterable<IPracticeSTTResult>;
   /** Signal the adapter to stop reconnecting. Called when the session ends. */
   stopReconnecting(): void;
+  /** Clear any stale or accumulated audio buffer (e.g. echo from TTS) */
+  clearBuffer(): void;
 }

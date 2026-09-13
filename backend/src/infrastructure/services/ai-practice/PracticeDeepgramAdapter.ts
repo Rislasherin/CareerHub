@@ -24,6 +24,14 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
   private deepgram = createClient(env.DEEPGRAM_API_KEY);
   private firstAudioSent = false;
   private _lifecycle: STTLifecycle = STTLifecycle.ACTIVE;
+  private transcriptQueue: IPracticeSTTResult[] = [];
+  private finalSegmentAccumulator: string = "";
+
+  clearBuffer(): void {
+    this.transcriptQueue = [];
+    this.finalSegmentAccumulator = "";
+    Logger.info(LogCategory.SYSTEM_INFO, `[STT_LIFECYCLE] CLEAR_BUFFER — stale STT data discarded`);
+  }
 
   /**
    * Signal that the practice session is ending.
@@ -51,7 +59,8 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
     this.firstAudioSent = false;
 
     // ── Queue/Iterator plumbing ─────────────────────────────────────────────
-    const transcriptQueue: IPracticeSTTResult[] = [];
+    this.transcriptQueue = [];
+    this.finalSegmentAccumulator = "";
     let resolveNext: (() => void) | null = null;
     let isForceClosed = false;
 
@@ -206,18 +215,17 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
     // Deepgram often sends speech_final=true on a SEPARATE empty event;
     // the text lives on is_final=true/speech_final=false.
     // We accumulate all is_final=true segments and flush on speech_final or utterance_end.
-    let finalSegmentAccumulator = "";
 
     const flushAccumulator = (reason: string) => {
-      const accumulated = finalSegmentAccumulator.trim();
-      finalSegmentAccumulator = "";
+      const accumulated = this.finalSegmentAccumulator.trim();
+      this.finalSegmentAccumulator = "";
       if (accumulated.length > 0) {
         Logger.info(LogCategory.SYSTEM_INFO, `[INTERVIEW_FLOW] CANDIDATE_TURN_FINALIZED`, {
           accumulatedLength: accumulated.length,
           reason,
           preview: accumulated.substring(0, 80),
         });
-        transcriptQueue.push({ text: accumulated, isEndpoint: true, isInterim: false, reason });
+        this.transcriptQueue.push({ text: accumulated, isEndpoint: true, isInterim: false, reason });
         if (resolveNext) {
           resolveNext();
           resolveNext = null;
@@ -249,23 +257,23 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
         }
 
         if (isFinal && transcript.length > 0) {
-          finalSegmentAccumulator = finalSegmentAccumulator
-            ? finalSegmentAccumulator + " " + transcript
+          this.finalSegmentAccumulator = this.finalSegmentAccumulator
+            ? this.finalSegmentAccumulator + " " + transcript
             : transcript;
 
           Logger.info(LogCategory.SYSTEM_INFO, `[INTERVIEW_FLOW] TRANSCRIPT_ACCUMULATED`, {
             segment: transcript,
-            total: finalSegmentAccumulator.substring(0, 80),
+            total: this.finalSegmentAccumulator.substring(0, 80),
           });
 
           // Pass through for interim display
-          transcriptQueue.push({ text: transcript, isEndpoint: false, isInterim: false });
+          this.transcriptQueue.push({ text: transcript, isEndpoint: false, isInterim: false });
           if (resolveNext) {
             resolveNext();
             resolveNext = null;
           }
         } else if (!isFinal && transcript.length > 0) {
-          transcriptQueue.push({ text: transcript, isEndpoint: false, isInterim: true });
+          this.transcriptQueue.push({ text: transcript, isEndpoint: false, isInterim: true });
           if (resolveNext) {
             resolveNext();
             resolveNext = null;
@@ -279,7 +287,7 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
 
       live.on(LiveTranscriptionEvents.UtteranceEnd, () => {
         Logger.info(LogCategory.SYSTEM_INFO, `[INTERVIEW_FLOW] DEEPGRAM_UTTERANCE_END`, {
-          accumulated: finalSegmentAccumulator.substring(0, 80),
+          accumulated: this.finalSegmentAccumulator.substring(0, 80),
         });
         flushAccumulator("utterance_end");
       });
@@ -370,9 +378,9 @@ export class PracticeDeepgramAdapter implements IPracticeSTTService {
     maintainConnection();
 
     // ── Yield transcripts to caller ─────────────────────────────────────────
-    while (!isForceClosed || transcriptQueue.length > 0) {
-      if (transcriptQueue.length > 0) {
-        yield transcriptQueue.shift()!;
+    while (!isForceClosed || this.transcriptQueue.length > 0) {
+      if (this.transcriptQueue.length > 0) {
+        yield this.transcriptQueue.shift()!;
       } else {
         await new Promise<void>((resolve) => { resolveNext = resolve; });
       }
