@@ -28,6 +28,9 @@ export class RespondToOfferUseCase implements IRespondToOfferUseCase {
     }
 
     if (status === 'ACCEPTED') {
+        if (!offer.signatureUrl) {
+            throw new AppError("Please sign the offer before accepting.", HttpStatus.FORBIDDEN, ErrorCode.VALIDATION_ERROR);
+        }
         offer.accept();
     } else {
         offer.reject();
