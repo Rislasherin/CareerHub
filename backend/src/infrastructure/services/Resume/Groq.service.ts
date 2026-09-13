@@ -128,8 +128,10 @@ export class GroqService implements IAIService {
 
     async generateProfessionalSummary(profileData: unknown): Promise<string> {
         try {
+            const modelToUse = env.GROQ_MODEL;
+            Logger.info(`[Groq] Professional Summary runtime model: ${modelToUse} | Direct env check: ${process.env.GROQ_MODEL}`);
             const response = await this._client.chat.completions.create({
-                model: env.GROQ_MODEL,
+                model: modelToUse,
                 response_format: { type: "json_object" },
                 messages: [
                     { role: "system", content: AIPromptRegistry.getProfessionalSummarySystemPrompt() },
