@@ -26,6 +26,7 @@ services:
       RABBITMQ_URL: amqp://rabbitmq:5672
       REDIS_URL: redis://redis:6379
       OLLAMA_BASE_URL: http://host.docker.internal:11434
+      GEMINI_EVALUATION_MODEL: gemini-1.5-flash-latest
     ports:
       - "5000:5000"
     depends_on:
@@ -44,6 +45,7 @@ services:
       RABBITMQ_URL: amqp://rabbitmq:5672
       REDIS_URL: redis://redis:6379
       OLLAMA_BASE_URL: http://host.docker.internal:11434
+      GEMINI_EVALUATION_MODEL: gemini-1.5-flash-latest
     command: ["node", "dist/worker.js"]
     depends_on:
       - redis
