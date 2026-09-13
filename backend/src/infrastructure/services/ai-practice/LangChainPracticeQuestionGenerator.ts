@@ -26,15 +26,45 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
         ? input.previousAnswers.map((a, idx) => `A${idx + 1}: ${a}`).join("\n")
         : "None";
 
-    const result = await chain.invoke({
+    const payload = {
       difficulty: input.difficulty,
       topics: input.topics.join(", "),
       currentTopic: input.currentTopic,
       previousQuestions: formattedPreviousQuestions,
       previousAnswers: formattedPreviousAnswers,
-    });
+    };
 
-    return this._sanitizeQuestion(result);
+    let result = await chain.invoke(payload);
+    let sanitized = this._sanitizeQuestion(result);
+
+    // Validate output
+    if (!this._isValidQuestion(sanitized)) {
+      // Retry once with a stronger system directive by appending a human correction
+      // We can do this by executing the model directly with the same prompt + correction
+      const promptValue = await PRACTICE_QUESTION_PROMPT.invoke(payload);
+      const messages = promptValue.toChatMessages();
+      messages.push({
+        _getType: () => "human",
+        content: "Your previous output was rejected because it was empty, punctuation-only, or not a real question. You must generate a fully formed interview question now.",
+        name: undefined,
+        additional_kwargs: {}
+      } as any);
+
+      const retryResult = await this._llm.invoke(messages);
+      result = retryResult.content as string;
+      sanitized = this._sanitizeQuestion(result);
+
+      if (!this._isValidQuestion(sanitized)) {
+        throw new Error("Failed to generate a valid question after retry. Output was empty or punctuation-only.");
+      }
+    }
+
+    return sanitized;
+  }
+
+  private _isValidQuestion(text: string): boolean {
+    const alphanumeric = text.replace(/[^a-zA-Z0-9]/g, "");
+    return alphanumeric.length > 3; // Must have at least a few real characters
   }
 
   private _sanitizeQuestion(raw: string): string {
