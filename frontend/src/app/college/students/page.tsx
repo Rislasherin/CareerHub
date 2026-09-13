@@ -45,6 +45,7 @@ export default function StudentDirectoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [resendingStudentId, setResendingStudentId] = useState<string | null>(null);
 
   // Add Student Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -282,7 +283,7 @@ export default function StudentDirectoryPage() {
   };
 
   const handleResendInvite = async (id: string) => {
-    setIsProcessing(true);
+    setResendingStudentId(id);
     try {
       await apiClient.post(`${API_ROUTES.COLLEGE.STUDENTS}/${id}/resend-invite`);
       toast.success('Invitation resent successfully');
@@ -290,7 +291,7 @@ export default function StudentDirectoryPage() {
       const errMsg = (err as any)?.error?.message || (err as Error)?.message || 'Failed to resend invitation';
       toast.error(errMsg);
     } finally {
-      setIsProcessing(false);
+      setResendingStudentId(null);
     }
   };
 
@@ -557,10 +558,15 @@ export default function StudentDirectoryPage() {
                           {p.status === 'PENDING_INVITE' && (
                             <button
                               onClick={() => handleResendInvite(p.id)}
-                              className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all"
+                              disabled={resendingStudentId === p.id}
+                              className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Resend Invitation"
                             >
-                              <Send size={16} />
+                              {resendingStudentId === p.id ? (
+                                <div className="w-4 h-4 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin group-hover:border-white/30 group-hover:border-t-white" />
+                              ) : (
+                                <Send size={16} />
+                              )}
                             </button>
                           )}
                         </td>
