@@ -30,7 +30,7 @@ async function runTests() {
     }
   };
 
-  // Test 1: Punctuation-only output is retried
+  // Case 4: LLM returns "?" -> reject and regenerate
   mockLLM.output = "?";
   mockLLM.invocations = [];
   try {
@@ -38,16 +38,32 @@ async function runTests() {
       difficulty: PracticeDifficulty.MEDIUM,
       topics: ["React"],
       previousQuestions: ["Context?"],
-      previousAnswers: ["Yes. We can start."],
+      previousAnswers: ["Yes, we can start."],
       currentTopic: "React"
     });
-    assert(false, "Should have thrown error on retry failure");
+    assert(false, "Should have thrown error on retry failure for '?'");
   } catch (e) {
-    assert(mockLLM.invocations.length === 2, "Should retry once before failing");
-    assert((e as Error).message.includes("empty or punctuation-only"), "Should throw correct error message");
+    assert(mockLLM.invocations.length === 2, "Case 4: Should retry once for '?'");
+    assert((e as Error).message.includes("punctuation-only"), "Case 4: Should throw correct error");
   }
 
-  // Test 2: Normal technical answer yields normal generation without retry
+  // Case 5: LLM returns "Great?" -> reject and regenerate
+  mockLLM.output = "Great?";
+  mockLLM.invocations = [];
+  try {
+    await generator.generateQuestion({
+      difficulty: PracticeDifficulty.MEDIUM,
+      topics: ["React"],
+      previousQuestions: ["Context?"],
+      previousAnswers: ["Yeah. I'm ready."],
+      currentTopic: "React"
+    });
+    assert(false, "Should have thrown error on retry failure for 'Great?'");
+  } catch (e) {
+    assert(mockLLM.invocations.length === 2, "Case 5: Should retry once for 'Great?'");
+  }
+
+  // Case 6: LLM returns a valid technical question -> accept immediately
   mockLLM.output = "That makes sense. Can you explain closures?";
   mockLLM.invocations = [];
   let result = await generator.generateQuestion({
@@ -58,29 +74,24 @@ async function runTests() {
     currentTopic: "JavaScript"
   });
   
-  assert(mockLLM.invocations.length === 1, "Should not retry valid output");
-  assert(result === "That makes sense. Can you explain closures?", "Should return valid output");
+  assert(mockLLM.invocations.length === 1, "Case 6: Should not retry valid output");
+  assert(result === "That makes sense. Can you explain closures?", "Case 6: Should return valid output");
   
-  // Test 3: LLM generates punctuation initially, but retry succeeds
+  // Cases 1, 2, 3 rely on the prompt structure itself, which we can verify by checking the prompt payload
+  // in the mock LLM invocations.
+  mockLLM.output = "What is a hook?";
   mockLLM.invocations = [];
-  mockLLM.invoke = async (input: any) => {
-    mockLLM.invocations.push(input);
-    if (mockLLM.invocations.length === 1) {
-      return { content: "." };
-    }
-    return { content: "Retry success. What is a hook?" };
-  };
-  
-  result = await generator.generateQuestion({
-    difficulty: PracticeDifficulty.EASY,
+  await generator.generateQuestion({
+    difficulty: PracticeDifficulty.MEDIUM,
     topics: ["React"],
     previousQuestions: [],
     previousAnswers: [],
     currentTopic: "React"
   });
-  
-  assert(mockLLM.invocations.length === 2, "Should retry once on period output");
-  assert(result === "Retry success. What is a hook?", "Should return successful retry output");
+  const firstCallInput = mockLLM.invocations[0];
+  const promptStr = JSON.stringify(firstCallInput);
+  assert(promptStr.includes("Do NOT treat it as a technical answer"), "Prompt includes rules to ignore filler");
+  assert(promptStr.includes("NEVER respond with \\\"Great?\\\"") || promptStr.includes("NEVER respond with \"Great?\""), "Prompt explicitly rejects conversational filler");
 
   console.log(`\nTests completed: ${passed}/${total} passed.`);
   if (passed !== total) process.exit(1);

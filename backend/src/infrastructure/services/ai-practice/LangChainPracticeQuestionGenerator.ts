@@ -45,7 +45,7 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
       const messages = promptValue.toChatMessages();
       messages.push({
         _getType: () => "human",
-        content: "Your previous output was rejected because it was empty, punctuation-only, or not a real question. You must generate a fully formed interview question now.",
+        content: "The previous generated output was invalid. Generate a meaningful technical interview question related to the selected topic. Do not output acknowledgement, filler, or punctuation-only text.",
         name: undefined,
         additional_kwargs: {}
       } as any);
@@ -64,7 +64,17 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
 
   private _isValidQuestion(text: string): boolean {
     const alphanumeric = text.replace(/[^a-zA-Z0-9]/g, "");
-    return alphanumeric.length > 3; // Must have at least a few real characters
+    if (alphanumeric.length <= 5) return false; // Too short to be a real question
+
+    const lowerText = text.toLowerCase().trim();
+    const invalidPhrases = ["great?", "okay?", "ready?", "welcome?", "yes?", "no?", "start?", "begin?"];
+    if (invalidPhrases.some(phrase => lowerText === phrase)) {
+      return false;
+    }
+
+    if (lowerText.replace(/[^a-z]/g, "") === "welcometo") return false; // "Welcome to?"
+    
+    return true;
   }
 
   private _sanitizeQuestion(raw: string): string {
