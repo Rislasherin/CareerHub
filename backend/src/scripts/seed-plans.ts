@@ -20,7 +20,7 @@ const plans = [
     maxStudents: 150,
     aiCredits: 2000,
     storageLimit: 10,
-    features: ['Notice Board', 'Basic Resume Builder'],
+    features: ['NOTICE_BOARD', 'BASIC_RESUME_BUILDER'],
     isActive: true,
   },
   {
@@ -33,7 +33,7 @@ const plans = [
     maxStudents: -1, // unlimited
     aiCredits: 10000,
     storageLimit: 50,
-    features: ['Notice Board', 'Broadcast Emails', 'Full AI Resume Builder', 'Mock Interview Bot', 'Advanced Analytics', 'Interview Calendar View'],
+    features: ['NOTICE_BOARD', 'BROADCAST_EMAILS', 'FULL_AI_RESUME_BUILDER', 'MOCK_INTERVIEW', 'ADVANCED_ANALYTICS', 'INTERVIEW_CALENDAR_VIEW'],
     isActive: true,
   },
   {
@@ -46,7 +46,7 @@ const plans = [
     maxStudents: 50,
     aiCredits: 500,
     storageLimit: 5,
-    features: ['Notice Board', 'Broadcast Emails', 'Full AI Resume Builder', 'Mock Interview Bot', 'Advanced Analytics', 'Interview Calendar View'],
+    features: ['NOTICE_BOARD', 'BROADCAST_EMAILS', 'FULL_AI_RESUME_BUILDER', 'MOCK_INTERVIEW', 'ADVANCED_ANALYTICS', 'INTERVIEW_CALENDAR_VIEW'],
     isActive: true,
   }
 ];
