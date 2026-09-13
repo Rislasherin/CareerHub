@@ -25,7 +25,8 @@ import {
   FileText,
   Download,
   AlertCircle,
-  ShieldAlert
+  ShieldAlert,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/shared/Button';
@@ -276,6 +277,19 @@ export default function StudentDirectoryPage() {
       setRejectReason('');
       fetchPendingVerifications();
     } catch (err) { } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResendInvite = async (id: string) => {
+    setIsProcessing(true);
+    try {
+      await apiClient.post(`${API_ROUTES.COLLEGE.STUDENTS}/${id}/resend-invite`);
+      toast.success('Invitation resent successfully');
+    } catch (err: unknown) {
+      const errMsg = (err as any)?.error?.message || (err as Error)?.message || 'Failed to resend invitation';
+      toast.error(errMsg);
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -538,6 +552,15 @@ export default function StudentDirectoryPage() {
                               title="View ID Proof"
                             >
                               <FileText size={16} />
+                            </button>
+                          )}
+                          {p.status === 'PENDING_INVITE' && (
+                            <button
+                              onClick={() => handleResendInvite(p.id)}
+                              className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all"
+                              title="Resend Invitation"
+                            >
+                              <Send size={16} />
                             </button>
                           )}
                         </td>

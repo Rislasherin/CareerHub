@@ -48,6 +48,13 @@ export const makeApproveAccessRequestUseCase = () => {
   return new ApproveAccessRequestUseCase(studentRepository, emailService, entitlementGuardService);
 };
 
+import { ResendStudentInvitationUseCase } from "@application/usecases/college/student-management/implementations/ResendStudentInvitation.usecase";
+
+export const makeResendStudentInvitationUseCase = () => {
+  const emailService = new EmailService();
+  return new ResendStudentInvitationUseCase(studentRepository, emailService);
+};
+
 export const makeGetCollegeDashboardStatsUseCase = () => {
   return new GetCollegeDashboardStatsUseCase(
     studentRepository,
@@ -75,7 +82,8 @@ export const makeStudentManagementController = () => {
     makeApproveAccessRequestUseCase(),
     makeGetCollegeDashboardStatsUseCase(),
     makeGetAllStudentsUseCase(),
-    makeToggleStudentStatusUseCase()
+    makeToggleStudentStatusUseCase(),
+    makeResendStudentInvitationUseCase()
   );
 };
 

@@ -25,6 +25,7 @@ router.patch("/status-toggle/:studentId", studentManagementController.toggleStat
 router.get("/students/pending", studentManagementController.getPendingStudents);
 router.post("/students/invite", validateDto(InviteStudentItemDto), studentManagementController.inviteStudent);
 router.post("/students/bulk-invite", validateDto(InviteStudentsDto), studentManagementController.bulkInvite);
+router.post("/students/:studentId/resend-invite", studentManagementController.resendInvitation);
 router.patch("/students/:studentId/approve", studentManagementController.approveStudent);
 router.patch("/students/:studentId/reject", studentManagementController.rejectStudent);
 router.patch("/students/:studentId/approve-access", studentManagementController.approveAccessRequest);

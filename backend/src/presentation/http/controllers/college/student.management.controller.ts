@@ -9,7 +9,8 @@ import { IBulkInviteStudentsUseCase } from "@application/usecases/college/studen
 import { IApproveAccessRequestUseCase } from "@application/usecases/college/student-management/interfaces/IApproveAccessRequest.usecase";;
 import { IGetAllStudentsUseCase } from "@application/usecases/college/student-management/interfaces/IGetAllStudents.usecase";;
 import { IToggleStudentStatusUseCase } from "@application/usecases/college/student-management/interfaces/IToggleStudentStatus.usecase";;
-import { IGetCollegeDashboardStatsUseCase } from "@application/usecases/college/interfaces/IGetCollegeDashboardStats.usecase";;
+import { IGetCollegeDashboardStatsUseCase } from "@application/usecases/college/interfaces/IGetCollegeDashboardStats.usecase";
+import { IResendStudentInvitationUseCase } from "@application/usecases/college/student-management/interfaces/IResendStudentInvitation.usecase";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
@@ -25,7 +26,8 @@ export class StudentManagementController {
     private readonly _approveAccessRequestUseCase: IApproveAccessRequestUseCase,
     private readonly _getDashboardStatsUseCase: IGetCollegeDashboardStatsUseCase,
     private readonly _getAllStudentsUseCase: IGetAllStudentsUseCase,
-    private readonly _toggleStatusUseCase: IToggleStudentStatusUseCase
+    private readonly _toggleStatusUseCase: IToggleStudentStatusUseCase,
+    private readonly _resendInvitationUseCase: IResendStudentInvitationUseCase
   ) { }
 
   getPendingStudents = asyncHandler(async (req: Request, res: Response) => {
@@ -112,5 +114,15 @@ export class StudentManagementController {
     logger.info(`Toggling status for student ${studentId} to ${status} by ${adminRole}`);
     await this._toggleStatusUseCase.execute(studentId, status, adminRole);
     sendSuccess(res, null, `Student status updated to ${status}`);
+  });
+
+  resendInvitation = asyncHandler(async (req: Request, res: Response) => {
+    const { studentId } = req.params;
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new AppError("Organization ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    await this._resendInvitationUseCase.execute(studentId, orgId);
+    sendSuccess(res, null, "Invitation resent successfully");
   });
 }
