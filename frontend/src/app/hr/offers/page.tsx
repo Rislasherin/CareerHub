@@ -210,6 +210,12 @@ export default function HROffersPage() {
                   <Mail size={16} className="mr-2" /> Resend Email
                 </Button>
 
+                {offer.signatureUrl && (
+                  <Button onClick={() => window.open(offer.signatureUrl, '_blank')} variant="secondary" className="bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg">
+                    <CheckCircle2 size={16} className="mr-2" /> View Signed Offer
+                  </Button>
+                )}
+
                 <div className="flex-1"></div>
 
                 {offer.status === 'ACCEPTED' && (

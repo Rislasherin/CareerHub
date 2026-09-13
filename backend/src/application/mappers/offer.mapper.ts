@@ -15,6 +15,8 @@ export const toOfferEntity = (doc: OfferDocument): Offer => {
     joiningDate: doc.joiningDate,
     status: doc.status as OfferStatus,
     expiresAt: doc.expiresAt,
+    signatureUrl: doc.signatureUrl || undefined,
+    signatureSignedAt: (doc.signatureSignedAt as Date) || undefined,
     createdAt: doc.createdAt as Date,
     updatedAt: doc.updatedAt as Date
   });
@@ -32,5 +34,7 @@ export const toOfferPersistence = (entity: Offer): Record<string, unknown> => {
     joiningDate: props.joiningDate,
     status: props.status,
     expiresAt: props.expiresAt,
+    signatureUrl: props.signatureUrl,
+    signatureSignedAt: props.signatureSignedAt,
   };
 };
