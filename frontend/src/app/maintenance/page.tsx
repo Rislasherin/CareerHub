@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ShieldAlert, Cog } from "lucide-react";
@@ -8,6 +8,29 @@ import { ShieldAlert, Cog } from "lucide-react";
 function MaintenanceContent() {
   const searchParams = useSearchParams();
   const message = searchParams.get("message") || "We are currently undergoing scheduled maintenance. Please check back shortly.";
+
+  useEffect(() => {
+    const getBaseUrl = () => {
+      if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+      return `http://${window.location.hostname}:5000/api`;
+    };
+
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetch(`${getBaseUrl()}/ping-maintenance`);
+        // If the middleware is active, it returns 503.
+        // If it passes the middleware, it returns 404 (since ping-maintenance doesn't exist)
+        // or any other code. Thus, !== 503 means maintenance is OFF.
+        if (res.status !== 503) {
+          window.location.href = '/';
+        }
+      } catch (error) {
+        // Ignore network errors (server might be restarting during maintenance)
+      }
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
