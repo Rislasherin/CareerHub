@@ -1,5 +1,5 @@
  import { OfferStatus } from "@domain/enums/OfferStatus.enum";
-import { Role } from "@domain/enums/Roles.enum";
+
 
 export interface OfferProps {
     id?: string,
@@ -7,7 +7,7 @@ export interface OfferProps {
     applicationId: string,
     studentId: string,
     companyId: string,
-    role: Role,
+    role: string,
     ctc: number,
     joiningDate: Date,
     status: OfferStatus,

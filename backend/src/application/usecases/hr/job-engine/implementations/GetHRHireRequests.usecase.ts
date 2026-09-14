@@ -1,6 +1,7 @@
 import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { IJobApplicationRepository } from "@domain/repositories/IJobApplicationRepository";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
+import { CompanyModel } from "@infrastructure/database/models/company/company.model";
 
 export class GetHRHireRequestsUseCase {
   constructor(
@@ -34,11 +35,22 @@ export class GetHRHireRequestsUseCase {
         }
 
         const job = jobs.find(j => j.id === appJson.jobId);
+        let jobWithCompany = job ? job.toJSON() : null;
+        if (jobWithCompany) {
+            try {
+                // Since this usecase gets companyId from params, we can just fetch the company details.
+                const companyData = await CompanyModel.findById(companyId).select('companyName logo');
+                jobWithCompany.companyId = companyData as any;
+            } catch (e) {
+                // Fallback
+                jobWithCompany.companyId = { _id: companyId, companyName: 'Company Name' } as any;
+            }
+        }
 
         return {
           ...appJson,
           student: studentDetails,
-          job: job ? job.toJSON() : null
+          job: jobWithCompany
         };
       })
     );

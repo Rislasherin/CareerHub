@@ -254,7 +254,7 @@ export default function HRHireRequestsPage() {
                     
                     <div id="offer-letter-preview" className="bg-white p-8 border border-slate-200 shadow-sm rounded-lg min-h-[500px] text-slate-800">
                       <div className="text-center mb-8">
-                        <h2 className="text-2xl font-black text-slate-900">TechCorp India</h2>
+                        <h2 className="text-2xl font-black text-slate-900">{selectedApp.job?.companyId?.companyName || 'Company Name'}</h2>
                         <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Offer of Employment • Confidential</p>
                       </div>
 
@@ -264,34 +264,26 @@ export default function HRHireRequestsPage() {
                         <p>Dear <strong>{selectedApp.student?.firstName} {selectedApp.student?.lastName}</strong>,</p>
                         
                         <p>
-                          We are pleased to extend an offer of employment for the position of <strong>{offerForm.role || '[Role]'}</strong> at TechCorp India. 
+                          We are pleased to extend an offer of employment for the position of <strong>{offerForm.role || '[Role]'}</strong> at {selectedApp.job?.companyId?.companyName || 'Company Name'}. 
                           You have successfully completed our selection process and we believe you will be an excellent addition to our team.
                         </p>
 
-                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 my-6 grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 my-8 grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
                           <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">Role</span>
-                            <span className="font-bold text-slate-900">{offerForm.role || '-'}</span>
+                            <span className="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Role</span>
+                            <span className="font-black text-slate-900 text-base">{offerForm.role || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">CTC (Annual)</span>
-                            <span className="font-bold text-slate-900">₹{Number(offerForm.ctc || 0).toLocaleString()}</span>
+                            <span className="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">CTC (Annual)</span>
+                            <span className="font-bold text-slate-900 text-base">₹{Number(offerForm.ctc || 0).toLocaleString()}</span>
                           </div>
                           <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">Joining Date</span>
-                            <span className="font-bold text-slate-900">{offerForm.joiningDate ? new Date(offerForm.joiningDate).toLocaleDateString() : '-'}</span>
+                            <span className="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Joining Date</span>
+                            <span className="font-bold text-slate-900 text-base">{offerForm.joiningDate ? new Date(offerForm.joiningDate).toLocaleDateString() : '-'}</span>
                           </div>
                           <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">Location</span>
-                            <span className="font-bold text-slate-900">Bangalore - Hybrid</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">Type</span>
-                            <span className="font-bold text-slate-900">Full-time Permanent</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-xs mb-0.5">Reports to</span>
-                            <span className="font-bold text-slate-900">Engineering Manager</span>
+                            <span className="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Location</span>
+                            <span className="font-bold text-slate-900 text-base">Bangalore - Hybrid</span>
                           </div>
                         </div>
 
@@ -304,10 +296,10 @@ export default function HRHireRequestsPage() {
 
                         <div className="flex justify-between mt-12 pt-8 border-t border-slate-200">
                           <div className="text-xs text-slate-500 font-medium">
-                            HR Manager • TechCorp India
+                            HR Manager • {selectedApp.job?.companyId?.companyName || 'Company Name'}
                           </div>
-                          <div className="text-xs text-slate-500 font-medium text-right">
-                            Candidate Acceptance Signature
+                          <div className="text-xs text-slate-500 font-medium text-right flex flex-col items-end">
+                            <span className="mb-2">Candidate Acceptance Signature</span>
                           </div>
                         </div>
                       </div>

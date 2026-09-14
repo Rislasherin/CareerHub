@@ -40,7 +40,7 @@ export class GenerateOfferUseCase implements IGenerateOfferUseCase {
             applicationId: application.id as string,
             studentId: application.studentId,
             companyId: companyId,
-            role: Role.STUDENT,
+            role: data.role,
             ctc: data.ctc,
             joiningDate: new Date(data.joiningDate),
             expiresAt: new Date(data.expiresAt),
