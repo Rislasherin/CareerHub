@@ -43,11 +43,7 @@ export class OfferRepository extends BaseRepository<Offer, OfferDocument> implem
           })
           .populate({
             path: 'studentId',
-            select: 'user firstName lastName',
-            populate: {
-              path: 'user',
-              select: 'firstName lastName email'
-            }
+            select: 'firstName lastName email'
           })
           .sort({ createdAt: -1 })
           .exec();

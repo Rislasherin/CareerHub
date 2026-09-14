@@ -295,7 +295,7 @@ export default function StudentOffersPage() {
                     <div className="space-y-6 text-sm leading-relaxed">
                       <p className="font-semibold text-slate-900">{new Date(selectedOffer.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       
-                      <p>Dear <strong className="text-slate-900">{selectedOffer.student?.user?.firstName} {selectedOffer.student?.user?.lastName}</strong>,</p>
+                      <p>Dear <strong className="text-slate-900">{selectedOffer.student?.user?.firstName || selectedOffer.student?.firstName} {selectedOffer.student?.user?.lastName || selectedOffer.student?.lastName}</strong>,</p>
                       
                       <p>
                         We are pleased to extend an offer of employment for the position of <strong className="text-slate-900">{selectedOffer.role || '[Role]'}</strong> at {selectedOffer.job?.companyId?.companyName || selectedOffer.company?.companyName || 'Company Name'}. 
