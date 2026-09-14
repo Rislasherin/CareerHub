@@ -221,7 +221,7 @@ export default function StudentOffersPage() {
                   onClick={() => { setSelectedOffer(offer); setShowOfferModal(true); }}
                   className="bg-transparent border-2 border-rose-200/60 text-rose-600 hover:bg-rose-50 hover:border-rose-300 px-8 py-2.5 rounded-xl font-bold transition-all"
                 >
-                  View Letter
+                  {offer.signatureUrl ? 'View Signed Offer' : 'View Letter'}
                 </Button>
                 
                 {isPending && (
