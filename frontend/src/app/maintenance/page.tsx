@@ -43,7 +43,7 @@ function MaintenanceContent() {
           {message}
         </p>
 
-        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden relative">
+        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden relative mb-8">
           <motion.div
             initial={{ left: "-100%" }}
             animate={{ left: "100%" }}
@@ -51,6 +51,14 @@ function MaintenanceContent() {
             className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"
           />
         </div>
+
+        <button
+          onClick={() => window.location.href = '/'}
+          className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 px-6 py-2.5 rounded-xl font-bold transition-colors"
+        >
+          Check Status & Reload
+        </button>
+
         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-6">
           CareerHub Administration
         </p>
