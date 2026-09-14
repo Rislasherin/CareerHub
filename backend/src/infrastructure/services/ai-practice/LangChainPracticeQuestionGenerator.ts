@@ -1,5 +1,6 @@
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { HumanMessage } from "@langchain/core/messages";
 import { IPracticeQuestionGenerator } from "@application/interfaces/ai-practice/IPracticeQuestionGenerator";
 import { PracticeDifficulty } from "@domain/enums/PracticeDifficulty.enum";
 import { PRACTICE_QUESTION_PROMPT } from "./prompts";
@@ -43,12 +44,7 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
       // We can do this by executing the model directly with the same prompt + correction
       const promptValue = await PRACTICE_QUESTION_PROMPT.invoke(payload);
       const messages = promptValue.toChatMessages();
-      messages.push({
-        _getType: () => "human",
-        content: "The previous generated output was invalid. Generate a meaningful technical interview question related to the selected topic. Do not output acknowledgement, filler, or punctuation-only text.",
-        name: undefined,
-        additional_kwargs: {}
-      } as any);
+      messages.push(new HumanMessage("The previous generated output was invalid. Generate a meaningful technical interview question related to the selected topic. Do not output acknowledgement, filler, or punctuation-only text."));
 
       const retryResult = await this._llm.invoke(messages);
       result = retryResult.content as string;

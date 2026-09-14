@@ -61,6 +61,12 @@ async function runTests() {
     assert(false, "Should have thrown error on retry failure for 'Great?'");
   } catch (e) {
     assert(mockLLM.invocations.length === 2, "Case 5: Should retry once for 'Great?'");
+    
+    // Verify the pushed message is an actual HumanMessage (or BaseMessage) to prevent "Unknown author" error
+    const retryMessages = mockLLM.invocations[1];
+    const retryMsg = retryMessages[retryMessages.length - 1];
+    assert(retryMsg.constructor.name === "HumanMessage" || (retryMsg._getType && retryMsg._getType() === "human"), "Case 5: Retry message must be a valid HumanMessage");
+    assert(retryMsg.content && retryMsg.content.includes("invalid"), "Case 5: Retry message must contain invalid output warning");
   }
 
   // Case 6: LLM returns a valid technical question -> accept immediately
