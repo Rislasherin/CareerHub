@@ -34,12 +34,12 @@ export class OfferRepository extends BaseRepository<Offer, OfferDocument> implem
             select: 'title companyId',
             populate: {
               path: 'companyId',
-              select: 'companyName logo'
+              select: 'name logoUrl'
             }
           })
           .populate({
             path: 'companyId',
-            select: 'companyName logo'
+            select: 'name logoUrl'
           })
           .populate({
             path: 'studentId',
