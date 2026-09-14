@@ -12,6 +12,7 @@ import { GeneratePracticeFeedbackUseCase } from "./GeneratePracticeFeedback.usec
 
 export class PracticeWorkerOrchestratorUseCase {
   private _isStopping = false;
+  private _isProcessingTurn = false;
   // Prevents STT endpoint results from triggering answer submission while AI is speaking.
   // Set true immediately before TTS starts, cleared after TTS finishes and listening resumes.
   private _isAISpeaking = true;
@@ -151,17 +152,20 @@ export class PracticeWorkerOrchestratorUseCase {
         if (result.isEndpoint && result.text.trim().length > 0) {
           // â”€â”€ CANDIDATE TURN FINALIZED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-          // Gate: if the AI is currently speaking (TTS active), this endpoint was
-          // almost certainly caused by echo from the speakers or buffered mic frames.
-          // Discard it and wait for the next genuine student utterance.
-          if (this._isAISpeaking) {
-            Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] STT_ENDPOINT_DISCARDED_AI_SPEAKING`, {
+          // Gate: if the AI is currently speaking (TTS active) OR we are already processing a turn,
+          // discard the endpoint and wait for the next genuine student utterance.
+          if (this._isAISpeaking || this._isProcessingTurn) {
+            Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_FLOW] STT_ENDPOINT_DISCARDED_LOCKED`, {
               sessionId,
+              isAISpeaking: this._isAISpeaking,
+              isProcessingTurn: this._isProcessingTurn,
               text: result.text.substring(0, 80),
             });
             this._sttService.clearBuffer(); // discard stale accumulations
             continue;
           }
+
+          this._isProcessingTurn = true;
 
           // â”€â”€ Latency trace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           const t0 = performance.now();
@@ -291,6 +295,7 @@ export class PracticeWorkerOrchestratorUseCase {
             // so that any genuine student speech immediately after is accepted.
             this._sttService.clearBuffer();
             this._isAISpeaking = false;
+            this._isProcessingTurn = false;
 
             // Notify frontend of state update (new question)
             await this._audioTransport.publishDataMessage({ event: 'state_sync' });
@@ -299,6 +304,7 @@ export class PracticeWorkerOrchestratorUseCase {
             const e = err as Error;
             Logger.error(LogCategory.SYSTEM_ERROR, `[PracticeWorker] Error processing turn:`, err);
             this._isAISpeaking = false; // Always clear flag on error path
+            this._isProcessingTurn = false; // Release the lock on error
             // "Turn already processed" / "Answer has already been recorded" â€” duplicate endpoint event.
             // This can happen if both speech_final and utterance_end fire for the same utterance,
             // or if echo caused a second endpoint during TTS. Log and continue.

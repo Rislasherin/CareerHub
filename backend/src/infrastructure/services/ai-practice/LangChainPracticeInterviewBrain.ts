@@ -100,7 +100,7 @@ export class LangChainPracticeInterviewBrain implements IPracticeInterviewBrain 
         `[LangChainPracticeInterviewBrain] Question generator error, using fallback:`,
         err
       );
-      questionText = `Got it. Can you walk me through a practical example of how you've used ${nextTopic}?`;
+      questionText = `Can you walk me through a practical example of how you've used ${nextTopic}?`;
     }
 
     const t_q_done = performance.now();

@@ -43,7 +43,7 @@ async function runTests() {
     });
     assert(false, "Should have thrown error on retry failure for '?'");
   } catch (e) {
-    assert(mockLLM.invocations.length === 2, "Case 4: Should retry once for '?'");
+    assert(mockLLM.invocations.length === 3, "Case 4: Should retry twice for '?'");
     assert((e as Error).message.includes("punctuation-only"), "Case 4: Should throw correct error");
   }
 
@@ -60,7 +60,7 @@ async function runTests() {
     });
     assert(false, "Should have thrown error on retry failure for 'Great?'");
   } catch (e) {
-    assert(mockLLM.invocations.length === 2, "Case 5: Should retry once for 'Great?'");
+    assert(mockLLM.invocations.length === 3, "Case 5: Should retry twice for 'Great?'");
     
     // Verify the pushed message is an actual HumanMessage (or BaseMessage) to prevent "Unknown author" error
     const retryMessages = mockLLM.invocations[1];
@@ -81,7 +81,7 @@ async function runTests() {
   });
   
   assert(mockLLM.invocations.length === 1, "Case 6: Should not retry valid output");
-  assert(result === "That makes sense. Can you explain closures?", "Case 6: Should return valid output");
+  assert(result === "Can you explain closures?", "Case 6: Should return valid output without filler");
   
   // Cases 1, 2, 3 rely on the prompt structure itself, which we can verify by checking the prompt payload
   // in the mock LLM invocations.
@@ -98,6 +98,63 @@ async function runTests() {
   const promptStr = JSON.stringify(firstCallInput);
   assert(promptStr.includes("Do NOT treat it as a technical answer"), "Prompt includes rules to ignore filler");
   assert(promptStr.includes("NEVER respond with \\\"Great?\\\"") || promptStr.includes("NEVER respond with \"Great?\""), "Prompt explicitly rejects conversational filler");
+
+  // Case 7: LLM returns short fragments -> reject and regenerate
+  mockLLM.output = "What is?";
+  mockLLM.invocations = [];
+  try {
+    await generator.generateQuestion({
+      difficulty: PracticeDifficulty.MEDIUM,
+      topics: ["React"],
+      previousQuestions: [],
+      previousAnswers: [],
+      currentTopic: "React"
+    });
+    assert(false, "Should reject 'What is?'");
+  } catch(e) {
+    assert(mockLLM.invocations.length === 3, "Case 7: Should retry twice for 'What is?' (3 total calls)");
+  }
+
+  mockLLM.output = "Difficulty?";
+  mockLLM.invocations = [];
+  try {
+    await generator.generateQuestion({
+      difficulty: PracticeDifficulty.MEDIUM,
+      topics: ["React"],
+      previousQuestions: [],
+      previousAnswers: [],
+      currentTopic: "React"
+    });
+    assert(false, "Should reject 'Difficulty?'");
+  } catch(e) {}
+
+  // Case 8: Duplicate question -> reject
+  mockLLM.output = "Can you explain how closures work in JavaScript?";
+  mockLLM.invocations = [];
+  try {
+    await generator.generateQuestion({
+      difficulty: PracticeDifficulty.MEDIUM,
+      topics: ["JavaScript"],
+      previousQuestions: ["Explain how closures work in JavaScript, please."],
+      previousAnswers: ["Yes"],
+      currentTopic: "JavaScript"
+    });
+    assert(false, "Should reject duplicate question");
+  } catch (e) {
+    assert(mockLLM.invocations.length === 3, "Case 8: Should retry for duplicate question");
+  }
+
+  // Case 9: Sanitizer removes conversational filler
+  mockLLM.output = "Got it. Can you explain closures?";
+  mockLLM.invocations = [];
+  result = await generator.generateQuestion({
+    difficulty: PracticeDifficulty.MEDIUM,
+    topics: ["JavaScript"],
+    previousQuestions: [],
+    previousAnswers: [],
+    currentTopic: "JavaScript"
+  });
+  assert(result === "Can you explain closures?", "Case 9: Should remove 'Got it.' filler");
 
   console.log(`\nTests completed: ${passed}/${total} passed.`);
   if (passed !== total) process.exit(1);
