@@ -27,47 +27,85 @@ export class GenerateOfferPdfUseCase implements IGenerateOfferPdfUseCase {
             throw new AppError("Student or Company not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
         }
 
+        const formatCurrency = (amount: number) => {
+            return new Intl.NumberFormat('en-IN', {
+              style: 'currency',
+              currency: 'INR',
+              maximumFractionDigits: 0
+            }).format(amount);
+        };
+
         const htmlContent = `
+            <!DOCTYPE html>
             <html>
                 <head>
+                    <meta charset="UTF-8">
+                    <script src="https://cdn.tailwindcss.com"></script>
                     <style>
-                        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.6; padding: 40px; }
-                        h1 { color: #4F46E5; margin-bottom: 5px; }
-                        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 40px; }
-                        .footer { margin-top: 60px; font-size: 12px; text-align: center; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
-                        .content { max-width: 800px; margin: 0 auto; }
-                        .highlight { font-weight: bold; color: #111; }
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+                        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; padding: 48px; }
+                        /* Tailwind colors override just in case */
+                        .text-slate-900 { color: #0f172a; }
+                        .text-slate-800 { color: #1e293b; }
+                        .text-slate-600 { color: #475569; }
+                        .text-slate-500 { color: #64748b; }
+                        .bg-slate-50 { background-color: #f8fafc; }
+                        .border-slate-200 { border-color: #e2e8f0; }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <h1>${company.name}</h1>
-                        <p style="color: #666; font-size: 14px;">Official Offer of Employment</p>
-                    </div>
-                    <div class="content">
-                        <p>Date: ${new Date().toLocaleDateString()}</p>
-                        <br/>
-                        <p>Dear <span class="highlight">${student.firstName} ${student.lastName}</span>,</p>
-                        <p>We are absolutely thrilled to officially offer you the position of <span class="highlight">${offer.role}</span> at ${company.name}. We were extremely impressed by your skills and believe you will be a fantastic addition to our team.</p>
-                        
-                        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #e2e8f0;">
-                            <h3 style="margin-top: 0; color: #334155;">Offer Details:</h3>
-                            <ul style="list-style: none; padding: 0; margin: 0;">
-                                <li style="margin-bottom: 10px;"><strong>Position:</strong> ${offer.role}</li>
-                                <li style="margin-bottom: 10px;"><strong>Total Compensation (CTC):</strong> ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(offer.ctc)} per year</li>
-                                <li style="margin-bottom: 10px;"><strong>Expected Joining Date:</strong> ${new Date(offer.joiningDate).toLocaleDateString()}</li>
-                            </ul>
+                    <div class="max-w-3xl mx-auto">
+                        <div class="text-center mb-10">
+                            <h2 class="text-3xl font-black text-slate-900">${company.name}</h2>
+                            <p class="text-xs uppercase tracking-widest text-slate-500 font-bold mt-2">Offer of Employment &bull; Confidential</p>
                         </div>
 
-                        <p>Please review this offer letter and indicate your acceptance before <span class="highlight">${new Date(offer.expiresAt).toLocaleDateString()}</span>.</p>
-                        <p>If you have any questions, please do not hesitate to reach out to us.</p>
-                        
-                        <br/><br/>
-                        <p>Sincerely,</p>
-                        <p><span class="highlight">Human Resources</span><br/>${company.name}</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is a digitally generated and securely tracked document by CareerHub. No physical signature is required.</p>
+                        <div class="space-y-6 text-sm leading-relaxed text-slate-800">
+                            <p class="font-semibold text-slate-900">${new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                            
+                            <p>Dear <strong class="text-slate-900">${student.firstName} ${student.lastName}</strong>,</p>
+                            
+                            <p>
+                                We are pleased to extend an offer of employment for the position of <strong class="text-slate-900">${offer.role}</strong> at ${company.name}. 
+                                You have successfully completed our selection process and we believe you will be an excellent addition to our team.
+                            </p>
+
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 my-8 grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+                                <div>
+                                    <span class="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Role</span>
+                                    <span class="font-black text-slate-900 text-base">${offer.role}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">CTC (Annual)</span>
+                                    <span class="font-black text-slate-900 text-base">${formatCurrency(offer.ctc)}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Joining Date</span>
+                                    <span class="font-black text-slate-900 text-base">${new Date(offer.joiningDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500 font-semibold block text-[10px] uppercase tracking-widest mb-1">Location</span>
+                                    <span class="font-black text-slate-900 text-base">Bangalore - Hybrid</span>
+                                </div>
+                            </div>
+
+                            <p class="text-slate-600">
+                                This offer is contingent upon successful completion of background verification and document submission prior to your joining date.
+                            </p>
+                            <p class="text-slate-600">
+                                Please confirm your acceptance by <strong class="text-slate-900">${new Date(offer.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong>. We look forward to welcoming you!
+                            </p>
+
+                            <div class="flex justify-between mt-16 pt-8 border-t border-slate-200">
+                                <div class="text-xs text-slate-500 font-medium">
+                                    HR Manager &bull; ${company.name}
+                                </div>
+                                <div class="text-xs text-slate-500 font-medium text-right flex flex-col items-end">
+                                    <span class="mb-2">Candidate Acceptance Signature</span>
+                                    ${offer.signatureUrl ? `<div class="w-48 h-20 border border-slate-200 rounded flex items-center justify-center p-2 bg-slate-50"><img src="${offer.signatureUrl}" alt="Signature" class="max-w-full max-h-full object-contain mix-blend-multiply" /></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </body>
             </html>
