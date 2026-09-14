@@ -527,6 +527,18 @@ export default function UnifiedSettingsPage() {
                   />
                 </div>
               </motion.div>
+
+              {/* Bottom Save Button */}
+              <div className="flex justify-end mt-8">
+                <button
+                  onClick={handleSavePlatformSettings}
+                  disabled={isSavingPlatform}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                >
+                  {isSavingPlatform ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+                  {isSavingPlatform ? 'Saving...' : 'Save All Platform Settings'}
+                </button>
+              </div>
             </div>
           )}
         </motion.div>
