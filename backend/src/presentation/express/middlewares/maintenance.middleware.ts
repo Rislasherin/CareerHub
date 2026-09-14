@@ -14,12 +14,12 @@ export const maintenanceMiddleware = async (req: Request, res: Response, next: N
         }
 
         // Allow super admin routes to bypass maintenance mode (so they can turn it off!)
-        if (req.originalUrl.includes("/api/super-admin") || req.originalUrl.includes("/api/auth/super-admin")) {
+        if (req.originalUrl.startsWith("/api/super-admin") || req.originalUrl.startsWith("/api/auth/super-admin")) {
             return next();
         }
 
         // Allow authentication refresh routes so users don't randomly get logged out
-        if (req.originalUrl.includes("/auth/refresh-token") || req.originalUrl.includes("/auth/logout") || req.originalUrl.includes("/auth/status")) {
+        if (req.originalUrl.startsWith("/api/auth/refresh-token") || req.originalUrl.startsWith("/api/auth/logout") || req.originalUrl.startsWith("/api/auth/status")) {
             return next();
         }
 
