@@ -68,12 +68,19 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
     if (words.length < 4) return false;
 
     const lowerText = text.toLowerCase().trim();
-    const invalidPhrases = ["great?", "okay?", "ready?", "welcome?", "yes?", "no?", "start?", "begin?"];
-    if (invalidPhrases.some(phrase => lowerText === phrase)) {
+    const invalidPhrases = ["great?", "okay?", "ready?", "welcome?", "yes?", "no?", "start?", "begin?", "understood?", "got it?"];
+    if (invalidPhrases.some(phrase => lowerText === phrase || lowerText.startsWith(phrase.replace('?', ' ')))) {
       return false;
     }
 
     if (lowerText.replace(/[^a-z]/g, "") === "welcometo") return false; // "Welcome to?"
+
+    // Structural Check: Ensure it actually asks a question (starts with interrogative or common modal)
+    const firstWord = words[0].toLowerCase().replace(/[^a-z]/g, "");
+    const interrogatives = new Set(["what", "how", "why", "when", "where", "who", "which", "can", "could", "would", "do", "does", "did", "is", "are", "describe", "explain", "tell", "walk", "share", "give"]);
+    if (!interrogatives.has(firstWord) && !lowerText.includes("?")) {
+       return false; // Not a question structure
+    }
 
     // Basic semantic duplicate check: compare word sets (ignoring small words)
     const ignoreWords = new Set(["can", "you", "tell", "me", "about", "what", "is", "explain", "describe", "how", "why", "the", "a", "an", "in", "and", "or", "to", "for", "of"]);
@@ -111,7 +118,7 @@ export class LangChainPracticeQuestionGenerator implements IPracticeQuestionGene
     let text = raw.trim();
     
     // Strip conversational fillers at the beginning
-    text = text.replace(/^(got\s+it|okay|great|sure|that\s+makes\s+sense|nice|good\s+answer)[!.,;\s]*/i, "");
+    text = text.replace(/^(got\s+it|okay|great|sure|that\s+makes\s+sense|nice|good\s+answer|understood)[!.,;?\s]*/i, "");
     text = text.trim();
 
     // Strip common LLM prefixes

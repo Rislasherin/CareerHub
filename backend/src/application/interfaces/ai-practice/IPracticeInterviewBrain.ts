@@ -2,7 +2,8 @@ export enum PracticeAction {
   FOLLOW_UP = 'FOLLOW_UP',
   CLARIFICATION = 'CLARIFICATION',
   NEXT_QUESTION = 'NEXT_QUESTION',
-  END_INTERVIEW = 'END_INTERVIEW'
+  END_INTERVIEW = 'END_INTERVIEW',
+  ERROR = 'ERROR'
 }
 
 export interface IPracticeBrainDecision {

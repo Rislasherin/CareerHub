@@ -97,10 +97,18 @@ export class LangChainPracticeInterviewBrain implements IPracticeInterviewBrain 
     } catch (err) {
       Logger.error(
         LogCategory.SYSTEM_ERROR,
-        `[LangChainPracticeInterviewBrain] Question generator error, using fallback:`,
+        `[LangChainPracticeInterviewBrain] Question generator error. Returning ERROR action.`,
         err
       );
-      questionText = `Can you walk me through a practical example of how you've used ${nextTopic}?`;
+      
+      const t_q_done = performance.now();
+      Logger.info(LogCategory.SYSTEM_INFO, `[PRACTICE_LATENCY] BRAIN_COMPLETE_ERROR`, { totalMs: Math.round(t_q_done - t_start) });
+      
+      return {
+        action: PracticeAction.ERROR,
+        responseText: "",
+        reason: "Question generation failed",
+      };
     }
 
     const t_q_done = performance.now();
