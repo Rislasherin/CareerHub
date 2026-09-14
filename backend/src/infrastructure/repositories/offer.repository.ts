@@ -37,6 +37,18 @@ export class OfferRepository extends BaseRepository<Offer, OfferDocument> implem
               select: 'companyName logo'
             }
           })
+          .populate({
+            path: 'companyId',
+            select: 'companyName logo'
+          })
+          .populate({
+            path: 'studentId',
+            select: 'user firstName lastName',
+            populate: {
+              path: 'user',
+              select: 'firstName lastName email'
+            }
+          })
           .sort({ createdAt: -1 })
           .exec();
 
@@ -45,7 +57,9 @@ export class OfferRepository extends BaseRepository<Offer, OfferDocument> implem
             return {
                 ...doc,
                 id: doc._id.toString(),
-                job: doc.jobId
+                job: doc.jobId,
+                student: doc.studentId,
+                company: doc.companyId
             };
         });
     }

@@ -288,7 +288,7 @@ export default function StudentOffersPage() {
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-slate-100/50">
                   <div id="offer-letter-preview" className="bg-white p-8 md:p-12 border border-slate-200 shadow-lg rounded-xl max-w-3xl mx-auto text-slate-800">
                     <div className="text-center mb-10">
-                      <h2 className="text-3xl font-black text-slate-900">{selectedOffer.job?.companyId?.companyName || 'Company Name'}</h2>
+                      <h2 className="text-3xl font-black text-slate-900">{selectedOffer.job?.companyId?.companyName || selectedOffer.company?.companyName || 'Company Name'}</h2>
                       <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-2">Offer of Employment • Confidential</p>
                     </div>
 
@@ -298,7 +298,7 @@ export default function StudentOffersPage() {
                       <p>Dear <strong className="text-slate-900">{selectedOffer.student?.user?.firstName} {selectedOffer.student?.user?.lastName}</strong>,</p>
                       
                       <p>
-                        We are pleased to extend an offer of employment for the position of <strong className="text-slate-900">{selectedOffer.role || '[Role]'}</strong> at {selectedOffer.job?.companyId?.companyName}. 
+                        We are pleased to extend an offer of employment for the position of <strong className="text-slate-900">{selectedOffer.role || '[Role]'}</strong> at {selectedOffer.job?.companyId?.companyName || selectedOffer.company?.companyName || 'Company Name'}. 
                         You have successfully completed our selection process and we believe you will be an excellent addition to our team.
                       </p>
 
@@ -330,7 +330,7 @@ export default function StudentOffersPage() {
 
                       <div className="flex justify-between mt-16 pt-8 border-t border-slate-200">
                         <div className="text-xs text-slate-500 font-medium">
-                          HR Manager • {selectedOffer.job?.companyId?.companyName}
+                          HR Manager • {selectedOffer.job?.companyId?.companyName || selectedOffer.company?.companyName || 'Company Name'}
                         </div>
                         <div className="text-xs text-slate-500 font-medium text-right flex flex-col items-end">
                           <span className="mb-2">Candidate Acceptance Signature</span>

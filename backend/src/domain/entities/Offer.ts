@@ -34,6 +34,8 @@ export class Offer {
     get joiningDate(): Date { return this._props.joiningDate; }
     get status(): OfferStatus { return this._props.status; }
     get expiresAt(): Date { return this._props.expiresAt; }
+    get createdAt(): Date { return this._props.createdAt; }
+    get updatedAt(): Date { return this._props.updatedAt; }
     get signatureUrl(): string | undefined { return this._props.signatureUrl; }
     get signatureSignedAt(): Date | undefined { return this._props.signatureSignedAt; }
 
