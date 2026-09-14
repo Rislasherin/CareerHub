@@ -4,6 +4,8 @@ import { OfferModel } from '../infrastructure/database/models/company/offer.mode
 import { JobModel } from '../infrastructure/database/models/company/job.model';
 
 async function runMigration() {
+    const isDryRun = !process.argv.includes('--execute');
+    
     try {
         console.log('Connecting to MongoDB...');
         await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/career-hub');
@@ -14,6 +16,13 @@ async function runMigration() {
             role: { $in: ['student', 'STUDENT'] } 
         });
 
+        if (isDryRun) {
+            console.log('\n==================================================');
+            console.log('DRY RUN MODE ENABLED - NO CHANGES WILL BE MADE');
+            console.log('Run with --execute to apply changes.');
+            console.log('==================================================\n');
+        }
+
         console.log(`Found ${legacyOffers.length} offers to migrate.`);
 
         let migratedCount = 0;
@@ -23,18 +32,27 @@ async function runMigration() {
             const job = await JobModel.findById(offer.jobId);
             
             if (job && job.title && job.title.toLowerCase() !== 'student') {
-                console.log(`Migrating offer ${offer._id} from "student" to "${job.title}"`);
+                const action = isDryRun ? 'Would update' : 'Updating';
+                console.log(`\nOffer ID: ${offer._id}`);
+                console.log(`Current role: ${offer.role}`);
+                console.log(`Resolved Job ID: ${job._id}`);
+                console.log(`Resolved Job title: ${job.title}`);
+                console.log(`Would update? YES`);
                 
-                // Directly update the document bypassing validators in case of other issues, 
-                // but keeping it simple using updateOne to preserve all existing fields like signatures.
-                await OfferModel.updateOne(
-                    { _id: offer._id },
-                    { $set: { role: job.title } }
-                );
+                if (!isDryRun) {
+                    await OfferModel.updateOne(
+                        { _id: offer._id },
+                        { $set: { role: job.title } }
+                    );
+                }
                 
                 migratedCount++;
             } else {
-                console.log(`Skipped offer ${offer._id}: Could not resolve a valid job title (Job ID: ${offer.jobId})`);
+                console.log(`\nOffer ID: ${offer._id}`);
+                console.log(`Current role: ${offer.role}`);
+                console.log(`Resolved Job ID: ${offer.jobId}`);
+                console.log(`Resolved Job title: ${job?.title || 'NOT FOUND'}`);
+                console.log(`Would update? NO (Cannot reliably resolve title)`);
                 skippedCount++;
             }
         }
