@@ -1,4 +1,4 @@
-…\frontend > Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+\frontend > Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 
 THE COMPLETE ARCHITECTURE
 
@@ -23,6 +23,7 @@ THE COMPLETE ARCHITECTURE
               ┌────────┴────────┐
               │                 │
               ▼                 ▼
+
          Scheduler          Interview Agent
                                 │
                 ┌───────────────┼───────────────┐
@@ -57,8 +58,8 @@ THE COMPLETE ARCHITECTURE
 INTERVIEW AGENT
 
 
-	 InterviewSupervisor
-        │
+InterviewSupervisor
+        │  
         ▼
  ┌───────────────────────┐
  │  What should happen?  │

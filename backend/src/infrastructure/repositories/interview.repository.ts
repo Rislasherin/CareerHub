@@ -5,6 +5,7 @@ import { IInterviewRepository } from "@domain/repositories/IInterviewRepository"
 import { InterviewSchema } from "@infrastructure/database/schema/company/interview.schema";
 import { toInterviewEntity, toInterviewPersistence } from "@application/mappers/interview.mapper";
 import { SheduleInterviewDto } from "@application/dtos/hr/Request/ScheduleInterview.dto";
+import { InterviewStatus } from "@domain/enums/InterviewStatus.enum";
 
 export class InterviewRepository extends BaseRepository<Interview,InterviewDocument> implements IInterviewRepository {
     constructor(){
@@ -103,4 +104,6 @@ export class InterviewRepository extends BaseRepository<Interview,InterviewDocum
             id: doc._id.toString()
         }));
     }
+
+
 }

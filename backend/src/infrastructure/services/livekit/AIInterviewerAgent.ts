@@ -68,12 +68,23 @@ export class AIInterviewerAgent implements IAudioTransport {
       }
     });
 
-    this.room.on(RoomEvent.ParticipantConnected, (_participant: RemoteParticipant) => {
-      Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (via event)`);
-      onParticipantConnected();
+    this.room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
+      if (participant.identity !== 'tavus-avatar-agent') {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (via event)`);
+        onParticipantConnected();
+      } else {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Tavus participant connected, waiting for human...`);
+      }
     });
 
-    if (this.room.remoteParticipants.size > 0) {
+    let humanFound = false;
+    this.room.remoteParticipants.forEach((p) => {
+      if (p.identity !== 'tavus-avatar-agent') {
+        humanFound = true;
+      }
+    });
+
+    if (humanFound) {
       Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (already in room)`);
       onParticipantConnected();
     }

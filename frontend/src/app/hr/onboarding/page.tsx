@@ -379,9 +379,50 @@ export default function HROnboardingPage() {
                         </div>
 
                         <div className="space-y-3">
-                        
-                         </div>
+                          <label className="text-sm font-bold text-slate-700 ml-1">Preferred Colleges (Optional)</label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="e.g. IIT Bombay"
+                              value={collegeInput}
+                              onChange={(e) => setCollegeInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  addCollege();
+                                }
+                              }}
+                              className="bg-slate-50/50 h-11 flex-1"
+                            />
+                            <Button 
+                              type="button" 
+                              onClick={addCollege}
+                              className="h-11 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl font-bold"
+                            >
+                              Add
+                            </Button>
+                          </div>
+                          
+                          {preferredColleges.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {preferredColleges.map(college => (
+                                <div 
+                                  key={college}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-semibold text-indigo-700"
+                                >
+                                  {college}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeCollege(college)}
+                                    className="p-0.5 hover:bg-indigo-200 rounded-md transition-colors"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
+                      </div>
 
                       <div className="lg:w-64 space-y-4">
                         <label className="text-sm font-bold text-slate-800 ml-1">Company Logo</label>

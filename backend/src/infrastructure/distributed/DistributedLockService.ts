@@ -25,4 +25,12 @@ export class DistributedLockService implements IDistributedLockService {
   async acquireProviderSemaphore(providerType: string, maxConcurrent: number, timeoutMs?: number): Promise<(() => void) | null> {
     return DistributedLock.acquireProviderSemaphore(providerType, maxConcurrent, timeoutMs);
   }
+
+  async acquireLock(key: string, ttlMs?: number): Promise<boolean> {
+    return DistributedLock.acquireLock(key, ttlMs);
+  }
+
+  async releaseLock(key: string): Promise<void> {
+    return DistributedLock.releaseLock(key);
+  }
 }

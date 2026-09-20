@@ -55,7 +55,8 @@ export const makeStartAIInterviewUseCase = () => {
     logger,
     aiCreditService,
     entitlementGuardService,
-    env.LIVEKIT_URL
+    env.LIVEKIT_URL,
+    new DistributedLockService()
   );
 };
 

@@ -23,6 +23,7 @@ import { ILogger, LogCategory } from "../../../interfaces/observability/ILogger"
 import { IAICreditService } from "@domain/services/IAICreditService";
 import { IEntitlementGuardService } from "@domain/services/IEntitlementGuardService";
 import { AICreditPolicy } from "@infrastructure/config/ai-credit.policy";
+import { IDistributedLockService } from "../../../interfaces/distributed/IDistributedLockService";
 
 export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
   constructor(
@@ -37,10 +38,22 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     private readonly _logger?: ILogger,
     private readonly _aiCreditService?: IAICreditService,
     private readonly _entitlementGuard?: IEntitlementGuardService,
-    private readonly _liveKitUrl: string = ''
+    private readonly _liveKitUrl: string = '',
+    private readonly _distributedLock?: IDistributedLockService
   ) { }
 
   async execute(input: StartAIInterviewInputDTO): Promise<StartAIInterviewOutput> {
+    const lockKey = `start_interview_${input.interviewId}`;
+    let lockAcquired = false;
+
+    if (this._distributedLock) {
+      lockAcquired = await this._distributedLock.acquireLock(lockKey, 15000);
+      if (!lockAcquired) {
+        throw new AppError("Request already in progress. Please try again in a moment.", HttpStatus.RATE_LIMIT_EXCEEDED, ErrorCode.RESOURCE_EXISTS);
+      }
+    }
+
+    try {
     // 1. Validate Parent Interview
     const interview = await this._interviewRepository.findById(input.interviewId);
     if (!interview) {
@@ -71,6 +84,7 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     // 3. Create or Retrieve the Runtime AI Session
     let session = await this._repository.findByInterviewId(interview.id);
     let savedSession;
+    let isNewSession = false;
 
     if (session && session.phase !== InterviewPhase.COMPLETED && session.phase !== InterviewPhase.CLOSING && session.phase !== InterviewPhase.NOT_STARTED) {
         if (this._logger) {
@@ -122,6 +136,7 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
 
         // 7. Infrastructure: Save new session
         savedSession = await this._repository.create(session);
+        isNewSession = true;
     }
 
     // 8. Generate LiveKit token for the student
@@ -137,18 +152,20 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     try {
       token = await this._liveKitService.generateToken(savedSession.id, input.studentId, studentName);
       
-      // 9. Publish job to worker
-      await this._messageBroker.publish('ai_interview_jobs', {
-        type: 'START_AI_INTERVIEW',
-        sessionId: savedSession.id
-      });
-      
-      // 10. Start the Avatar in the background (Non-blocking)
-      this._avatarService.startAvatar(savedSession.id, this._liveKitUrl, token).catch(e => {
-          if (this._logger) {
-             this._logger.error(LogCategory.SYSTEM_ERROR, `[StartAIInterviewUseCase] Background avatar start failed:`, e);
-          }
-      });
+      if (isNewSession) {
+        // 9. Publish job to worker ONLY if it's a new session
+        await this._messageBroker.publish('ai_interview_jobs', {
+          type: 'START_AI_INTERVIEW',
+          sessionId: savedSession.id
+        });
+        
+        // 10. Start the Avatar in the background (Non-blocking)
+        this._avatarService.startAvatar(savedSession.id, this._liveKitUrl, token).catch(e => {
+            if (this._logger) {
+               this._logger.error(LogCategory.SYSTEM_ERROR, `[StartAIInterviewUseCase] Background avatar start failed:`, e);
+            }
+        });
+      }
     } catch (error) {
       // If LiveKit generation or initialization fails, release the reservation!
       if (reservationId && this._aiCreditService) {
@@ -175,5 +192,10 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
       livekitUrl: this._liveKitUrl,
       durationMinutes: savedSession.getDurationMinutes()
     };
+    } finally {
+      if (lockAcquired && this._distributedLock) {
+        await this._distributedLock.releaseLock(lockKey);
+      }
+    }
   }
 }
