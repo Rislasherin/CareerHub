@@ -1,7 +1,7 @@
 'use client';
 
 import React, { use, useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { LiveKitRoom, RoomAudioRenderer, useParticipants, useTrackToggle, useRoomContext } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, useParticipants, useTrackToggle, useRoomContext, useAudioPlayback } from '@livekit/components-react';
 import { Track, RoomEvent } from 'livekit-client';
 import '@livekit/components-styles';
 import { StudentInterviewService } from '@/services/student/interview.service';
@@ -86,6 +86,23 @@ function AIInterviewRoomContent({
 
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
   const latestQuestionSeqRef = useRef<number>(0);
+
+  // ── Audio Autoplay Fix ────────────────────────────────────────────────────────
+  // The browser's autoplay policy may suspend the AudioContext when the LiveKit
+  // room mounts. We must call room.startAudio() as soon as possible (while still
+  // within the 'user gesture trust' window from the 'Join Interview' click).
+  // If that window has already closed, useStartAudio provides a fallback button.
+  const { canPlayAudio, startAudio } = useAudioPlayback(room);
+
+  useEffect(() => {
+    if (!room) return;
+    // Eagerly try to unlock audio immediately on mount.
+    // This succeeds when we're still within the browser's gesture trust window.
+    room.startAudio().catch(() => {
+      // Autoplay was blocked — the canPlayAudio / StartAudio fallback button will handle it.
+      console.warn('[AI_INTERVIEW] room.startAudio() blocked by autoplay policy. Waiting for user gesture.');
+    });
+  }, [room]);
 
   // LiveKit AI participant presence check
   const aiParticipant = participants.find(
@@ -208,11 +225,32 @@ function AIInterviewRoomContent({
     room.on(RoomEvent.Reconnected, handleReconnected);
     room.on(RoomEvent.Disconnected, handleDisconnected);
 
+    // Diagnostic: log every remote track subscription to confirm AI audio arrives
+    const handleTrackSubscribed = (track: any, publication: any, participant: any) => {
+      console.log('[AI_INTERVIEW] TrackSubscribed:', {
+        participantIdentity: participant?.identity,
+        trackName: publication?.trackName || publication?.name,
+        trackKind: track?.kind,
+        trackSource: publication?.source,
+        trackSid: track?.sid,
+        canPlaybackAudio: room.canPlaybackAudio,
+      });
+    };
+    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+
+    // Diagnostic: log when audio playback status changes
+    const handleAudioPlaybackChanged = () => {
+      console.log('[AI_INTERVIEW] AudioPlaybackStatusChanged: canPlaybackAudio =', room.canPlaybackAudio);
+    };
+    room.on(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackChanged);
+
     return () => {
       room.off(RoomEvent.DataReceived, handleDataReceived);
       room.off(RoomEvent.Reconnecting, handleReconnecting);
       room.off(RoomEvent.Reconnected, handleReconnected);
       room.off(RoomEvent.Disconnected, handleDisconnected);
+      room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+      room.off(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackChanged);
     };
   }, [room]);
 
@@ -334,6 +372,25 @@ function AIInterviewRoomContent({
 
   return (
     <div className="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4 md:p-6 overflow-hidden select-none font-sans">
+
+      {/* ── Audio Autoplay Fallback ── */}
+      {/* Shown only when browser autoplay policy has blocked audio playback.     */}
+      {/* The user clicking this button calls room.startAudio() which resumes      */}
+      {/* the suspended AudioContext and allows RoomAudioRenderer to play tracks. */}
+      {!canPlayAudio && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900/95 border border-rose-500/50 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-2xl shadow-rose-900/30 animate-pulse">
+          <span className="w-2 h-2 rounded-full bg-rose-500" />
+          <span className="text-xs font-bold text-slate-200">AI audio paused by browser</span>
+          <button
+            id="ai-audio-enable-btn"
+            onClick={startAudio}
+            className="ml-2 px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold rounded-xl transition-colors shadow-lg shadow-rose-600/25 cursor-pointer"
+          >
+            Enable Audio
+          </button>
+        </div>
+      )}
+
       
       {/* Top Header Bar */}
       <header className="h-16 w-full bg-slate-900/90 border border-slate-800/90 px-6 rounded-2xl flex items-center justify-between shadow-xl backdrop-blur-md shrink-0">
@@ -486,6 +543,12 @@ function AIInterviewRoomContent({
         toggleMicrophone={toggleMic}
       />
 
+      {/* RoomAudioRenderer subscribes to all remote audio tracks (including the
+          ai-voice track published by AIInterviewerAgent) and attaches each one
+          to a hidden <audio> element so the browser actually plays them.
+          LiveKitRoom audio={true} controls only LOCAL mic publication and does
+          NOT auto-play remote tracks. Without this, AI voice is silently dropped
+          even though it arrives at the browser via the LiveKit SFU. */}
       <RoomAudioRenderer />
     </div>
   );

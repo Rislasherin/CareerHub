@@ -5,10 +5,7 @@ import * as crypto from 'crypto';
 export class DistributedLock {
   private static workerId = crypto.randomUUID();
 
-  /**
-   * Acquires a distributed lease for an AI Interview session.
-   * Prevents other workers from starting orchestration for the same session.
-   */
+
   static async acquireSessionLease(sessionId: string, ttlMs: number = 60000): Promise<boolean> {
     try {
       const redis = RedisClient.getClient();

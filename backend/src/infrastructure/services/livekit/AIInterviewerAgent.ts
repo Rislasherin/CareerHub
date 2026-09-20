@@ -30,6 +30,7 @@ export class AIInterviewerAgent implements IAudioTransport {
     
     const track = LocalAudioTrack.createAudioTrack('ai-voice', this.audioSource);
     await this.room.localParticipant?.publishTrack(track, { name: 'ai-voice', source: TrackSource.SOURCE_MICROPHONE } as unknown as TrackPublishOptions);
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [7b] Audio track 'ai-voice' published to LiveKit room. LocalParticipant identity: ${this.room.localParticipant?.identity}`);
 
     // Listen for student audio tracks
     this.room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub: RemoteTrackPublication, _participant: RemoteParticipant) => {
@@ -91,6 +92,7 @@ export class AIInterviewerAgent implements IAudioTransport {
   }
 
   private pcmRemainder: Int16Array | null = null;
+  private _framesCaptured = 0;
   private streamWriter?: any;
   private _tavusFirstChunkSent = false;
   private _tavusChunksSent = 0;
@@ -145,6 +147,12 @@ export class AIInterviewerAgent implements IAudioTransport {
       const frameSlice = combined.slice(start, start + samplesPerFrame);
       const audioFrame = new AudioFrame(frameSlice, 24000, 1, samplesPerFrame);
       await this.audioSource.captureFrame(audioFrame);
+      this._framesCaptured++;
+      if (this._framesCaptured === 1) {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] AUDIO_PIPELINE: First audio frame captured and sent to LiveKit AudioSource. sampleRate=24000 channels=1 samplesPerChannel=${samplesPerFrame}`);
+      } else if (this._framesCaptured % 200 === 0) {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] AUDIO_PIPELINE: ${this._framesCaptured} frames captured to LiveKit AudioSource.`);
+      }
       
       if (this.streamWriter) {
         if (!this._tavusFirstChunkSent) {
