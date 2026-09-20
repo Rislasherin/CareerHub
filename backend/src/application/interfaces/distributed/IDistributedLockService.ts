@@ -5,6 +5,6 @@ export interface IDistributedLockService {
   renewSessionLease(sessionId: string, ttlMs?: number): Promise<boolean>;
   releaseSessionLease(sessionId: string): Promise<void>;
   acquireProviderSemaphore(providerType: string, maxConcurrent: number, timeoutMs?: number): Promise<(() => void) | null>;
-  acquireLock(key: string, ttlMs?: number): Promise<boolean>;
+  acquireLock(key: string, ttlMs?: number): Promise<'acquired' | 'contended' | 'error'>;
   releaseLock(key: string): Promise<void>;
 }

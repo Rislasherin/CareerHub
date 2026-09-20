@@ -49,6 +49,12 @@ export default function StudentInterviewsPage() {
         setStartingId(null);
       }
     } catch (error: any) {
+      console.error('[AI_INTERVIEW] startInterview failed:', {
+        status: error?.response?.status,
+        code: error?.response?.data?.code,
+        message: error?.response?.data?.message,
+        interviewId,
+      });
       toast.error(error.response?.data?.message || 'Failed to start AI interview');
       setStartingId(null);
     }

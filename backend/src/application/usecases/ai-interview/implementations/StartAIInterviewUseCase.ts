@@ -47,9 +47,15 @@ export class StartAIInterviewUseCase implements IStartAIInterviewUseCase {
     let lockAcquired = false;
 
     if (this._distributedLock) {
-      lockAcquired = await this._distributedLock.acquireLock(lockKey, 15000);
-      if (!lockAcquired) {
+      const lockResult = await this._distributedLock.acquireLock(lockKey, 15000);
+      if (lockResult === 'contended') {
         throw new AppError("Request already in progress. Please try again in a moment.", HttpStatus.RATE_LIMIT_EXCEEDED, ErrorCode.RESOURCE_EXISTS);
+      } else if (lockResult === 'acquired') {
+        lockAcquired = true;
+      }
+      // lockResult === 'error': Redis infra failure – fail open, proceed without lock and log
+      if (lockResult === 'error' && this._logger) {
+        this._logger.info(LogCategory.SYSTEM_INFO, `[StartAIInterviewUseCase] Redis lock unavailable for interview ${input.interviewId}, proceeding without lock.`);
       }
     }
 

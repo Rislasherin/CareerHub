@@ -152,15 +152,19 @@ export class DistributedLock {
 
   /**
    * Acquires a generic lock for a given key.
+   * Returns:
+   *  'acquired'  – lock successfully acquired
+   *  'contended' – another holder already owns this lock
+   *  'error'     – Redis infrastructure error; caller should decide whether to fail open/closed
    */
-  static async acquireLock(key: string, ttlMs: number = 5000): Promise<boolean> {
+  static async acquireLock(key: string, ttlMs: number = 5000): Promise<'acquired' | 'contended' | 'error'> {
     try {
       const redis = RedisClient.getClient();
       const result = await redis.set(key, this.workerId, 'PX', ttlMs, 'NX');
-      return result === 'OK';
+      return result === 'OK' ? 'acquired' : 'contended';
     } catch (err) {
       Logger.error(LogCategory.SYSTEM_ERROR, `[DistributedLock] Error acquiring lock for ${key}`, err);
-      return false;
+      return 'error';
     }
   }
 
