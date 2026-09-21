@@ -10,6 +10,7 @@ import { QuestionEvaluationAnalysis } from '@domain/value-objects/QuestionEvalua
 import { AIRecommendation } from '@domain/enums/AIRecommendation.enum';
 import { EvaluationConfidence } from '@domain/enums/EvaluationConfidence.enum';
 import { EvaluationStatus } from '@domain/enums/EvaluationStatus.enum';
+import { InterviewStatus } from '@domain/enums/InterviewStatus.enum';
 import { AppError } from '@application/errors/AppError';
 import { HttpStatus } from '@domain/enums/HttpStatus.enum';
 import { ErrorCode } from '@domain/enums/ErrorCodes.enum';
@@ -265,6 +266,19 @@ export class GenerateInterviewEvaluationUseCase implements IGenerateInterviewEva
       });
 
       const savedZero = await this._evaluationRepository.save(zeroEvaluation);
+
+      // Idempotent parent interview finalization: transition IN_PROGRESS → COMPLETED
+      // so the student "My Interviews" page stops showing IN_PROGRESS after the session ends.
+      try {
+        if (parentInterview.status === InterviewStatus.IN_PROGRESS) {
+          parentInterview.markAsCompleted();
+          await this._interviewRepository.update(parentInterview.id, parentInterview);
+          Logger.info(LogCategory.SYSTEM_INFO, `[GenerateInterviewEvaluationUseCase] Parent interview ${interviewId} finalized to COMPLETED (zero-answer path).`);
+        }
+      } catch (finalizeErr) {
+        Logger.error(LogCategory.SYSTEM_ERROR, `[GenerateInterviewEvaluationUseCase] Failed to finalize parent interview ${interviewId} status:`, finalizeErr);
+      }
+
       return { status: 'STARTED_AND_COMPLETED', evaluation: savedZero };
     }
 
@@ -357,6 +371,19 @@ export class GenerateInterviewEvaluationUseCase implements IGenerateInterviewEva
       Logger.info(LogCategory.SYSTEM_INFO, `[GenerateInterviewEvaluationUseCase] LATENCY Save to MongoDB took ${(t_save_end - t_save_start).toFixed(2)}ms`);
 
       Logger.info(LogCategory.SYSTEM_INFO, `[GenerateInterviewEvaluationUseCase] Evaluation successfully saved for interview ${interviewId} (Overall score: ${saved.overallScore}, Recommendation: ${saved.recommendation})`);
+
+      // Idempotent parent interview finalization: transition IN_PROGRESS → COMPLETED
+      // so the student "My Interviews" page stops showing IN_PROGRESS after the session ends.
+      try {
+        if (parentInterview.status === InterviewStatus.IN_PROGRESS) {
+          parentInterview.markAsCompleted();
+          await this._interviewRepository.update(parentInterview.id, parentInterview);
+          Logger.info(LogCategory.SYSTEM_INFO, `[GenerateInterviewEvaluationUseCase] Parent interview ${interviewId} finalized to COMPLETED.`);
+        }
+      } catch (finalizeErr) {
+        Logger.error(LogCategory.SYSTEM_ERROR, `[GenerateInterviewEvaluationUseCase] Failed to finalize parent interview ${interviewId} status:`, finalizeErr);
+      }
+
       return { status: 'STARTED_AND_COMPLETED', evaluation: saved };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
