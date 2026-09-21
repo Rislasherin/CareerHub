@@ -409,6 +409,9 @@ export class LLMProviderFactory {
         apiKey: env.GEMINI_API_KEY,
         temperature: config.temperature,
         maxOutputTokens: config.maxTokens,
+        thinkingConfig: {
+          thinkingLevel: "LOW",
+        },
         maxRetries: 1,
         streaming: true,
       });
