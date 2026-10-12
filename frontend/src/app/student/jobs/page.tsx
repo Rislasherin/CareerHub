@@ -57,6 +57,52 @@ const calculateProfileCompleteness = (u: (Partial<StudentDetails> & { phoneNumbe
   return Math.round((filled / fields.length) * 100);
 };
 
+const isJobExpired = (deadline: string | Date | undefined): boolean => {
+  if (!deadline) return false;
+  const d = new Date(deadline);
+  const endOfDay = new Date(d);
+  if (endOfDay.getUTCHours() === 0 && endOfDay.getUTCMinutes() === 0 && endOfDay.getUTCSeconds() === 0) {
+    endOfDay.setUTCHours(23, 59, 59, 999);
+  }
+  return Date.now() > endOfDay.getTime();
+};
+
+const getDaysRemaining = (deadline: string | Date | undefined): number => {
+  if (!deadline) return 0;
+  const d = new Date(deadline);
+  const endOfDay = new Date(d);
+  if (endOfDay.getUTCHours() === 0 && endOfDay.getUTCMinutes() === 0 && endOfDay.getUTCSeconds() === 0) {
+    endOfDay.setUTCHours(23, 59, 59, 999);
+  }
+  return Math.ceil((endOfDay.getTime() - Date.now()) / (1000 * 3600 * 24));
+};
+
+const isBranchMatch = (jobBranch: string, targetBranch: string): boolean => {
+  const normalize = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const j = normalize(jobBranch);
+  const t = normalize(targetBranch);
+  if (!j || !t) return false;
+  if (j === t || j.includes(t) || t.includes(j)) return true;
+
+  const itKeywords = ['it', 'computer', 'software', 'informationtechnology', 'cse', 'cs', 'ce', 'network', 'data'];
+  if (j.includes('anyit') || j.includes('anybranch')) return true;
+  if (itKeywords.some(k => j.includes(k))) {
+    return itKeywords.some(k => t.includes(k));
+  }
+
+  const eceKeywords = ['electronics', 'electrical', 'ece', 'eee', 'communication', 'telecom'];
+  if (eceKeywords.some(k => j.includes(k))) {
+    return eceKeywords.some(k => t.includes(k));
+  }
+
+  const coreKeywords = ['mechanical', 'mech', 'civil', 'auto', 'manufacturing'];
+  if (coreKeywords.some(k => j.includes(k))) {
+    return coreKeywords.some(k => t.includes(k));
+  }
+
+  return false;
+};
+
 export default function StudentJobsFeed() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -333,7 +379,9 @@ export default function StudentJobsFeed() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {paginatedJobs.map((job) => {
                 const hasApplied = appliedJobs.includes(job.id);
-              const isEligible = job.isEligible !== undefined ? job.isEligible : true;
+                const isExpired = isJobExpired(job.deadline);
+                const isClosed = job.isClosed || job.status === 'closed' || isExpired;
+                const isEligible = !isClosed && (job.isEligible !== undefined ? job.isEligible : true);
 
               // Overlap check for skill match representation (e.g., "Skill match (3/5)")
               const studentSkillSet = new Set<string>();
@@ -387,6 +435,10 @@ export default function StudentJobsFeed() {
                           {hasApplied ? (
                             <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
                               Applied
+                            </span>
+                          ) : isClosed ? (
+                            <span className="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
+                              Closed
                             </span>
                           ) : isEligible ? (
                             <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
@@ -462,8 +514,8 @@ export default function StudentJobsFeed() {
                           }
                         </span>
                         {!hasApplied && (
-                          <span className="text-[10px] text-amber-600 font-bold mt-1">
-                            Closes {formattedDeadline}
+                          <span className={`text-[10px] font-bold mt-1 ${isClosed ? 'text-slate-400' : 'text-amber-600'}`}>
+                            {isClosed ? 'Application Closed' : `Closes ${formattedDeadline}`}
                           </span>
                         )}
                       </div>
@@ -483,6 +535,10 @@ export default function StudentJobsFeed() {
                         {hasApplied ? (
                           <button className="h-10 bg-emerald-50 text-emerald-600 border border-emerald-100 px-6 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-not-allowed">
                             ✓ Applied
+                          </button>
+                        ) : isClosed ? (
+                          <button disabled className="h-10 bg-slate-100 text-slate-400 border border-slate-200 px-6 rounded-xl text-xs font-black uppercase tracking-wider cursor-not-allowed">
+                            Closed
                           </button>
                         ) : (
                           <Button
@@ -519,7 +575,10 @@ export default function StudentJobsFeed() {
         {/* --- Side Drawer Detail View --- */}
         <AnimatePresence>
           {showDetails && selectedJob && (() => {
-            const isEligible = selectedJob.isEligible !== undefined ? selectedJob.isEligible : true;
+            const isExpired = isJobExpired(selectedJob.deadline);
+            const isClosed = selectedJob.isClosed || selectedJob.status === 'closed' || isExpired;
+            const isEligible = !isClosed && (selectedJob.isEligible !== undefined ? selectedJob.isEligible : true);
+            const daysLeft = getDaysRemaining(selectedJob.deadline);
             return (
               <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
                 <motion.div
@@ -558,14 +617,17 @@ export default function StudentJobsFeed() {
                             <span className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200/50 flex items-center gap-1">
                               <MapPin size={10} /> {selectedJob.location || 'Bangalore'}
                             </span>
-                            {selectedJob.deadline && (() => {
-                              const daysLeft = Math.ceil((new Date(selectedJob.deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                              return daysLeft > 0 ? (
+                            {selectedJob.deadline && (
+                              daysLeft > 0 && !isClosed ? (
                                 <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-rose-100 flex items-center gap-1">
                                   <Clock size={10} /> {daysLeft} days left
                                 </span>
-                              ) : null;
-                            })()}
+                              ) : (
+                                <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200 flex items-center gap-1">
+                                  <Clock size={10} /> Closed
+                                </span>
+                              )
+                            )}
                             <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
                               ✓ Approved
                             </span>
@@ -751,8 +813,13 @@ export default function StudentJobsFeed() {
                             const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
                             const skillPercent = requiredSkills.length > 0 ? Math.round((matchedCount / requiredSkills.length) * 100) : 100;
 
-                            const cgpaEligible = user?.cgpa && parseFloat(String(user.cgpa)) >= (selectedJob.eligibility?.minCGPA || 0);
-                            const branchEligible = !selectedJob.eligibility?.eligibleBranches || selectedJob.eligibility.eligibleBranches.length === 0 || selectedJob.eligibility.eligibleBranches.some((b: string) => b.toLowerCase().trim() === (user?.branch || '').toLowerCase().trim());
+                            const studentCGPA = user?.cgpa !== undefined && user?.cgpa !== null ? parseFloat(String(user.cgpa)) : undefined;
+                            const minCGPA = selectedJob.eligibility?.minCGPA || 0;
+                            const cgpaEligible = minCGPA === 0 || (studentCGPA !== undefined && studentCGPA >= minCGPA);
+
+                            const studentBranch = user?.branch || user?.department || '';
+                            const eligibleBranches = selectedJob.eligibility?.eligibleBranches || [];
+                            const branchEligible = eligibleBranches.length === 0 || eligibleBranches.some((b: string) => isBranchMatch(b, studentBranch));
 
                             return (
                               <div className="space-y-3 pt-2">
@@ -808,23 +875,33 @@ export default function StudentJobsFeed() {
                         <div className="border border-slate-150 rounded-[2rem] p-6 space-y-4 bg-white shadow-sm">
                           <span className="text-slate-900 font-black text-xs block">Eligibility Check</span>
                           {(() => {
-                            const cgpaEligible = user?.cgpa && parseFloat(String(user.cgpa)) >= (selectedJob.eligibility?.minCGPA || 0);
-                            const branchEligible = !selectedJob.eligibility?.eligibleBranches || selectedJob.eligibility.eligibleBranches.length === 0 || selectedJob.eligibility.eligibleBranches.some((b: string) => b.toLowerCase().trim() === (user?.branch || '').toLowerCase().trim());
+                            const studentCGPA = user?.cgpa !== undefined && user?.cgpa !== null ? parseFloat(String(user.cgpa)) : undefined;
+                            const minCGPA = selectedJob.eligibility?.minCGPA || 0;
+                            const cgpaEligible = minCGPA === 0 || (studentCGPA !== undefined && studentCGPA >= minCGPA);
+
+                            const studentBranch = user?.branch || user?.department || '';
+                            const eligibleBranches = selectedJob.eligibility?.eligibleBranches || [];
+                            const branchEligible = eligibleBranches.length === 0 || eligibleBranches.some((b: string) => isBranchMatch(b, studentBranch));
+
+                            const requiredPassingYear = selectedJob.eligibility?.passingYear;
+                            const studentGradYear = user?.graduationYear;
+                            const passingYearEligible = !requiredPassingYear || !studentGradYear || studentGradYear === requiredPassingYear;
+
                             const backlogsEligible = (user?.activeBacklogs || 0) <= (selectedJob.eligibility?.allowedBacklogs !== undefined ? selectedJob.eligibility.allowedBacklogs : 0);
 
                             return (
                               <div className="space-y-2.5 text-xs font-bold text-slate-600">
                                 <div className="flex items-center gap-2">
                                   <span className={cgpaEligible ? 'text-emerald-600' : 'text-rose-600'}>{cgpaEligible ? '✓' : '✗'}</span>
-                                  <span>CGPA {user?.cgpa || 'N/A'} (req: {selectedJob.eligibility?.minCGPA || '0'}+)</span>
+                                  <span>{studentCGPA !== undefined ? `CGPA ${studentCGPA} (req: ${minCGPA > 0 ? `${minCGPA}+` : 'None'})` : `CGPA Not Provided (req: ${minCGPA > 0 ? `${minCGPA}+` : 'None'})`}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-emerald-600">✓</span>
-                                  <span>Graduation year {user?.graduationYear || 'N/A'}</span>
+                                  <span className={passingYearEligible ? 'text-emerald-600' : 'text-rose-600'}>{passingYearEligible ? '✓' : '✗'}</span>
+                                  <span>Graduation year {user?.graduationYear || 'Not Specified'}{requiredPassingYear ? ` (req: ${requiredPassingYear})` : ''}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className={branchEligible ? 'text-emerald-600' : 'text-rose-600'}>{branchEligible ? '✓' : '✗'}</span>
-                                  <span>Branch: {user?.branch || user?.department || 'N/A'}</span>
+                                  <span>Branch: {studentBranch || 'Not Specified'}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className={backlogsEligible ? 'text-emerald-600' : 'text-rose-600'}>{backlogsEligible ? '✓' : '✗'}</span>
@@ -842,11 +919,11 @@ export default function StudentJobsFeed() {
                             {selectedJob.deadline ? new Date(selectedJob.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline specified'}
                           </h4>
                           {selectedJob.deadline && (() => {
-                            const daysLeft = Math.ceil((new Date(selectedJob.deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                            if (daysLeft > 0) {
+                            const daysLeft = getDaysRemaining(selectedJob.deadline);
+                            if (daysLeft > 0 && !isClosed) {
                               return <span className="text-[10px] text-slate-400 font-bold block">{daysLeft} days remaining • Apply soon!</span>;
                             } else {
-                              return <span className="text-[10px] text-rose-500 font-bold block">Deadline passed</span>;
+                              return <span className="text-[10px] text-rose-500 font-bold block">Application deadline passed / closed</span>;
                             }
                           })()}
                         </div>
@@ -884,6 +961,10 @@ export default function StudentJobsFeed() {
                     {appliedJobs.includes(String(selectedJob.id || selectedJob._id)) ? (
                       <button className="h-12 flex-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-not-allowed shadow-sm">
                         ✓ Application Submitted
+                      </button>
+                    ) : isClosed ? (
+                      <button disabled className="h-12 flex-1 bg-slate-200 text-slate-400 border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed shadow-none">
+                        Closed
                       </button>
                     ) : (
                       <Button

@@ -216,7 +216,7 @@ export default function CollegeJobsApprovalPage() {
               >
                 <div>
                   <div className="flex justify-between items-start gap-4 mb-4">
-                    {job.status === 'approved' || job.status === 'active' ? (
+                    {activeTab === 'approved' || job.status === 'approved' || job.status === 'active' ? (
                       <span className="px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-100">
                         Approved
                       </span>
@@ -361,7 +361,7 @@ export default function CollegeJobsApprovalPage() {
 
               {/* Actions */}
               <div className="flex justify-between pt-6 border-t border-slate-100">
-                {(selectedJob.status !== 'approved' && selectedJob.status !== 'active') ? (
+                {(activeTab !== 'approved' && selectedJob.status !== 'approved' && selectedJob.status !== 'active') ? (
                   <>
                     <Button
                       className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-6 py-3 rounded-2xl border-none"

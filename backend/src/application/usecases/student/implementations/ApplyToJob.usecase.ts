@@ -7,6 +7,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Student } from "@domain/entities/student";
 import { JobApplication } from "@domain/entities/JobApplication";
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
+import { JobStatus } from "@domain/enums/JobStatus.enum";
 import { IApplyToJobUseCase } from "../interfaces/IApplyToJob.usecase";
 import { ICreateSystemNotificationUseCase } from "@application/usecases/common/notifications/interfaces/ICreateSystemNotification.usecase";
 import { NotificationRole } from "@domain/enums/NotificationRole.enum";
@@ -29,6 +30,29 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
     const job = await this._jobRepository.findById(jobId);
     if (!job) {
       throw new AppError("Job not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
+    }
+
+    if (job.status === JobStatus.CLOSED || job.isDeleted) {
+      throw new AppError("This job is closed and no longer accepting applications", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
+    if (job.deadline) {
+      const d = new Date(job.deadline);
+      const endOfDay = new Date(d);
+      if (endOfDay.getUTCHours() === 0 && endOfDay.getUTCMinutes() === 0 && endOfDay.getUTCSeconds() === 0) {
+        endOfDay.setUTCHours(23, 59, 59, 999);
+      }
+      if (Date.now() > endOfDay.getTime()) {
+        throw new AppError("The application deadline for this job has passed", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+      }
+    }
+
+    const isAuthorizedCollege = job.collegeId === "ALL"
+      ? (job.approvedColleges || []).includes(student.collegeId)
+      : job.collegeId === student.collegeId;
+
+    if (!isAuthorizedCollege) {
+      throw new AppError("This job is not approved or available for your college", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);
     }
 
     const existingApplication = await this._jobApplicationRepository.findByJobAndStudent(jobId, studentId);

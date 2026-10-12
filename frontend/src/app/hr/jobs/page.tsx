@@ -83,6 +83,7 @@ export default function HRJobsPage() {
     { roundNumber: 1, name: 'Aptitude Test', type: 'APTITUDE', description: 'Basic cognitive and quantitative analysis' },
     { roundNumber: 2, name: 'Technical Round 1', type: 'TECHNICAL', description: 'Core problem solving and CS fundamentals' }
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newRoundName, setNewRoundName] = useState('');
   const [newRoundType, setNewRoundType] = useState<'APTITUDE' | 'CODING' | 'TECHNICAL' | 'HR' | 'GROUP_DISCUSSION' | ''>('');
   const [newRoundDesc, setNewRoundDesc] = useState('');
@@ -434,6 +435,8 @@ export default function HRJobsPage() {
   });
 
   const handleSubmitJob = handleFormSubmit(async () => {
+    if (isSubmitting) return;
+
     if (!title || !category || !deadline || !minSalary || !maxSalary) {
       Swal.fire({
         title: 'Required Fields',
@@ -478,6 +481,7 @@ export default function HRJobsPage() {
       rounds
     };
 
+    setIsSubmitting(true);
     try {
       if (editJobId) { await updateJob(editJobId, payload as any); } else { await postJob(payload as any); }
       await Swal.fire({
@@ -507,6 +511,8 @@ export default function HRJobsPage() {
         },
         buttonsStyling: false
       });
+    } finally {
+      setIsSubmitting(false);
     }
   });
 
@@ -1218,10 +1224,18 @@ export default function HRJobsPage() {
                   </Button>
                 ) : (
                   <Button
-                    className="bg-company-primary text-white font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 transition-all duration-300"
+                    className="bg-company-primary text-white font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
                     onClick={handleSubmitJob}
+                    disabled={isSubmitting}
                   >
-                    Submit for Approval
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit for Approval'
+                    )}
                   </Button>
                 )}
               </div>

@@ -19,11 +19,16 @@ export class ApproveJobUseCase implements IApproveJobUseCase {
       throw new AppError("Unauthorized access to this job", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);
     }
 
+    if (job.status === JobStatus.CLOSED || job.isDeleted) {
+      throw new AppError("Cannot approve a closed or deleted job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
     if (job.collegeId === "ALL") {
       if (job.approvedColleges.includes(collegeId)) {
         throw new AppError("Job already approved by your college", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
       }
       job.approveForCollege(collegeId);
+      job.status = JobStatus.APPROVED;
     } else {
       if (job.status !== JobStatus.PENDING_REVIEW) {
         throw new AppError("Job is not pending review", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);

@@ -77,35 +77,59 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
       const allowedBacklogs = job.eligibility?.allowedBacklogs !== undefined ? job.eligibility.allowedBacklogs : 0;
       const eligibleBranches = job.eligibility?.eligibleBranches || [];
 
-      const studentCGPA = student.cgpa || 0;
+      const studentCGPA = student.cgpa;
       const studentBacklogs = student.activeBacklogs || 0;
       const studentBranch = student.branch || student.department || '';
 
-      const cgpaEligible = studentCGPA >= minCGPA;
+      const cgpaEligible = minCGPA === 0 || (studentCGPA !== undefined && studentCGPA !== null && studentCGPA >= minCGPA);
       const backlogsEligible = studentBacklogs <= allowedBacklogs;
       const branchEligible = eligibleBranches.length === 0 ||
         eligibleBranches.some(b => BranchMatcher.isBranchMatch(b, studentBranch));
 
-      const requiredDegreeStr = job.eligibility?.degreeType || '';
-      const requiredDegrees = requiredDegreeStr.split(',').map(d => d.trim().toLowerCase()).filter(d => d);
+      const requiredDegreeStr = (job.eligibility?.degreeType || '').trim();
+      const requiredDegrees = requiredDegreeStr.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
+      const isAnyDegree = !requiredDegreeStr ||
+        requiredDegreeStr.toLowerCase() === 'any degree' ||
+        requiredDegreeStr.toLowerCase() === 'all' ||
+        requiredDegrees.includes('any degree') ||
+        requiredDegrees.includes('all');
 
-      const degreeEligible = requiredDegrees.length === 0 || requiredDegreeStr === 'Any Degree' ||
-        (student.degree && requiredDegrees.some(rd => {
+      const degreeEligible = isAnyDegree || (
+        student.degree ? requiredDegrees.some(rd => {
           const sd = student.degree!.toLowerCase().trim();
           return rd === sd || rd.includes(sd) || sd.includes(rd);
-        }));
+        }) : false
+      );
+
+      const requiredPassingYear = job.eligibility?.passingYear;
+      const studentGradYear = student.graduationYear;
+      const passingYearEligible = !requiredPassingYear || !studentGradYear || studentGradYear === requiredPassingYear;
+
+      // Inclusive end-of-day deadline check
+      let isExpired = false;
+      if (job.deadline) {
+        const d = new Date(job.deadline);
+        const endOfDay = new Date(d);
+        if (endOfDay.getUTCHours() === 0 && endOfDay.getUTCMinutes() === 0 && endOfDay.getUTCSeconds() === 0) {
+          endOfDay.setUTCHours(23, 59, 59, 999);
+        }
+        isExpired = Date.now() > endOfDay.getTime();
+      }
+      const isClosed = job.status === JobStatus.CLOSED || isExpired;
 
       const cgpaScore = cgpaEligible ? 15 : 0;
       const backlogsScore = backlogsEligible ? 15 : 0;
 
       const matchScore = Math.round(skillMatchScore + cgpaScore + backlogsScore);
-      const isEligible = cgpaEligible && backlogsEligible && branchEligible && !!degreeEligible;
+      const isEligible = cgpaEligible && backlogsEligible && branchEligible && degreeEligible && passingYearEligible && !isClosed;
 
       return {
         ...job.toJSON(),
         companyName,
         matchScore,
-        isEligible
+        isEligible,
+        isClosed,
+        isExpired
       };
     }));
     enrichedJobs.sort((a, b) => {

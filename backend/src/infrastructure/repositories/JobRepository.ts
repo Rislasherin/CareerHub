@@ -32,15 +32,15 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
         { collegeId, status: JobStatus.PENDING_REVIEW },
         {
           collegeId: "ALL",
-          status: { $in: [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE] },
+          status: { $in: [JobStatus.PENDING_REVIEW, JobStatus.APPROVED, JobStatus.ACTIVE] },
           approvedColleges: { $ne: collegeId },
           rejectedColleges: { $ne: collegeId }
         }
       ];
     } else if (status === JobStatus.APPROVED) {
       query.$or = [
-        { collegeId, status: JobStatus.APPROVED },
-        { collegeId: "ALL", approvedColleges: collegeId }
+        { collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } },
+        { collegeId: "ALL", approvedColleges: collegeId, status: { $ne: JobStatus.CLOSED } }
       ];
     } else if (status === JobStatus.REJECTED) {
       query.$or = [
@@ -49,8 +49,8 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
       ];
     } else if (status === JobStatus.ACTIVE) {
       query.$or = [
-        { collegeId, status: JobStatus.ACTIVE },
-        { collegeId: "ALL", status: JobStatus.ACTIVE, approvedColleges: collegeId }
+        { collegeId, status: { $in: [JobStatus.ACTIVE, JobStatus.APPROVED] } },
+        { collegeId: "ALL", approvedColleges: collegeId, status: { $ne: JobStatus.CLOSED } }
       ];
     } else {
       query.$or = [
