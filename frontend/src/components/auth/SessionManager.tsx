@@ -139,11 +139,13 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
     // 2. Authenticated user
     if (isAuthenticated && activeRole) {
       const hrOnboardingComplete =
-        (hrDetails?.onboardingStep || 0) >= 3 ||
-        hrDetails?.status?.toUpperCase() === 'ACTIVE';
+        ((hrDetails?.onboardingStep || 0) >= 3 ||
+        hrDetails?.status?.toUpperCase() === 'ACTIVE') &&
+        hrDetails?.status?.toUpperCase() !== 'REJECTED';
       const collegeOnboardingComplete =
-        (collegeAdminDetails?.onboardingStep || 0) >= 3 ||
-        collegeAdminDetails?.status?.toUpperCase() === 'ACTIVE';
+        ((collegeAdminDetails?.onboardingStep || 0) >= 3 ||
+        collegeAdminDetails?.status?.toUpperCase() === 'ACTIVE') &&
+        collegeAdminDetails?.status?.toUpperCase() !== 'REJECTED';
 
       // Prevent going back to onboarding if already completed
       if (activeRole === 'hr' && hrOnboardingComplete && pathname === '/hr/onboarding') {

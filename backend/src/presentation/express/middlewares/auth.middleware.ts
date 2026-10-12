@@ -60,13 +60,51 @@ export class AuthMiddleware {
               if (company.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
               }
-              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding'];
-              if (company.status === UserStatus.PENDING && (company.onboardingStep as number) >= 3) {
-                if (!allowedPendingPaths.some(p => req.originalUrl.includes(p))) {
+              const allowedPendingPaths = [
+                '/auth/me', 
+                '/auth/status', 
+                '/auth/logout', 
+                '/auth/hr/onboarding', 
+                '/auth/hr/resubmit',
+                '/auth/college-admin/onboarding'
+              ];
+              const isRestricted = company.status === UserStatus.REJECTED || (company.status === UserStatus.PENDING && (company.onboardingStep as number) >= 3);
+              if (isRestricted) {
+                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
+                if (!isAllowed) {
+                  if (company.status === UserStatus.REJECTED) {
+                    throw new UnauthorizedError("Your company application was rejected. Please review feedback and resubmit.");
+                  }
                   throw new UnauthorizedError("Your company account is currently pending administrator approval.");
                 }
               }
-              user = { ...hrUser, onboardingStep: company.onboardingStep };
+              user = { 
+                ...hrUser, 
+                onboardingStep: company.onboardingStep,
+                companyName: company['name'],
+                name: company['name'],
+                industry: company['industry'],
+                sector: company['sector'],
+                size: company['size'],
+                website: company['website'],
+                headquarters: company['headquarters'],
+                location: company['location'],
+                description: company['description'],
+                contactName: company['contactName'],
+                contactEmail: company['contactEmail'],
+                contactPhone: company['contactPhone'],
+                contactJobTitle: company['contactJobTitle'],
+                preferredColleges: company['preferredColleges'],
+                logoUrl: company['logoUrl'],
+                verificationDocument: company['verificationDocument'],
+                status: company.status || hrUser.status,
+                companyStatus: company.status,
+                rejectionReason: company['rejectionReason'],
+                rejectedAt: company['rejectedAt'],
+                resubmittedAt: company['resubmittedAt'],
+                approvedAt: company['approvedAt'],
+                statusHistory: company['statusHistory']
+              };
             } else {
               user = hrUser;
             }
@@ -86,11 +124,23 @@ export class AuthMiddleware {
               if (org.status === UserStatus.BLOCKED) {
                 throw new UnauthorizedError("Your institution has been blocked. Please contact admin.");
               }
-              // Check if organization is pending approval
-              const allowedPendingPaths = ['/auth/me', '/auth/logout', '/auth/hr/onboarding', '/auth/college-admin/onboarding', '/subscription/create'];
-              if (org.status === UserStatus.PENDING && (org.onboardingStep as number) >= 3) {
+              // Check if organization is pending approval or rejected
+              const allowedPendingPaths = [
+                '/auth/me', 
+                '/auth/status', 
+                '/auth/logout', 
+                '/auth/hr/onboarding', 
+                '/auth/college-admin/onboarding', 
+                '/auth/college-admin/resubmit',
+                '/subscription/create'
+              ];
+              const isRestricted = org.status === UserStatus.REJECTED || (org.status === UserStatus.PENDING && (org.onboardingStep as number) >= 3);
+              if (isRestricted) {
                 const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
                 if (!isAllowed) {
+                  if (org.status === UserStatus.REJECTED) {
+                    throw new UnauthorizedError("Your institution application was rejected. Please review feedback and resubmit.");
+                  }
                   throw new UnauthorizedError("Your institution account is currently pending administrator approval.");
                 }
               }
@@ -106,7 +156,7 @@ export class AuthMiddleware {
                     hasActiveSubscription = sub?.status === SubscriptionStatus.ACTIVE;
                   }
                   
-                  const isAllowed = ['/auth/logout', '/subscription/create', '/auth/me'].some(p => req.originalUrl.includes(p));
+                  const isAllowed = ['/auth/logout', '/subscription/create', '/auth/me', '/auth/status'].some(p => req.originalUrl.includes(p));
                   if (!hasActiveSubscription && !isAllowed) {
                     throw new UnauthorizedError("Your trial has expired. Please subscribe to continue using the platform.");
                   }
@@ -117,9 +167,30 @@ export class AuthMiddleware {
                 ...collegeUser, 
                 onboardingStep: org.onboardingStep,
                 collegeName: org['name'],
+                name: org['name'],
+                shortName: org['shortName'],
+                yearEstablished: org['yearEstablished'],
+                website: org['website'],
+                address: org['address'],
+                city: org['city'],
+                state: org['state'],
+                naacGrade: org['naacGrade'],
+                placementCellName: org['placementCellName'],
+                placementContactEmail: org['placementContactEmail'] || collegeUser['email'],
+                placementContactPhone: org['placementContactPhone'],
+                logoUrl: org['logoUrl'],
+                verificationDocument: org['verificationDocument'],
                 activeBranches: org['activeBranches'] || [],
+                currentAcademicYear: org['currentAcademicYear'],
+                activePlacementBatch: org['activePlacementBatch'],
                 plan: org['plan'] || null,
-                trialEndsAt: org['trialEndsAt'] || null
+                trialEndsAt: org['trialEndsAt'] || null,
+                status: org['status'] || collegeUser['status'],
+                rejectionReason: org['rejectionReason'] || null,
+                rejectedAt: org['rejectedAt'] || null,
+                resubmittedAt: org['resubmittedAt'] || null,
+                approvedAt: org['approvedAt'] || null,
+                statusHistory: org['statusHistory'] || []
               };
             } else {
               user = collegeUser;

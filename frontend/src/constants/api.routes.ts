@@ -53,6 +53,7 @@ export const API_ROUTES = {
     HR_REGISTER: '/auth/hr/register',
     HR_VERIFY_OTP: '/auth/hr/verify-otp',
     HR_ONBOARDING: '/auth/hr/onboarding',
+    HR_RESUBMIT: '/auth/hr/resubmit',
     COLLEGE_ADMIN_REGISTER: '/auth/college-admin/register',
     COLLEGE_ADMIN_VERIFY_OTP: '/auth/college-admin/verify-otp',
     COLLEGE_ADMIN_ONBOARDING: '/auth/college-admin/onboarding',

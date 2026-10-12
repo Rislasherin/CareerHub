@@ -78,10 +78,14 @@ export class SuperAdminController {
 
 
   updateStatus = asyncHandler(async (req: Request, res: Response) => {
+    if (req.user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenError("Access denied: Super Admin authorization required");
+    }
     const { role, id } = req.params;
-    const { status } = req.body;
+    const { status, reason, rejectionReason } = req.body;
     const adminRole = req.user?.role;
-    await this._updateStatusUseCase.execute(role, id, status, adminRole);
+    const adminId = (req.user as any)?.id;
+    await this._updateStatusUseCase.execute(role, id, status, adminRole, reason || rejectionReason, adminId);
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 

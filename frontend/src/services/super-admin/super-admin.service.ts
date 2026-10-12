@@ -36,8 +36,13 @@ export const superAdminService = {
     return response.data;
   },
 
-  updateStatus: async (role: string, id: string, status: string) => {
-    const response = await apiClient.patch(`${API_ROUTES.SUPER_ADMIN.MANAGEMENT}/${role}/${id}/status`, { status });
+  updateStatus: async (role: string, id: string, status: string, reason?: string) => {
+    const payload: { status: string; reason?: string; rejectionReason?: string } = { status };
+    if (reason) {
+      payload.reason = reason;
+      payload.rejectionReason = reason;
+    }
+    const response = await apiClient.patch(`${API_ROUTES.SUPER_ADMIN.MANAGEMENT}/${role}/${id}/status`, payload);
     return response.data;
   },
 

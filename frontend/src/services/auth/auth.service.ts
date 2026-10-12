@@ -128,8 +128,18 @@ export const updateHROnboarding = async (payload: Record<string, unknown>): Prom
   return response.data;
 }
 
+export const resubmitHROnboarding = async (payload: Record<string, unknown> = {}): Promise<unknown> => {
+  const response = await apiClient.post(API_ROUTES.AUTH.HR_RESUBMIT, payload) as ApiResponse<unknown>;
+  return response.data;
+}
+
 export const updateCollegeOnboarding = async (payload: Record<string, unknown>): Promise<unknown> => {
   const response = await apiClient.patch(API_ROUTES.AUTH.COLLEGE_ADMIN_ONBOARDING, payload) as ApiResponse<unknown>;
+  return response.data;
+}
+
+export const resubmitCollegeOnboarding = async (payload: Record<string, unknown> = {}): Promise<unknown> => {
+  const response = await apiClient.post('/auth/college-admin/resubmit', payload) as ApiResponse<unknown>;
   return response.data;
 }
 

@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { NotificationBell } from '../shared/NotificationBell';
-import { LogOut, User as UserIcon, Menu, X, Clock, ShieldCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { LogOut, User as UserIcon, Menu, X, Clock, ShieldCheck, AlertTriangle, XCircle, FileEdit } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { clearAuth } from '@/redux/slices/authSlice';
 import { clearStudentDetails } from '@/redux/slices/studentSlice';
@@ -19,6 +20,7 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const router = useRouter();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -155,6 +157,166 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     <p className="text-xs text-slate-500 mt-1">Usually takes 1-2 business days. We will notify you via email once approved.</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          ) : (role === 'college_admin' && (collegeAdminDetails as any)?.status === 'REJECTED') ? (
+            <div className="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center space-y-6 max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center text-rose-500 shadow-inner border border-rose-100">
+                <XCircle size={44} strokeWidth={1.8} />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-center mb-1">
+                  <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-200">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    Application Rejected
+                  </span>
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Application Requires Changes</h2>
+                <p className="text-slate-500 font-medium max-w-lg mx-auto text-sm leading-relaxed">
+                  Your institution application was reviewed by our administrators and requires corrections before it can be approved. Please review the feedback below, make the necessary changes, and resubmit for review.
+                </p>
+              </div>
+
+              {/* Rejection Reason Card */}
+              <div className="bg-gradient-to-br from-rose-50/70 to-red-50/40 border border-rose-200/80 rounded-2xl p-6 w-full text-left shadow-sm">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-black text-rose-950 uppercase tracking-wider">Administrator Feedback</h4>
+                    <p className="text-sm text-rose-900 font-medium mt-1 leading-relaxed bg-white/70 p-3.5 rounded-xl border border-rose-100">
+                      {(collegeAdminDetails as any)?.rejectionReason || 'No specific feedback provided. Please review and update your institution submission details.'}
+                    </p>
+                    {(collegeAdminDetails as any)?.rejectedAt && (
+                      <p className="text-[11px] text-rose-500 font-bold mt-2">
+                        Reviewed on {new Date((collegeAdminDetails as any).rejectedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submitted Details Snapshot */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full text-left shadow-sm space-y-4">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Submitted Institution Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="font-medium text-slate-400">Institution Name:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(collegeAdminDetails as any)?.collegeName || (collegeAdminDetails as any)?.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Contact Email:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(collegeAdminDetails as any)?.placementContactEmail || collegeAdminDetails?.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Location:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{[(collegeAdminDetails as any)?.city, (collegeAdminDetails as any)?.state].filter(Boolean).join(', ') || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Active Branches:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{collegeAdminDetails?.activeBranches?.length ? collegeAdminDetails.activeBranches.join(', ') : 'None specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
+                <button
+                  onClick={() => router.push('/college/onboarding?mode=edit')}
+                  className="w-full sm:flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] hover:opacity-95 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/10 transition-all cursor-pointer"
+                >
+                  <FileEdit size={16} /> Edit and Resubmit Form
+                </button>
+                <button
+                  onClick={() => setIsLogoutModalOpen(true)}
+                  className="w-full sm:w-auto px-6 h-12 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-sm transition-all"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (role === 'hr' && (hrDetails as any)?.status === 'REJECTED') ? (
+            <div className="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center space-y-6 max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center text-rose-500 shadow-inner border border-rose-100">
+                <XCircle size={44} strokeWidth={1.8} />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-center mb-1">
+                  <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-200">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    Application Rejected
+                  </span>
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Application Requires Changes</h2>
+                <p className="text-slate-500 font-medium max-w-lg mx-auto text-sm leading-relaxed">
+                  Your company application was reviewed by our administrators and requires corrections before it can be approved. Please review the feedback below, make the necessary changes, and resubmit for review.
+                </p>
+              </div>
+
+              {/* Rejection Reason Card */}
+              <div className="bg-gradient-to-br from-rose-50/70 to-red-50/40 border border-rose-200/80 rounded-2xl p-6 w-full text-left shadow-sm">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-black text-rose-950 uppercase tracking-wider">Administrator Feedback</h4>
+                    <p className="text-sm text-rose-900 font-medium mt-1 leading-relaxed bg-white/70 p-3.5 rounded-xl border border-rose-100">
+                      {(hrDetails as any)?.rejectionReason || 'No specific feedback provided. Please review and update your company submission details.'}
+                    </p>
+                    {(hrDetails as any)?.rejectedAt && (
+                      <p className="text-[11px] text-rose-500 font-bold mt-2">
+                        Reviewed on {new Date((hrDetails as any).rejectedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submitted Details Snapshot */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full text-left shadow-sm space-y-4">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Submitted Company Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="font-medium text-slate-400">Company Name:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(hrDetails as any)?.companyName || (hrDetails as any)?.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Contact Person:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{[(hrDetails as any)?.firstName, (hrDetails as any)?.lastName].filter(Boolean).join(' ') || (hrDetails as any)?.contactName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Contact Email:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(hrDetails as any)?.contactEmail || hrDetails?.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Industry:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(hrDetails as any)?.industry || (hrDetails as any)?.sector || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Headquarters / Location:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(hrDetails as any)?.headquarters || (hrDetails as any)?.location || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-400">Company Size:</span>
+                    <p className="font-bold text-slate-800 text-sm mt-0.5">{(hrDetails as any)?.size || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
+                <button
+                  onClick={() => router.push('/hr/onboarding?mode=edit')}
+                  className="w-full sm:flex-1 h-12 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:opacity-95 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/10 transition-all cursor-pointer"
+                >
+                  <FileEdit size={16} /> Edit and Resubmit Form
+                </button>
+                <button
+                  onClick={() => setIsLogoutModalOpen(true)}
+                  className="w-full sm:w-auto px-6 h-12 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-sm transition-all"
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
           ) : (

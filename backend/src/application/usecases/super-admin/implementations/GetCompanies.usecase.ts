@@ -24,11 +24,25 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
         contactEmail: userJson.email,
         email: userJson.email,
         status: userJson.status,
+        companyStatus: companyProps?.status,
         industry: companyProps?.industry || "N/A",
+        sector: companyProps?.sector || "N/A",
+        size: companyProps?.size || "N/A",
         website: companyProps?.website,
         location: companyProps?.location || companyProps?.headquarters || "N/A",
+        headquarters: companyProps?.headquarters,
         description: companyProps?.description || "",
-        contactPhone: companyProps?.contactPhone || ""
+        contactPhone: companyProps?.contactPhone || "",
+        contactJobTitle: companyProps?.contactJobTitle || userJson.designation || "",
+        logoUrl: companyProps?.logoUrl,
+        verificationDocument: companyProps?.verificationDocument,
+        preferredColleges: companyProps?.preferredColleges || [],
+        rejectionReason: companyProps?.rejectionReason,
+        rejectedAt: companyProps?.rejectedAt,
+        resubmittedAt: companyProps?.resubmittedAt,
+        approvedAt: companyProps?.approvedAt,
+        statusHistory: companyProps?.statusHistory || [],
+        createdAt: companyProps?.createdAt || userJson.createdAt
       };
     }));
 
