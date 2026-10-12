@@ -9,6 +9,7 @@ import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IPostJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IPostJob.usecase";
 import { IGetHRJobsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRJobs.usecase";
 import { ICloseJobUseCase } from "@application/usecases/hr/job-engine/interfaces/ICloseJob.usecase";
+import { IReopenJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IReopenJob.usecase";
 import { IDeleteJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IDeleteJob.usecase";
 import { IGetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRCandidates.usecase";
 import { IUpdateJobUseCase } from "@application/usecases/hr/job-engine/interfaces/IUpdateJob.usecase";
@@ -19,6 +20,8 @@ import { IUpdateApplicationStatusUseCase } from "@application/usecases/hr/job-en
 import { JobApplicationStatus } from "@domain/enums/JobApplicationStatus.enum";
 
 import { IGetHRHireRequestsUseCase } from "@application/usecases/hr/job-engine/interfaces/IGetHRHireRequests.usecase";
+import { ICancelJobScheduleUseCase } from "@application/usecases/hr/job-engine/interfaces/ICancelJobSchedule.usecase";
+import { IPublishJobNowUseCase } from "@application/usecases/hr/job-engine/interfaces/IPublishJobNow.usecase";
 
 export class HRJobController {
   constructor(
@@ -31,7 +34,10 @@ export class HRJobController {
     private readonly _getCandidateProfileUseCase: IGetCandidateProfileUseCase,
     private readonly _getHRJobApplicationsUseCase: IGetHRJobApplicationsUseCase,
     private readonly _getHRHireRequestsUseCase: IGetHRHireRequestsUseCase,
-    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase
+    private readonly _updateApplicationStatusUseCase: IUpdateApplicationStatusUseCase,
+    private readonly _reopenJobUseCase: IReopenJobUseCase,
+    private readonly _cancelJobScheduleUseCase: ICancelJobScheduleUseCase,
+    private readonly _publishJobNowUseCase: IPublishJobNowUseCase
   ) { }
 
   postJob = asyncHandler(async (req: Request, res: Response) => {
@@ -75,7 +81,20 @@ export class HRJobController {
       throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
     }
     const { jobId } = req.params;
-    const result = await this._closeJobUseCase.execute(companyId, jobId);
+    const { reason } = req.body || {};
+    const result = await this._closeJobUseCase.execute(companyId, jobId, reason);
+    sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED);
+  });
+
+  reopenJob = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { jobId } = req.params;
+    const { deadline } = req.body || {};
+    const newDeadline = deadline ? new Date(deadline) : undefined;
+    const result = await this._reopenJobUseCase.execute(companyId, jobId, newDeadline);
     sendSuccess(res, result.toJSON(), MESSAGES.SUCCESS.UPDATED);
   });
 
@@ -155,5 +174,23 @@ export class HRJobController {
     sendSuccess(res, null, MESSAGES.SUCCESS.UPDATED);
   });
 
+  cancelSchedule = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { jobId } = req.params;
+    const result = await this._cancelJobScheduleUseCase.execute(jobId, companyId);
+    sendSuccess(res, result.toJSON(), "Job schedule cancelled successfully");
+  });
 
+  publishJobNow = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError("Company ID not found in session", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const { jobId } = req.params;
+    const result = await this._publishJobNowUseCase.execute(jobId, companyId);
+    sendSuccess(res, result.toJSON(), "Job submitted for review successfully");
+  });
 }

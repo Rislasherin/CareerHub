@@ -7,8 +7,13 @@ import { HRDashboardController } from "@presentation/http/controllers/hr/hr.dash
 import { PostJobUseCase } from "@application/usecases/hr/job-engine/implementations/PostJob.usecase";;
 import { UpdateJobUseCase } from "@application/usecases/hr/job-engine/implementations/UpdateJob.usecase";;
 import { GetHRJobsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobs.usecase";;
-import { CloseJobUseCase } from "@application/usecases/hr/job-engine/implementations/CloseJob.usecase";;
-import { DeleteJobUseCase } from "@application/usecases/hr/job-engine/implementations/DeleteJob.usecase";;
+import { CloseJobUseCase } from "@application/usecases/hr/job-engine/implementations/CloseJob.usecase";
+import { ReopenJobUseCase } from "@application/usecases/hr/job-engine/implementations/ReopenJob.usecase";
+import { DeleteJobUseCase } from "@application/usecases/hr/job-engine/implementations/DeleteJob.usecase";
+import { CancelJobScheduleUseCase } from "@application/usecases/hr/job-engine/implementations/CancelJobSchedule.usecase";
+import { PublishJobNowUseCase } from "@application/usecases/hr/job-engine/implementations/PublishJobNow.usecase";
+import { ProcessScheduledJobsUseCase } from "@application/usecases/hr/job-engine/implementations/ProcessScheduledJobs.usecase";
+import { ScheduledJobPublisherService } from "@infrastructure/services/jobs/ScheduledJobPublisher.service";
 import { HRJobController } from "@presentation/http/controllers/hr/job.controller";
 import { GetHRCandidatesUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRCandidates.usecase";
 import { GetHRJobApplicationsUseCase } from "@application/usecases/hr/job-engine/implementations/GetHRJobApplications.usecase";
@@ -44,8 +49,21 @@ export const makeVerifyCompanyOtpUseCase = () => {
   return new VerifyCompanyOtpUseCase(otpRepository, hrUserRepository, companyRepository, jwtService);
 };
 
+import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
+import { UploadCompanyVerificationDocumentUseCase } from "@application/usecases/auth/hr/implementations/UploadCompanyVerificationDocument.usecase";
+import { DeleteCompanyVerificationDocumentUseCase } from "@application/usecases/auth/hr/implementations/DeleteCompanyVerificationDocument.usecase";
+
 export const makeUpdateCompanyOnboardingUseCase = () => {
   return new UpdateCompanyOnboardingUseCase(companyRepository, hrUserRepository);
+};
+
+export const makeUploadCompanyVerificationDocumentUseCase = () => {
+  const cloudinaryService = new CloudinaryService();
+  return new UploadCompanyVerificationDocumentUseCase(companyRepository, cloudinaryService);
+};
+
+export const makeDeleteCompanyVerificationDocumentUseCase = () => {
+  return new DeleteCompanyVerificationDocumentUseCase(companyRepository);
 };
 
 export const makeHRAuthController = () => {
@@ -53,7 +71,9 @@ export const makeHRAuthController = () => {
     makeRegisterCompanyUseCase(),
     makeUpdateCompanyOnboardingUseCase(),
     makeVerifyCompanyOtpUseCase(),
-    makeLoginHRUseCase()
+    makeLoginHRUseCase(),
+    makeUploadCompanyVerificationDocumentUseCase(),
+    makeDeleteCompanyVerificationDocumentUseCase()
   );
 };
 
@@ -99,6 +119,10 @@ export const makeCloseJobUseCase = () => {
   return new CloseJobUseCase(jobRepository);
 };
 
+export const makeReopenJobUseCase = () => {
+  return new ReopenJobUseCase(jobRepository);
+};
+
 export const makeDeleteJobUseCase = () => {
   return new DeleteJobUseCase(jobRepository);
 };
@@ -129,6 +153,20 @@ export const makeUpdateApplicationStatusUseCase = () => {
 
 
 
+export const makeCancelJobScheduleUseCase = () => {
+  return new CancelJobScheduleUseCase(jobRepository);
+};
+
+export const makePublishJobNowUseCase = () => {
+  return new PublishJobNowUseCase(jobRepository);
+};
+
+export const makeProcessScheduledJobsUseCase = () => {
+  return new ProcessScheduledJobsUseCase(jobRepository);
+};
+
+export const scheduledJobPublisherService = new ScheduledJobPublisherService(makeProcessScheduledJobsUseCase());
+
 export const makeHRJobController = () => {
   return new HRJobController(
     makePostJobUseCase(),
@@ -140,7 +178,10 @@ export const makeHRJobController = () => {
     makeGetCandidateProfileUseCase(),
     makeGetHRJobApplicationsUseCase(),
     makeGetHRHireRequestsUseCase(),
-    makeUpdateApplicationStatusUseCase()
+    makeUpdateApplicationStatusUseCase(),
+    makeReopenJobUseCase(),
+    makeCancelJobScheduleUseCase(),
+    makePublishJobNowUseCase()
   );
 };
 

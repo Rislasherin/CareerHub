@@ -40,7 +40,7 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
     } else if (status === JobStatus.APPROVED) {
       query.$or = [
         { collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } },
-        { collegeId: "ALL", approvedColleges: collegeId, status: { $ne: JobStatus.CLOSED } }
+        { collegeId: "ALL", approvedColleges: collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
       ];
     } else if (status === JobStatus.REJECTED) {
       query.$or = [
@@ -50,7 +50,12 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
     } else if (status === JobStatus.ACTIVE) {
       query.$or = [
         { collegeId, status: { $in: [JobStatus.ACTIVE, JobStatus.APPROVED] } },
-        { collegeId: "ALL", approvedColleges: collegeId, status: { $ne: JobStatus.CLOSED } }
+        { collegeId: "ALL", approvedColleges: collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
+      ];
+    } else if (status === JobStatus.CLOSED) {
+      query.$or = [
+        { collegeId, status: JobStatus.CLOSED },
+        { collegeId: "ALL", approvedColleges: collegeId, status: JobStatus.CLOSED }
       ];
     } else {
       query.$or = [
@@ -135,6 +140,39 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
       skill: r._id,
       demand: r.demand
     }));
+  }
+
+  async findDueScheduledJobs(now: Date = new Date()): Promise<Job[]> {
+    const docs = await this.model.find({
+      status: JobStatus.SCHEDULED,
+      scheduledPublishAt: { $lte: now },
+      isDeleted: { $ne: true }
+    }).sort({ scheduledPublishAt: 1 });
+
+    return docs.map((doc) => this.toEntity(doc as JobDocument));
+  }
+
+  async claimAndPublishScheduledJob(jobId: string, targetStatus: JobStatus): Promise<Job | null> {
+    const doc = await this.model.findOneAndUpdate(
+      {
+        _id: jobId,
+        status: JobStatus.SCHEDULED,
+        isDeleted: { $ne: true }
+      },
+      {
+        $set: {
+          status: targetStatus,
+          publishOption: "publish_now"
+        },
+        $unset: {
+          scheduledPublishAt: 1
+        }
+      },
+      { new: true }
+    );
+
+    if (!doc) return null;
+    return this.toEntity(doc as JobDocument);
   }
 }
 

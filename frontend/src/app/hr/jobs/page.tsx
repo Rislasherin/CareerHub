@@ -14,7 +14,10 @@ import {
   postJob,
   updateJob,
   closeJob,
-  deleteJob
+  reopenJob,
+  deleteJob,
+  cancelJobSchedule,
+  publishJobNow
 } from '@/services/hr/job.service';
 import {
   Job,
@@ -88,6 +91,14 @@ export default function HRJobsPage() {
   const [newRoundType, setNewRoundType] = useState<'APTITUDE' | 'CODING' | 'TECHNICAL' | 'HR' | 'GROUP_DISCUSSION' | ''>('');
   const [newRoundDesc, setNewRoundDesc] = useState('');
 
+  // Publishing Option State
+  const [publishOption, setPublishOption] = useState<'publish_now' | 'draft' | 'schedule'>('publish_now');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('09:00');
+  const [scheduledTimezone, setScheduledTimezone] = useState(
+    typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC'
+  );
+
   // Selected Job Details Modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -140,7 +151,9 @@ export default function HRJobsPage() {
   const handleCloseJob = async (jobId: string) => {
     const result = await Swal.fire({
       title: 'Close Job Opening?',
-      text: 'Are you sure you want to close this job opening? This cannot be undone.',
+      text: 'Are you sure you want to close this job opening? Candidates will no longer be able to apply.',
+      input: 'textarea',
+      inputPlaceholder: 'Optional closure reason (e.g., Positions filled, hiring completed)...',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Close it',
@@ -148,6 +161,7 @@ export default function HRJobsPage() {
       customClass: {
         popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
         title: 'text-2xl font-black text-slate-900 mb-2',
+        input: 'rounded-2xl border border-slate-200 text-sm p-4 font-normal mt-3',
         confirmButton: 'bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl mr-2',
         cancelButton: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm font-bold px-6 py-3 rounded-2xl'
       },
@@ -157,7 +171,8 @@ export default function HRJobsPage() {
     if (!result.isConfirmed) return;
 
     try {
-      await closeJob(jobId);
+      const reason = result.value ? String(result.value).trim() : undefined;
+      await closeJob(jobId, reason);
       await Swal.fire({
         title: 'Closed!',
         text: 'Job successfully marked as closed!',
@@ -175,7 +190,98 @@ export default function HRJobsPage() {
     } catch (err: unknown) {
       Swal.fire({
         title: 'Error',
-        text: (err as Error)?.message || 'Failed to close job openings',
+        text: (err as Error)?.message || 'Failed to close job opening',
+        icon: 'error',
+        confirmButtonText: 'Ok',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+        },
+        buttonsStyling: false
+      });
+    }
+  };
+
+  const handleReopenJob = async (job: Job) => {
+    const isDeadlinePassed = new Date(job.deadline).getTime() <= Date.now();
+    let newDeadline: string | undefined = undefined;
+
+    if (isDeadlinePassed) {
+      const { value: deadlineValue, isConfirmed } = await Swal.fire({
+        title: 'Update Deadline to Reopen',
+        text: 'The previous application deadline has passed. Please specify a new future deadline date to reopen this opening.',
+        html: `
+          <div class="mt-4 text-left">
+            <label class="block text-xs font-bold text-slate-600 mb-1">New Application Deadline *</label>
+            <input type="date" id="swal-new-deadline" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm" min="${new Date().toISOString().split('T')[0]}" />
+          </div>
+        `,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Reopen Job',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+          const input = document.getElementById('swal-new-deadline') as HTMLInputElement;
+          if (!input || !input.value) {
+            Swal.showValidationMessage('Please select a valid future deadline date');
+            return false;
+          }
+          if (new Date(input.value).getTime() <= Date.now()) {
+            Swal.showValidationMessage('Deadline date must be in the future');
+            return false;
+          }
+          return input.value;
+        },
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl mr-2',
+          cancelButton: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm font-bold px-6 py-3 rounded-2xl'
+        },
+        buttonsStyling: false
+      });
+      if (!isConfirmed) return;
+      newDeadline = deadlineValue;
+    } else {
+      const confirmResult = await Swal.fire({
+        title: 'Reopen Job Opening?',
+        text: `Are you sure you want to reopen this job opening? Candidates will be able to apply until ${new Date(job.deadline).toLocaleDateString()}.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Reopen',
+        cancelButtonText: 'Cancel',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl mr-2',
+          cancelButton: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm font-bold px-6 py-3 rounded-2xl'
+        },
+        buttonsStyling: false
+      });
+      if (!confirmResult.isConfirmed) return;
+    }
+
+    try {
+      await reopenJob(job.id, newDeadline);
+      await Swal.fire({
+        title: 'Reopened!',
+        text: 'Job successfully reopened and active!',
+        icon: 'success',
+        confirmButtonText: 'Ok',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+        },
+        buttonsStyling: false
+      });
+      fetchJobs();
+      setShowDetailsModal(false);
+    } catch (err: unknown) {
+      Swal.fire({
+        title: 'Error',
+        text: (err as Error)?.message || 'Failed to reopen job opening',
         icon: 'error',
         confirmButtonText: 'Ok',
         customClass: {
@@ -328,6 +434,21 @@ export default function HRJobsPage() {
     setBranches(job.eligibility.eligibleBranches || []);
     setAllBranchesSelected(job.eligibility.eligibleBranches?.length === 0);
     setRounds(job.rounds || []);
+    if (job.status === 'draft') {
+      setPublishOption('draft');
+    } else if (job.status === 'scheduled') {
+      setPublishOption('schedule');
+      if (job.scheduledPublishAt) {
+        const d = new Date(job.scheduledPublishAt);
+        setScheduledDate(d.toISOString().split('T')[0]);
+        setScheduledTime(d.toTimeString().substring(0, 5));
+      }
+      if (job.scheduledTimezone) {
+        setScheduledTimezone(job.scheduledTimezone);
+      }
+    } else {
+      setPublishOption('publish_now');
+    }
     setWizardStep(1);
     setShowWizard(true);
     resetValidation();
@@ -363,6 +484,9 @@ export default function HRJobsPage() {
       { roundNumber: 2, name: 'Technical Round 1', type: 'TECHNICAL', description: 'Core problem solving and CS fundamentals' }
     ]);
     setSelectedOrgId('ALL');
+    setPublishOption('publish_now');
+    setScheduledDate('');
+    setScheduledTime('09:00');
     setWizardStep(1);
     setShowWizard(false);
     setEditJobId(null);
@@ -434,8 +558,159 @@ export default function HRJobsPage() {
     resetValidation();
   });
 
+  const handleSaveDraft = async () => {
+    if (!title.trim()) {
+      Swal.fire({
+        title: 'Title Required',
+        text: 'Please provide at least a Job Title to save a draft.',
+        icon: 'warning',
+        confirmButtonText: 'Ok',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+        },
+        buttonsStyling: false
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload: any = {
+        title: title.trim(),
+        category: category || 'General',
+        collegeId: selectedOrgId || 'ALL',
+        type: jobType || 'full-time',
+        deadline: deadline || undefined,
+        openings: Number(openings) || 1,
+        experienceLevel: experienceLevel || '',
+        noticePeriod: noticePeriod || '',
+        workMode: workMode || 'on-site',
+        location: location || '',
+        salaryType: salaryType || 'per_month',
+        minSalary: minSalary ? Number(minSalary) : 0,
+        maxSalary: maxSalary ? Number(maxSalary) : 0,
+        interviewMode: interviewMode || 'online',
+        description: description || '',
+        requiredSkills: skills.length > 0 ? skills : [],
+        preferredSkills: [],
+        eligibility: {
+          minCGPA: minCGPA ? Number(minCGPA) : 0,
+          allowedBacklogs: allowedBacklogs ? Number(allowedBacklogs) : 0,
+          eligibleBranches: allBranchesSelected ? [] : branches,
+          passingYear: passingYear ? Number(passingYear) : 0,
+          degreeType: allDegreesSelected ? 'Any Degree' : degreeTypes.join(', ')
+        },
+        rounds,
+        publishOption: 'draft'
+      };
+
+      if (editJobId) {
+        await updateJob(editJobId, payload);
+      } else {
+        await postJob(payload);
+      }
+
+      await Swal.fire({
+        title: 'Draft Saved!',
+        text: 'Your job details have been safely saved as a draft. It is not visible to colleges or students.',
+        icon: 'success',
+        confirmButtonText: 'Got it',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+        },
+        buttonsStyling: false
+      });
+      resetWizard();
+      fetchJobs();
+    } catch (err: unknown) {
+      Swal.fire({
+        title: 'Error Saving Draft',
+        text: (err as Error)?.message || 'Failed to save draft',
+        icon: 'error',
+        confirmButtonText: 'Ok',
+        customClass: {
+          popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+          title: 'text-2xl font-black text-slate-900 mb-2',
+          confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+        },
+        buttonsStyling: false
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelSchedule = async (jobId: string) => {
+    const confirm = await Swal.fire({
+      title: 'Cancel Scheduled Publication?',
+      text: 'This job will be moved back to your Drafts. You can edit, reschedule, or publish it whenever ready.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel Schedule',
+      cancelButtonText: 'Keep Scheduled',
+      customClass: {
+        popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+        title: 'text-2xl font-black text-slate-900 mb-2',
+        confirmButton: 'bg-amber-600 hover:bg-amber-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl mr-2',
+        cancelButton: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm font-bold px-6 py-3 rounded-2xl'
+      },
+      buttonsStyling: false
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await cancelJobSchedule(jobId);
+      toast.success('Job schedule cancelled and moved to Drafts');
+      fetchJobs();
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Failed to cancel schedule');
+    }
+  };
+
+  const handlePublishNow = async (job: Job) => {
+    if (!job.category || !job.deadline || !job.openings) {
+      toast.info('Please complete all required fields before publishing.');
+      handleEditJob(job);
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      title: 'Submit for Review Now?',
+      text: 'This job will immediately enter the college review and approval workflow.',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Submit Now',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+        title: 'text-2xl font-black text-slate-900 mb-2',
+        confirmButton: 'bg-company-primary text-white font-bold px-6 py-3 rounded-2xl shadow-xl mr-2',
+        cancelButton: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm font-bold px-6 py-3 rounded-2xl'
+      },
+      buttonsStyling: false
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await publishJobNow(job.id);
+      toast.success('Job successfully submitted for review!');
+      fetchJobs();
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Failed to submit job');
+    }
+  };
+
   const handleSubmitJob = handleFormSubmit(async () => {
     if (isSubmitting) return;
+
+    if (publishOption === 'draft') {
+      await handleSaveDraft();
+      return;
+    }
 
     if (!title || !category || !deadline || !minSalary || !maxSalary) {
       Swal.fire({
@@ -451,6 +726,62 @@ export default function HRJobsPage() {
         buttonsStyling: false
       });
       return;
+    }
+
+    let scheduledPublishAtIso: string | undefined;
+
+    if (publishOption === 'schedule') {
+      if (!scheduledDate || !scheduledTime) {
+        Swal.fire({
+          title: 'Schedule Date & Time Required',
+          text: 'Please choose a future date and time for scheduled publishing.',
+          icon: 'warning',
+          confirmButtonText: 'Ok',
+          customClass: {
+            popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+            title: 'text-2xl font-black text-slate-900 mb-2',
+            confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+          },
+          buttonsStyling: false
+        });
+        return;
+      }
+
+      const scheduledTimestamp = new Date(`${scheduledDate}T${scheduledTime}`);
+      if (isNaN(scheduledTimestamp.getTime()) || scheduledTimestamp.getTime() <= Date.now()) {
+        Swal.fire({
+          title: 'Invalid Scheduled Date',
+          text: 'Scheduled publication date & time must be in the future.',
+          icon: 'error',
+          confirmButtonText: 'Ok',
+          customClass: {
+            popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+            title: 'text-2xl font-black text-slate-900 mb-2',
+            confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+          },
+          buttonsStyling: false
+        });
+        return;
+      }
+
+      const deadlineTimestamp = new Date(deadline);
+      if (deadlineTimestamp.getTime() <= scheduledTimestamp.getTime()) {
+        Swal.fire({
+          title: 'Deadline Mismatch',
+          text: 'The application closing deadline must be after the scheduled publication date.',
+          icon: 'error',
+          confirmButtonText: 'Ok',
+          customClass: {
+            popup: 'rounded-[2.5rem] border border-slate-100 shadow-2xl bg-white font-sans p-8',
+            title: 'text-2xl font-black text-slate-900 mb-2',
+            confirmButton: 'bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl shadow-xl'
+          },
+          buttonsStyling: false
+        });
+        return;
+      }
+
+      scheduledPublishAtIso = scheduledTimestamp.toISOString();
     }
 
     const payload = {
@@ -478,15 +809,29 @@ export default function HRJobsPage() {
         passingYear: Number(passingYear),
         degreeType: allDegreesSelected ? 'Any Degree' : degreeTypes.join(', ')
       },
-      rounds
+      rounds,
+      publishOption,
+      scheduledPublishAt: scheduledPublishAtIso,
+      scheduledTimezone: publishOption === 'schedule' ? scheduledTimezone : undefined
     };
 
     setIsSubmitting(true);
     try {
-      if (editJobId) { await updateJob(editJobId, payload as any); } else { await postJob(payload as any); }
+      if (editJobId) {
+        await updateJob(editJobId, payload as any);
+      } else {
+        await postJob(payload as any);
+      }
+      const successTitle = publishOption === 'schedule' ? 'Job Scheduled!' : 'Job Submitted!';
+      const successText = publishOption === 'schedule'
+        ? 'Your job has been scheduled and will automatically enter the review workflow at the configured date and time!'
+        : editJobId
+          ? 'Job vacancy has been updated successfully!'
+          : 'Job vacancy has been created and submitted for college approval successfully!';
+
       await Swal.fire({
-        title: 'Job Submitted!',
-        text: editJobId ? 'Job vacancy has been updated successfully!' : 'Job vacancy has been created and submitted for college approval successfully!',
+        title: successTitle,
+        text: successText,
         icon: 'success',
         confirmButtonText: 'Awesome',
         customClass: {
@@ -523,6 +868,10 @@ export default function HRJobsPage() {
         return 'bg-emerald-50 text-emerald-700 border-emerald-100';
       case 'pending_review':
         return 'bg-amber-50 text-amber-700 border-amber-100';
+      case 'scheduled':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'draft':
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'rejected':
         return 'bg-rose-50 text-rose-700 border-rose-100';
       case 'closed':
@@ -533,10 +882,18 @@ export default function HRJobsPage() {
 
   const getStatusLabel = (status: Job['status']) => {
     if (status === 'pending_review') return 'Pending Approval';
+    if (status === 'scheduled') return 'Scheduled';
+    if (status === 'draft') return 'Drafts';
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const getJobStatusBadgeClass = (job: Job) => {
+    if (job.status === 'draft') {
+      return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+    if (job.status === 'scheduled') {
+      return 'bg-purple-50 text-purple-700 border-purple-100';
+    }
     if (job.collegeId === 'ALL') {
       if (job.status === 'closed') {
         return 'bg-slate-50 text-slate-600 border-slate-200';
@@ -551,6 +908,8 @@ export default function HRJobsPage() {
   };
 
   const getJobStatusLabel = (job: Job) => {
+    if (job.status === 'draft') return 'Draft';
+    if (job.status === 'scheduled') return 'Scheduled';
     if (job.status === 'closed') return 'Closed';
     if (job.collegeId === 'ALL') {
       const approvedCount = job.approvedColleges?.length || 0;
@@ -584,7 +943,7 @@ export default function HRJobsPage() {
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
           {/* Tabs */}
           <div className="flex gap-2 p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl border border-slate-200/50 w-full md:w-auto overflow-x-auto">
-            {['', 'pending_review', 'approved', 'rejected', 'closed'].map((status) => (
+            {['', 'draft', 'scheduled', 'pending_review', 'approved', 'closed', 'rejected'].map((status) => (
               <button
                 key={status}
                 onClick={() => {
@@ -669,20 +1028,45 @@ export default function HRJobsPage() {
                       <span className="text-slate-400 font-medium">Deadline</span>
                       <span className="text-slate-800 font-bold">{new Date(job.deadline).toLocaleDateString()}</span>
                     </div>
+                    {job.status === 'scheduled' && job.scheduledPublishAt && (
+                      <div className="flex flex-col gap-1 text-xs bg-purple-50/80 p-2.5 rounded-xl border border-purple-100 text-purple-900 mt-2">
+                        <span className="font-bold flex items-center gap-1 text-purple-800">
+                          <span>⏰</span> Scheduled Publication:
+                        </span>
+                        <span className="font-semibold text-[11px] text-purple-700">
+                          {new Date(job.scheduledPublishAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}{' '}
+                          {new Date(job.scheduledPublishAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          {job.scheduledTimezone ? ` (${job.scheduledTimezone})` : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2 mt-4">
-                  <Button
-                    variant="ghost"
-                    className="w-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/hr/jobs/${job.id}/applicants`);
-                    }}
-                  >
-                    Manage Pipeline
-                  </Button>
+                  {job.status !== 'draft' && job.status !== 'scheduled' ? (
+                    <Button
+                      variant="ghost"
+                      className="w-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/hr/jobs/${job.id}/applicants`);
+                      }}
+                    >
+                      Manage Pipeline
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="w-full bg-company-primary/10 border border-company-primary/20 hover:bg-company-primary/20 text-company-primary font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePublishNow(job);
+                      }}
+                    >
+                      <span>🚀</span> Submit for Review Now
+                    </Button>
+                  )}
                   
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -704,9 +1088,21 @@ export default function HRJobsPage() {
                         handleEditJob(job);
                       }}
                     >
-                      Edit
+                      {job.status === 'draft' ? 'Edit Draft' : job.status === 'scheduled' ? 'Edit Schedule' : 'Edit'}
                     </Button>
-                    {job.status === 'approved' && (
+                    {job.status === 'scheduled' && (
+                      <Button
+                        variant="ghost"
+                        className="flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-100 text-amber-700 font-bold py-2 px-2 rounded-xl text-[11px] whitespace-nowrap"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCancelSchedule(job.id);
+                        }}
+                      >
+                        Cancel Schedule
+                      </Button>
+                    )}
+                    {(job.status === 'approved' || job.status === 'active') && (
                       <Button
                         variant="ghost"
                         className="flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-100 text-amber-600 font-bold py-2 px-2 rounded-xl text-[11px] whitespace-nowrap"
@@ -716,6 +1112,18 @@ export default function HRJobsPage() {
                         }}
                       >
                         Close
+                      </Button>
+                    )}
+                    {job.status === 'closed' && (
+                      <Button
+                        variant="ghost"
+                        className="flex-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-600 font-bold py-2 px-2 rounded-xl text-[11px] whitespace-nowrap"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReopenJob(job);
+                        }}
+                      >
+                        Reopen
                       </Button>
                     )}
                     <Button
@@ -1196,23 +1604,143 @@ export default function HRJobsPage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Publishing Options Selection */}
+                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-200/50 space-y-4">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Choose Publishing Option *</span>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setPublishOption('publish_now')}
+                          className={`p-4 rounded-2xl border text-left transition-all ${
+                            publishOption === 'publish_now'
+                              ? 'bg-company-primary/10 border-company-primary text-slate-900 shadow-sm ring-2 ring-company-primary/30'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-sm mb-1 flex items-center gap-1.5">
+                            <span>🚀</span> Publish Now
+                          </div>
+                          <p className="text-xs text-slate-500">Submit immediately into the college approval / review workflow.</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPublishOption('draft')}
+                          className={`p-4 rounded-2xl border text-left transition-all ${
+                            publishOption === 'draft'
+                              ? 'bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-slate-900/30'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-sm mb-1 flex items-center gap-1.5">
+                            <span>💾</span> Save as Draft
+                          </div>
+                          <p className={`text-xs ${publishOption === 'draft' ? 'text-slate-300' : 'text-slate-500'}`}>Save job details without submitting or showing to colleges/students.</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPublishOption('schedule')}
+                          className={`p-4 rounded-2xl border text-left transition-all ${
+                            publishOption === 'schedule'
+                              ? 'bg-purple-50 border-purple-500 text-purple-950 shadow-sm ring-2 ring-purple-500/30'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-sm mb-1 flex items-center gap-1.5">
+                            <span>⏰</span> Schedule for Later
+                          </div>
+                          <p className="text-xs text-slate-500">Pick a future date and time to automatically submit for review.</p>
+                        </button>
+                      </div>
+
+                      {publishOption === 'schedule' && (
+                        <div className="mt-4 pt-4 border-t border-slate-200/60 space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-bold text-slate-600 block mb-1">Scheduled Publication Date *</label>
+                              <input
+                                type="date"
+                                value={scheduledDate}
+                                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                                onChange={(e) => setScheduledDate(e.target.value)}
+                                className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-medium focus:ring-2 focus:ring-purple-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-slate-600 block mb-1">Scheduled Publication Time *</label>
+                              <input
+                                type="time"
+                                value={scheduledTime}
+                                onChange={(e) => setScheduledTime(e.target.value)}
+                                className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-medium focus:ring-2 focus:ring-purple-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs bg-purple-100/50 p-3 rounded-xl text-purple-800">
+                            <span className="font-bold">Applicable Timezone:</span>
+                            <span className="font-mono bg-white px-2 py-0.5 rounded border border-purple-200 font-bold">{scheduledTimezone}</span>
+                          </div>
+
+                          {scheduledDate && scheduledTime && (
+                            <div className="p-3.5 bg-white rounded-xl border border-purple-200 text-xs text-slate-700 space-y-1 shadow-sm">
+                              <p className="font-bold text-purple-900 flex items-center gap-1">
+                                <span>📋</span> Confirmation Summary:
+                              </p>
+                              <p>
+                                This job will automatically enter the review workflow on{' '}
+                                <strong className="text-slate-900">
+                                  {new Date(`${scheduledDate}T${scheduledTime}`).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}{' '}
+                                  at{' '}
+                                  {new Date(`${scheduledDate}T${scheduledTime}`).toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </strong>{' '}
+                                ({scheduledTimezone}).
+                              </p>
+                              <p className="text-slate-500">
+                                Application deadline remains strictly separate:{' '}
+                                <strong className="text-slate-700">{deadline ? new Date(deadline).toLocaleDateString() : 'Not set'}</strong>.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Wizard Footer Actions */}
-              <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">
-                {wizardStep > 1 ? (
+              <div className="flex items-center justify-between mt-10 pt-6 border-t border-slate-100 gap-3">
+                <div className="flex items-center gap-2">
+                  {wizardStep > 1 && (
+                    <Button
+                      variant="secondary"
+                      className="font-bold px-6 py-3 rounded-2xl"
+                      onClick={() => setWizardStep(wizardStep - 1)}
+                    >
+                      Back
+                    </Button>
+                  )}
                   <Button
-                    variant="secondary"
-                    className="font-bold px-6 py-3 rounded-2xl"
-                    onClick={() => setWizardStep(wizardStep - 1)}
+                    type="button"
+                    variant="ghost"
+                    className="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60 font-bold px-5 py-3 rounded-2xl text-xs flex items-center gap-1.5"
+                    onClick={handleSaveDraft}
+                    disabled={isSubmitting}
                   >
-                    Back
+                    <span>💾</span> Save Draft
                   </Button>
-                ) : (
-                  <div></div>
-                )}
+                </div>
 
                 {wizardStep < 5 ? (
                   <Button
@@ -1224,17 +1752,27 @@ export default function HRJobsPage() {
                   </Button>
                 ) : (
                   <Button
-                    className="bg-company-primary text-white font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                    className={`${
+                      publishOption === 'schedule'
+                        ? 'bg-purple-600 hover:bg-purple-500'
+                        : publishOption === 'draft'
+                        ? 'bg-slate-900 hover:bg-slate-800'
+                        : 'bg-company-primary'
+                    } text-white font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2`}
                     onClick={handleSubmitJob}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Submitting...
+                        Processing...
                       </>
+                    ) : publishOption === 'schedule' ? (
+                      '⏰ Schedule Job Publication'
+                    ) : publishOption === 'draft' ? (
+                      '💾 Save as Draft'
                     ) : (
-                      'Submit for Approval'
+                      '🚀 Submit for Approval'
                     )}
                   </Button>
                 )}
@@ -1266,6 +1804,62 @@ export default function HRJobsPage() {
                 <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-800 text-sm mb-6">
                   <span className="font-bold block mb-1">Rejection Reason:</span>
                   {selectedJob.rejectionNote}
+                </div>
+              )}
+
+              {selectedJob.status === 'scheduled' && selectedJob.scheduledPublishAt && (
+                <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl text-purple-900 text-sm mb-6 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold flex items-center gap-1.5 mb-1 text-purple-950">
+                      <span>⏰</span> Scheduled Publication:
+                    </span>
+                    <span className="text-xs text-purple-800">
+                      {new Date(selectedJob.scheduledPublishAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}{' '}
+                      at{' '}
+                      {new Date(selectedJob.scheduledPublishAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}{' '}
+                      ({selectedJob.scheduledTimezone || 'Configured Timezone'})
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="bg-white border border-purple-200 text-purple-700 hover:bg-purple-100 font-bold px-3 py-1.5 rounded-xl text-xs"
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleCancelSchedule(selectedJob.id);
+                    }}
+                  >
+                    Cancel Schedule
+                  </Button>
+                </div>
+              )}
+
+              {selectedJob.status === 'draft' && (
+                <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl text-slate-800 text-sm mb-6 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold flex items-center gap-1.5 mb-1 text-slate-900">
+                      <span>💾</span> Saved as Draft
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      This job is not visible to colleges or students. You can publish or edit it anytime.
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="bg-company-primary text-white font-bold px-4 py-2 rounded-xl text-xs"
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handlePublishNow(selectedJob);
+                    }}
+                  >
+                    Submit for Review Now
+                  </Button>
                 </div>
               )}
 
@@ -1411,6 +2005,17 @@ export default function HRJobsPage() {
                 );
               })()}
 
+              {selectedJob.status === 'closed' && (
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl text-xs space-y-1 mb-6">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-700 uppercase tracking-wider">
+                    <span>🔒</span> Job Closed
+                  </div>
+                  <p className="text-slate-600">
+                    {selectedJob.closureReason ? `Closure Reason: ${selectedJob.closureReason}` : 'This job opening was marked as closed and is not accepting new applicants.'}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4 text-slate-700 text-sm mb-8 leading-relaxed max-h-[30vh] overflow-y-auto pr-2">
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Job Description</span>
@@ -1457,7 +2062,15 @@ export default function HRJobsPage() {
 
                 {/* Primary & Neutral Actions (Far Right) */}
                 <div className="flex items-center gap-2">
-                  {selectedJob.status === 'approved' && (
+                  {selectedJob.status === 'closed' ? (
+                    <button
+                      type="button"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all duration-350 active:scale-95 cursor-pointer outline-none"
+                      onClick={() => handleReopenJob(selectedJob)}
+                    >
+                      <span>🔄</span> Reopen Opening
+                    </button>
+                  ) : (selectedJob.status === 'approved' || selectedJob.status === 'active') ? (
                     <button
                       type="button"
                       className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow-md hover:shadow-lg border border-amber-600 transition-all duration-350 active:scale-95 cursor-pointer outline-none"
@@ -1465,7 +2078,7 @@ export default function HRJobsPage() {
                     >
                       <span>🔒</span> Archive Opening
                     </button>
-                  )}
+                  ) : null}
                   <button
                     type="button"
                     className="font-bold px-5 py-2.5 rounded-2xl text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/50 shadow-sm transition-all duration-350 active:scale-95 cursor-pointer outline-none"

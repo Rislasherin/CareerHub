@@ -4,12 +4,12 @@ import { apiClient } from '@/services/api/api.client';
 import { Job, GetHRJobsResponse, CandidateProfile } from '@/types/job';
 import { ApiResponse } from '@/types/api';
 
-export const postJob = async (payload: Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Job> => {
+export const postJob = async (payload: Partial<Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>> & { title: string }): Promise<Job> => {
   const response = (await apiClient.post(API_ROUTES.HR.JOBS, payload)) as ApiResponse<Job>;
   return response.data;
 };
 
-export const updateJob = async (jobId: string, payload: Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Job> => {
+export const updateJob = async (jobId: string, payload: Partial<Omit<Job, 'id' | 'companyId' | 'status' | 'createdAt' | 'updatedAt'>>): Promise<Job> => {
   const response = (await apiClient.put(`${API_ROUTES.HR.JOBS}/${jobId}`, payload)) as ApiResponse<Job>;
   return response.data;
 };
@@ -28,13 +28,28 @@ export const getHRJobs = async (
   return response.data;
 };
 
-export const closeJob = async (jobId: string): Promise<Job> => {
-  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/close`, {})) as ApiResponse<Job>;
+export const closeJob = async (jobId: string, reason?: string): Promise<Job> => {
+  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/close`, { reason })) as ApiResponse<Job>;
+  return response.data;
+};
+
+export const reopenJob = async (jobId: string, deadline?: string): Promise<Job> => {
+  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/reopen`, { deadline })) as ApiResponse<Job>;
   return response.data;
 };
 
 export const deleteJob = async (jobId: string): Promise<Job> => {
   const response = (await apiClient.delete(`${API_ROUTES.HR.JOBS}/${jobId}`)) as ApiResponse<Job>;
+  return response.data;
+};
+
+export const cancelJobSchedule = async (jobId: string): Promise<Job> => {
+  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/cancel-schedule`)) as ApiResponse<Job>;
+  return response.data;
+};
+
+export const publishJobNow = async (jobId: string): Promise<Job> => {
+  const response = (await apiClient.patch(`${API_ROUTES.HR.JOBS}/${jobId}/publish-now`)) as ApiResponse<Job>;
   return response.data;
 };
 

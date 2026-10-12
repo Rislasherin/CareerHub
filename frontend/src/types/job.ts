@@ -35,8 +35,13 @@ export interface Job {
   requiredSkills: string[];
   preferredSkills?: string[];
   rounds: InterviewRoundConfig[];
-  status: 'pending_review' | 'approved' | 'rejected' | 'active' | 'closed';
+  status: 'pending_review' | 'approved' | 'rejected' | 'active' | 'closed' | 'draft' | 'scheduled';
+  publishOption?: 'publish_now' | 'draft' | 'schedule';
+  scheduledPublishAt?: string;
+  scheduledTimezone?: string;
   rejectionNote?: string;
+  closureReason?: string;
+  closedAt?: string;
   approvedColleges?: string[];
   rejectedColleges?: string[];
   createdAt: string;

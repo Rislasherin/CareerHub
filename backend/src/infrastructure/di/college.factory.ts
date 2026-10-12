@@ -260,5 +260,8 @@ export const makeSendPlacementReadinessReminderUseCase = () => {
 };
 
 export const makePlacementReadinessController = () => {
-  return new PlacementReadinessController(makeGetPlacementReadinessUseCase());
+  return new PlacementReadinessController(
+    makeGetPlacementReadinessUseCase(),
+    makeSendPlacementReadinessReminderUseCase()
+  );
 };
