@@ -6,9 +6,35 @@ export interface CollegeAdminDetails {
   lastName: string;
   email: string;
   collegeName?: string;
+  name?: string;
+  shortName?: string;
+  yearEstablished?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  naacGrade?: string;
+  placementCellName?: string;
+  placementContactEmail?: string;
+  placementContactPhone?: string;
+  logoUrl?: string;
+  verificationDocument?: string;
   status: string;
   onboardingStep?: number;
   activeBranches?: string[];
+  currentAcademicYear?: string;
+  activePlacementBatch?: string;
+  plan?: string;
+  rejectionReason?: string;
+  rejectedAt?: string | Date;
+  resubmittedAt?: string | Date;
+  approvedAt?: string | Date;
+  statusHistory?: Array<{
+    status: string;
+    reason?: string;
+    changedBy?: string;
+    changedAt: string | Date;
+  }>;
 }
 
 interface CollegeAdminState {

@@ -16,5 +16,6 @@ router.post("/login", validateSchema(loginSchema), collegeAdminAuthController.lo
 router.post("/register", checkRegistrationEnabled('college'), validateDto(RegisterCollegeRequestDto), collegeAdminAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCollegeOtpRequestDto), collegeAdminAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCollegeOnboardingDto), collegeAdminAuthController.updateOnboarding);
+router.post("/resubmit", authMiddleware.protect, collegeAdminAuthController.resubmit);
 
 export default router;

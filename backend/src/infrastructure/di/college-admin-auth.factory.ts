@@ -8,7 +8,7 @@ import { LoginCollegeAdminUseCase } from "@application/usecases/auth/organizatio
 import { UpdateCollegeOnboardingUseCase } from "@application/usecases/auth/organization/implementations/UpdateCollegeOnboarding.usecase";
 
 export const makeUpdateCollegeOnboardingUseCase = () => {
-    return new UpdateCollegeOnboardingUseCase(organizationRepository);
+    return new UpdateCollegeOnboardingUseCase(organizationRepository, collegeAdminRepository);
 };
 
 export const makeLoginCollegeAdminUseCase = () => {

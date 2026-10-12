@@ -78,4 +78,11 @@ export class CollegeAdminAuthController {
     const result = await this._updateOnboardingUseCase.execute(orgId as string, req.body);
     sendSuccess(res, result, MESSAGES.SUCCESS.ONBOARDING_UPDATED);
   });
+
+  resubmit = asyncHandler(async (req: Request, res: Response) => {
+    const { orgId } = req.user as unknown as Record<string, unknown>;
+    const payload = { ...req.body, step: 3, resubmit: true };
+    const result = await this._updateOnboardingUseCase.execute(orgId as string, payload);
+    sendSuccess(res, result, "Application resubmitted successfully for review");
+  });
 }

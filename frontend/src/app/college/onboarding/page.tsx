@@ -7,7 +7,7 @@ import {
   ArrowRight, ArrowLeft, Building2,
   Users, BarChart3, Link as LinkIcon,
   CheckCircle2, X, Upload, Check, Star,
-  Mail, Phone, Search
+  Mail, Phone, Search, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -70,13 +70,8 @@ interface CollegeFormValues {
 export default function CollegeOnboardingPage() {
   const dispatch = useAppDispatch();
   const collegeAdminDetails = useAppSelector((state) => state.collegeAdmin.details);
+  const isRejected = collegeAdminDetails?.status?.toUpperCase() === 'REJECTED';
   const [currentStep, setCurrentStep] = useState(1);
-
-  useEffect(() => {
-    if (collegeAdminDetails?.onboardingStep) {
-      setCurrentStep(Math.min(collegeAdminDetails.onboardingStep + 1, steps.length));
-    }
-  }, [collegeAdminDetails]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [branchInput, setBranchInput] = useState('');
@@ -107,6 +102,33 @@ export default function CollegeOnboardingPage() {
     }
   });
 
+  // Prefill existing data and set step
+  useEffect(() => {
+    if (collegeAdminDetails) {
+      if (isRejected) {
+        // When rejected, always allow the college to review and edit from Step 1
+        setCurrentStep(1);
+      } else if (collegeAdminDetails.onboardingStep) {
+        setCurrentStep(Math.min(collegeAdminDetails.onboardingStep + 1, steps.length));
+      }
+
+      const collegeNameVal = collegeAdminDetails.name || collegeAdminDetails.collegeName;
+      if (collegeNameVal) setValue('name', collegeNameVal, { shouldValidate: true });
+      if (collegeAdminDetails.shortName) setValue('shortName', collegeAdminDetails.shortName);
+      if (collegeAdminDetails.yearEstablished) setValue('yearEstablished', collegeAdminDetails.yearEstablished);
+      if (collegeAdminDetails.website) setValue('website', collegeAdminDetails.website);
+      if (collegeAdminDetails.address) setValue('address', collegeAdminDetails.address);
+      if (collegeAdminDetails.city) setValue('city', collegeAdminDetails.city, { shouldValidate: true });
+      if (collegeAdminDetails.state) setValue('state', collegeAdminDetails.state, { shouldValidate: true });
+      if (collegeAdminDetails.naacGrade) setValue('naacGrade', collegeAdminDetails.naacGrade);
+      if (collegeAdminDetails.logoUrl) setValue('logoUrl', collegeAdminDetails.logoUrl);
+      if (collegeAdminDetails.activeBranches?.length) setValue('activeBranches', collegeAdminDetails.activeBranches, { shouldValidate: true });
+      if (collegeAdminDetails.currentAcademicYear) setValue('currentAcademicYear', collegeAdminDetails.currentAcademicYear);
+      if (collegeAdminDetails.activePlacementBatch) setValue('activePlacementBatch', collegeAdminDetails.activePlacementBatch);
+      if (collegeAdminDetails.plan) setValue('plan', (collegeAdminDetails.plan as 'basic' | 'pro') || 'pro');
+    }
+  }, [collegeAdminDetails, isRejected, setValue]);
+
   const activeBranches = watch('activeBranches');
   const plan = watch('plan');
 
@@ -114,6 +136,10 @@ export default function CollegeOnboardingPage() {
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleCancelOnboarding = async () => {
+    if (isRejected) {
+      router.push('/college');
+      return;
+    }
     setIsLoading(true);
     try {
       await logoutUser();
@@ -154,26 +180,41 @@ export default function CollegeOnboardingPage() {
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedOrg = await updateCollegeOnboarding({ ...data, step: currentStep }) as any;
+      const payload = {
+        ...data,
+        step: currentStep,
+        resubmit: isRejected ? true : undefined
+      };
+      const updatedOrg = await updateCollegeOnboarding(payload) as any;
 
       if (collegeAdminDetails) {
         dispatch(setCollegeAdminDetails({
           ...collegeAdminDetails,
+          ...updatedOrg,
           collegeName: updatedOrg.name,
           onboardingStep: updatedOrg.onboardingStep,
           activeBranches: updatedOrg.activeBranches || collegeAdminDetails.activeBranches || [],
-          status: updatedOrg.status || collegeAdminDetails.status
+          status: updatedOrg.status || (isRejected && currentStep === 3 ? 'PENDING' : collegeAdminDetails.status),
+          rejectionReason: isRejected && currentStep === 3 ? undefined : collegeAdminDetails.rejectionReason
         }));
       }
 
-      if (currentStep < steps.length) {
+      if (currentStep < 3) {
         nextStep();
       } else {
-        toast.success('Onboarding completed successfully!');
-        router.push('/college');
+        if (isRejected) {
+          toast.success('Application resubmitted successfully for review!');
+          router.push('/college');
+        } else if (currentStep < steps.length) {
+          nextStep();
+        } else {
+          toast.success('Onboarding completed successfully!');
+          router.push('/college');
+        }
       }
-    } catch (error) {
-      toast.error('Failed to update onboarding info.');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update onboarding info.';
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -231,6 +272,17 @@ export default function CollegeOnboardingPage() {
           {/* Form Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form noValidate onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
+              {isRejected && (
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3 flex-shrink-0">
+                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs font-black uppercase tracking-wider text-rose-700">Application Previously Rejected</p>
+                    <p className="text-sm font-medium mt-0.5 text-rose-800 leading-relaxed">
+                      {collegeAdminDetails?.rejectionReason || 'Please review your application information, make necessary corrections, and resubmit for review.'}
+                    </p>
+                  </div>
+                </div>
+              )}
               <AnimatePresence mode="wait">
                 {currentStep === 1 ? (
                   <motion.div
@@ -552,7 +604,7 @@ export default function CollegeOnboardingPage() {
                         onClick={handleCancelOnboarding}
                         className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-rose-600 transition-all"
                       >
-                        <ArrowLeft size={16} /> Back to Register
+                        <ArrowLeft size={16} /> {isRejected ? 'Back to Portal' : 'Back to Register'}
                       </button>
                     )}
                   </div>
@@ -563,7 +615,7 @@ export default function CollegeOnboardingPage() {
                     isLoading={isLoading}
                     className="px-10 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] text-white font-black shadow-xl shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all flex items-center gap-2 border-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Continue <ArrowRight size={18} />
+                    {isRejected && currentStep === 3 ? 'Resubmit for Review' : 'Continue'} <ArrowRight size={18} />
                   </Button>
                 </div>
               )}

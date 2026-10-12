@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches, Min, Max } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches, Min, Max, IsBoolean } from "class-validator";
 
 export class UpdateCollegeOnboardingDto {
   @Expose()
@@ -8,6 +8,11 @@ export class UpdateCollegeOnboardingDto {
   @Min(1, { message: "Step must be at least 1" })
   @Max(4, { message: "Step must not exceed 4" })
   step!: number;
+
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  resubmit?: boolean;
 
   // Step 1 fields
   @Expose()

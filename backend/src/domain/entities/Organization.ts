@@ -1,5 +1,12 @@
 import { UserStatus } from "@domain/enums/user.status.enum";
 
+export interface OrganizationStatusHistoryItem {
+  status: string;
+  reason?: string;
+  changedBy?: string;
+  changedAt: Date;
+}
+
 export interface OrganizationProps {
   id?: string;
   name: string;
@@ -20,11 +27,17 @@ export interface OrganizationProps {
   plan?: string;
   trialEndsAt?: Date;
   logoUrl?: string;
+  verificationDocument?: string;
 
   onboardingStep?: number;
   website?: string;
   instituteType?: string;
   description?: string;
+  rejectionReason?: string;
+  rejectedAt?: Date;
+  resubmittedAt?: Date;
+  approvedAt?: Date;
+  statusHistory?: OrganizationStatusHistoryItem[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -87,6 +100,62 @@ export class Organization {
     return this._props.placementContactPhone;
   }
 
+  get placementContactEmail(): string | undefined {
+    return this._props.placementContactEmail;
+  }
+
+  get shortName(): string | undefined {
+    return this._props.shortName;
+  }
+
+  get yearEstablished(): string | undefined {
+    return this._props.yearEstablished;
+  }
+
+  get naacGrade(): string | undefined {
+    return this._props.naacGrade;
+  }
+
+  get placementCellName(): string | undefined {
+    return this._props.placementCellName;
+  }
+
+  get currentAcademicYear(): string | undefined {
+    return this._props.currentAcademicYear;
+  }
+
+  get activePlacementBatch(): string | undefined {
+    return this._props.activePlacementBatch;
+  }
+
+  get logoUrl(): string | undefined {
+    return this._props.logoUrl;
+  }
+
+  get verificationDocument(): string | undefined {
+    return this._props.verificationDocument;
+  }
+
+  get rejectionReason(): string | undefined {
+    return this._props.rejectionReason;
+  }
+
+  get rejectedAt(): Date | undefined {
+    return this._props.rejectedAt;
+  }
+
+  get resubmittedAt(): Date | undefined {
+    return this._props.resubmittedAt;
+  }
+
+  get approvedAt(): Date | undefined {
+    return this._props.approvedAt;
+  }
+
+  get statusHistory(): OrganizationStatusHistoryItem[] {
+    return this._props.statusHistory || [];
+  }
+
   get website(): string | undefined {
     return this._props.website;
   }
@@ -100,7 +169,50 @@ export class Organization {
     return new Date() < new Date(this._props.trialEndsAt);
   }
 
-  toJSON():OrganizationProps {
-     return {...this._props};
+  approve(adminId?: string): void {
+    if (this._props.status === UserStatus.REJECTED) {
+      throw new Error("Cannot approve a rejected organization without resubmission");
+    }
+    this._props.status = UserStatus.ACTIVE;
+    this._props.approvedAt = new Date();
+    this.addStatusHistory(UserStatus.ACTIVE, "Approved by administrator", adminId);
+  }
+
+  reject(reason: string, adminId?: string): void {
+    if (this._props.status === UserStatus.ACTIVE) {
+      throw new Error("Cannot reject an already approved organization");
+    }
+    if (!reason || !reason.trim()) {
+      throw new Error("Rejection reason is required");
+    }
+    this._props.status = UserStatus.REJECTED;
+    this._props.rejectionReason = reason.trim();
+    this._props.rejectedAt = new Date();
+    this.addStatusHistory(UserStatus.REJECTED, reason.trim(), adminId);
+  }
+
+  resubmit(): void {
+    if (this._props.status === UserStatus.ACTIVE) {
+      throw new Error("Cannot resubmit an already approved organization");
+    }
+    this._props.status = UserStatus.PENDING;
+    this._props.resubmittedAt = new Date();
+    this.addStatusHistory(UserStatus.PENDING, "Resubmitted for review");
+  }
+
+  private addStatusHistory(status: string, reason?: string, changedBy?: string): void {
+    if (!this._props.statusHistory) {
+      this._props.statusHistory = [];
+    }
+    this._props.statusHistory.push({
+      status,
+      reason,
+      changedBy,
+      changedAt: new Date()
+    });
+  }
+
+  toJSON(): OrganizationProps {
+     return { ...this._props };
   }
 }

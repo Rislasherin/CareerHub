@@ -26,6 +26,12 @@ export const toOrganizationEntity = (doc: OrganizationDocument): Organization =>
         website: doc.website || undefined,
         instituteType: (doc as any).instituteType || undefined,
         status: doc.status as UserStatus,
+        rejectionReason: (doc as any).rejectionReason || undefined,
+        rejectedAt: (doc as any).rejectedAt || undefined,
+        resubmittedAt: (doc as any).resubmittedAt || undefined,
+        approvedAt: (doc as any).approvedAt || undefined,
+        verificationDocument: (doc as any).verificationDocument || undefined,
+        statusHistory: (doc as any).statusHistory || [],
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
     });
@@ -54,6 +60,12 @@ export const toOrganizationPersistence = (entity: Organization) => {
         onboardingStep: props.onboardingStep,
         website: props.website,
         instituteType: props.instituteType,
-        status: props.status
+        status: props.status,
+        rejectionReason: props.rejectionReason,
+        rejectedAt: props.rejectedAt,
+        resubmittedAt: props.resubmittedAt,
+        approvedAt: props.approvedAt,
+        verificationDocument: props.verificationDocument,
+        statusHistory: props.statusHistory
     }
 }

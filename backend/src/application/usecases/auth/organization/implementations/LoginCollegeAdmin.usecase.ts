@@ -23,11 +23,11 @@ export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
       throw new InvalidCredentialsError();
     }
 
-    if (admin.status === UserStatus.BLOCKED || admin.status === UserStatus.REJECTED) {
-      throw new UnauthorizedError("Your account has been blocked or rejected.");
+    if (admin.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedError("Your account has been blocked. Please contact admin.");
     }
 
-    if (admin.status !== UserStatus.ACTIVE && admin.status !== UserStatus.PENDING) {
+    if (admin.status !== UserStatus.ACTIVE && admin.status !== UserStatus.PENDING && admin.status !== UserStatus.REJECTED) {
       throw new UnauthorizedError("Your account is not active. Please verify your email.");
     }
 
@@ -49,6 +49,8 @@ export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
       orgId: admin.orgId,
     };
 
+    const orgJson = organization?.toJSON();
+
     return {
       accessToken: this._jwtService.signAccessToken(payload),
       refreshToken: this._jwtService.signRefreshToken(payload),
@@ -60,8 +62,12 @@ export class LoginCollegeAdminUseCase implements ILoginCollegeAdminUseCase {
         role: admin.role,
         organizationId: admin.orgId,
         activeBranches: organization?.activeBranches || [],
+        status: organization?.status || admin.status,
+        rejectionReason: organization?.rejectionReason,
+        rejectedAt: organization?.rejectedAt,
+        resubmittedAt: organization?.resubmittedAt,
       },
-      organization: organization?.toJSON(),
+      organization: orgJson,
     };
   }
 }

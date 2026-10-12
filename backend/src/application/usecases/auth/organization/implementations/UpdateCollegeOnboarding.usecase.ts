@@ -1,16 +1,22 @@
 import { IOrganizationRepository } from "@domain/repositories/IOrganizationRepository";
+import { ICollegeAdminRepository } from "@domain/repositories/ICollegeAdminRepository";
 import { UpdateCollegeOnboardingDto } from "@application/dtos/auth/collage/Request/UpdateCollegeOnboarding.dto";
 import { AppError } from "@application/errors/AppError";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { Organization } from "@domain/entities/Organization";
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { IPlatformSettingsRepository } from "@domain/repositories/IPlatformSettingsRepository";
 import { PlatformSettingsRepository } from "@infrastructure/repositories/PlatformSettingsRepository";
 
 import { IUpdateCollegeOnboardingUseCase } from "../interfaces/IUpdateCollegeOnboarding.usecase";
 
 export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingUseCase {
-  constructor(private readonly _organizationRepository: IOrganizationRepository) { }
+  constructor(
+    private readonly _organizationRepository: IOrganizationRepository,
+    private readonly _collegeAdminRepository?: ICollegeAdminRepository,
+    private readonly _platformSettingsRepo?: IPlatformSettingsRepository
+  ) { }
 
   async execute(orgId: string, dto: UpdateCollegeOnboardingDto) {
     const organization = await this._organizationRepository.findById(orgId);
@@ -18,43 +24,80 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
       throw new AppError("Organization not found", HttpStatus.NOT_FOUND, ErrorCode.INTERNAL_ERROR);
     }
 
+    if (organization.status === UserStatus.ACTIVE && dto.resubmit) {
+      throw new AppError("Cannot resubmit an already approved organization", HttpStatus.BAD_REQUEST, ErrorCode.INVALID_STATUS);
+    }
+
     const currentProps = organization.toJSON();
 
     // Update fields based on step
     if (dto.step === 1) {
       if (dto.name) currentProps.name = dto.name;
-      if (dto.shortName) currentProps.shortName = dto.shortName;
-      if (dto.yearEstablished) currentProps.yearEstablished = dto.yearEstablished;
-      if (dto.website) currentProps.website = dto.website;
-      if (dto.address) currentProps.address = dto.address;
+      if (dto.shortName !== undefined) currentProps.shortName = dto.shortName;
+      if (dto.yearEstablished !== undefined) currentProps.yearEstablished = dto.yearEstablished;
+      if (dto.website !== undefined) currentProps.website = dto.website;
+      if (dto.address !== undefined) currentProps.address = dto.address;
       if (dto.city) currentProps.city = dto.city;
       if (dto.state) currentProps.state = dto.state;
-      if (dto.address) currentProps.address = dto.address;
-      if (dto.naacGrade) currentProps.naacGrade = dto.naacGrade;
-      if (dto.placementCellName) currentProps.placementCellName = dto.placementCellName;
-      if (dto.placementContactEmail) currentProps.placementContactEmail = dto.placementContactEmail;
-      if (dto.placementContactPhone) currentProps.placementContactPhone = dto.placementContactPhone;
-      if (dto.logoUrl) currentProps.logoUrl = dto.logoUrl;
-      currentProps.onboardingStep = 1;
+      if (dto.naacGrade !== undefined) currentProps.naacGrade = dto.naacGrade;
+      if (dto.placementCellName !== undefined) currentProps.placementCellName = dto.placementCellName;
+      if (dto.placementContactEmail !== undefined) currentProps.placementContactEmail = dto.placementContactEmail;
+      if (dto.placementContactPhone !== undefined) currentProps.placementContactPhone = dto.placementContactPhone;
+      if (dto.logoUrl !== undefined) currentProps.logoUrl = dto.logoUrl;
+      if (dto.verificationDocument !== undefined) currentProps.verificationDocument = dto.verificationDocument;
+      currentProps.onboardingStep = Math.max(currentProps.onboardingStep || 0, 1);
     } else if (dto.step === 2) {
       if (dto.activeBranches) currentProps.activeBranches = dto.activeBranches;
-      if (dto.currentAcademicYear) currentProps.currentAcademicYear = dto.currentAcademicYear;
-      if (dto.activePlacementBatch) currentProps.activePlacementBatch = dto.activePlacementBatch;
-      currentProps.onboardingStep = 2;
+      if (dto.currentAcademicYear !== undefined) currentProps.currentAcademicYear = dto.currentAcademicYear;
+      if (dto.activePlacementBatch !== undefined) currentProps.activePlacementBatch = dto.activePlacementBatch;
+      currentProps.onboardingStep = Math.max(currentProps.onboardingStep || 0, 2);
     } else if (dto.step === 3) {
       if (dto.plan) currentProps.plan = dto.plan;
       currentProps.onboardingStep = 3;
       
-      const settingsRepo = new PlatformSettingsRepository();
-      const settings = await settingsRepo.getSettings();
-      if (settings && settings.requireApproval) {
-          currentProps.status = UserStatus.PENDING;
+      let requireApproval = true;
+      try {
+        const settingsRepo = this._platformSettingsRepo || new PlatformSettingsRepository();
+        const settings = await settingsRepo.getSettings();
+        if (settings && typeof settings.requireApproval === 'boolean') {
+          requireApproval = settings.requireApproval;
+        }
+      } catch {
+        requireApproval = true;
+      }
+
+      if (requireApproval) {
+        currentProps.status = UserStatus.PENDING;
       } else {
-          currentProps.status = UserStatus.ACTIVE;
-          // Start 14-day free trial on immediate approval
-          const trialEnd = new Date();
-          trialEnd.setDate(trialEnd.getDate() + 14);
-          currentProps.trialEndsAt = trialEnd;
+        currentProps.status = UserStatus.ACTIVE;
+        // Start 14-day free trial on immediate approval
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 14);
+        currentProps.trialEndsAt = trialEnd;
+      }
+    }
+
+    // Handle resubmission transition if previously REJECTED or explicitly requested
+    if (dto.resubmit || (dto.step === 3 && organization.status === UserStatus.REJECTED)) {
+      currentProps.status = UserStatus.PENDING;
+      currentProps.resubmittedAt = new Date();
+      currentProps.onboardingStep = 3;
+      
+      if (!currentProps.statusHistory) {
+        currentProps.statusHistory = [];
+      }
+      currentProps.statusHistory.push({
+        status: UserStatus.PENDING,
+        reason: 'Resubmitted for review',
+        changedAt: new Date()
+      });
+
+      if (this._collegeAdminRepository) {
+        const collegeAdmin = await this._collegeAdminRepository.findByOrgId(orgId);
+        if (collegeAdmin) {
+          collegeAdmin.status = UserStatus.PENDING;
+          await this._collegeAdminRepository.update(collegeAdmin.id!, collegeAdmin);
+        }
       }
     }
 

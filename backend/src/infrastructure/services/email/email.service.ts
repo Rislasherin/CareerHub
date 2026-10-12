@@ -187,6 +187,41 @@ export class EmailService implements IEmailService {
     }
   }
 
+  async sendAccountRejectionEmail(email: string, name: string, reason: string): Promise<void> {
+    try {
+      const replyTo = await this.getContactEmail();
+      await this._transporter.sendMail({
+        from: env.EMAIL_FROM,
+        replyTo,
+        to: email,
+        subject: "Application Update - Changes Required - CareerHub",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #e11d48;">Application Requires Revision</h2>
+            <p style="color: #334155; font-size: 16px;">
+              Hello ${name},
+            </p>
+            <p style="color: #334155; font-size: 16px;">
+              Thank you for applying to CareerHub. Our administrators have reviewed your application and requested changes before it can be approved.
+            </p>
+            <div style="background-color: #fef2f2; border-left: 4px solid #f43f5e; padding: 16px; margin: 20px 0; border-radius: 4px;">
+              <strong style="color: #9f1239; font-size: 14px; text-transform: uppercase;">Feedback from Administrator:</strong>
+              <p style="color: #881337; font-size: 15px; margin-top: 8px; margin-bottom: 0;">${reason}</p>
+            </div>
+            <p style="color: #334155; font-size: 16px;">
+              You can log in to your account, update the required information, and resubmit your application for review.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${env.FRONTEND_URL}/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Log In & Resubmit</a>
+            </div>
+          </div>
+        `,
+      });
+    } catch (err) {
+      logger.error("Nodemailer Failed to send rejection email:", err);
+    }
+  }
+
   async sendOfferEmail(email: string, candidateName: string, role: string, companyName: string): Promise<void> {
     try {
       const replyTo = await this.getContactEmail();

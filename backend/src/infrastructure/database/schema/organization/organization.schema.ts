@@ -43,6 +43,19 @@ export const organizationSchema = new Schema(
       required: true,
     },
     blockedBy: { type: String, required: false },
+    rejectionReason: { type: String, required: false },
+    rejectedAt: { type: Date, required: false },
+    resubmittedAt: { type: Date, required: false },
+    approvedAt: { type: Date, required: false },
+    verificationDocument: { type: String, required: false },
+    statusHistory: [
+      {
+        status: { type: String, required: true },
+        reason: { type: String, required: false },
+        changedBy: { type: String, required: false },
+        changedAt: { type: Date, default: Date.now },
+      },
+    ],
     isDeleted: { type: Boolean, default: false, index: true },
   },
   {

@@ -31,7 +31,15 @@ export class OrganizationRepository extends BaseRepository
         isDeleted: { $ne: true }
     };
     if (status) {
-      filter.status = { $regex: `^${status}$`, $options: 'i' };
+      if (status.toUpperCase() === 'PENDING' || status.toUpperCase() === 'PENDING_REVIEW') {
+        filter.status = { $in: ['PENDING', 'pending', 'PENDING_REVIEW', 'pending_review'] };
+      } else if (status.toUpperCase() === 'ACTIVE' || status.toUpperCase() === 'APPROVED') {
+        filter.status = { $in: ['ACTIVE', 'active', 'APPROVED', 'approved'] };
+      } else if (status.toUpperCase() === 'REJECTED') {
+        filter.status = { $in: ['REJECTED', 'rejected'] };
+      } else {
+        filter.status = { $regex: `^${status}$`, $options: 'i' };
+      }
     }
 
     const [docs, total] = await Promise.all([
@@ -45,23 +53,46 @@ export class OrganizationRepository extends BaseRepository
     };
   }
 
-  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+  async updateStatus(id: string, status: string, blockedBy?: string, rejectionReason?: string, changedBy?: string): Promise<void> {
     const update: Record<string, unknown> = { status };
     if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status?.toUpperCase() !== 'BLOCKED') {
       update.blockedBy = null;
     }
-    // Set trial start when admin approves a PENDING org
-    if (status?.toUpperCase() === 'ACTIVE') {
+
+    const historyEntry: Record<string, unknown> = {
+      status,
+      changedAt: new Date(),
+    };
+    if (changedBy) historyEntry.changedBy = changedBy;
+
+    if (status?.toUpperCase() === 'REJECTED') {
+      update.rejectionReason = rejectionReason || 'No reason provided';
+      update.rejectedAt = new Date();
+      historyEntry.reason = rejectionReason;
+    } else if (status?.toUpperCase() === 'ACTIVE' || status?.toUpperCase() === 'APPROVED') {
+      update.approvedAt = new Date();
+      historyEntry.reason = 'Approved by administrator';
+      // Set trial start when admin approves a PENDING org
       const existing = await this.model.findById(id).select('trialEndsAt');
       if (existing && !existing.trialEndsAt) {
         const trialEnd = new Date();
         trialEnd.setDate(trialEnd.getDate() + 14);
         update.trialEndsAt = trialEnd;
       }
+    } else if (status?.toUpperCase() === 'PENDING' || status?.toUpperCase() === 'PENDING_REVIEW') {
+      update.resubmittedAt = new Date();
+      historyEntry.reason = 'Resubmitted for review';
     }
-    await this.model.updateOne({ _id: id }, { $set: update });
+
+    await this.model.updateOne(
+      { _id: id },
+      {
+        $set: update,
+        $push: { statusHistory: historyEntry }
+      }
+    );
   }
 
   async extendTrial(orgId: string, days: number): Promise<void> {
