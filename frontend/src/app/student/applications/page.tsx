@@ -1,6 +1,6 @@
 'use client';
 import { API_ROUTES } from '@/constants/api.routes';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -63,17 +63,19 @@ export default function StudentApplicationsPage() {
     fetchApplications();
   }, []);
 
-  const filteredApplications = [...applications]
-    .filter(app => {
-      const jobTitle = app.job?.title?.toLowerCase() || '';
-      const companyName = app.job?.companyName?.toLowerCase() || '';
-      return jobTitle.includes(searchQuery.toLowerCase()) || companyName.includes(searchQuery.toLowerCase());
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.appliedAt || a.createdAt || Date.now()).getTime();
-      const dateB = new Date(b.appliedAt || b.createdAt || Date.now()).getTime();
-      return dateB - dateA;
-    });
+  const filteredApplications = useMemo(() => {
+    return [...applications]
+      .filter(app => {
+        const jobTitle = app.job?.title?.toLowerCase() || '';
+        const companyName = app.job?.companyName?.toLowerCase() || '';
+        return jobTitle.includes(searchQuery.toLowerCase()) || companyName.includes(searchQuery.toLowerCase());
+      })
+      .sort((a, b) => {
+        const dateA = a.appliedAt || a.createdAt ? new Date(a.appliedAt || a.createdAt).getTime() : 0;
+        const dateB = b.appliedAt || b.createdAt ? new Date(b.appliedAt || b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }, [applications, searchQuery]);
 
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
   const paginatedApplications = filteredApplications.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);

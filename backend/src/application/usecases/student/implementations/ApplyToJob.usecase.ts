@@ -36,6 +36,10 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
       throw new AppError("This job is closed and no longer accepting applications", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
+    if (job.status === JobStatus.DRAFT || job.status === JobStatus.SCHEDULED) {
+      throw new AppError("This job is not currently available for applications", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
     if (job.deadline) {
       const d = new Date(job.deadline);
       const endOfDay = new Date(d);
@@ -49,7 +53,7 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
 
     const isAuthorizedCollege = job.collegeId === "ALL"
       ? (job.approvedColleges || []).includes(student.collegeId)
-      : job.collegeId === student.collegeId;
+      : (job.collegeId === student.collegeId && (job.status === JobStatus.APPROVED || job.status === JobStatus.ACTIVE));
 
     if (!isAuthorizedCollege) {
       throw new AppError("This job is not approved or available for your college", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);

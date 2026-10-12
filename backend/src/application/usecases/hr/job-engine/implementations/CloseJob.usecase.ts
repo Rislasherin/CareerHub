@@ -9,7 +9,7 @@ import { ICloseJobUseCase } from "../interfaces/ICloseJob.usecase";
 export class CloseJobUseCase implements ICloseJobUseCase {
   constructor(private readonly _jobRepository: IJobRepository) { }
 
-  async execute(companyId: string, jobId: string): Promise<Job> {
+  async execute(companyId: string, jobId: string, closureReason?: string): Promise<Job> {
     const job = await this._jobRepository.findById(jobId);
     if (!job) {
       throw new AppError("Job not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -23,7 +23,11 @@ export class CloseJobUseCase implements ICloseJobUseCase {
       throw new AppError("Cannot close a deleted job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    job.status = JobStatus.CLOSED;
+    if (job.status === JobStatus.CLOSED) {
+      throw new AppError("Job is already closed", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
+    job.close(closureReason);
 
     return await this._jobRepository.update(jobId, job);
   }

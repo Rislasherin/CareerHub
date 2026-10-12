@@ -6,5 +6,5 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 
 export interface ICloseJobUseCase {
-  execute(companyId: string, jobId: string): Promise<Job>;
+  execute(companyId: string, jobId: string, closureReason?: string): Promise<Job>;
 }

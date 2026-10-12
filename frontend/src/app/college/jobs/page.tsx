@@ -27,13 +27,15 @@ export default function CollegeJobsApprovalPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingReject, setSubmittingReject] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'closed'>('pending');
 
-  const fetchJobsList = async (tab: 'pending' | 'approved') => {
+  const fetchJobsList = async (tab: 'pending' | 'approved' | 'closed') => {
     setLoading(true);
     setError(null);
     try {
-      const statusParam = tab === 'pending' ? 'pending_review' : 'approved';
+      let statusParam = 'pending_review';
+      if (tab === 'approved') statusParam = 'approved';
+      else if (tab === 'closed') statusParam = 'closed';
       const data = await getPendingJobs(statusParam);
       setJobs(data);
     } catch (err) {
@@ -184,6 +186,15 @@ export default function CollegeJobsApprovalPage() {
             >
               Approved Vacancies
             </button>
+            <button
+              onClick={() => setActiveTab('closed')}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all uppercase tracking-wider ${activeTab === 'closed'
+                  ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10'
+                  : 'text-slate-500 hover:text-slate-900'
+                }`}
+            >
+              Closed Vacancies
+            </button>
           </div>
         </div>
 
@@ -199,12 +210,14 @@ export default function CollegeJobsApprovalPage() {
         ) : jobs.length === 0 ? (
           <GlassCard className="p-20 text-center rounded-[2.5rem] border-slate-100/50 bg-white">
             <p className="text-slate-400 font-bold text-lg mb-2">
-              {activeTab === 'pending' ? 'No pending reviews' : 'No approved vacancies'}
+              {activeTab === 'pending' ? 'No pending reviews' : activeTab === 'closed' ? 'No closed vacancies' : 'No approved vacancies'}
             </p>
             <p className="text-slate-400 text-sm max-w-sm mx-auto">
               {activeTab === 'pending'
                 ? 'There are no job vacancies waiting to be approved right now.'
-                : 'You have not approved type job vacancies yet.'}
+                : activeTab === 'closed'
+                ? 'There are no closed job vacancies at this time.'
+                : 'You have not approved any job vacancies yet.'}
             </p>
           </GlassCard>
         ) : (
@@ -216,7 +229,11 @@ export default function CollegeJobsApprovalPage() {
               >
                 <div>
                   <div className="flex justify-between items-start gap-4 mb-4">
-                    {activeTab === 'approved' || job.status === 'approved' || job.status === 'active' ? (
+                    {job.status === 'closed' ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold border bg-slate-100 text-slate-700 border-slate-200">
+                        Closed Vacancy
+                      </span>
+                    ) : (activeTab === 'approved' || job.status === 'approved' || job.status === 'active') ? (
                       <span className="px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-100">
                         Approved
                       </span>
@@ -259,7 +276,7 @@ export default function CollegeJobsApprovalPage() {
                       setShowDetails(true);
                     }}
                   >
-                    {activeTab === 'pending' ? 'Review Drive' : 'View Details'}
+                    {activeTab === 'pending' && job.status !== 'closed' ? 'Review Drive' : 'View Details'}
                   </Button>
                 </div>
               </GlassCard>
@@ -279,7 +296,11 @@ export default function CollegeJobsApprovalPage() {
               </button>
 
               <div className="mb-6">
-                {selectedJob.status === 'approved' || selectedJob.status === 'active' ? (
+                {selectedJob.status === 'closed' ? (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold border bg-slate-100 text-slate-700 border-slate-200 inline-block mb-3">
+                    Closed Vacancy
+                  </span>
+                ) : (selectedJob.status === 'approved' || selectedJob.status === 'active') ? (
                   <span className="px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-100 inline-block mb-3">
                     Active & Approved Vacancy
                   </span>
@@ -291,6 +312,17 @@ export default function CollegeJobsApprovalPage() {
                 <h2 className="text-3xl font-black text-slate-900 leading-snug tracking-tight mb-1">{selectedJob.title}</h2>
                 <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">{selectedJob.category}</p>
               </div>
+
+              {selectedJob.status === 'closed' && (
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl text-xs space-y-1 mb-6">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-700 uppercase tracking-wider">
+                    <span>🔒</span> Vacancy Closed
+                  </div>
+                  <p className="text-slate-600">
+                    {selectedJob.closureReason ? `Closure Reason: ${selectedJob.closureReason}` : 'This job vacancy has been closed by the recruiter and is no longer accepting new applications.'}
+                  </p>
+                </div>
+              )}
 
               {/* Stats Box */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 border border-slate-100 p-6 rounded-[2rem] text-sm mb-8">
@@ -361,7 +393,7 @@ export default function CollegeJobsApprovalPage() {
 
               {/* Actions */}
               <div className="flex justify-between pt-6 border-t border-slate-100">
-                {(activeTab !== 'approved' && selectedJob.status !== 'approved' && selectedJob.status !== 'active') ? (
+                {(activeTab !== 'approved' && selectedJob.status !== 'approved' && selectedJob.status !== 'active' && selectedJob.status !== 'closed') ? (
                   <>
                     <Button
                       className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-6 py-3 rounded-2xl border-none"

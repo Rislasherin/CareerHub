@@ -379,9 +379,9 @@ export default function StudentJobsFeed() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {paginatedJobs.map((job) => {
                 const hasApplied = appliedJobs.includes(job.id);
-                const isExpired = isJobExpired(job.deadline);
-                const isClosed = job.isClosed || job.status === 'closed' || isExpired;
-                const isEligible = !isClosed && (job.isEligible !== undefined ? job.isEligible : true);
+                const isClosed = job.status === 'closed' || job.isClosed;
+                const isExpired = !isClosed && isJobExpired(job.deadline);
+                const isEligible = !isClosed && !isExpired && (job.isEligible !== undefined ? job.isEligible : true);
 
               // Overlap check for skill match representation (e.g., "Skill match (3/5)")
               const studentSkillSet = new Set<string>();
@@ -439,6 +439,10 @@ export default function StudentJobsFeed() {
                           ) : isClosed ? (
                             <span className="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
                               Closed
+                            </span>
+                          ) : isExpired ? (
+                            <span className="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
+                              Expired
                             </span>
                           ) : isEligible ? (
                             <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none">
@@ -514,8 +518,8 @@ export default function StudentJobsFeed() {
                           }
                         </span>
                         {!hasApplied && (
-                          <span className={`text-[10px] font-bold mt-1 ${isClosed ? 'text-slate-400' : 'text-amber-600'}`}>
-                            {isClosed ? 'Application Closed' : `Closes ${formattedDeadline}`}
+                          <span className={`text-[10px] font-bold mt-1 ${isClosed ? 'text-slate-400' : isExpired ? 'text-rose-500' : 'text-amber-600'}`}>
+                            {isClosed ? 'Application Closed' : isExpired ? 'Deadline Passed' : `Closes ${formattedDeadline}`}
                           </span>
                         )}
                       </div>
@@ -539,6 +543,10 @@ export default function StudentJobsFeed() {
                         ) : isClosed ? (
                           <button disabled className="h-10 bg-slate-100 text-slate-400 border border-slate-200 px-6 rounded-xl text-xs font-black uppercase tracking-wider cursor-not-allowed">
                             Closed
+                          </button>
+                        ) : isExpired ? (
+                          <button disabled className="h-10 bg-rose-50 text-rose-400 border border-rose-200 px-6 rounded-xl text-xs font-black uppercase tracking-wider cursor-not-allowed">
+                            Expired
                           </button>
                         ) : (
                           <Button
@@ -575,9 +583,9 @@ export default function StudentJobsFeed() {
         {/* --- Side Drawer Detail View --- */}
         <AnimatePresence>
           {showDetails && selectedJob && (() => {
-            const isExpired = isJobExpired(selectedJob.deadline);
-            const isClosed = selectedJob.isClosed || selectedJob.status === 'closed' || isExpired;
-            const isEligible = !isClosed && (selectedJob.isEligible !== undefined ? selectedJob.isEligible : true);
+            const isClosed = selectedJob.status === 'closed' || selectedJob.isClosed;
+            const isExpired = !isClosed && isJobExpired(selectedJob.deadline);
+            const isEligible = !isClosed && !isExpired && (selectedJob.isEligible !== undefined ? selectedJob.isEligible : true);
             const daysLeft = getDaysRemaining(selectedJob.deadline);
             return (
               <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
@@ -617,17 +625,19 @@ export default function StudentJobsFeed() {
                             <span className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200/50 flex items-center gap-1">
                               <MapPin size={10} /> {selectedJob.location || 'Bangalore'}
                             </span>
-                            {selectedJob.deadline && (
-                              daysLeft > 0 && !isClosed ? (
-                                <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-rose-100 flex items-center gap-1">
-                                  <Clock size={10} /> {daysLeft} days left
-                                </span>
-                              ) : (
-                                <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200 flex items-center gap-1">
-                                  <Clock size={10} /> Closed
-                                </span>
-                              )
-                            )}
+                            {isClosed ? (
+                              <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200 flex items-center gap-1">
+                                <Clock size={10} /> Application Closed
+                              </span>
+                            ) : isExpired ? (
+                              <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-amber-200 flex items-center gap-1">
+                                <Clock size={10} /> Deadline Passed
+                              </span>
+                            ) : selectedJob.deadline ? (
+                              <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-rose-100 flex items-center gap-1">
+                                <Clock size={10} /> {daysLeft} days left
+                              </span>
+                            ) : null}
                             <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
                               ✓ Approved
                             </span>
@@ -920,10 +930,14 @@ export default function StudentJobsFeed() {
                           </h4>
                           {selectedJob.deadline && (() => {
                             const daysLeft = getDaysRemaining(selectedJob.deadline);
-                            if (daysLeft > 0 && !isClosed) {
+                            if (isClosed) {
+                              return <span className="text-[10px] text-slate-500 font-bold block">{selectedJob.closureReason ? `Closed: ${selectedJob.closureReason}` : 'This job is closed and no longer accepting applications.'}</span>;
+                            } else if (isExpired) {
+                              return <span className="text-[10px] text-rose-500 font-bold block">Application deadline has passed.</span>;
+                            } else if (daysLeft > 0) {
                               return <span className="text-[10px] text-slate-400 font-bold block">{daysLeft} days remaining • Apply soon!</span>;
                             } else {
-                              return <span className="text-[10px] text-rose-500 font-bold block">Application deadline passed / closed</span>;
+                              return <span className="text-[10px] text-rose-500 font-bold block">Application deadline has passed.</span>;
                             }
                           })()}
                         </div>
@@ -964,7 +978,11 @@ export default function StudentJobsFeed() {
                       </button>
                     ) : isClosed ? (
                       <button disabled className="h-12 flex-1 bg-slate-200 text-slate-400 border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed shadow-none">
-                        Closed
+                        Application Closed
+                      </button>
+                    ) : isExpired ? (
+                      <button disabled className="h-12 flex-1 bg-rose-50 text-rose-400 border border-rose-200 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed shadow-none">
+                        Deadline Passed
                       </button>
                     ) : (
                       <Button

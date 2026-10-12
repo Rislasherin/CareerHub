@@ -23,6 +23,10 @@ export class RejectJobUseCase implements IRejectJobUseCase {
       throw new AppError("Unauthorized access to this job", HttpStatus.FORBIDDEN, ErrorCode.UNAUTHORIZED);
     }
 
+    if (job.status === JobStatus.CLOSED || job.isDeleted) {
+      throw new AppError("Cannot reject a closed or deleted job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+
     if (job.collegeId === "ALL") {
       if (job.rejectedColleges.includes(collegeId)) {
         throw new AppError("Job already rejected by your college", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);

@@ -115,13 +115,13 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
         }
         isExpired = Date.now() > endOfDay.getTime();
       }
-      const isClosed = job.status === JobStatus.CLOSED || isExpired;
+      const isClosed = job.status === JobStatus.CLOSED;
 
       const cgpaScore = cgpaEligible ? 15 : 0;
       const backlogsScore = backlogsEligible ? 15 : 0;
 
       const matchScore = Math.round(skillMatchScore + cgpaScore + backlogsScore);
-      const isEligible = cgpaEligible && backlogsEligible && branchEligible && degreeEligible && passingYearEligible && !isClosed;
+      const isEligible = cgpaEligible && backlogsEligible && branchEligible && degreeEligible && passingYearEligible && !isClosed && !isExpired;
 
       return {
         ...job.toJSON(),

@@ -165,7 +165,8 @@ async function runTests() {
         plan: "pro",
         activeBranches: ["Computer Science", "Information Technology"],
         placementContactEmail: "tpo@apex.edu",
-        placementContactPhone: "9876543210"
+        placementContactPhone: "9876543210",
+        verificationDocument: "https://documents.careerhub.internal/verif/apex_affiliation.pdf"
       }
     };
 
