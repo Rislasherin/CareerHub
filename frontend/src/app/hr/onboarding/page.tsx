@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Building2, MapPin, Phone, Mail,
   ArrowRight, ArrowLeft, Globe,
-  X, Upload, Check, Star, Briefcase
+  X, Upload, Check, Star, Briefcase,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -13,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
-import { updateHROnboarding, logoutUser } from '@/services/auth/auth.service';
+import { updateHROnboarding, resubmitHROnboarding, logoutUser } from '@/services/auth/auth.service';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setHRDetails, clearHRDetails } from '@/redux/slices/hrSlice';
@@ -80,12 +81,13 @@ export default function HROnboardingPage() {
   const dispatch = useAppDispatch();
   const hrDetails = useAppSelector((state) => state.hr.details);
   const [currentStep, setCurrentStep] = useState(1);
+  const isRejected = hrDetails?.status?.toUpperCase() === 'REJECTED';
 
   useEffect(() => {
-    if (hrDetails?.onboardingStep) {
+    if (hrDetails?.onboardingStep && !isRejected) {
       setCurrentStep(Math.min(hrDetails.onboardingStep + 1, steps.length));
     }
-  }, [hrDetails]);
+  }, [hrDetails, isRejected]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [collegeInput, setCollegeInput] = useState('');
@@ -114,6 +116,36 @@ export default function HROnboardingPage() {
     }
   });
 
+  // Prefill existing company data
+  useEffect(() => {
+    if (hrDetails) {
+      if (hrDetails.name || hrDetails.companyName) {
+        setValue('name', hrDetails.name || hrDetails.companyName || '', { shouldValidate: true });
+      }
+      if (hrDetails.website) setValue('website', hrDetails.website, { shouldValidate: true });
+      if (hrDetails.industry || hrDetails.sector) {
+        setValue('industry', hrDetails.industry || hrDetails.sector || '', { shouldValidate: true });
+      }
+      if (hrDetails.headquarters || hrDetails.location) {
+        setValue('headquarters', hrDetails.headquarters || hrDetails.location || '', { shouldValidate: true });
+      }
+      if (hrDetails.description) setValue('description', hrDetails.description, { shouldValidate: true });
+      if (hrDetails.size) setValue('size', hrDetails.size, { shouldValidate: true });
+      if (hrDetails.contactName) {
+        setValue('contactName', hrDetails.contactName, { shouldValidate: true });
+      } else if (hrDetails.firstName || hrDetails.lastName) {
+        setValue('contactName', [hrDetails.firstName, hrDetails.lastName].filter(Boolean).join(' '), { shouldValidate: true });
+      }
+      if (hrDetails.contactJobTitle) setValue('jobTitle', hrDetails.contactJobTitle, { shouldValidate: true });
+      if (hrDetails.contactEmail || hrDetails.email) setValue('contactEmail', hrDetails.contactEmail || hrDetails.email, { shouldValidate: true });
+      if (hrDetails.contactPhone) setValue('contactPhone', hrDetails.contactPhone, { shouldValidate: true });
+      if (hrDetails.preferredColleges && hrDetails.preferredColleges.length > 0) {
+        setValue('preferredColleges', hrDetails.preferredColleges, { shouldValidate: true });
+      }
+      if (hrDetails.logoUrl) setValue('logoUrl', hrDetails.logoUrl, { shouldValidate: true });
+    }
+  }, [hrDetails, setValue]);
+
   const preferredColleges = watch('preferredColleges') || [];
   const size = watch('size');
   const industry = watch('industry');
@@ -122,6 +154,10 @@ export default function HROnboardingPage() {
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleCancelOnboarding = async () => {
+    if (isRejected) {
+      router.push('/hr');
+      return;
+    }
     setIsLoading(true);
     try {
       await logoutUser();
@@ -160,7 +196,14 @@ export default function HROnboardingPage() {
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedCompany = (await updateHROnboarding({ ...data, step: currentStep })) as any;
+      const isResubmission = isRejected && currentStep === steps.length;
+      const payload = {
+        ...data,
+        step: currentStep,
+        ...(isResubmission ? { resubmit: true } : {})
+      };
+
+      const updatedCompany = (await (isResubmission ? resubmitHROnboarding(payload) : updateHROnboarding(payload))) as any;
 
       // Update Redux state with new onboarding step and company info
       if (hrDetails) {
@@ -169,14 +212,18 @@ export default function HROnboardingPage() {
           companyName: updatedCompany.name,
           onboardingStep: updatedCompany.onboardingStep,
           industry: updatedCompany.industry,
-          status: updatedCompany.status || hrDetails.status
+          status: isResubmission ? 'PENDING' : (updatedCompany.status || hrDetails.status)
         }));
       }
 
       if (currentStep < steps.length) {
         nextStep();
       } else {
-        toast.success('Onboarding completed successfully!');
+        if (isResubmission) {
+          toast.success('Company application resubmitted successfully for review!');
+        } else {
+          toast.success('Onboarding completed successfully!');
+        }
         router.push('/hr');
       }
     } catch (error) {
@@ -237,6 +284,19 @@ export default function HROnboardingPage() {
           {/* Form Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form noValidate onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
+              {isRejected && (
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-black text-rose-950 uppercase tracking-wider">
+                      Application Revision Required
+                    </h4>
+                    <p className="text-sm text-rose-900 font-medium mt-1 leading-relaxed bg-white/70 p-3 rounded-xl border border-rose-100">
+                      {hrDetails?.rejectionReason || "Please review and correct your company details before resubmitting."}
+                    </p>
+                  </div>
+                </div>
+              )}
               <AnimatePresence mode="wait">
                 {currentStep === 1 ? (
                   <motion.div
@@ -463,9 +523,9 @@ export default function HROnboardingPage() {
                     <button
                       type="button"
                       onClick={handleCancelOnboarding}
-                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-rose-600 transition-all"
+                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-all"
                     >
-                      <ArrowLeft size={16} /> Back to Register
+                      <ArrowLeft size={16} /> {isRejected ? "Return to Dashboard" : "Back to Register"}
                     </button>
                   )}
                 </div>
@@ -476,7 +536,9 @@ export default function HROnboardingPage() {
                   disabled={!isValid || isLoading}
                   className="px-10 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 disabled:opacity-50 text-white font-black shadow-xl shadow-indigo-200/50 hover:shadow-indigo-300/50 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
                 >
-                  {currentStep === steps.length ? "🚀 Complete Setup" : "Continue"} <ArrowRight size={18} />
+                  {currentStep === steps.length 
+                    ? (isRejected ? "Resubmit for Review" : "🚀 Complete Setup") 
+                    : "Continue"} <ArrowRight size={18} />
                 </Button>
               </div>
             </form>

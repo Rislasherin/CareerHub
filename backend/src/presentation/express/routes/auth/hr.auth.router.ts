@@ -16,5 +16,6 @@ router.post("/login", validateSchema(loginSchema), hrAuthController.login);
 router.post("/register", checkRegistrationEnabled('company'), validateDto(RegisterCompanyRequestDto), hrAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCompanyOtpRequestDto), hrAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCompanyOnboardingDto), hrAuthController.updateOnboarding);
+router.post("/resubmit", authMiddleware.protect, hrAuthController.resubmit);
 
 export default router;

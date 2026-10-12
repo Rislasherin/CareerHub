@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsEmail, IsArray, MinLength, MaxLength, Matches } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsArray, MinLength, MaxLength, Matches, IsBoolean } from "class-validator";
 
 export class UpdateCompanyOnboardingDto {
   // Step 1 fields
@@ -88,4 +88,15 @@ export class UpdateCompanyOnboardingDto {
   @Expose()
   @IsNotEmpty({ message: "Step is required" })
   step!: number;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  resubmit?: boolean;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000, { message: "Verification document URL cannot exceed 2000 characters" })
+  verificationDocument?: string;
 }

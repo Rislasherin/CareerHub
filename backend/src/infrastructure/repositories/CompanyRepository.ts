@@ -24,12 +24,22 @@ export class CompanyRepository
     return doc ? this.toEntity(doc as CompanyDocument) : null;
   }
 
-  async searchCompanies(query: string, page: number, limit: number): Promise<{ companies: Company[], total: number }> {
+  async searchCompanies(query: string, page: number, limit: number, status?: string): Promise<{ companies: Company[], total: number }> {
     const skip = (page - 1) * limit;
-    const filter = {
+    const filter: Record<string, unknown> = {
       name: { $regex: query, $options: "i" },
       isDeleted: { $ne: true }
     };
+
+    if (status) {
+      if (status.toUpperCase() === 'APPROVED') {
+        filter.status = { $regex: '^(ACTIVE|APPROVED)$', $options: 'i' };
+      } else if (status.toUpperCase() === 'ACTIVE') {
+        filter.status = { $regex: '^(ACTIVE|APPROVED)$', $options: 'i' };
+      } else {
+        filter.status = { $regex: `^${status}$`, $options: 'i' };
+      }
+    }
 
     const [docs, total] = await Promise.all([
       this.model.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
@@ -42,14 +52,38 @@ export class CompanyRepository
     };
   }
 
-  async updateStatus(id: string, status: string, blockedBy?: string): Promise<void> {
+  async updateStatus(id: string, status: string, blockedBy?: string, rejectionReason?: string, adminId?: string): Promise<void> {
     const update: Record<string, unknown> = { status };
+    const historyEntry = {
+      status,
+      changedAt: new Date(),
+      changedBy: adminId || blockedBy,
+      reason: rejectionReason
+    };
+
     if (status?.toUpperCase() === 'BLOCKED' && blockedBy) {
       update.blockedBy = blockedBy;
     } else if (status?.toUpperCase() !== 'BLOCKED') {
       update.blockedBy = null;
     }
-    await this.model.updateOne({ _id: id }, { $set: update });
+
+    if (status?.toUpperCase() === 'REJECTED') {
+      update.rejectionReason = rejectionReason;
+      update.rejectedAt = new Date();
+    } else if (status?.toUpperCase() === 'ACTIVE' || status?.toUpperCase() === 'APPROVED') {
+      update.approvedAt = new Date();
+      update.rejectionReason = null;
+    } else if (status?.toUpperCase() === 'PENDING') {
+      update.resubmittedAt = new Date();
+    }
+
+    await this.model.updateOne(
+      { _id: id }, 
+      { 
+        $set: update,
+        $push: { statusHistory: historyEntry }
+      }
+    );
   }
 }
 

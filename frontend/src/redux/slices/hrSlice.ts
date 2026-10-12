@@ -7,9 +7,34 @@ export interface HRDetails {
   email: string;
   companyId?: string;
   companyName?: string;
+  name?: string;
   industry?: string;
+  sector?: string;
+  size?: string;
+  website?: string;
+  headquarters?: string;
+  location?: string;
+  description?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactJobTitle?: string;
+  logoUrl?: string;
+  preferredColleges?: string[];
+  verificationDocument?: string;
   status: string;
+  companyStatus?: string;
   onboardingStep?: number;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  resubmittedAt?: string;
+  approvedAt?: string;
+  statusHistory?: Array<{
+    status: string;
+    changedAt: string;
+    changedBy?: string;
+    reason?: string;
+  }>;
 }
 
 interface HRState {

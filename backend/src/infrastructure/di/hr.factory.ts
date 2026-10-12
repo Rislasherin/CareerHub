@@ -45,7 +45,7 @@ export const makeVerifyCompanyOtpUseCase = () => {
 };
 
 export const makeUpdateCompanyOnboardingUseCase = () => {
-  return new UpdateCompanyOnboardingUseCase(companyRepository);
+  return new UpdateCompanyOnboardingUseCase(companyRepository, hrUserRepository);
 };
 
 export const makeHRAuthController = () => {

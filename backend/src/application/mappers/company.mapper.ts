@@ -21,6 +21,19 @@ export const toCompanyEntity = (doc: CompanyDocument): Company => {
     preferredColleges: doc.preferredColleges ?? [],
     onboardingStep: doc.onboardingStep || 0,
     status: doc.status as UserStatus,
+    rejectionReason: (doc as any).rejectionReason ?? undefined,
+    rejectedAt: (doc as any).rejectedAt ?? undefined,
+    resubmittedAt: (doc as any).resubmittedAt ?? undefined,
+    approvedAt: (doc as any).approvedAt ?? undefined,
+    verificationDocument: (doc as any).verificationDocument ?? undefined,
+    statusHistory: (doc as any).statusHistory
+      ? (doc as any).statusHistory.map((h: any) => ({
+          status: h.status as UserStatus,
+          changedAt: h.changedAt,
+          changedBy: h.changedBy,
+          reason: h.reason
+        }))
+      : undefined,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   });
@@ -46,5 +59,11 @@ export const toCompanyPersistence = (entity: Company) => {
     preferredColleges: props.preferredColleges,
     onboardingStep: props.onboardingStep,
     status: props.status,
+    rejectionReason: props.rejectionReason,
+    rejectedAt: props.rejectedAt,
+    resubmittedAt: props.resubmittedAt,
+    approvedAt: props.approvedAt,
+    verificationDocument: props.verificationDocument,
+    statusHistory: props.statusHistory,
   };
 };

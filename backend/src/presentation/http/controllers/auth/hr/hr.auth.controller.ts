@@ -86,4 +86,19 @@ export class HRAuthController {
     const company = await this._onboardingUseCase.execute(companyId, req.body);
     sendSuccess(res, company, MESSAGES.SUCCESS.ONBOARDING_UPDATED);
   });
+
+  resubmit = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+
+    if (!companyId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+
+    const company = await this._onboardingUseCase.execute(companyId, {
+      ...req.body,
+      step: 3,
+      resubmit: true
+    });
+    sendSuccess(res, company, "Company application resubmitted successfully for review");
+  });
 }

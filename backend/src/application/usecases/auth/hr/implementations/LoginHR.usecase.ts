@@ -23,11 +23,15 @@ export class LoginHRUseCase implements ILoginHRUseCase {
       throw new InvalidCredentialsError();
     }
 
-    if (hrUser.status === UserStatus.BLOCKED || hrUser.status === UserStatus.REJECTED) {
-      throw new UnauthorizedError("Your account has been blocked or rejected.");
+    if (hrUser.status === UserStatus.BLOCKED) {
+      throw new UnauthorizedError("Your account has been blocked. Please contact admin.");
     }
 
-    if (hrUser.status !== UserStatus.ACTIVE && hrUser.status !== UserStatus.PENDING) {
+    if (
+      hrUser.status !== UserStatus.ACTIVE &&
+      hrUser.status !== UserStatus.PENDING &&
+      hrUser.status !== UserStatus.REJECTED
+    ) {
       throw new UnauthorizedError("Your account is not active");
     }
 
@@ -42,6 +46,8 @@ export class LoginHRUseCase implements ILoginHRUseCase {
     if (company?.status === UserStatus.BLOCKED) {
       throw new UnauthorizedError("Your company has been blocked. Please contact admin.");
     }
+
+    const effectiveStatus = company?.status || hrUser.status;
 
     const payload = {
       id: hrUser.id!,
@@ -59,6 +65,10 @@ export class LoginHRUseCase implements ILoginHRUseCase {
         email: hrUser.email,
         role: hrUser.role,
         companyId: hrUser.companyId,
+        status: effectiveStatus,
+        rejectionReason: company?.rejectionReason,
+        rejectedAt: company?.rejectedAt,
+        resubmittedAt: company?.resubmittedAt,
       },
       company: company?.toJSON(),
     };
