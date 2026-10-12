@@ -32,7 +32,16 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
 
     // Update fields based on step
     if (dto.step === 1) {
-      if (dto.name) currentProps.name = dto.name;
+      if (dto.name !== undefined) {
+        const trimmed = dto.name.trim();
+        if (trimmed.length < 3) {
+          throw new AppError("Institution name must be at least 3 characters long", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+        if (/^Pending Institution/i.test(trimmed)) {
+          throw new AppError("Invalid institution name: please enter your actual registered institution name", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+        currentProps.name = trimmed;
+      }
       if (dto.shortName !== undefined) currentProps.shortName = dto.shortName;
       if (dto.yearEstablished !== undefined) currentProps.yearEstablished = dto.yearEstablished;
       if (dto.website !== undefined) currentProps.website = dto.website;
@@ -45,6 +54,12 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
       if (dto.placementContactPhone !== undefined) currentProps.placementContactPhone = dto.placementContactPhone;
       if (dto.logoUrl !== undefined) currentProps.logoUrl = dto.logoUrl;
       if (dto.verificationDocument !== undefined) currentProps.verificationDocument = dto.verificationDocument;
+      if (dto.verificationDocuments !== undefined) {
+        currentProps.verificationDocuments = dto.verificationDocuments.map(d => ({
+          ...d,
+          uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date()
+        }));
+      }
       currentProps.onboardingStep = Math.max(currentProps.onboardingStep || 0, 1);
     } else if (dto.step === 2) {
       if (dto.activeBranches) currentProps.activeBranches = dto.activeBranches;
@@ -52,7 +67,41 @@ export class UpdateCollegeOnboardingUseCase implements IUpdateCollegeOnboardingU
       if (dto.activePlacementBatch !== undefined) currentProps.activePlacementBatch = dto.activePlacementBatch;
       currentProps.onboardingStep = Math.max(currentProps.onboardingStep || 0, 2);
     } else if (dto.step === 3) {
+      if (dto.name !== undefined) {
+        const trimmed = dto.name.trim();
+        if (trimmed.length < 3) {
+          throw new AppError("Institution name must be at least 3 characters long", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+        if (/^Pending Institution/i.test(trimmed)) {
+          throw new AppError("Invalid institution name: please enter your actual registered institution name", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+        }
+        currentProps.name = trimmed;
+      }
+
+      // Enforce valid institution name for final submission
+      if (!currentProps.name || /^Pending Institution/i.test(currentProps.name.trim())) {
+        throw new AppError("A valid official institution name is required before final submission", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+      }
+
       if (dto.plan) currentProps.plan = dto.plan;
+      if (dto.verificationDocument !== undefined) currentProps.verificationDocument = dto.verificationDocument;
+      if (dto.verificationDocuments !== undefined) {
+        currentProps.verificationDocuments = dto.verificationDocuments.map(d => ({
+          ...d,
+          uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date()
+        }));
+      }
+
+      if (currentProps.verificationDocuments && currentProps.verificationDocuments.length > 0 && !currentProps.verificationDocument) {
+        currentProps.verificationDocument = currentProps.verificationDocuments[0].fileUrl;
+      }
+
+      // Validate at least one verification document
+      const hasVerificationDoc = (currentProps.verificationDocuments && currentProps.verificationDocuments.length > 0) || !!currentProps.verificationDocument;
+      if (!hasVerificationDoc) {
+        throw new AppError("At least one official institution verification document is required before final submission", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+      }
+
       currentProps.onboardingStep = 3;
       
       let requireApproval = true;

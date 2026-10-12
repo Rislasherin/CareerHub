@@ -53,6 +53,17 @@ export const CompanySchema = new Schema(
     resubmittedAt: { type: Date, required: false },
     approvedAt: { type: Date, required: false },
     verificationDocument: { type: String, required: false },
+    verificationDocuments: [
+      {
+        id: { type: String, required: true },
+        category: { type: String, required: true },
+        fileName: { type: String, required: true },
+        fileUrl: { type: String, required: true },
+        fileSize: { type: Number, required: false },
+        mimeType: { type: String, required: false },
+        uploadedAt: { type: Date, default: Date.now },
+      }
+    ],
     statusHistory: [
       {
         status: { type: String, required: true },

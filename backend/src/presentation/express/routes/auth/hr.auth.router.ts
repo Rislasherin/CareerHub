@@ -9,13 +9,18 @@ import { validateSchema } from "@presentation/express/middlewares/validateSchema
 import { loginSchema } from "@shared/validation";
 import { checkRegistrationEnabled } from "@presentation/express/middlewares/registration.middleware";
 
+import multer from "multer";
+
 const router = Router();
 const hrAuthController = makeHRAuthController();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/login", validateSchema(loginSchema), hrAuthController.login);
 router.post("/register", checkRegistrationEnabled('company'), validateDto(RegisterCompanyRequestDto), hrAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCompanyOtpRequestDto), hrAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCompanyOnboardingDto), hrAuthController.updateOnboarding);
 router.post("/resubmit", authMiddleware.protect, hrAuthController.resubmit);
+router.post("/verification-documents", authMiddleware.protect, upload.single("file"), hrAuthController.uploadVerificationDocument);
+router.delete("/verification-documents/:id", authMiddleware.protect, hrAuthController.deleteVerificationDocument);
 
 export default router;

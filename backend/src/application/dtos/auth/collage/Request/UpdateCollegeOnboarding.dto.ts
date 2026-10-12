@@ -1,5 +1,6 @@
-import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches, Min, Max, IsBoolean } from "class-validator";
+import { Expose, Type } from "class-transformer";
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsEmail, MinLength, MaxLength, Matches, Min, Max, IsBoolean, ValidateNested } from "class-validator";
+import { VerificationDocumentDto } from "../../hr/Request/UpdateCompanyOnboarding.dto";
 
 export class UpdateCollegeOnboardingDto {
   @Expose()
@@ -21,7 +22,8 @@ export class UpdateCollegeOnboardingDto {
   @MinLength(3, { message: "College name must be at least 3 characters long" })
   @MaxLength(150, { message: "College name cannot exceed 150 characters" })
   @Matches(/^[A-Z]/, { message: "College name must start with a capital letter" })
-  @Matches(/^[a-zA-Z ]+$/, { message: "College name can only contain letters and spaces" })
+  @Matches(/^(?!Pending Institution)/i, { message: "Institution name cannot be a placeholder name" })
+  @Matches(/^[a-zA-Z0-9\s'.,&-]+$/, { message: "College name can only contain letters, numbers, spaces, and standard punctuation" })
   @Matches(/^(?!.*\s\s)/, { message: "College name cannot have consecutive spaces" })
   @Matches(/^(?!.*\s$)/, { message: "College name cannot end with a space" })
   @Matches(/^(?!^\s)/, { message: "College name cannot start with a space" })
@@ -159,4 +161,11 @@ export class UpdateCollegeOnboardingDto {
   @IsOptional()
   @MaxLength(500, { message: "Verification document URL cannot exceed 500 characters" })
   verificationDocument?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VerificationDocumentDto)
+  verificationDocuments?: VerificationDocumentDto[];
 }

@@ -1,5 +1,15 @@
 import { UserStatus } from "../enums/user.status.enum";
 
+export interface VerificationDocument {
+  id: string;
+  category: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedAt: Date;
+}
+
 export interface CompanyProps {
   id?: string;
   name: string;
@@ -23,6 +33,7 @@ export interface CompanyProps {
   resubmittedAt?: Date;
   approvedAt?: Date;
   verificationDocument?: string;
+  verificationDocuments?: VerificationDocument[];
   statusHistory?: Array<{
     status: UserStatus;
     changedAt: Date;
@@ -130,6 +141,38 @@ export class Company {
 
   get verificationDocument(): string | undefined {
     return this.props.verificationDocument;
+  }
+
+  get verificationDocuments(): VerificationDocument[] | undefined {
+    return this.props.verificationDocuments;
+  }
+
+  addVerificationDocument(doc: VerificationDocument): void {
+    if (!this.props.verificationDocuments) {
+      this.props.verificationDocuments = [];
+    }
+    // Prevent duplicate entries for same file / id
+    const existingIndex = this.props.verificationDocuments.findIndex(
+      d => d.id === doc.id || (d.fileName === doc.fileName && d.category === doc.category)
+    );
+    if (existingIndex >= 0) {
+      this.props.verificationDocuments[existingIndex] = doc;
+    } else {
+      this.props.verificationDocuments.push(doc);
+    }
+    if (!this.props.verificationDocument) {
+      this.props.verificationDocument = doc.fileUrl;
+    }
+  }
+
+  removeVerificationDocument(docId: string): void {
+    if (!this.props.verificationDocuments) return;
+    this.props.verificationDocuments = this.props.verificationDocuments.filter(d => d.id !== docId);
+    if (this.props.verificationDocuments.length > 0) {
+      this.props.verificationDocument = this.props.verificationDocuments[0].fileUrl;
+    } else {
+      this.props.verificationDocument = undefined;
+    }
   }
 
   get statusHistory(): Array<{ status: UserStatus; changedAt: Date; changedBy?: string; reason?: string }> | undefined {

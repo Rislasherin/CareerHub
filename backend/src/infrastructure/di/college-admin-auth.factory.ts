@@ -36,11 +36,26 @@ export const makeVerifyCollegeOtpUseCase = () => {
     );
 };
 
+import { CloudinaryService } from "@infrastructure/services/cloudinary/Cloudinary.service";
+import { UploadCollegeVerificationDocumentUseCase } from "@application/usecases/auth/organization/implementations/UploadCollegeVerificationDocument.usecase";
+import { DeleteCollegeVerificationDocumentUseCase } from "@application/usecases/auth/organization/implementations/DeleteCollegeVerificationDocument.usecase";
+
+export const makeUploadCollegeVerificationDocumentUseCase = () => {
+    const cloudinaryService = new CloudinaryService();
+    return new UploadCollegeVerificationDocumentUseCase(organizationRepository, cloudinaryService);
+};
+
+export const makeDeleteCollegeVerificationDocumentUseCase = () => {
+    return new DeleteCollegeVerificationDocumentUseCase(organizationRepository);
+};
+
 export const makeCollegeAdminAuthController = () => {
     return new CollegeAdminAuthController(
         makeRegisterOrganizationUseCase(),
         makeVerifyCollegeOtpUseCase(),
         makeLoginCollegeAdminUseCase(),
-        makeUpdateCollegeOnboardingUseCase()
+        makeUpdateCollegeOnboardingUseCase(),
+        makeUploadCollegeVerificationDocumentUseCase(),
+        makeDeleteCollegeVerificationDocumentUseCase()
     );
 };

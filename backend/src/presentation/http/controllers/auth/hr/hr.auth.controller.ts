@@ -5,6 +5,8 @@ import { IRegisterCompanyUseCase } from "@application/usecases/auth/hr/interface
 import { IUpdateCompanyOnboardingUseCase } from "@application/usecases/auth/hr/interfaces/IUpdateCompanyOnboarding.usecase";
 import { IVerifyCompanyOtpUseCase } from "@application/usecases/auth/hr/interfaces/IVerifyCompanyOtp.usecase";
 import { ILoginHRUseCase } from "@application/usecases/auth/hr/interfaces/ILoginHR.usecase";
+import { IUploadCompanyVerificationDocumentUseCase } from "@application/usecases/auth/hr/implementations/UploadCompanyVerificationDocument.usecase";
+import { IDeleteCompanyVerificationDocumentUseCase } from "@application/usecases/auth/hr/implementations/DeleteCompanyVerificationDocument.usecase";
 import { AppError } from "@application/errors/AppError";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { HttpStatus } from "@domain/enums/HttpStatus.enum";
@@ -16,7 +18,9 @@ export class HRAuthController {
     private readonly _registerUseCase: IRegisterCompanyUseCase,
     private readonly _onboardingUseCase: IUpdateCompanyOnboardingUseCase,
     private readonly _verifyOtpUseCase: IVerifyCompanyOtpUseCase,
-    private readonly _loginUseCase: ILoginHRUseCase
+    private readonly _loginUseCase: ILoginHRUseCase,
+    private readonly _uploadVerificationDocUseCase?: IUploadCompanyVerificationDocumentUseCase,
+    private readonly _deleteVerificationDocUseCase?: IDeleteCompanyVerificationDocumentUseCase
   ) { }
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -100,5 +104,40 @@ export class HRAuthController {
       resubmit: true
     });
     sendSuccess(res, company, "Company application resubmitted successfully for review");
+  });
+
+  uploadVerificationDocument = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    if (!this._uploadVerificationDocUseCase) {
+      throw new AppError("Upload service not configured", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
+    }
+
+    const result = await this._uploadVerificationDocUseCase.execute(
+      companyId,
+      req.file,
+      req.body.category
+    );
+
+    sendSuccess(res, result, "Verification document uploaded successfully", HttpStatus.CREATED);
+  });
+
+  deleteVerificationDocument = asyncHandler(async (req: Request, res: Response) => {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new AppError(MESSAGES.ERROR.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+    }
+    const documentId = req.params.id;
+    if (!documentId) {
+      throw new AppError("Document ID is required", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
+    if (!this._deleteVerificationDocUseCase) {
+      throw new AppError("Delete service not configured", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR);
+    }
+
+    const updatedCompany = await this._deleteVerificationDocUseCase.execute(companyId, documentId);
+    sendSuccess(res, updatedCompany, "Verification document removed successfully");
   });
 }

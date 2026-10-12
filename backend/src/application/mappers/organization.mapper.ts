@@ -31,6 +31,17 @@ export const toOrganizationEntity = (doc: OrganizationDocument): Organization =>
         resubmittedAt: (doc as any).resubmittedAt || undefined,
         approvedAt: (doc as any).approvedAt || undefined,
         verificationDocument: (doc as any).verificationDocument || undefined,
+        verificationDocuments: (doc as any).verificationDocuments
+            ? (doc as any).verificationDocuments.map((d: any) => ({
+                id: d.id,
+                category: d.category,
+                fileName: d.fileName,
+                fileUrl: d.fileUrl,
+                fileSize: d.fileSize,
+                mimeType: d.mimeType,
+                uploadedAt: d.uploadedAt
+            }))
+            : undefined,
         statusHistory: (doc as any).statusHistory || [],
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
@@ -66,6 +77,7 @@ export const toOrganizationPersistence = (entity: Organization) => {
         resubmittedAt: props.resubmittedAt,
         approvedAt: props.approvedAt,
         verificationDocument: props.verificationDocument,
+        verificationDocuments: props.verificationDocuments,
         statusHistory: props.statusHistory
     }
 }

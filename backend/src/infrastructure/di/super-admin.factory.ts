@@ -136,6 +136,12 @@ export const makeGetAILedgerUseCase = () => {
   return new GetAILedgerUseCase(aiUsageRepository);
 };
 
+import { GetVerificationDocumentViewUseCase } from "@application/usecases/auth/common/GetVerificationDocumentView.usecase";
+
+export const makeGetVerificationDocumentViewUseCase = () => {
+  return new GetVerificationDocumentViewUseCase(companyRepository, orgRepository);
+};
+
 export const makeSuperAdminController = () => {
   return new SuperAdminController(
     makeGetDashboardStatsUseCase(),
@@ -154,7 +160,8 @@ export const makeSuperAdminController = () => {
     makeChangeSuperAdminPasswordUseCase(),
     makeRequestSuperAdminEmailChangeUseCase(),
     makeVerifySuperAdminEmailChangeUseCase(),
-    makeGetAILedgerUseCase()
+    makeGetAILedgerUseCase(),
+    makeGetVerificationDocumentViewUseCase()
   );
 };
 

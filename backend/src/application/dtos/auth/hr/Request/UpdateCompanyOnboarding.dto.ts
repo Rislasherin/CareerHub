@@ -1,5 +1,40 @@
-import { Expose } from "class-transformer";
-import { IsString, IsNotEmpty, IsOptional, IsEmail, IsArray, MinLength, MaxLength, Matches, IsBoolean } from "class-validator";
+import { Expose, Type } from "class-transformer";
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsArray, MinLength, MaxLength, Matches, IsBoolean, ValidateNested } from "class-validator";
+
+export class VerificationDocumentDto {
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  category!: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  fileName!: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  fileUrl!: string;
+
+  @Expose()
+  @IsOptional()
+  fileSize?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  mimeType?: string;
+
+  @Expose()
+  @IsOptional()
+  uploadedAt?: Date;
+}
 
 export class UpdateCompanyOnboardingDto {
   // Step 1 fields
@@ -11,7 +46,8 @@ export class UpdateCompanyOnboardingDto {
   @Matches(/^(?!.*\s\s)/, { message: "Company name cannot have consecutive spaces" })
   @Matches(/^(?!.*\s$)/, { message: "Company name cannot end with a space" })
   @Matches(/^(?!^\s)/, { message: "Company name cannot start with a space" })
-  @Matches(/^[a-zA-Z\s'-]+$/, { message: "Company name can only contain letters, spaces, hyphens, and apostrophes" })
+  @Matches(/^(?!Pending Company)/i, { message: "Company name cannot be a placeholder name" })
+  @Matches(/^[a-zA-Z0-9\s'.,&-]+$/, { message: "Company name can only contain letters, numbers, spaces, and standard punctuation" })
   name?: string;
 
   @Expose()
@@ -99,4 +135,11 @@ export class UpdateCompanyOnboardingDto {
   @IsString()
   @MaxLength(2000, { message: "Verification document URL cannot exceed 2000 characters" })
   verificationDocument?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VerificationDocumentDto)
+  verificationDocuments?: VerificationDocumentDto[];
 }

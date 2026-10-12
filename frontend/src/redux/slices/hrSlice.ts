@@ -1,5 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export interface VerificationDocumentItem {
+  id: string;
+  category: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedAt: string | Date;
+}
+
 export interface HRDetails {
   id: string;
   firstName: string;
@@ -22,6 +32,7 @@ export interface HRDetails {
   logoUrl?: string;
   preferredColleges?: string[];
   verificationDocument?: string;
+  verificationDocuments?: VerificationDocumentItem[];
   status: string;
   companyStatus?: string;
   onboardingStep?: number;

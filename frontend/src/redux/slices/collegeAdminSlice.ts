@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { VerificationDocumentItem } from './hrSlice';
 
 export interface CollegeAdminDetails {
   id: string;
@@ -19,6 +20,7 @@ export interface CollegeAdminDetails {
   placementContactPhone?: string;
   logoUrl?: string;
   verificationDocument?: string;
+  verificationDocuments?: VerificationDocumentItem[];
   status: string;
   onboardingStep?: number;
   activeBranches?: string[];

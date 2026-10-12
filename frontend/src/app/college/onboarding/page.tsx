@@ -7,7 +7,8 @@ import {
   ArrowRight, ArrowLeft, Building2,
   Users, BarChart3, Link as LinkIcon,
   CheckCircle2, X, Upload, Check, Star,
-  Mail, Phone, Search, AlertTriangle, Send
+  Mail, Phone, Search, AlertTriangle, Send,
+  FileText, Trash2, Download, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -16,14 +17,30 @@ import * as z from 'zod';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { updateCollegeOnboarding, logoutUser } from '@/services/auth/auth.service';
+import { apiClient } from '@/services/api/api.client';
 import { PLATFORM_BRANCHES } from '@/constants/academic';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setCollegeAdminDetails, clearCollegeAdminDetails } from '@/redux/slices/collegeAdminSlice';
+import { VerificationDocumentItem } from '@/redux/slices/hrSlice';
 import { clearAuth } from '@/redux/slices/authSlice';
 
+export const COLLEGE_VERIFICATION_CATEGORIES = [
+  { value: 'ESTABLISHMENT_CERTIFICATE', label: 'Institution Registration / Establishment Certificate' },
+  { value: 'GOVERNMENT_RECOGNITION', label: 'Government Recognition / Affiliation Certificate' },
+  { value: 'UGC_AICTE_AFFILIATION', label: 'UGC / AICTE / University Affiliation Proof' },
+  { value: 'INSTITUTION_AUTHORIZATION', label: 'Official Institutional Authorization Letter' },
+  { value: 'OTHER', label: 'Other Official Institution Verification Document' },
+] as const;
+
 const step1Schema = z.object({
-  name: z.string().min(3, 'Institution name must be at least 3 characters'),
+  name: z.string()
+    .trim()
+    .min(3, 'Official institution name must be at least 3 characters')
+    .max(150, 'Institution name cannot exceed 150 characters')
+    .refine((val) => !/^Pending Institution/i.test(val.trim()), {
+      message: 'Please enter your actual official institution name, not a placeholder',
+    }),
   shortName: z.string().optional(),
   yearEstablished: z.string().optional(),
   website: z.string().optional().or(z.literal('')),
@@ -77,6 +94,9 @@ export default function CollegeOnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [branchInput, setBranchInput] = useState('');
   const [customBranch, setCustomBranch] = useState('');
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocumentItem[]>([]);
+  const [selectedDocCategory, setSelectedDocCategory] = useState<string>('ESTABLISHMENT_CERTIFICATE');
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -122,7 +142,11 @@ export default function CollegeOnboardingPage() {
       }
 
       const collegeNameVal = collegeAdminDetails.name || collegeAdminDetails.collegeName;
-      if (collegeNameVal) setValue('name', collegeNameVal, { shouldValidate: true });
+      if (collegeNameVal && !/^Pending Institution/i.test(collegeNameVal.trim())) {
+        setValue('name', collegeNameVal, { shouldValidate: true });
+      } else {
+        setValue('name', '', { shouldValidate: false });
+      }
       if (collegeAdminDetails.shortName) setValue('shortName', collegeAdminDetails.shortName);
       if (collegeAdminDetails.yearEstablished) setValue('yearEstablished', collegeAdminDetails.yearEstablished);
       if (collegeAdminDetails.website) setValue('website', collegeAdminDetails.website);
@@ -135,6 +159,18 @@ export default function CollegeOnboardingPage() {
       if (collegeAdminDetails.currentAcademicYear) setValue('currentAcademicYear', collegeAdminDetails.currentAcademicYear);
       if (collegeAdminDetails.activePlacementBatch) setValue('activePlacementBatch', collegeAdminDetails.activePlacementBatch);
       if (collegeAdminDetails.plan) setValue('plan', (collegeAdminDetails.plan as 'basic' | 'pro') || 'pro');
+
+      if (collegeAdminDetails.verificationDocuments && collegeAdminDetails.verificationDocuments.length > 0) {
+        setVerificationDocuments(collegeAdminDetails.verificationDocuments);
+      } else if (collegeAdminDetails.verificationDocument) {
+        setVerificationDocuments([{
+          id: 'legacy-doc',
+          category: 'OTHER',
+          fileName: collegeAdminDetails.verificationDocument.split('/').pop() || 'Verification Document',
+          fileUrl: collegeAdminDetails.verificationDocument,
+          uploadedAt: new Date()
+        }]);
+      }
     }
   }, [collegeAdminDetails, isRejected, setValue, searchParams]);
 
@@ -182,19 +218,81 @@ export default function CollegeOnboardingPage() {
     }
   };
 
-  const removeBranch = (branch: string) => {
-    setValue('activeBranches', activeBranches.filter(b => b !== branch), { shouldValidate: true });
+  const removeBranch = (branchToRemove: string) => {
+    setValue('activeBranches', activeBranches.filter(b => b !== branchToRemove), { shouldValidate: true });
+  };
+
+  const handleVerificationDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!selectedDocCategory) {
+      toast.error('Please select a document category');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
+      return;
+    }
+
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only PDF, JPG, PNG, and WEBP files are allowed');
+      return;
+    }
+
+    setIsUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', selectedDocCategory);
+
+      const response: any = await apiClient.post('/auth/college-admin/verification-documents', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const newDoc = response.data?.document;
+      if (newDoc) {
+        setVerificationDocuments(prev => [...prev.filter(d => d.id !== newDoc.id), newDoc]);
+        toast.success('Verification document uploaded successfully');
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to upload document';
+      toast.error(msg);
+    } finally {
+      setIsUploadingDoc(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveVerificationDoc = async (docId: string) => {
+    try {
+      await apiClient.delete(`/auth/college-admin/verification-documents/${docId}`);
+      setVerificationDocuments(prev => prev.filter(d => d.id !== docId));
+      toast.success('Document removed');
+    } catch (err: any) {
+      toast.error('Failed to remove document');
+    }
   };
 
   const onSubmit = async (data: any) => {
+    const isFinalStep = currentStep === 3;
+    if (isFinalStep) {
+      if (verificationDocuments.length === 0) {
+        toast.error('Please upload at least one official institution verification document before final submission.');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      const isFinalStep = currentStep === 3;
       const allFormValues = getValues();
       const payload = {
         ...allFormValues,
         ...data,
         step: currentStep,
+        verificationDocuments,
         ...(isFinalStep && isRejected ? { resubmit: true } : {})
       };
       const updatedOrg = await updateCollegeOnboarding(payload) as any;
@@ -204,8 +302,11 @@ export default function CollegeOnboardingPage() {
           ...collegeAdminDetails,
           ...updatedOrg,
           collegeName: updatedOrg.name,
+          name: updatedOrg.name,
           onboardingStep: updatedOrg.onboardingStep,
           activeBranches: updatedOrg.activeBranches || collegeAdminDetails.activeBranches || [],
+          verificationDocuments: updatedOrg.verificationDocuments || verificationDocuments,
+          verificationDocument: updatedOrg.verificationDocument,
           status: (isFinalStep && isRejected) ? 'PENDING' : (updatedOrg.status || collegeAdminDetails.status),
           rejectionReason: (isFinalStep && isRejected) ? undefined : collegeAdminDetails.rejectionReason
         }));
@@ -610,6 +711,128 @@ export default function CollegeOnboardingPage() {
                             </li>
                           ))}
                         </ul>
+                      </div>
+                    </div>
+
+                    {/* Verification Documents & Proof Section */}
+                    <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck size={18} className="text-emerald-600" />
+                            Verification Documents & Proof *
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Upload at least one official recognition, affiliation, or establishment document (UGC, AICTE, Govt. Affiliation, or Letter).
+                          </p>
+                        </div>
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 self-start sm:self-auto">
+                          Required (Min 1 Document)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                        {/* Category Selector & Upload Dropzone */}
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700 ml-1">Document Category</label>
+                            <select
+                              value={selectedDocCategory}
+                              onChange={(e) => setSelectedDocCategory(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-4 h-11 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer"
+                            >
+                              {COLLEGE_VERIFICATION_CATEGORIES.map((cat) => (
+                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="relative border-2 border-dashed border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/50 hover:border-emerald-400 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer group">
+                            <input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg,.webp"
+                              disabled={isUploadingDoc}
+                              onChange={handleVerificationDocUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                            />
+                            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                              {isUploadingDoc ? <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" /> : <Upload size={20} />}
+                            </div>
+                            <p className="text-xs font-bold text-slate-700 mb-0.5">
+                              {isUploadingDoc ? 'Uploading document...' : 'Click or drag file to upload'}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG, WEBP (Max 10MB)</p>
+                          </div>
+                        </div>
+
+                        {/* Uploaded Documents List */}
+                        <div className="lg:col-span-2 space-y-3">
+                          <label className="text-xs font-bold text-slate-700 ml-1">
+                            Submitted Documents ({verificationDocuments.length})
+                          </label>
+                          {verificationDocuments.length === 0 ? (
+                            <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-white text-center flex flex-col items-center justify-center">
+                              <FileText size={28} className="text-slate-300 mb-2" />
+                              <p className="text-xs font-bold text-slate-500">No verification documents uploaded yet.</p>
+                              <p className="text-[11px] text-slate-400 mt-1 max-w-sm">
+                                Please select a category and upload at least one official document for Super Admin review.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                              {verificationDocuments.map((doc) => {
+                                const catObj = COLLEGE_VERIFICATION_CATEGORIES.find(c => c.value === doc.category);
+                                const categoryLabel = catObj ? catObj.label : doc.category;
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-emerald-200 transition-all"
+                                  >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <FileText size={18} />
+                                      </div>
+                                      <div className="overflow-hidden">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 truncate">
+                                            {categoryLabel}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                                          {doc.fileName}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400">
+                                          {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB • ` : ''}
+                                          {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Just now'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <a
+                                        href={doc.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                        title="View Document"
+                                      >
+                                        <Download size={16} />
+                                      </a>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveVerificationDoc(doc.id)}
+                                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                        title="Remove Document"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 

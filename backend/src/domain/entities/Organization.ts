@@ -1,4 +1,5 @@
 import { UserStatus } from "@domain/enums/user.status.enum";
+import { VerificationDocument } from "./Company";
 
 export interface OrganizationStatusHistoryItem {
   status: string;
@@ -28,6 +29,7 @@ export interface OrganizationProps {
   trialEndsAt?: Date;
   logoUrl?: string;
   verificationDocument?: string;
+  verificationDocuments?: VerificationDocument[];
 
   onboardingStep?: number;
   website?: string;
@@ -134,6 +136,37 @@ export class Organization {
 
   get verificationDocument(): string | undefined {
     return this._props.verificationDocument;
+  }
+
+  get verificationDocuments(): VerificationDocument[] | undefined {
+    return this._props.verificationDocuments;
+  }
+
+  addVerificationDocument(doc: VerificationDocument): void {
+    if (!this._props.verificationDocuments) {
+      this._props.verificationDocuments = [];
+    }
+    const existingIndex = this._props.verificationDocuments.findIndex(
+      d => d.id === doc.id || (d.fileName === doc.fileName && d.category === doc.category)
+    );
+    if (existingIndex >= 0) {
+      this._props.verificationDocuments[existingIndex] = doc;
+    } else {
+      this._props.verificationDocuments.push(doc);
+    }
+    if (!this._props.verificationDocument) {
+      this._props.verificationDocument = doc.fileUrl;
+    }
+  }
+
+  removeVerificationDocument(docId: string): void {
+    if (!this._props.verificationDocuments) return;
+    this._props.verificationDocuments = this._props.verificationDocuments.filter(d => d.id !== docId);
+    if (this._props.verificationDocuments.length > 0) {
+      this._props.verificationDocument = this._props.verificationDocuments[0].fileUrl;
+    } else {
+      this._props.verificationDocument = undefined;
+    }
   }
 
   get rejectionReason(): string | undefined {

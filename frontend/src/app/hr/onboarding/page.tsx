@@ -6,7 +6,7 @@ import {
   Building2, MapPin, Phone, Mail,
   ArrowRight, ArrowLeft, Globe,
   X, Upload, Check, Star, Briefcase,
-  AlertTriangle, Send
+  AlertTriangle, Send, FileText, Trash2, CheckCircle2, ShieldCheck, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -15,13 +15,28 @@ import * as z from 'zod';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { updateHROnboarding, resubmitHROnboarding, logoutUser } from '@/services/auth/auth.service';
+import { apiClient } from '@/services/api/api.client';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { setHRDetails, clearHRDetails } from '@/redux/slices/hrSlice';
+import { setHRDetails, clearHRDetails, VerificationDocumentItem } from '@/redux/slices/hrSlice';
 import { clearAuth } from '@/redux/slices/authSlice';
 
+export const COMPANY_VERIFICATION_CATEGORIES = [
+  { value: 'INCORPORATION_CERTIFICATE', label: 'Certificate of Incorporation / Registration Certificate' },
+  { value: 'GST_CERTIFICATE', label: 'GST Registration Certificate' },
+  { value: 'MSME_CERTIFICATE', label: 'Udyam / MSME Registration Certificate' },
+  { value: 'ESTABLISHMENT_LICENSE', label: 'Shop & Establishment Licence / Business Registration' },
+  { value: 'OTHER', label: 'Other Official Business Verification Document' },
+] as const;
+
 const step1Schema = z.object({
-  name: z.string().min(3, 'Company name must be at least 3 characters'),
+  name: z.string()
+    .trim()
+    .min(2, 'Registered company name must be at least 2 characters')
+    .max(100, 'Company name cannot exceed 100 characters')
+    .refine((val) => !/^Pending Company/i.test(val.trim()), {
+      message: 'Please enter your actual registered company name, not a placeholder',
+    }),
   website: z.string().optional().or(z.literal('')),
   industry: z.string().optional().or(z.literal('')),
   headquarters: z.string().optional(),
@@ -105,6 +120,9 @@ export default function HROnboardingPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [collegeInput, setCollegeInput] = useState('');
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocumentItem[]>([]);
+  const [selectedDocCategory, setSelectedDocCategory] = useState<string>('INCORPORATION_CERTIFICATE');
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isValid }, setValue, watch, getValues } = useForm<HRFormValues>({
     mode: 'all',
@@ -133,8 +151,11 @@ export default function HROnboardingPage() {
   // Prefill existing company data
   useEffect(() => {
     if (hrDetails) {
-      if (hrDetails.name || hrDetails.companyName) {
-        setValue('name', hrDetails.name || hrDetails.companyName || '', { shouldValidate: true });
+      const rawName = hrDetails.name || hrDetails.companyName || '';
+      if (rawName && !/^Pending Company/i.test(rawName.trim())) {
+        setValue('name', rawName, { shouldValidate: true });
+      } else {
+        setValue('name', '', { shouldValidate: false });
       }
       if (hrDetails.website) setValue('website', hrDetails.website, { shouldValidate: true });
       if (hrDetails.industry || hrDetails.sector) {
@@ -157,6 +178,18 @@ export default function HROnboardingPage() {
         setValue('preferredColleges', hrDetails.preferredColleges, { shouldValidate: true });
       }
       if (hrDetails.logoUrl) setValue('logoUrl', hrDetails.logoUrl, { shouldValidate: true });
+
+      if (hrDetails.verificationDocuments && hrDetails.verificationDocuments.length > 0) {
+        setVerificationDocuments(hrDetails.verificationDocuments);
+      } else if (hrDetails.verificationDocument) {
+        setVerificationDocuments([{
+          id: 'legacy-doc',
+          category: 'OTHER',
+          fileName: hrDetails.verificationDocument.split('/').pop() || 'Verification Document',
+          fileUrl: hrDetails.verificationDocument,
+          uploadedAt: new Date()
+        }]);
+      }
     }
   }, [hrDetails, setValue]);
 
@@ -207,7 +240,69 @@ export default function HROnboardingPage() {
     setValue('preferredColleges', preferredColleges.filter(c => c !== college), { shouldValidate: true });
   };
 
+  const handleVerificationDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!selectedDocCategory) {
+      toast.error('Please select a document category');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
+      return;
+    }
+
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only PDF, JPG, PNG, and WEBP files are allowed');
+      return;
+    }
+
+    setIsUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', selectedDocCategory);
+
+      const response: any = await apiClient.post('/auth/hr/verification-documents', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const newDoc = response.data?.document;
+      if (newDoc) {
+        setVerificationDocuments(prev => [...prev.filter(d => d.id !== newDoc.id), newDoc]);
+        toast.success('Verification document uploaded successfully');
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to upload document';
+      toast.error(msg);
+    } finally {
+      setIsUploadingDoc(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveVerificationDoc = async (docId: string) => {
+    try {
+      await apiClient.delete(`/auth/hr/verification-documents/${docId}`);
+      setVerificationDocuments(prev => prev.filter(d => d.id !== docId));
+      toast.success('Document removed');
+    } catch (err: any) {
+      toast.error('Failed to remove document');
+    }
+  };
+
   const onSubmit = async (data: any) => {
+    // If completing the final step (Step 3), ensure at least 1 verification document is uploaded
+    if (currentStep === steps.length) {
+      if (verificationDocuments.length === 0) {
+        toast.error('Please upload at least one official business verification document before final submission.');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const isResubmission = isRejected && currentStep === steps.length;
@@ -216,18 +311,22 @@ export default function HROnboardingPage() {
         ...allFormValues,
         ...data,
         step: currentStep,
+        verificationDocuments,
         ...(isResubmission ? { resubmit: true } : {})
       };
 
       const updatedCompany = (await (isResubmission ? resubmitHROnboarding(payload) : updateHROnboarding(payload))) as any;
 
-      // Update Redux state with new onboarding step and company info
+      // Update Redux state with new onboarding step, company info, and verification documents
       if (hrDetails) {
         dispatch(setHRDetails({
           ...hrDetails,
           companyName: updatedCompany.name,
+          name: updatedCompany.name,
           onboardingStep: updatedCompany.onboardingStep,
           industry: updatedCompany.industry,
+          verificationDocuments: updatedCompany.verificationDocuments || verificationDocuments,
+          verificationDocument: updatedCompany.verificationDocument,
           status: isResubmission ? 'PENDING' : (updatedCompany.status || hrDetails.status),
           rejectionReason: isResubmission ? undefined : hrDetails.rejectionReason
         }));
@@ -243,8 +342,9 @@ export default function HROnboardingPage() {
         }
         router.push('/hr');
       }
-    } catch (error) {
-      toast.error('Failed to update onboarding.');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update onboarding info.';
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -374,13 +474,18 @@ export default function HROnboardingPage() {
                     className="space-y-6"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <Input
-                        label="Company Name"
-                        placeholder="e.g. Google Inc."
-                        {...register('name')}
-                        error={errors.name?.message as string}
-                        className="bg-slate-50/50 h-12"
-                      />
+                      <div className="space-y-1">
+                        <Input
+                          label="Registered Company Name *"
+                          placeholder="e.g. Acme Technologies Private Limited"
+                          {...register('name')}
+                          error={errors.name?.message as string}
+                          className="bg-slate-50/50 h-12"
+                        />
+                        <p className="text-[11px] text-slate-400 ml-1">
+                          Enter your legal registered company name as documented in your official certificates.
+                        </p>
+                      </div>
                       <Input
                         label="Website (Optional)"
                         placeholder="https://company.com"
@@ -567,6 +672,128 @@ export default function HROnboardingPage() {
                               </p>
                               <p className="text-[10px] text-slate-400 font-medium">PNG, JPG up to 2MB</p>
                             </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Verification Documents & Proof Section */}
+                    <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck size={18} className="text-indigo-600" />
+                            Verification Documents & Proof *
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Upload at least one official business registration document (Certificate of Incorporation, GST, MSME, or Licence).
+                          </p>
+                        </div>
+                        <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 self-start sm:self-auto">
+                          Required (Min 1 Document)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                        {/* Category Selector & Upload Dropzone */}
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700 ml-1">Document Category</label>
+                            <select
+                              value={selectedDocCategory}
+                              onChange={(e) => setSelectedDocCategory(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-4 h-11 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 cursor-pointer"
+                            >
+                              {COMPANY_VERIFICATION_CATEGORIES.map((cat) => (
+                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="relative border-2 border-dashed border-indigo-200 bg-indigo-50/20 hover:bg-indigo-50/50 hover:border-indigo-400 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer group">
+                            <input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg,.webp"
+                              disabled={isUploadingDoc}
+                              onChange={handleVerificationDocUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                            />
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                              {isUploadingDoc ? <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> : <Upload size={20} />}
+                            </div>
+                            <p className="text-xs font-bold text-slate-700 mb-0.5">
+                              {isUploadingDoc ? 'Uploading document...' : 'Click or drag file to upload'}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG, WEBP (Max 10MB)</p>
+                          </div>
+                        </div>
+
+                        {/* Uploaded Documents List */}
+                        <div className="lg:col-span-2 space-y-3">
+                          <label className="text-xs font-bold text-slate-700 ml-1">
+                            Submitted Documents ({verificationDocuments.length})
+                          </label>
+                          {verificationDocuments.length === 0 ? (
+                            <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-white text-center flex flex-col items-center justify-center">
+                              <FileText size={28} className="text-slate-300 mb-2" />
+                              <p className="text-xs font-bold text-slate-500">No verification documents uploaded yet.</p>
+                              <p className="text-[11px] text-slate-400 mt-1 max-w-sm">
+                                Please select a category and upload at least one official document for Super Admin review.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                              {verificationDocuments.map((doc) => {
+                                const catObj = COMPANY_VERIFICATION_CATEGORIES.find(c => c.value === doc.category);
+                                const categoryLabel = catObj ? catObj.label : doc.category;
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-200 transition-all"
+                                  >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                      <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                        <FileText size={18} />
+                                      </div>
+                                      <div className="overflow-hidden">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 truncate">
+                                            {categoryLabel}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                                          {doc.fileName}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400">
+                                          {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB • ` : ''}
+                                          {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Just now'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <a
+                                        href={doc.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                        title="View Document"
+                                      >
+                                        <Download size={16} />
+                                      </a>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveVerificationDoc(doc.id)}
+                                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                        title="Remove Document"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       </div>

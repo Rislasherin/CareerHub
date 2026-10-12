@@ -19,6 +19,7 @@ import { IChangeSuperAdminPasswordUseCase } from "@application/usecases/super-ad
 import { IRequestSuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IRequestSuperAdminEmailChangeUseCase.usecase";
 import { IVerifySuperAdminEmailChangeUseCase } from "@application/usecases/super-admin/interfaces/IVerifySuperAdminEmailChangeUseCase.usecase";
 import { IGetAILedgerUseCase } from "@application/usecases/super-admin/interfaces/IGetAILedgerUseCase";
+import { IGetVerificationDocumentViewUseCase } from "@application/usecases/auth/common/GetVerificationDocumentView.usecase";
 import { ForbiddenError } from "@application/errors/AuthError";
 import { ValidationError } from "@application/errors/validation.error";
 import { Role } from "@domain/enums/Roles.enum";
@@ -42,7 +43,8 @@ export class SuperAdminController {
     private readonly _changePasswordUseCase: IChangeSuperAdminPasswordUseCase,
     private readonly _requestEmailChangeUseCase: IRequestSuperAdminEmailChangeUseCase,
     private readonly _verifyEmailChangeUseCase: IVerifySuperAdminEmailChangeUseCase,
-    private readonly _getAILedgerUseCase: IGetAILedgerUseCase
+    private readonly _getAILedgerUseCase: IGetAILedgerUseCase,
+    private readonly _getVerificationDocViewUseCase?: IGetVerificationDocumentViewUseCase
   ) { }
 
   updateOrganizationPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -198,5 +200,28 @@ export class SuperAdminController {
     ]);
     
     sendSuccess(res, { ledger, stats }, "AI Usage Ledger fetched successfully");
+  });
+
+  getVerificationDocumentView = asyncHandler(async (req: Request, res: Response) => {
+    const { targetType, targetId, docId } = req.params;
+    if (!this._getVerificationDocViewUseCase) {
+      throw new Error("Verification document viewer not configured");
+    }
+
+    const requestingUser = {
+      id: req.user?.id || "",
+      role: req.user?.role || "",
+      companyId: req.user?.companyId,
+      orgId: req.user?.orgId,
+    };
+
+    const doc = await this._getVerificationDocViewUseCase.execute(
+      requestingUser,
+      targetType as "company" | "college",
+      targetId,
+      docId
+    );
+
+    sendSuccess(res, doc, "Verification document details fetched successfully");
   });
 }

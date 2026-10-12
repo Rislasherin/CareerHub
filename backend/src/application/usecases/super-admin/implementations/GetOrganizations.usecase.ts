@@ -26,6 +26,15 @@ export class GetOrganizationsUseCase implements IGetOrganizationsUseCase {
       const json = org.toJSON();
       return {
         ...json,
+        verificationDocuments: (json.verificationDocuments && json.verificationDocuments.length > 0)
+          ? json.verificationDocuments
+          : (json.verificationDocument ? [{
+              id: 'legacy-doc',
+              category: 'OTHER',
+              fileName: json.verificationDocument.split('/').pop() || 'Verification Document',
+              fileUrl: json.verificationDocument,
+              uploadedAt: json.createdAt || new Date()
+            }] : []),
         countOfStudents: studentCount,
         email: admin?.email || 'No email',
         placementContactEmail: admin?.email || 'No email',

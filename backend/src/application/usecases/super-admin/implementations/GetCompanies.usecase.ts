@@ -36,6 +36,15 @@ export class GetCompaniesUseCase implements IGetCompaniesUseCase {
         contactJobTitle: companyProps?.contactJobTitle || userJson.designation || "",
         logoUrl: companyProps?.logoUrl,
         verificationDocument: companyProps?.verificationDocument,
+        verificationDocuments: companyProps?.verificationDocuments && companyProps.verificationDocuments.length > 0
+          ? companyProps.verificationDocuments
+          : (companyProps?.verificationDocument ? [{
+              id: 'legacy-doc',
+              category: 'OTHER',
+              fileName: companyProps.verificationDocument.split('/').pop() || 'Verification Document',
+              fileUrl: companyProps.verificationDocument,
+              uploadedAt: companyProps.createdAt || new Date()
+            }] : []),
         preferredColleges: companyProps?.preferredColleges || [],
         rejectionReason: companyProps?.rejectionReason,
         rejectedAt: companyProps?.rejectedAt,

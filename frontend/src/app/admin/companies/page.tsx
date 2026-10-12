@@ -739,33 +739,95 @@ export default function CompaniesManagement() {
                         </p>
                       </div>
 
-                      {/* Verification Document */}
+                      {/* Verification Documents */}
                       <div className="p-5 rounded-2xl bg-[#121520] border border-white/5 md:col-span-2 flex flex-col gap-3">
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                          <FileText size={14} className="text-cyan-400" />
-                          Verification Documents & Proof
-                        </p>
-                        {viewedCompany.verificationDocument ? (
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                            <div className="flex items-center gap-3">
-                              <FileText size={20} className="text-cyan-400" />
-                              <span className="text-xs font-bold text-white truncate max-w-xs md:max-w-md">
-                                {viewedCompany.verificationDocument.split('/').pop() || 'Verification Document'}
-                              </span>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <FileText size={14} className="text-cyan-400" />
+                            Verification Documents & Proof
+                          </p>
+                          {((viewedCompany.verificationDocuments?.length || (viewedCompany.verificationDocument ? 1 : 0)) > 0) && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              {(viewedCompany.verificationDocuments?.length || 1)} Document(s)
+                            </span>
+                          )}
+                        </div>
+
+                        {(() => {
+                          const docs = (viewedCompany.verificationDocuments && viewedCompany.verificationDocuments.length > 0)
+                            ? viewedCompany.verificationDocuments
+                            : viewedCompany.verificationDocument
+                              ? [{
+                                  id: 'legacy-doc',
+                                  category: 'OTHER',
+                                  fileName: viewedCompany.verificationDocument.split('/').pop() || 'Verification Document',
+                                  fileUrl: viewedCompany.verificationDocument,
+                                }]
+                              : [];
+
+                          const categoryLabels: Record<string, string> = {
+                            INCORPORATION_CERTIFICATE: 'Certificate of Incorporation',
+                            GST_CERTIFICATE: 'GST Registration Certificate',
+                            MSME_CERTIFICATE: 'Udyam / MSME Certificate',
+                            ESTABLISHMENT_LICENSE: 'Shop & Establishment Licence',
+                            OTHER: 'Official Business Registration',
+                          };
+
+                          if (docs.length === 0) {
+                            return (
+                              <p className="text-xs text-slate-500 py-3">
+                                No verification documents have been submitted.
+                              </p>
+                            );
+                          }
+
+                          return (
+                            <div className="space-y-2.5">
+                              {docs.map((doc: any, idx: number) => {
+                                const catLabel = categoryLabels[doc.category] || doc.category || 'Official Document';
+                                return (
+                                  <div
+                                    key={doc.id || idx}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all gap-3"
+                                  >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                      <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+                                        <FileText size={18} />
+                                      </div>
+                                      <div className="overflow-hidden">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 truncate">
+                                            {catLabel}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs font-bold text-white truncate max-w-xs md:max-w-md mt-1">
+                                          {doc.fileName || 'Verification Document'}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">
+                                          {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(2)} MB • ` : ''}
+                                          {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Submitted with Application'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                                      <a
+                                        href={doc.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-3.5 py-2 rounded-xl bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-xs font-bold border border-cyan-500/20 inline-flex items-center gap-1.5 transition-all"
+                                        title="View or Download Document"
+                                      >
+                                        <ExternalLink size={14} />
+                                        View Document
+                                      </a>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                            <a
-                              href={viewedCompany.verificationDocument}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-4 py-2 rounded-xl bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-xs font-bold border border-cyan-500/20 inline-flex items-center gap-1.5 transition-all"
-                            >
-                              <ExternalLink size={14} />
-                              Open Document
-                            </a>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-500">No verification documents attached.</p>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

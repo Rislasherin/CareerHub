@@ -9,13 +9,18 @@ import { loginSchema } from "@shared/validation";
 import { authMiddleware } from "@infrastructure/di/infra.container";
 import { checkRegistrationEnabled } from "@presentation/express/middlewares/registration.middleware";
 
+import multer from "multer";
+
 const router = Router();
 const collegeAdminAuthController = makeCollegeAdminAuthController();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/login", validateSchema(loginSchema), collegeAdminAuthController.login);
 router.post("/register", checkRegistrationEnabled('college'), validateDto(RegisterCollegeRequestDto), collegeAdminAuthController.register);
 router.post("/verify-otp", validateDto(VerifyCollegeOtpRequestDto), collegeAdminAuthController.verifyOtp);
 router.patch("/onboarding", authMiddleware.protect, validateDto(UpdateCollegeOnboardingDto), collegeAdminAuthController.updateOnboarding);
 router.post("/resubmit", authMiddleware.protect, collegeAdminAuthController.resubmit);
+router.post("/verification-documents", authMiddleware.protect, upload.single("file"), collegeAdminAuthController.uploadVerificationDocument);
+router.delete("/verification-documents/:id", authMiddleware.protect, collegeAdminAuthController.deleteVerificationDocument);
 
 export default router;

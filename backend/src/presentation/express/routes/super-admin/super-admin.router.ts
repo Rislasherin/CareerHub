@@ -14,6 +14,7 @@ router.get("/dashboard/stats", superAdminController.getStats);
 router.get("/organizations", superAdminController.getOrganizations);
 router.get("/students", superAdminController.getStudents);
 router.get("/companies", superAdminController.getCompanies);
+router.get("/verification-documents/:targetType/:targetId/:docId", superAdminController.getVerificationDocumentView);
 
 router.get("/billing", superAdminController.getBillingInvoices);
 router.post("/billing/subscriptions/:id/remind", superAdminController.sendRenewalReminder);
