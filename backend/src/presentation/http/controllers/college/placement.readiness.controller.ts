@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
 import { IGetPlacementReadinessUseCase } from '@application/usecases/college/interfaces/IGetPlacementReadiness.usecase';
+import { SendPlacementReadinessReminderUseCase } from '@application/usecases/college/implementations/SendPlacementReadinessReminder.usecase';
 import { sendSuccess } from '@shared/utils/response.util';
 import { HttpStatus } from '@domain/enums/HttpStatus.enum';
 import { Logger, LogCategory } from '../../../../infrastructure/logger/logger';
 
 export class PlacementReadinessController {
-  constructor(private readonly getPlacementReadinessUseCase: IGetPlacementReadinessUseCase) {}
+  constructor(
+    private readonly getPlacementReadinessUseCase: IGetPlacementReadinessUseCase,
+    private readonly sendPlacementReadinessReminderUseCase?: SendPlacementReadinessReminderUseCase
+  ) {}
 
   public getPlacementReadiness = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -31,10 +35,13 @@ export class PlacementReadinessController {
         res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
         return;
       }
-      
-      const { makeSendPlacementReadinessReminderUseCase } = require('@infrastructure/di/college.factory');
-      const useCase = makeSendPlacementReadinessReminderUseCase();
-      await useCase.execute(collegeId, studentId, action);
+
+      if (!this.sendPlacementReadinessReminderUseCase) {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Reminder service unavailable' });
+        return;
+      }
+
+      await this.sendPlacementReadinessReminderUseCase.execute(collegeId, studentId, action);
       
       sendSuccess(res, null, 'Reminder sent successfully to the student via email and in-app notification');
     } catch (error: any) {
