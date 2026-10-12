@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Building2, MapPin, Phone, Mail,
   ArrowRight, ArrowLeft, Globe,
   X, Upload, Check, Star, Briefcase,
-  AlertTriangle
+  AlertTriangle, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -45,7 +45,7 @@ const step3Schema = z.object({
 const steps = [
   { id: 'company', title: 'Company Details', description: 'Company Details' },
   { id: 'team', title: 'Team & Hiring', description: 'Team & Hiring Preferences' },
-  { id: 'final', title: 'Logo & Preferences', description: 'Logo & Preferences' }
+  { id: 'final', title: 'Contacts & Preferences', description: 'Contacts & Preferences' }
 ];
 
 const industries = [
@@ -82,19 +82,33 @@ export default function HROnboardingPage() {
   const hrDetails = useAppSelector((state) => state.hr.details);
   const [currentStep, setCurrentStep] = useState(1);
   const isRejected = hrDetails?.status?.toUpperCase() === 'REJECTED';
+  const hasInitializedRef = useRef(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (hrDetails?.onboardingStep && !isRejected) {
-      setCurrentStep(Math.min(hrDetails.onboardingStep + 1, steps.length));
+    if (hrDetails) {
+      if (!hasInitializedRef.current) {
+        hasInitializedRef.current = true;
+        const requestedStep = searchParams?.get('step');
+        if (requestedStep && ['1', '2', '3'].includes(requestedStep)) {
+          setCurrentStep(parseInt(requestedStep, 10));
+        } else if (isRejected) {
+          setCurrentStep(1);
+        } else if (hrDetails?.onboardingStep) {
+          setCurrentStep(Math.min(hrDetails.onboardingStep + 1, steps.length));
+        }
+      }
     }
-  }, [hrDetails, isRejected]);
+  }, [hrDetails, isRejected, searchParams]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [collegeInput, setCollegeInput] = useState('');
-  const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<HRFormValues>({
+  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch, getValues } = useForm<HRFormValues>({
     mode: 'all',
+    shouldUnregister: false,
     resolver: zodResolver(
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :
@@ -197,7 +211,9 @@ export default function HROnboardingPage() {
     setIsLoading(true);
     try {
       const isResubmission = isRejected && currentStep === steps.length;
+      const allFormValues = getValues();
       const payload = {
+        ...allFormValues,
         ...data,
         step: currentStep,
         ...(isResubmission ? { resubmit: true } : {})
@@ -212,7 +228,8 @@ export default function HROnboardingPage() {
           companyName: updatedCompany.name,
           onboardingStep: updatedCompany.onboardingStep,
           industry: updatedCompany.industry,
-          status: isResubmission ? 'PENDING' : (updatedCompany.status || hrDetails.status)
+          status: isResubmission ? 'PENDING' : (updatedCompany.status || hrDetails.status),
+          rejectionReason: isResubmission ? undefined : hrDetails.rejectionReason
         }));
       }
 
@@ -257,43 +274,93 @@ export default function HROnboardingPage() {
                 </div>
                 <span className="font-bold tracking-tight text-lg">creerHub</span>
               </div>
-              {/* Progress Bars */}
-              <div className="flex gap-2 w-32">
+              {/* Interactive Progress Bars */}
+              <div className="flex gap-2 w-36 items-center">
                 {steps.map((s, i) => (
-                  <div key={s.id} className={`h-1 flex-1 rounded-full transition-all duration-500 ${i + 1 <= currentStep ? 'bg-white' : 'bg-white/30'}`} />
+                  <button
+                    key={s.id}
+                    type="button"
+                    title={`Go to Step ${i + 1}`}
+                    onClick={() => setCurrentStep(i + 1)}
+                    className={`h-2 flex-1 rounded-full transition-all duration-300 cursor-pointer ${
+                      i + 1 <= currentStep ? 'bg-white shadow-sm' : 'bg-white/25 hover:bg-white/40'
+                    }`}
+                  />
                 ))}
               </div>
             </div>
 
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <h1 className="text-xl sm:text-2xl font-bold mb-0.5">
-                {currentStep === 1 && "Welcome! Set up your company profile"}
-                {currentStep === 2 && "Tell us about your team"}
-                {currentStep === 3 && "Final touches — almost there!"}
-              </h1>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-wider">
-                Step {currentStep} of 3 — {steps[currentStep - 1].description}
-              </p>
-            </motion.div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <h1 className="text-xl sm:text-2xl font-bold mb-0.5">
+                  {currentStep === 1 && "Welcome! Set up your company profile"}
+                  {currentStep === 2 && "Tell us about your team"}
+                  {currentStep === 3 && (isRejected ? "Review Application & Resubmit" : "Final touches — almost there!")}
+                </h1>
+                <p className="text-white/60 text-xs font-medium uppercase tracking-wider">
+                  Step {currentStep} of 3 — {steps[currentStep - 1]?.description}
+                </p>
+              </motion.div>
+
+              {/* Interactive Step Pills */}
+              <div className="flex items-center gap-1.5 bg-white/10 p-1 rounded-2xl border border-white/15 backdrop-blur-sm overflow-x-auto">
+                {steps.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setCurrentStep(idx + 1)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                      currentStep === idx + 1
+                        ? 'bg-white text-indigo-950 shadow-md shadow-black/10'
+                        : 'text-white/80 hover:bg-white/15 hover:text-white'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center ${
+                      currentStep === idx + 1 ? 'bg-indigo-900 text-white' : 'bg-white/20 text-white'
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    {idx === 0 ? 'Company' : idx === 1 ? 'Team' : isRejected ? 'Resubmit' : 'Contacts'}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Form Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form noValidate onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
               {isRejected && (
-                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3">
-                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h4 className="text-xs font-black text-rose-950 uppercase tracking-wider">
-                      Application Revision Required
-                    </h4>
-                    <p className="text-sm text-rose-900 font-medium mt-1 leading-relaxed bg-white/70 p-3 rounded-xl border border-rose-100">
-                      {hrDetails?.rejectionReason || "Please review and correct your company details before resubmitting."}
-                    </p>
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-black text-rose-950 uppercase tracking-wider">
+                        Application Revision Required — Resubmission Mode
+                      </h4>
+                      <p className="text-sm text-rose-900 font-medium mt-1 leading-relaxed bg-white/70 p-3 rounded-xl border border-rose-100">
+                        {hrDetails?.rejectionReason || "Please review and correct your company details across all steps before resubmitting."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 bg-white/90 p-1 rounded-xl border border-rose-200/80 shadow-sm shrink-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">Jump to:</span>
+                    {steps.map((s, idx) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setCurrentStep(idx + 1)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          currentStep === idx + 1 ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:bg-rose-100/60'
+                        }`}
+                      >
+                        {idx + 1}. {idx === 0 ? 'Company' : idx === 1 ? 'Team' : 'Contacts'}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -504,6 +571,39 @@ export default function HROnboardingPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Resubmission Summary on Step 3 */}
+                    {isRejected && (
+                      <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Company Resubmission Summary</h3>
+                          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                            Ready to Resubmit
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Company</span>
+                            <p className="font-bold text-slate-800 text-sm mt-0.5 truncate">{watch('name') || hrDetails?.companyName || 'N/A'}</p>
+                            <p className="text-slate-500 text-[11px] mt-0.5 truncate">{watch('headquarters') || 'Location provided'}</p>
+                          </div>
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Industry & Size</span>
+                            <p className="font-bold text-slate-800 text-sm mt-0.5 truncate">
+                              {watch('industry') || hrDetails?.industry || 'Not specified'}
+                            </p>
+                            <p className="text-slate-500 text-[11px] mt-0.5">{watch('size') ? `${watch('size')} employees` : 'Team size provided'}</p>
+                          </div>
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Contact Representative</span>
+                            <p className="font-bold text-indigo-700 text-sm mt-0.5 truncate">
+                              {watch('contactName') || 'Contact name'}
+                            </p>
+                            <p className="text-slate-500 text-[11px] mt-0.5 truncate">{watch('contactEmail') || 'Email provided'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -515,7 +615,7 @@ export default function HROnboardingPage() {
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-all"
+                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-all cursor-pointer"
                     >
                       <ArrowLeft size={16} /> Back
                     </button>
@@ -523,23 +623,40 @@ export default function HROnboardingPage() {
                     <button
                       type="button"
                       onClick={handleCancelOnboarding}
-                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-all"
+                      className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-rose-600 transition-all cursor-pointer"
                     >
                       <ArrowLeft size={16} /> {isRejected ? "Return to Dashboard" : "Back to Register"}
                     </button>
                   )}
                 </div>
 
-                <Button
-                  type="submit"
-                  isLoading={isLoading}
-                  disabled={!isValid || isLoading}
-                  className="px-10 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 disabled:opacity-50 text-white font-black shadow-xl shadow-indigo-200/50 hover:shadow-indigo-300/50 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
-                >
-                  {currentStep === steps.length 
-                    ? (isRejected ? "Resubmit for Review" : "🚀 Complete Setup") 
-                    : "Continue"} <ArrowRight size={18} />
-                </Button>
+                <div className="flex items-center gap-3">
+                  {isRejected && currentStep < 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-all cursor-pointer"
+                    >
+                      Skip to Review & Resubmit
+                    </button>
+                  )}
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    disabled={!isValid || isLoading}
+                    id={isRejected && currentStep === 3 ? "hr-resubmit-btn" : undefined}
+                    className="px-8 sm:px-10 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 disabled:opacity-50 text-white font-black shadow-xl shadow-indigo-200/50 hover:shadow-indigo-300/50 hover:scale-[1.02] transition-all flex items-center gap-2 border-none"
+                  >
+                    {currentStep === 1
+                      ? "Next: Team & Hiring"
+                      : currentStep === 2
+                      ? "Next: Contacts & Preferences"
+                      : isRejected
+                      ? "Resubmit Company Application for Review"
+                      : "🚀 Complete Setup"}
+                    {isRejected && currentStep === 3 ? <Send size={16} /> : <ArrowRight size={18} />}
+                  </Button>
+                </div>
               </div>
             </form>
           </div>

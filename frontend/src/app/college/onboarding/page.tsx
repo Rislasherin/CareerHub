@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   GraduationCap, MapPin, Globe,
   ArrowRight, ArrowLeft, Building2,
   Users, BarChart3, Link as LinkIcon,
   CheckCircle2, X, Upload, Check, Star,
-  Mail, Phone, Search, AlertTriangle
+  Mail, Phone, Search, AlertTriangle, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -47,7 +47,7 @@ const step3Schema = z.object({
 const steps = [
   { id: 'institution', title: 'Institution Setup', description: 'Institution Setup' },
   { id: 'departments', title: 'Departments & Branches', description: 'Departments & Branches' },
-  { id: 'plan', title: 'Choose Plan', description: 'Choose your plan' },
+  { id: 'plan', title: 'Plan & Resubmit', description: 'Plan and review' },
   { id: 'complete', title: 'All Set!', description: 'All Set!' }
 ];
 
@@ -72,13 +72,16 @@ export default function CollegeOnboardingPage() {
   const collegeAdminDetails = useAppSelector((state) => state.collegeAdmin.details);
   const isRejected = collegeAdminDetails?.status?.toUpperCase() === 'REJECTED';
   const [currentStep, setCurrentStep] = useState(1);
+  const hasInitializedRef = useRef(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [branchInput, setBranchInput] = useState('');
   const [customBranch, setCustomBranch] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<CollegeFormValues>({
+  const { register, handleSubmit, formState: { errors, isValid }, setValue, watch, getValues } = useForm<CollegeFormValues>({
+    shouldUnregister: false,
     resolver: zodResolver(
       currentStep === 1 ? step1Schema :
         currentStep === 2 ? step2Schema :
@@ -102,14 +105,20 @@ export default function CollegeOnboardingPage() {
     }
   });
 
-  // Prefill existing data and set step
+  // Prefill existing data and initialize step once
   useEffect(() => {
     if (collegeAdminDetails) {
-      if (isRejected) {
-        // When rejected, always allow the college to review and edit from Step 1
-        setCurrentStep(1);
-      } else if (collegeAdminDetails.onboardingStep) {
-        setCurrentStep(Math.min(collegeAdminDetails.onboardingStep + 1, steps.length));
+      if (!hasInitializedRef.current) {
+        hasInitializedRef.current = true;
+        const requestedStep = searchParams?.get('step');
+        if (requestedStep && ['1', '2', '3'].includes(requestedStep)) {
+          setCurrentStep(parseInt(requestedStep, 10));
+        } else if (isRejected) {
+          // When rejected, start at Step 1 so applicant can review and edit
+          setCurrentStep(1);
+        } else if (collegeAdminDetails.onboardingStep) {
+          setCurrentStep(Math.min(collegeAdminDetails.onboardingStep + 1, steps.length));
+        }
       }
 
       const collegeNameVal = collegeAdminDetails.name || collegeAdminDetails.collegeName;
@@ -127,9 +136,9 @@ export default function CollegeOnboardingPage() {
       if (collegeAdminDetails.activePlacementBatch) setValue('activePlacementBatch', collegeAdminDetails.activePlacementBatch);
       if (collegeAdminDetails.plan) setValue('plan', (collegeAdminDetails.plan as 'basic' | 'pro') || 'pro');
     }
-  }, [collegeAdminDetails, isRejected, setValue]);
+  }, [collegeAdminDetails, isRejected, setValue, searchParams]);
 
-  const activeBranches = watch('activeBranches');
+  const activeBranches = watch('activeBranches') || [];
   const plan = watch('plan');
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length));
@@ -180,10 +189,13 @@ export default function CollegeOnboardingPage() {
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
+      const isFinalStep = currentStep === 3;
+      const allFormValues = getValues();
       const payload = {
+        ...allFormValues,
         ...data,
         step: currentStep,
-        resubmit: isRejected ? true : undefined
+        ...(isFinalStep && isRejected ? { resubmit: true } : {})
       };
       const updatedOrg = await updateCollegeOnboarding(payload) as any;
 
@@ -194,8 +206,8 @@ export default function CollegeOnboardingPage() {
           collegeName: updatedOrg.name,
           onboardingStep: updatedOrg.onboardingStep,
           activeBranches: updatedOrg.activeBranches || collegeAdminDetails.activeBranches || [],
-          status: updatedOrg.status || (isRejected && currentStep === 3 ? 'PENDING' : collegeAdminDetails.status),
-          rejectionReason: isRejected && currentStep === 3 ? undefined : collegeAdminDetails.rejectionReason
+          status: (isFinalStep && isRejected) ? 'PENDING' : (updatedOrg.status || collegeAdminDetails.status),
+          rejectionReason: (isFinalStep && isRejected) ? undefined : collegeAdminDetails.rejectionReason
         }));
       }
 
@@ -244,42 +256,100 @@ export default function CollegeOnboardingPage() {
                 </div>
                 <span className="font-bold tracking-tight text-lg">creerHub</span>
               </div>
-              {/* Progress Bars */}
-              <div className="flex gap-2 w-32">
-                {steps.map((s, i) => (
-                  <div key={s.id} className={`h-1 flex-1 rounded-full transition-all duration-500 ${i + 1 <= currentStep ? 'bg-white' : 'bg-white/30'}`} />
+              {/* Interactive Progress Bars */}
+              <div className="flex gap-2 w-36 items-center">
+                {[1, 2, 3].map((stepNum) => (
+                  <button
+                    key={stepNum}
+                    type="button"
+                    title={`Go to Step ${stepNum}`}
+                    onClick={() => setCurrentStep(stepNum)}
+                    className={`h-2 flex-1 rounded-full transition-all duration-300 cursor-pointer ${
+                      stepNum <= currentStep ? 'bg-white shadow-sm' : 'bg-white/25 hover:bg-white/40'
+                    }`}
+                  />
                 ))}
               </div>
             </div>
 
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <h1 className="text-xl sm:text-2xl font-bold mb-0.5">
-                {currentStep === 1 && "Welcome! Set up your institution"}
-                {currentStep === 2 && "Departments & Branches"}
-                {currentStep === 3 && "Choose your plan"}
-                {currentStep === 4 && "You're all set!"}
-              </h1>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-wider">
-                Step {currentStep} of 4 — {steps[currentStep - 1].description}
-              </p>
-            </motion.div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <h1 className="text-xl sm:text-2xl font-bold mb-0.5">
+                  {currentStep === 1 && "Welcome! Set up your institution"}
+                  {currentStep === 2 && "Departments & Branches"}
+                  {currentStep === 3 && (isRejected ? "Review Application & Resubmit" : "Choose your plan")}
+                  {currentStep === 4 && "You're all set!"}
+                </h1>
+                <p className="text-white/60 text-xs font-medium uppercase tracking-wider">
+                  Step {Math.min(currentStep, 3)} of 3 — {steps[Math.min(currentStep, 3) - 1]?.description}
+                </p>
+              </motion.div>
+
+              {/* Interactive Step Pills */}
+              <div className="flex items-center gap-1.5 bg-white/10 p-1 rounded-2xl border border-white/15 backdrop-blur-sm overflow-x-auto">
+                {[
+                  { num: 1, label: 'Institution' },
+                  { num: 2, label: 'Departments' },
+                  { num: 3, label: isRejected ? 'Resubmit' : 'Plan' }
+                ].map((s) => (
+                  <button
+                    key={s.num}
+                    type="button"
+                    onClick={() => setCurrentStep(s.num)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                      currentStep === s.num
+                        ? 'bg-white text-emerald-950 shadow-md shadow-black/10'
+                        : 'text-white/80 hover:bg-white/15 hover:text-white'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center ${
+                      currentStep === s.num ? 'bg-emerald-900 text-white' : 'bg-white/20 text-white'
+                    }`}>
+                      {s.num}
+                    </span>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Form Content - Scrollable */}
           <div className="overflow-y-auto flex-1 p-6 sm:p-10 custom-scrollbar">
             <form noValidate onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
               {isRejected && (
-                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3 flex-shrink-0">
-                  <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-xs font-black uppercase tracking-wider text-rose-700">Application Previously Rejected</p>
-                    <p className="text-sm font-medium mt-0.5 text-rose-800 leading-relaxed">
-                      {collegeAdminDetails?.rejectionReason || 'Please review your application information, make necessary corrections, and resubmit for review.'}
-                    </p>
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 flex-shrink-0">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-rose-700">Application Previously Rejected — Resubmission Mode</p>
+                      <p className="text-sm font-medium mt-0.5 text-rose-800 leading-relaxed">
+                        {collegeAdminDetails?.rejectionReason || 'Please review your application information across all steps, make necessary corrections, and resubmit for review.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 bg-white/90 p-1 rounded-xl border border-rose-200/80 shadow-sm shrink-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">Jump to:</span>
+                    {[
+                      { step: 1, label: '1. Setup' },
+                      { step: 2, label: '2. Branches' },
+                      { step: 3, label: '3. Plan' }
+                    ].map(tab => (
+                      <button
+                        key={tab.step}
+                        type="button"
+                        onClick={() => setCurrentStep(tab.step)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          currentStep === tab.step ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:bg-rose-100/60'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -542,6 +612,39 @@ export default function CollegeOnboardingPage() {
                         </ul>
                       </div>
                     </div>
+
+                    {/* Resubmission Summary on Step 3 */}
+                    {isRejected && (
+                      <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Application Resubmission Summary</h3>
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            Ready to Resubmit
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Institution</span>
+                            <p className="font-bold text-slate-800 text-sm mt-0.5 truncate">{watch('name') || collegeAdminDetails?.collegeName || 'N/A'}</p>
+                            <p className="text-slate-500 text-[11px] mt-0.5">{[watch('city'), watch('state')].filter(Boolean).join(', ') || 'Location provided'}</p>
+                          </div>
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Academic Branches</span>
+                            <p className="font-bold text-slate-800 text-sm mt-0.5">
+                              {activeBranches.length > 0 ? `${activeBranches.length} branch${activeBranches.length > 1 ? 'es' : ''} added` : 'No branches specified'}
+                            </p>
+                            <p className="text-slate-500 text-[11px] mt-0.5 truncate">{activeBranches.slice(0, 2).join(', ')}{activeBranches.length > 2 ? '...' : ''}</p>
+                          </div>
+                          <div className="bg-white p-3.5 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Selected Plan</span>
+                            <p className="font-bold text-emerald-700 text-sm mt-0.5 uppercase tracking-wide">
+                              {plan === 'basic' ? 'Basic (₹99K/yr)' : 'Pro (₹2.4L/yr)'}
+                            </p>
+                            <p className="text-slate-500 text-[11px] mt-0.5">Includes 14-day trial</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ) : currentStep === 4 ? (
                   <motion.div
@@ -609,14 +712,33 @@ export default function CollegeOnboardingPage() {
                     )}
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={!isValid}
-                    isLoading={isLoading}
-                    className="px-10 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] text-white font-black shadow-xl shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all flex items-center gap-2 border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isRejected && currentStep === 3 ? 'Resubmit for Review' : 'Continue'} <ArrowRight size={18} />
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    {isRejected && currentStep < 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(3)}
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-all"
+                      >
+                        Skip to Review & Resubmit
+                      </button>
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={!isValid}
+                      isLoading={isLoading}
+                      id={isRejected && currentStep === 3 ? "college-resubmit-btn" : undefined}
+                      className="px-8 sm:px-10 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-[rgb(11,45,31)] text-white font-black shadow-xl shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] transition-all flex items-center gap-2 border-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {currentStep === 1
+                        ? 'Next: Departments'
+                        : currentStep === 2
+                        ? 'Next: Review & Plan'
+                        : isRejected
+                        ? 'Resubmit Application for Review'
+                        : 'Continue'}
+                      {isRejected && currentStep === 3 ? <Send size={16} /> : <ArrowRight size={18} />}
+                    </Button>
+                  </div>
                 </div>
               )}
             </form>
