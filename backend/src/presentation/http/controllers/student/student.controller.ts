@@ -21,7 +21,7 @@ import { IGenerateProfessionalSummaryUseCase } from "@application/usecases/stude
 import { IGetStudentOffersUseCase } from "@application/usecases/student/interfaces/IGetStudentOffers.usecase";
 import { IRespondToOfferUseCase } from "@application/usecases/student/interfaces/IRespondToOffer.usecase";
 import { IGetStudentDashboardStatsUseCase } from "@application/usecases/student/dashboard/interfaces/IGetStudentDashboardStats.usecase";
-import { GetStudentEntitlementsUseCase } from "@application/usecases/student/implementations/GetStudentEntitlements.usecase";
+import { IGetStudentEntitlementsUseCase } from "@application/usecases/student/interfaces/IGetStudentEntitlements.usecase";
 import { ISignOfferUseCase } from "@application/usecases/student/interfaces/ISignOffer.usecase";
 
 export class StudentController {
@@ -43,7 +43,7 @@ export class StudentController {
     private readonly _generateOfferPdfUseCase: IGenerateOfferPdfUseCase,
     private readonly _generateProfessionalSummaryUseCase: IGenerateProfessionalSummaryUseCase,
     private readonly _getStudentDashboardStatsUseCase: IGetStudentDashboardStatsUseCase,
-    private readonly _getStudentEntitlementsUseCase: GetStudentEntitlementsUseCase,
+    private readonly _getStudentEntitlementsUseCase: IGetStudentEntitlementsUseCase,
     private readonly _signOfferUseCase: ISignOfferUseCase
   ) { }
 

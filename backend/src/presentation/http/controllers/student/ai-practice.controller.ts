@@ -13,7 +13,7 @@ import { CreateAIPracticeInterviewRequestDto } from "@application/dtos/ai-practi
 import { SubmitAnswerRequestDto } from "@application/dtos/ai-practice/SubmitAnswerRequest.dto";
 import { AIPracticeInterview } from "@domain/entities/ai-practice/AIPracticeInterview";
 import { IAIPracticeInterviewRepository } from "@domain/repositories/ai-practice/IAIPracticeInterviewRepository";
-import { GeneratePracticeFeedbackUseCase } from "@application/usecases/ai-practice/implementations/GeneratePracticeFeedback.usecase";
+import { IGeneratePracticeFeedbackUseCase } from "@application/usecases/ai-practice/interfaces/IGeneratePracticeFeedback.usecase";
 import { PracticeInterviewStatus } from "@domain/enums/PracticeInterviewStatus.enum";
 
 export class AIPracticeController {
@@ -24,7 +24,7 @@ export class AIPracticeController {
     private readonly _submitPracticeAnswerUseCase: ISubmitPracticeAnswerUseCase,
     private readonly _getPracticeRoomTokenUseCase: IGetPracticeRoomTokenUseCase,
     private readonly _practiceRepository: IAIPracticeInterviewRepository,
-    private readonly _generateFeedbackUseCase: GeneratePracticeFeedbackUseCase
+    private readonly _generateFeedbackUseCase: IGeneratePracticeFeedbackUseCase
   ) {}
 
   /**

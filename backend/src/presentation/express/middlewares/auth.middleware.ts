@@ -66,7 +66,8 @@ export class AuthMiddleware {
                 '/auth/logout', 
                 '/auth/hr/onboarding', 
                 '/auth/hr/resubmit',
-                '/auth/college-admin/onboarding'
+                '/auth/college-admin/onboarding',
+                '/auth/hr/verification-documents'
               ];
               const isRestricted = company.status === UserStatus.REJECTED || (company.status === UserStatus.PENDING && (company.onboardingStep as number) >= 3);
               if (isRestricted) {
