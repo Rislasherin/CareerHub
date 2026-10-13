@@ -71,7 +71,8 @@ export class AuthMiddleware {
               ];
               const isRestricted = company.status === UserStatus.REJECTED || (company.status === UserStatus.PENDING && (company.onboardingStep as number) >= 3);
               if (isRestricted) {
-                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
+                const normalizedPath = req.originalUrl.replace(/^\/api/, '');
+                const isAllowed = allowedPendingPaths.some(p => normalizedPath.startsWith(p));
                 if (!isAllowed) {
                   if (company.status === UserStatus.REJECTED) {
                     throw new UnauthorizedError("Your company application was rejected. Please review feedback and resubmit.");
@@ -137,7 +138,8 @@ export class AuthMiddleware {
               ];
               const isRestricted = org.status === UserStatus.REJECTED || (org.status === UserStatus.PENDING && (org.onboardingStep as number) >= 3);
               if (isRestricted) {
-                const isAllowed = allowedPendingPaths.some(p => req.originalUrl.includes(p));
+                const normalizedPath = req.originalUrl.replace(/^\/api/, '');
+                const isAllowed = allowedPendingPaths.some(p => normalizedPath.startsWith(p));
                 if (!isAllowed) {
                   if (org.status === UserStatus.REJECTED) {
                     throw new UnauthorizedError("Your institution application was rejected. Please review feedback and resubmit.");
