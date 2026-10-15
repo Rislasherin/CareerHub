@@ -22,6 +22,9 @@ export class ApproveJobUseCase implements IApproveJobUseCase {
     if (job.status === JobStatus.CLOSED || job.isDeleted) {
       throw new AppError("Cannot approve a closed or deleted job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
+    if (job.deadline && job.deadline.getTime() <= Date.now()) {
+      throw new AppError("Cannot approve an expired job", HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+    }
 
     if (job.collegeId === "ALL") {
       if (job.approvedColleges.includes(collegeId)) {
