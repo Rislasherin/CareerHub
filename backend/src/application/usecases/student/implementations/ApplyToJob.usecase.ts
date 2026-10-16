@@ -52,7 +52,7 @@ export class ApplyToJobUseCase implements IApplyToJobUseCase {
     }
 
     const isAuthorizedCollege = job.collegeId === "ALL"
-      ? (job.approvedColleges || []).includes(student.collegeId)
+      ? ((job.approvedColleges || []).includes(student.collegeId) || (job.approvedColleges || []).includes("ALL"))
       : (job.collegeId === student.collegeId && (job.status === JobStatus.APPROVED || job.status === JobStatus.ACTIVE));
 
     if (!isAuthorizedCollege) {

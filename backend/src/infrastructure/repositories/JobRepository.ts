@@ -33,14 +33,14 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
         {
           collegeId: "ALL",
           status: { $in: [JobStatus.PENDING_REVIEW, JobStatus.APPROVED, JobStatus.ACTIVE] },
-          approvedColleges: { $ne: collegeId },
+          approvedColleges: { $nin: [collegeId, "ALL"] },
           rejectedColleges: { $ne: collegeId }
         }
       ];
     } else if (status === JobStatus.APPROVED) {
       query.$or = [
         { collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } },
-        { collegeId: "ALL", approvedColleges: collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
+        { collegeId: "ALL", approvedColleges: { $in: [collegeId, "ALL"] }, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
       ];
     } else if (status === JobStatus.REJECTED) {
       query.$or = [
@@ -50,12 +50,12 @@ export class JobRepository extends BaseRepository<Job, JobDocument> implements I
     } else if (status === JobStatus.ACTIVE) {
       query.$or = [
         { collegeId, status: { $in: [JobStatus.ACTIVE, JobStatus.APPROVED] } },
-        { collegeId: "ALL", approvedColleges: collegeId, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
+        { collegeId: "ALL", approvedColleges: { $in: [collegeId, "ALL"] }, status: { $in: [JobStatus.APPROVED, JobStatus.ACTIVE] } }
       ];
     } else if (status === JobStatus.CLOSED) {
       query.$or = [
         { collegeId, status: JobStatus.CLOSED },
-        { collegeId: "ALL", approvedColleges: collegeId, status: JobStatus.CLOSED }
+        { collegeId: "ALL", approvedColleges: { $in: [collegeId, "ALL"] }, status: JobStatus.CLOSED }
       ];
     } else {
       query.$or = [

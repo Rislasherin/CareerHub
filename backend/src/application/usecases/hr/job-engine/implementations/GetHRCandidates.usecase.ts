@@ -2,6 +2,7 @@ import { IJobRepository } from "@domain/repositories/IJobRepository";
 import { IStudentRepository } from "@domain/repositories/IStudentRepository";
 import { organizationRepository } from "@infrastructure/di/infra.container";
 import { IGetHRCandidatesUseCase, CandidateListItem } from "../interfaces/IGetHRCandidates.usecase";
+import { SkillMatcher } from "@shared/utils/skillMatcher.util";
 
 export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
   constructor(
@@ -33,17 +34,6 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
       }
 
 
-      const studentSkillSet = new Set<string>();
-      if (student.skills) {
-        const sObj = student.skills;
-        (Array.isArray(sObj.languages) ? sObj.languages : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-        (Array.isArray(sObj.frameworks) ? sObj.frameworks : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-        (Array.isArray(sObj.databases) ? sObj.databases : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-        (Array.isArray(sObj.cloudDevops) ? sObj.cloudDevops : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-        (Array.isArray(sObj.otherTools) ? sObj.otherTools : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-        (Array.isArray(sObj.aiMl) ? sObj.aiMl : []).forEach(s => { if (typeof s === 'string') studentSkillSet.add(s.toLowerCase().trim()) });
-      }
-
       let bestJob: typeof jobs[0] | null = null;
       let highestScore = -1;
 
@@ -53,15 +43,10 @@ export class GetHRCandidatesUseCase implements IGetHRCandidatesUseCase {
         }
 
         const requiredSkills = Array.isArray(job.requiredSkills) ? job.requiredSkills : [];
+        const skillMatchResult = SkillMatcher.matchSkills(student.skills, requiredSkills);
         let skillMatchScore = 70;
-        if (requiredSkills.length > 0) {
-          let matchedCount = 0;
-          requiredSkills.forEach(reqSkill => {
-            if (typeof reqSkill === 'string' && studentSkillSet.has(reqSkill.toLowerCase().trim())) {
-              matchedCount++;
-            }
-          });
-          skillMatchScore = (matchedCount / requiredSkills.length) * 70;
+        if (skillMatchResult.totalRequired > 0) {
+          skillMatchScore = (skillMatchResult.matchedCount / skillMatchResult.totalRequired) * 70;
         }
 
         const minCGPA = job.eligibility?.minCGPA || 0;

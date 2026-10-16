@@ -8,6 +8,7 @@ import { HttpStatus } from "@domain/enums/HttpStatus.enum";
 import { ErrorCode } from "@domain/enums/ErrorCodes.enum";
 import { IGetStudentJobsUseCase } from "../interfaces/IGetStudentJobs.usecase";
 import { BranchMatcher } from "@shared/utils/branchMatcher.util";
+import { SkillMatcher } from "@shared/utils/skillMatcher.util";
 
 export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
   constructor(
@@ -21,16 +22,7 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
     if (!student) {
       throw new AppError("Student not found", HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
-    const studentSkillSet = new Set<string>();
-    if (student.skills) {
-      const sObj = student.skills;
-      (sObj.languages || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-      (sObj.frameworks || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-      (sObj.databases || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-      (sObj.cloudDevops || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-      (sObj.otherTools || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-      (sObj.aiMl || []).forEach(s => studentSkillSet.add(s.toLowerCase().trim()));
-    }
+
 
     // A student can see both APPROVED and ACTIVE jobs for their specific college or global ones
     const approvedJobs = await this._jobRepository.findByCollegeIdAndStatus(student.collegeId, JobStatus.APPROVED);
@@ -63,15 +55,10 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
         }
       }
       const requiredSkills = job.requiredSkills || [];
+      const skillMatchResult = SkillMatcher.matchSkills(student.skills, requiredSkills);
       let skillMatchScore = 70;
-      if (requiredSkills.length > 0) {
-        let matchedCount = 0;
-        requiredSkills.forEach(reqSkill => {
-          if (studentSkillSet.has(reqSkill.toLowerCase().trim())) {
-            matchedCount++;
-          }
-        });
-        skillMatchScore = (matchedCount / requiredSkills.length) * 70;
+      if (skillMatchResult.totalRequired > 0) {
+        skillMatchScore = (skillMatchResult.matchedCount / skillMatchResult.totalRequired) * 70;
       }
       const minCGPA = job.eligibility?.minCGPA || 0;
       const allowedBacklogs = job.eligibility?.allowedBacklogs !== undefined ? job.eligibility.allowedBacklogs : 0;
@@ -123,13 +110,43 @@ export class GetStudentJobsUseCase implements IGetStudentJobsUseCase {
       const matchScore = Math.round(skillMatchScore + cgpaScore + backlogsScore);
       const isEligible = cgpaEligible && backlogsEligible && branchEligible && degreeEligible && passingYearEligible && !isClosed && !isExpired;
 
+      const ineligibilityReasons: string[] = [];
+      if (!cgpaEligible) {
+        ineligibilityReasons.push(studentCGPA === undefined || studentCGPA === null ? `CGPA not provided (min required: ${minCGPA})` : `CGPA ${studentCGPA} is below required minimum ${minCGPA}`);
+      }
+      if (!backlogsEligible) {
+        ineligibilityReasons.push(`Active backlogs (${studentBacklogs}) exceeds maximum allowed (${allowedBacklogs})`);
+      }
+      if (!branchEligible) {
+        ineligibilityReasons.push(`Branch '${studentBranch || 'Not specified'}' is not in eligible branches (${eligibleBranches.join(', ')})`);
+      }
+      if (!degreeEligible) {
+        ineligibilityReasons.push(`Degree '${student.degree || 'Not specified'}' does not match required degree (${requiredDegreeStr})`);
+      }
+      if (!passingYearEligible) {
+        ineligibilityReasons.push(`Graduation year '${studentGradYear || 'Not specified'}' does not match required passing year (${requiredPassingYear})`);
+      }
+      if (isClosed) {
+        ineligibilityReasons.push(`Job is closed and no longer accepting applications`);
+      }
+      if (isExpired) {
+        ineligibilityReasons.push(`Application deadline has passed`);
+      }
+
       return {
         ...job.toJSON(),
         companyName,
         matchScore,
         isEligible,
         isClosed,
-        isExpired
+        isExpired,
+        skillMatchScore: Math.round(skillMatchScore),
+        skillMatchCount: skillMatchResult.matchedCount,
+        totalRequiredSkills: skillMatchResult.totalRequired,
+        skillMatchPercentage: skillMatchResult.matchPercentage,
+        matchedSkills: skillMatchResult.matchedSkills,
+        missingSkills: skillMatchResult.missingSkills,
+        ineligibilityReasons,
       };
     }));
     enrichedJobs.sort((a, b) => {

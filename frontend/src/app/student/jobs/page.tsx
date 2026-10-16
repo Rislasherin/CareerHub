@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { Job, InterviewRoundConfig } from '@/types/job';
 import { StudentProfile } from '@/types/student';
 import { ApiResponse } from '@/types/api';
+import { SkillMatcher } from '@/utils/skillMatcher.util';
 
 const calculateProfileCompleteness = (u: (Partial<StudentDetails> & { phoneNumber?: string; linkedinUrl?: string; githubUrl?: string; city?: string; }) | null) => {
   if (!u) return 0;
@@ -383,20 +384,12 @@ export default function StudentJobsFeed() {
                 const isExpired = !isClosed && isJobExpired(job.deadline);
                 const isEligible = !isClosed && !isExpired && (job.isEligible !== undefined ? job.isEligible : true);
 
-              // Overlap check for skill match representation (e.g., "Skill match (3/5)")
-              const studentSkillSet = new Set<string>();
-              if (user?.skills) {
-                const sObj = user.skills;
-                (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-              }
-              const requiredSkills = job.requiredSkills || [];
-              const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
-              const totalRequired = requiredSkills.length;
+              // Canonical skill match evaluation
+              const matchResult = SkillMatcher.matchSkills(user?.skills, job.requiredSkills || []);
+              const studentKeys = SkillMatcher.extractStudentSkillKeys(user?.skills);
+              const matchedCount = job.skillMatchCount !== undefined ? job.skillMatchCount : matchResult.matchedCount;
+              const totalRequired = job.totalRequiredSkills !== undefined ? job.totalRequiredSkills : matchResult.totalRequired;
+              const skillPercent = job.skillMatchPercentage !== undefined ? job.skillMatchPercentage : matchResult.matchPercentage;
 
               const formattedDeadline = job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', {
                 month: 'short',
@@ -476,20 +469,20 @@ export default function StudentJobsFeed() {
                       <div className="space-y-1.5 pt-2">
                         <div className="flex items-center justify-between text-[11px] font-black text-slate-600">
                           <span>Skill match ({matchedCount}/{totalRequired || 1})</span>
-                          <span className="text-indigo-600">{job.matchScore}%</span>
+                          <span className="text-indigo-600">{skillPercent}%</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                           <div
                             className="bg-indigo-600 h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${job.matchScore}%` }}
+                            style={{ width: `${skillPercent}%` }}
                           />
                         </div>
                       </div>
 
                       {/* Required Skills list pills */}
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        {requiredSkills.map((skill: string) => {
-                          const hasSkill = studentSkillSet.has(skill.toLowerCase().trim());
+                        {(job.requiredSkills || []).map((skill: string) => {
+                          const hasSkill = studentKeys.has(SkillMatcher.toCanonicalKey(skill));
                           return hasSkill ? (
                             <span key={skill} className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border border-blue-100">
                               ✓ {skill}
@@ -500,7 +493,7 @@ export default function StudentJobsFeed() {
                             </span>
                           );
                         })}
-                        {requiredSkills.length === 0 && (
+                        {(job.requiredSkills || []).length === 0 && (
                           <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-emerald-100">
                             ✓ No Specific Skills Required
                           </span>
@@ -681,39 +674,43 @@ export default function StudentJobsFeed() {
                         {/* Required Skills Section */}
                         <div>
                           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Required Skills</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {(selectedJob.requiredSkills || []).map((skill: string) => (
-                              <span key={skill} className="bg-rose-50 text-rose-600 px-3 py-1 rounded-lg text-xs font-bold border border-rose-100 flex items-center gap-1.5">
-                                <span className="w-[2.5px] h-3.5 bg-rose-500 rounded-sm inline-block shrink-0"></span>
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                          {/* Summary match */}
                           {(() => {
-                            const studentSkillSet = new Set<string>();
-                            if (user?.skills) {
-                              const sObj = user.skills;
-                              (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                            }
-                            const requiredSkills = selectedJob.requiredSkills || [];
-                            const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
-                            const missingCount = requiredSkills.length - matchedCount;
+                            const modalMatchResult = SkillMatcher.matchSkills(user?.skills, selectedJob.requiredSkills || []);
+                            const modalStudentKeys = SkillMatcher.extractStudentSkillKeys(user?.skills);
 
                             return (
-                              <div className="flex items-center gap-4 mt-3 text-xs font-bold">
-                                <span className="text-emerald-600 flex items-center gap-1">
-                                  ✓ {matchedCount} skills you have
-                                </span>
-                                <span className="text-rose-600 flex items-center gap-1">
-                                  ❙ {missingCount} skills to improve
-                                </span>
-                              </div>
+                              <>
+                                <div className="flex flex-wrap gap-2">
+                                  {(selectedJob.requiredSkills || []).map((skill: string) => {
+                                    const hasSkill = modalStudentKeys.has(SkillMatcher.toCanonicalKey(skill));
+                                    return hasSkill ? (
+                                      <span key={skill} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100 flex items-center gap-1.5">
+                                        <span className="w-[2.5px] h-3.5 bg-blue-500 rounded-sm inline-block shrink-0"></span>
+                                        ✓ {skill}
+                                      </span>
+                                    ) : (
+                                      <span key={skill} className="bg-rose-50 text-rose-600 px-3 py-1 rounded-lg text-xs font-bold border border-rose-100 flex items-center gap-1.5">
+                                        <span className="w-[2.5px] h-3.5 bg-rose-500 rounded-sm inline-block shrink-0"></span>
+                                        {skill}
+                                      </span>
+                                    );
+                                  })}
+                                  {(selectedJob.requiredSkills || []).length === 0 && (
+                                    <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-xs font-bold border border-emerald-100">
+                                      ✓ No Specific Skills Required
+                                    </span>
+                                  )}
+                                </div>
+                                {/* Summary match */}
+                                <div className="flex items-center gap-4 mt-3 text-xs font-bold">
+                                  <span className="text-emerald-600 flex items-center gap-1">
+                                    ✓ {modalMatchResult.matchedCount} skills you have
+                                  </span>
+                                  <span className="text-rose-600 flex items-center gap-1">
+                                    ❙ {modalMatchResult.missingSkills.length} skills to improve
+                                  </span>
+                                </div>
+                              </>
                             );
                           })()}
                         </div>
@@ -809,19 +806,10 @@ export default function StudentJobsFeed() {
 
                           {/* Progress bars matching mockup */}
                           {(() => {
-                            const studentSkillSet = new Set<string>();
-                            if (user?.skills) {
-                              const sObj = user.skills;
-                              (sObj.languages || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.frameworks || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.databases || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.cloudDevops || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.otherTools || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                              (sObj.aiMl || []).forEach((s: string) => studentSkillSet.add(s.toLowerCase().trim()));
-                            }
-                            const requiredSkills = selectedJob.requiredSkills || [];
-                            const matchedCount = requiredSkills.filter((s: string) => studentSkillSet.has(s.toLowerCase().trim())).length;
-                            const skillPercent = requiredSkills.length > 0 ? Math.round((matchedCount / requiredSkills.length) * 100) : 100;
+                            const modalMatchResult = SkillMatcher.matchSkills(user?.skills, selectedJob.requiredSkills || []);
+                            const skillPercent = selectedJob.skillMatchPercentage !== undefined
+                              ? selectedJob.skillMatchPercentage
+                              : modalMatchResult.matchPercentage;
 
                             const studentCGPA = user?.cgpa !== undefined && user?.cgpa !== null ? parseFloat(String(user.cgpa)) : undefined;
                             const minCGPA = selectedJob.eligibility?.minCGPA || 0;
@@ -887,36 +875,84 @@ export default function StudentJobsFeed() {
                           {(() => {
                             const studentCGPA = user?.cgpa !== undefined && user?.cgpa !== null ? parseFloat(String(user.cgpa)) : undefined;
                             const minCGPA = selectedJob.eligibility?.minCGPA || 0;
-                            const cgpaEligible = minCGPA === 0 || (studentCGPA !== undefined && studentCGPA >= minCGPA);
+                            const cgpaProvided = studentCGPA !== undefined && !isNaN(studentCGPA);
+                            const cgpaEligible = minCGPA === 0 || (cgpaProvided && studentCGPA >= minCGPA);
 
                             const studentBranch = user?.branch || user?.department || '';
                             const eligibleBranches = selectedJob.eligibility?.eligibleBranches || [];
-                            const branchEligible = eligibleBranches.length === 0 || eligibleBranches.some((b: string) => isBranchMatch(b, studentBranch));
+                            const branchProvided = Boolean(studentBranch);
+                            const branchEligible = eligibleBranches.length === 0 || (branchProvided && eligibleBranches.some((b: string) => isBranchMatch(b, studentBranch)));
 
                             const requiredPassingYear = selectedJob.eligibility?.passingYear;
                             const studentGradYear = user?.graduationYear;
-                            const passingYearEligible = !requiredPassingYear || !studentGradYear || studentGradYear === requiredPassingYear;
+                            const passingYearProvided = Boolean(studentGradYear);
+                            const passingYearEligible = !requiredPassingYear || (passingYearProvided && Number(studentGradYear) === Number(requiredPassingYear));
 
-                            const backlogsEligible = (user?.activeBacklogs || 0) <= (selectedJob.eligibility?.allowedBacklogs !== undefined ? selectedJob.eligibility.allowedBacklogs : 0);
+                            const allowedBacklogs = selectedJob.eligibility?.allowedBacklogs !== undefined ? selectedJob.eligibility.allowedBacklogs : 0;
+                            const backlogsEligible = (user?.activeBacklogs || 0) <= allowedBacklogs;
+
+                            const modalMatchResult = SkillMatcher.matchSkills(user?.skills, selectedJob.requiredSkills || []);
 
                             return (
                               <div className="space-y-2.5 text-xs font-bold text-slate-600">
                                 <div className="flex items-center gap-2">
-                                  <span className={cgpaEligible ? 'text-emerald-600' : 'text-rose-600'}>{cgpaEligible ? '✓' : '✗'}</span>
-                                  <span>{studentCGPA !== undefined ? `CGPA ${studentCGPA} (req: ${minCGPA > 0 ? `${minCGPA}+` : 'None'})` : `CGPA Not Provided (req: ${minCGPA > 0 ? `${minCGPA}+` : 'None'})`}</span>
+                                  <span className={cgpaEligible ? 'text-emerald-600' : (!cgpaProvided && minCGPA > 0 ? 'text-amber-500' : 'text-rose-600')}>
+                                    {cgpaEligible ? '✓' : (!cgpaProvided && minCGPA > 0 ? '⚠' : '✗')}
+                                  </span>
+                                  <span>
+                                    {cgpaProvided
+                                      ? `CGPA ${studentCGPA} (req: ${minCGPA > 0 ? `${minCGPA}+` : 'None'})`
+                                      : (minCGPA > 0 ? `CGPA Not Provided in Profile (req: ${minCGPA}+)` : 'CGPA: No Minimum Required')}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className={passingYearEligible ? 'text-emerald-600' : 'text-rose-600'}>{passingYearEligible ? '✓' : '✗'}</span>
-                                  <span>Graduation year {user?.graduationYear || 'Not Specified'}{requiredPassingYear ? ` (req: ${requiredPassingYear})` : ''}</span>
+                                  <span className={passingYearEligible ? 'text-emerald-600' : (!passingYearProvided && requiredPassingYear ? 'text-amber-500' : 'text-rose-600')}>
+                                    {passingYearEligible ? '✓' : (!passingYearProvided && requiredPassingYear ? '⚠' : '✗')}
+                                  </span>
+                                  <span>
+                                    {passingYearProvided
+                                      ? `Graduation Year ${studentGradYear}${requiredPassingYear ? ` (req: ${requiredPassingYear})` : ''}`
+                                      : (requiredPassingYear ? `Graduation Year Not in Profile (req: ${requiredPassingYear})` : 'Graduation Year: Any')}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className={branchEligible ? 'text-emerald-600' : 'text-rose-600'}>{branchEligible ? '✓' : '✗'}</span>
-                                  <span>Branch: {studentBranch || 'Not Specified'}</span>
+                                  <span className={branchEligible ? 'text-emerald-600' : (!branchProvided && eligibleBranches.length > 0 ? 'text-amber-500' : 'text-rose-600')}>
+                                    {branchEligible ? '✓' : (!branchProvided && eligibleBranches.length > 0 ? '⚠' : '✗')}
+                                  </span>
+                                  <span>
+                                    {branchProvided
+                                      ? `Branch: ${studentBranch}`
+                                      : (eligibleBranches.length > 0 ? 'Branch Not Provided in Profile' : 'Branch: All Branches Eligible')}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className={backlogsEligible ? 'text-emerald-600' : 'text-rose-600'}>{backlogsEligible ? '✓' : '✗'}</span>
-                                  <span>{backlogsEligible ? 'No active backlogs' : `Active Backlogs: ${user?.activeBacklogs}`}</span>
+                                  <span className={backlogsEligible ? 'text-emerald-600' : 'text-rose-600'}>
+                                    {backlogsEligible ? '✓' : '✗'}
+                                  </span>
+                                  <span>
+                                    {backlogsEligible
+                                      ? ((user?.activeBacklogs || 0) === 0 ? 'No active backlogs' : `Active Backlogs: ${user?.activeBacklogs} (Allowed: ${allowedBacklogs})`)
+                                      : `Active Backlogs: ${user?.activeBacklogs} (Allowed: ${allowedBacklogs})`}
+                                  </span>
                                 </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={modalMatchResult.matchedCount > 0 || modalMatchResult.totalRequired === 0 ? 'text-emerald-600' : 'text-slate-400'}>
+                                    {modalMatchResult.matchedCount > 0 || modalMatchResult.totalRequired === 0 ? '✓' : '•'}
+                                  </span>
+                                  <span>
+                                    Skills: {modalMatchResult.matchedCount}/{modalMatchResult.totalRequired || 1} matched ({modalMatchResult.matchPercentage}%)
+                                  </span>
+                                </div>
+                                {selectedJob.ineligibilityReasons && selectedJob.ineligibilityReasons.length > 0 && (
+                                  <div className="mt-3 pt-3 border-t border-rose-100 bg-rose-50/50 p-2.5 rounded-xl">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 block mb-1">Ineligibility Reason</span>
+                                    <ul className="text-[11px] text-rose-600 space-y-0.5 list-disc list-inside">
+                                      {selectedJob.ineligibilityReasons.map((reason: string, idx: number) => (
+                                        <li key={idx}>{reason}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}
