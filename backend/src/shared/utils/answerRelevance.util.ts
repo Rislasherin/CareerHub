@@ -146,7 +146,7 @@ export function assessAnswerRelevance(
     }
 
     // 4. Concise Factoid / Keyword Answers
-    const isDirectQuestion = /^(which|what\s+([a-z]+\s+)?(tool|library|framework|database|cache|orm|language|method|protocol)|have you used|did you use|do you use|name a|name the)\b/i.test(cleanQuestion);
+    const isDirectQuestion = /^(which|what('s|\s+is|\s+are)?\s+([a-z]+\s+)?(tool|library|framework|database|cache|orm|language|method|protocol)|what is|what are|what's|have you used|did you use|do you use|name a|name the)\b/i.test(cleanQuestion);
     const hasCoreTechKeyword = /\b(jwt|json web token|redis|mongodb|postgres|postgresql|mysql|sqlite|docker|kubernetes|node|nodejs|react|redux|zustand|express|fastify|nestjs|graphql|rest|grpc|kafka|rabbitmq|git|aws|gcp|azure|typescript|javascript|python|go|java|html|css|tailwind|vitest|jest|mocha)\b/i.test(cleanAnswer);
 
     if (isDirectQuestion && (hasCoreTechKeyword || wordCount >= 1)) {

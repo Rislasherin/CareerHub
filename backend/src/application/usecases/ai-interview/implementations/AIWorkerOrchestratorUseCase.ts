@@ -15,15 +15,22 @@ import { ILogger, LogCategory } from "../../../interfaces/observability/ILogger"
 import { CandidateUtteranceIntent } from "@domain/enums/CandidateUtteranceIntent.enum";
 import { classifyCandidateUtterance, getCandidateQuestionResponse } from "../../../services/ai-interview/CandidateUtteranceClassifier";
 import { classifyTurnIntent, CandidateTurnIntent } from "../../../../shared/utils/turnIntent.util";
+import { assessAnswerRelevance } from "../../../../shared/utils/answerRelevance.util";
 import { IMessageBroker } from "@application/interfaces/messaging/IMessageBroker";
 import { env } from "@infrastructure/config/env.validator";
 
 export enum TurnState {
+  CONNECTING = 'CONNECTING',
+  INTRO_SPEAKING = 'INTRO_SPEAKING',
   AI_SPEAKING = 'AI_SPEAKING',
-  CANDIDATE_LISTENING = 'CANDIDATE_LISTENING',
-  CANDIDATE_PROCESSING = 'CANDIDATE_PROCESSING',
+  ASKING_QUESTION = 'ASKING_QUESTION',
   WAITING_FOR_CANDIDATE = 'WAITING_FOR_CANDIDATE',
+  CANDIDATE_LISTENING = 'CANDIDATE_LISTENING',
+  PROCESSING_ANSWER = 'PROCESSING_ANSWER',
+  CANDIDATE_PROCESSING = 'CANDIDATE_PROCESSING',
+  FOLLOW_UP_OR_NEXT_QUESTION = 'FOLLOW_UP_OR_NEXT_QUESTION',
   FOLLOW_UP_PENDING = 'FOLLOW_UP_PENDING',
+  COMPLETED = 'COMPLETED',
   INTERVIEW_COMPLETED = 'INTERVIEW_COMPLETED',
   ERROR = 'ERROR'
 }
@@ -34,9 +41,44 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
   private _introStarted = false;
   private _isStopped = false;
   private _lastAcknowledgement: string | null = null;
+  private _cleanupFns: Array<() => void> = [];
 
-  public getConversationalAcknowledgement(intent: CandidateUtteranceIntent, isShortAnswer: boolean = false): string | null {
+  public isValidTransition(from: TurnState, to: TurnState): boolean {
+    if (from === to) return true;
+    const allowedTransitions: Record<TurnState, TurnState[]> = {
+      [TurnState.CONNECTING]: [TurnState.INTRO_SPEAKING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.ERROR],
+      [TurnState.INTRO_SPEAKING]: [TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.ASKING_QUESTION, TurnState.ERROR],
+      [TurnState.AI_SPEAKING]: [TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.COMPLETED, TurnState.INTERVIEW_COMPLETED, TurnState.ERROR],
+      [TurnState.ASKING_QUESTION]: [TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.ERROR],
+      [TurnState.WAITING_FOR_CANDIDATE]: [TurnState.PROCESSING_ANSWER, TurnState.CANDIDATE_PROCESSING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.COMPLETED, TurnState.INTERVIEW_COMPLETED, TurnState.ERROR],
+      [TurnState.CANDIDATE_LISTENING]: [TurnState.PROCESSING_ANSWER, TurnState.CANDIDATE_PROCESSING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.COMPLETED, TurnState.INTERVIEW_COMPLETED, TurnState.ERROR],
+      [TurnState.PROCESSING_ANSWER]: [TurnState.FOLLOW_UP_OR_NEXT_QUESTION, TurnState.FOLLOW_UP_PENDING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.COMPLETED, TurnState.INTERVIEW_COMPLETED, TurnState.ERROR],
+      [TurnState.CANDIDATE_PROCESSING]: [TurnState.FOLLOW_UP_OR_NEXT_QUESTION, TurnState.FOLLOW_UP_PENDING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.COMPLETED, TurnState.INTERVIEW_COMPLETED, TurnState.ERROR],
+      [TurnState.FOLLOW_UP_OR_NEXT_QUESTION]: [TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.ERROR],
+      [TurnState.FOLLOW_UP_PENDING]: [TurnState.WAITING_FOR_CANDIDATE, TurnState.CANDIDATE_LISTENING, TurnState.AI_SPEAKING, TurnState.ASKING_QUESTION, TurnState.ERROR],
+      [TurnState.COMPLETED]: [],
+      [TurnState.INTERVIEW_COMPLETED]: [],
+      [TurnState.ERROR]: []
+    };
+    return allowedTransitions[from]?.includes(to) ?? false;
+  }
+
+  public getConversationalAcknowledgement(
+    intent: CandidateUtteranceIntent, 
+    isShortAnswer: boolean = false,
+    relevance?: AnswerRelevanceClassification
+  ): string | null {
     if (intent !== CandidateUtteranceIntent.NORMAL_ANSWER) {
+      return null;
+    }
+
+    // Never acknowledge false, incomplete, or off-topic answers with affirming statements
+    if (
+      relevance === AnswerRelevanceClassification.IRRELEVANT_OR_UNRELATED ||
+      relevance === AnswerRelevanceClassification.INCORRECT_OR_MISCONCEPTION ||
+      relevance === AnswerRelevanceClassification.UNCLEAR_OR_TOO_SHORT ||
+      relevance === AnswerRelevanceClassification.NO_RESPONSE
+    ) {
       return null;
     }
 
@@ -134,10 +176,38 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                   sequenceNumber: session.questions.length,
                   timestamp: Date.now()
               });
+
+              // On reconnect, if the current question has not been answered yet, replay it so candidate hears it!
+              if (!activeQuestion.candidateAnswer) {
+                if (this._audioTransport.waitForClientReady) {
+                  await this._audioTransport.waitForClientReady(2000);
+                } else {
+                  await new Promise(r => setTimeout(r, 1000));
+                }
+                const replayPrompt = `Welcome back. Let's continue with our question: ${activeQuestion.text}`;
+                await this._audioTransport.publishDataMessage({
+                  type: 'AI_STATE_CHANGED',
+                  state: TurnState.ASKING_QUESTION,
+                  timestamp: Date.now()
+                });
+                try {
+                  const audioStream = this._ttsService.generateAudioStream(replayPrompt);
+                  for await (const chunk of audioStream) {
+                    await this._audioTransport.publishAudioChunk(chunk);
+                  }
+                  if (this._audioTransport.waitForPlayout) {
+                    await this._audioTransport.waitForPlayout();
+                  }
+                  await new Promise(r => setTimeout(r, 600));
+                  this._audioTransport.clearIncomingBuffer?.();
+                } catch (replayErr) {
+                  if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] Replay audio on reconnect failed:`, replayErr);
+                }
+              }
           }
           await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'LISTENING',
+              state: TurnState.WAITING_FOR_CANDIDATE,
               timestamp: Date.now()
           });
       } else {
@@ -166,8 +236,6 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
   private async runIntroPhase(sessionId: string): Promise<boolean> {
     if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [10] INTRO phase started`);
     try {
-      // Avoid redundant LLM call. The very first question is already generated 
-      // and saved to the database by StartAIInterviewUseCase.
       const session = await this._repository.findById(sessionId);
       if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [9] Session loaded`);
       if (!session || session.questions.length === 0) {
@@ -200,7 +268,21 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         }
       }
 
-      // 3. Construct professional opening greeting (reusing Question 1 with zero extra LLM calls)
+      // Intro playback idempotency check
+      if (session.configuration?.metadata?.introPlayed || session.phase === InterviewPhase.ASKING_QUESTION) {
+        if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Intro already played, skipping playback`);
+        this._audioTransport.clearIncomingBuffer?.();
+        return true;
+      }
+
+      // Allow candidate audio track negotiation stabilization
+      if (this._audioTransport.waitForClientReady) {
+        await this._audioTransport.waitForClientReady(2500);
+      } else {
+        await new Promise(r => setTimeout(r, 1200));
+      }
+
+      // 3. Construct professional opening greeting
       if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [11] Greeting generation started`);
       const openingGreeting = `Hello ${candidateName}, welcome to your ${jobTitle} interview. I'm your AI interviewer today. Let's get started. ${activeQuestion.text}`;
       if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [12] Greeting generation completed: "${openingGreeting}"`);
@@ -215,43 +297,76 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
       });
       await this._audioTransport.publishDataMessage({
         type: 'AI_STATE_CHANGED',
-        state: 'AI_SPEAKING',
+        state: TurnState.INTRO_SPEAKING,
         timestamp: Date.now()
       });
 
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [13] TTS generation started`);
-      const audioStream = this._ttsService.generateAudioStream(openingGreeting);
-      let hasChunks = false;
-      
-      for await (const chunk of audioStream) {
-        if (!hasChunks) {
-          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [14] TTS first audio/chunk received`);
-          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [15] Audio publication started`);
-          hasChunks = true;
+      // Intro audio generation and playout with safe retry
+      let playoutSuccess = false;
+      const maxRetries = 2;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [13] TTS generation started (attempt ${attempt})`);
+          const audioStream = this._ttsService.generateAudioStream(openingGreeting);
+          let hasChunks = false;
+          
+          for await (const chunk of audioStream) {
+            if (!hasChunks) {
+              if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [14] TTS first audio/chunk received`);
+              if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [15] Audio publication started`);
+              hasChunks = true;
+            }
+            await this._audioTransport.publishAudioChunk(chunk);
+          }
+
+          if (hasChunks && this._audioTransport.waitForPlayout) {
+            await this._audioTransport.waitForPlayout();
+          }
+          playoutSuccess = true;
+          break;
+        } catch (playErr) {
+          if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] TTS intro attempt ${attempt} failed:`, playErr);
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 500));
+          }
         }
-        await this._audioTransport.publishAudioChunk(chunk);
       }
 
-      if (hasChunks && this._audioTransport.waitForPlayout) {
-        await this._audioTransport.waitForPlayout();
+      if (!playoutSuccess) {
+        if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Intro TTS audio playout failed.`);
+        await this._audioTransport.publishDataMessage({
+          type: 'AI_STATE_CHANGED',
+          state: TurnState.ERROR,
+          error: 'Audio playback failed'
+        });
+        return false;
       }
       
       await new Promise(r => setTimeout(r, 600));
       this._audioTransport.clearIncomingBuffer?.();
 
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [17] Transition to LISTENING`);
-      await this._audioTransport.publishDataMessage({
-        type: 'AI_STATE_CHANGED',
-        state: 'LISTENING',
-        turnId: `${activeQuestion.id}_turn_1`,
-        questionId: activeQuestion.id
-      });
+      // Persist introPlayed in session configuration metadata
+      if (session.configuration) {
+        session.configuration.metadata = {
+          ...(session.configuration.metadata || {}),
+          introPlayed: true
+        };
+        await this._repository.update(session.id, session);
+      }
 
       await this._repository.transitionSessionState(
         sessionId,
         [InterviewPhase.INTRO],
         InterviewPhase.ASKING_QUESTION
       );
+
+      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [17] Transition to WAITING_FOR_CANDIDATE`);
+      await this._audioTransport.publishDataMessage({
+        type: 'AI_STATE_CHANGED',
+        state: TurnState.WAITING_FOR_CANDIDATE,
+        turnId: `${activeQuestion.id}_turn_1`,
+        questionId: activeQuestion.id
+      });
 
       return true;
     } catch (err: any) {
@@ -272,22 +387,25 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
       const studentAudioStream = this._audioTransport.getIncomingAudioStream();
       const sttStream = this._sttService.transcribeStream(studentAudioStream);
 
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Student audio received`); 
+      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Student audio stream initialized`); 
       
       let currentAnswerBuffer: string[] = [];
 
-      // Fetch session once to initialize memory state
       let session = await this._repository.findById(sessionId);
       if (!session) {
          if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Session ${sessionId} not found`);
          return;
       }
 
-      let currentTurnState = TurnState.CANDIDATE_LISTENING as TurnState;
+      let currentTurnState = TurnState.WAITING_FOR_CANDIDATE as TurnState;
       let activeTurnCounter = 1;
-      let activeTurnId = `${session.questions[session.questions.length - 1]?.id || 'q'}_turn_${activeTurnCounter}`;
+      let activeQuestionId = session.questions[session.questions.length - 1]?.id || 'q';
+      let activeTurnId = `${activeQuestionId}_turn_${activeTurnCounter}`;
       let turnStartTime = Date.now();
       let lastSpeechTimestamp = Date.now();
+
+      let candidateSpokeDuringPlayback = false;
+      let repeatRequestedDuringPlayback = false;
 
       let silenceTimer: NodeJS.Timeout | null = null;
       let noResponseTimer: NodeJS.Timeout | null = null;
@@ -314,6 +432,8 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         }
       };
 
+      this._cleanupFns.push(clearAllTurnTimers);
+
       const resetNoResponseTimer = () => {
         if (noResponseTimer) {
           clearTimeout(noResponseTimer);
@@ -322,13 +442,14 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         const noResponseTimeoutMs = env.INTERVIEW_NO_RESPONSE_TIMEOUT_MS || 25000;
         noResponseTimer = setTimeout(async () => {
           if (completionHandled || isFinalizingTurn || this._ttsQueue.isSpeaking()) return;
-          if (currentAnswerBuffer.length === 0 && currentTurnState === TurnState.CANDIDATE_LISTENING) {
+          if (currentAnswerBuffer.length === 0 && 
+              (currentTurnState === TurnState.WAITING_FOR_CANDIDATE || currentTurnState === TurnState.CANDIDATE_LISTENING)) {
             if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] No response detected after ${noResponseTimeoutMs}ms`);
             
-            currentTurnState = TurnState.AI_SPEAKING;
+            currentTurnState = TurnState.ASKING_QUESTION;
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'AI_SPEAKING'
+              state: TurnState.ASKING_QUESTION
             });
 
             const promptMessage = "Whenever you're ready, please share your thoughts on the question.";
@@ -338,12 +459,13 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
             this._audioTransport.clearIncomingBuffer?.();
             currentAnswerBuffer = [];
-            currentTurnState = TurnState.CANDIDATE_LISTENING;
+            currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
             turnStartTime = Date.now();
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'LISTENING',
-              turnId: activeTurnId
+              state: TurnState.WAITING_FOR_CANDIDATE,
+              turnId: activeTurnId,
+              questionId: activeQuestionId
             });
             resetNoResponseTimer();
           }
@@ -354,28 +476,54 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         clearAllTurnTimers();
         activeTurnCounter++;
         const qId = newQuestionOrFollowUpId || session?.questions[session.questions.length - 1]?.id || 'q';
+        activeQuestionId = qId;
         activeTurnId = `${qId}_turn_${activeTurnCounter}`;
         currentAnswerBuffer = [];
         isFinalizingTurn = false;
         turnStartTime = Date.now();
         lastSpeechTimestamp = Date.now();
-        currentTurnState = TurnState.CANDIDATE_LISTENING;
+        currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
 
         // Discard any residual audio buffered during playback
         this._audioTransport.clearIncomingBuffer?.();
 
+        // Handle repeat requests made during playback
+        if (repeatRequestedDuringPlayback) {
+          repeatRequestedDuringPlayback = false;
+          candidateSpokeDuringPlayback = false;
+          const activeQ = session?.questions.find(q => q.id === qId) || session?.questions[session.questions.length - 1];
+          if (activeQ) {
+            currentTurnState = TurnState.ASKING_QUESTION;
+            const repeatText = `Sure, let me repeat the question: ${activeQ.text}`;
+            this._ttsQueue.enqueue(repeatText);
+            await this._audioTransport.publishDataMessage({
+              type: 'AI_STATE_CHANGED',
+              state: TurnState.ASKING_QUESTION
+            });
+            await this._ttsQueue.waitForDrain();
+            await new Promise(r => setTimeout(r, env.INTERVIEW_MIN_LISTENING_TIME_MS || 1200));
+            this._audioTransport.clearIncomingBuffer?.();
+            currentAnswerBuffer = [];
+            currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
+          }
+        } else if (candidateSpokeDuringPlayback) {
+          candidateSpokeDuringPlayback = false;
+          currentAnswerBuffer = [];
+        }
+
         await this._audioTransport.publishDataMessage({
           type: 'AI_STATE_CHANGED',
-          state: 'LISTENING',
+          state: TurnState.WAITING_FOR_CANDIDATE,
           turnId: activeTurnId,
           questionId: qId
         });
 
-        // Set maximum answer duration timer (e.g. 120s)
+        // Set maximum answer duration timer (default 120s)
         const maxDurationMs = env.INTERVIEW_MAX_ANSWER_DURATION_MS || 120000;
         maxDurationTimer = setTimeout(async () => {
-          if (!isFinalizingTurn && currentAnswerBuffer.length > 0 && currentTurnState === TurnState.CANDIDATE_LISTENING) {
-            if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Max answer duration reached (${maxDurationMs}ms)`);
+          if (!isFinalizingTurn && currentAnswerBuffer.length > 0 && 
+              (currentTurnState === TurnState.WAITING_FOR_CANDIDATE || currentTurnState === TurnState.CANDIDATE_LISTENING)) {
+            if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Max answer duration reached (${maxDurationMs}ms). Finalizing captured turn.`);
             await processCandidateTurn(activeTurnId);
           }
         }, maxDurationMs);
@@ -440,7 +588,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             });
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'AI_SPEAKING'
+              state: TurnState.ASKING_QUESTION
             });
 
             this._ttsQueue.enqueue(timeoutClosing);
@@ -450,7 +598,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'COMPLETED'
+              state: TurnState.COMPLETED
             });
             await this._audioTransport.publishDataMessage({
               type: 'INTERVIEW_PHASE_CHANGED',
@@ -472,6 +620,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             triggerHardTimeout();
          }
       }, 1000);
+      this._cleanupFns.push(() => clearInterval(timeoutInterval));
 
       // Start the initial listening turn timers
       resetNoResponseTimer();
@@ -484,12 +633,12 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
         clearAllTurnTimers();
         isFinalizingTurn = true;
-        currentTurnState = TurnState.CANDIDATE_PROCESSING;
+        currentTurnState = TurnState.PROCESSING_ANSWER;
 
         const activeQuestion = session?.questions[session.questions.length - 1];
         if (!activeQuestion) {
           isFinalizingTurn = false;
-          currentTurnState = TurnState.CANDIDATE_LISTENING;
+          currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
           return;
         }
 
@@ -499,23 +648,23 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
         if (!finalAnswer) {
           isFinalizingTurn = false;
-          currentTurnState = TurnState.CANDIDATE_LISTENING;
+          currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
           resetNoResponseTimer();
           return;
         }
 
         if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] turn_finalized: "${finalAnswer}" (turnId: ${turnIdToProcess})`);
 
-        // --- NATURAL STUDENT RESPONSE HANDLING (HESITATION, UNCERTAINTY & CANDIDATE QUESTIONS) ---
+        // --- NATURAL STUDENT RESPONSE HANDLING ---
         const classification = classifyCandidateUtterance(finalAnswer);
 
         if (classification.intent === CandidateUtteranceIntent.HESITATION) {
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] CANDIDATE_HESITATION detected: "${finalAnswer}" -> Responding patiently.`);
-          currentTurnState = TurnState.AI_SPEAKING;
+          currentTurnState = TurnState.ASKING_QUESTION;
           this._ttsQueue.enqueue("Of course, take your time.");
           await this._audioTransport.publishDataMessage({
             type: 'AI_STATE_CHANGED',
-            state: 'AI_SPEAKING'
+            state: TurnState.ASKING_QUESTION
           });
           
           await this._ttsQueue.waitForDrain();
@@ -527,12 +676,12 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
         if (classification.intent === CandidateUtteranceIntent.REPEAT_QUESTION) {
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] REPEAT_QUESTION detected -> Repeating active question: "${activeQuestion.text}"`);
-          currentTurnState = TurnState.AI_SPEAKING;
+          currentTurnState = TurnState.ASKING_QUESTION;
           const repeatText = `Sure, let me repeat the question: ${activeQuestion.text}`;
           this._ttsQueue.enqueue(repeatText);
           await this._audioTransport.publishDataMessage({
             type: 'AI_STATE_CHANGED',
-            state: 'AI_SPEAKING'
+            state: TurnState.ASKING_QUESTION
           });
 
           await this._ttsQueue.waitForDrain();
@@ -544,12 +693,12 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
         if (classification.intent === CandidateUtteranceIntent.PAUSE_REQUEST) {
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] PAUSE_REQUEST detected -> Acknowledging pause.`);
-          currentTurnState = TurnState.AI_SPEAKING;
+          currentTurnState = TurnState.ASKING_QUESTION;
           const pauseAck = "Sure, we can pause for a moment. Whenever you're ready to resume, just let me know or continue with your answer.";
           this._ttsQueue.enqueue(pauseAck);
           await this._audioTransport.publishDataMessage({
             type: 'AI_STATE_CHANGED',
-            state: 'AI_SPEAKING'
+            state: TurnState.ASKING_QUESTION
           });
 
           await this._ttsQueue.waitForDrain();
@@ -570,11 +719,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] CANDIDATE_QUESTION detected (category: ${classification.questionCategory}, count: ${consecutiveOffTopicCount}) -> Spoken redirect: "${responseText}"`);
 
-          currentTurnState = TurnState.AI_SPEAKING;
+          currentTurnState = TurnState.ASKING_QUESTION;
           this._ttsQueue.enqueue(responseText);
           await this._audioTransport.publishDataMessage({
             type: 'AI_STATE_CHANGED',
-            state: 'AI_SPEAKING'
+            state: TurnState.ASKING_QUESTION
           });
 
           await this._ttsQueue.waitForDrain();
@@ -584,15 +733,21 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
           return;
         }
 
+        // Assess Answer Relevance to decide if a positive conversational acknowledgement is warranted
+        const relevanceAssessment = assessAnswerRelevance(
+          activeQuestion.text,
+          finalAnswer,
+          session?.currentTopic || "General"
+        );
+
         if (classification.intent === CandidateUtteranceIntent.EXPLICIT_DONT_KNOW) {
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] CANDIDATE_UNCERTAINTY detected: "${finalAnswer}" -> Enqueuing transition.`);
           this._ttsQueue.enqueue("No problem, let's move on.");
         }
 
-        // Normal answer or explicit uncertainty -> Reset consecutive off-topic counter
         consecutiveOffTopicCount = 0;
 
-        // Broadcast final candidate transcript and set state to PROCESSING
+        // Broadcast final candidate transcript and set state to PROCESSING_ANSWER
         await this._audioTransport.publishDataMessage({
           type: 'TRANSCRIPT_FINAL',
           speaker: 'STUDENT',
@@ -601,7 +756,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         });
         await this._audioTransport.publishDataMessage({
           type: 'AI_STATE_CHANGED',
-          state: 'PROCESSING'
+          state: TurnState.PROCESSING_ANSWER
         });
 
         if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] PROCESSING_ANSWER: Process student answer (turnId: ${turnIdToProcess})`);
@@ -610,8 +765,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
         abortController = new AbortController();
 
-        const wordCount = finalAnswer.split(/\s+/).filter(Boolean).length;
-        const defaultAck = this.getConversationalAcknowledgement(classification.intent, wordCount < 5);
+        // Natural acknowledgement: ONLY if relevant and sufficient!
+        let chosenAck: string | null = null;
+        if (relevanceAssessment.classification === AnswerRelevanceClassification.RELEVANT_SUFFICIENT) {
+          chosenAck = relevanceAssessment.acknowledgement || this.getConversationalAcknowledgement(classification.intent, false, relevanceAssessment.classification);
+        }
         let hasSpokenAcknowledgement = false;
 
         // Trigger ProcessStudentAnswerUseCase
@@ -621,12 +779,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
           studentId: session?.studentId || '',
           answer: finalAnswer,
           onSentenceGenerated: async (sentence) => {
-            currentTurnState = TurnState.AI_SPEAKING;
+            currentTurnState = TurnState.FOLLOW_UP_OR_NEXT_QUESTION;
             let spokenSentence = sentence;
-            if (!hasSpokenAcknowledgement) {
-              const ack = processOutput?.acknowledgement || defaultAck;
-              if (ack && !sentence.startsWith(ack)) {
-                spokenSentence = `${ack} ${sentence}`;
+            if (!hasSpokenAcknowledgement && chosenAck) {
+              if (!sentence.startsWith(chosenAck)) {
+                spokenSentence = `${chosenAck} ${sentence}`;
               }
               hasSpokenAcknowledgement = true;
               if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Spoken question with conversational acknowledgement: "${spokenSentence}"`);
@@ -640,7 +797,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             });
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'AI_SPEAKING',
+              state: TurnState.ASKING_QUESTION,
               timestamp: Date.now()
             });
           },
@@ -659,11 +816,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         if (processOutput?.action === AIOrchestrationAction.REDIRECT) {
           const redirectSpeech = processOutput.spokenResponse || "Let's focus on the question at hand. Please take another moment to address it.";
           if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Action is REDIRECT. Spoken redirection: "${redirectSpeech}"`);
-          currentTurnState = TurnState.AI_SPEAKING;
+          currentTurnState = TurnState.ASKING_QUESTION;
           this._ttsQueue.enqueue(redirectSpeech);
           await this._audioTransport.publishDataMessage({
             type: 'AI_STATE_CHANGED',
-            state: 'AI_SPEAKING'
+            state: TurnState.ASKING_QUESTION
           });
 
           await this._ttsQueue.waitForDrain();
@@ -705,11 +862,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                   });
                   await this._audioTransport.publishDataMessage({
                     type: 'AI_STATE_CHANGED',
-                    state: 'AI_SPEAKING',
+                    state: TurnState.ASKING_QUESTION,
                     timestamp: Date.now()
                   });
 
-                  currentTurnState = TurnState.AI_SPEAKING;
+                  currentTurnState = TurnState.ASKING_QUESTION;
                   this._ttsQueue.enqueue(closingText);
 
                   await this._ttsQueue.waitForDrain();
@@ -732,7 +889,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                   }
                   await this._audioTransport.publishDataMessage({
                     type: 'AI_STATE_CHANGED',
-                    state: 'COMPLETED',
+                    state: TurnState.COMPLETED,
                     timestamp: Date.now()
                   });
                   await this._audioTransport.publishDataMessage({
@@ -790,7 +947,21 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
           }
 
           // 1. Half-Duplex Protection: Strictly discard STT while AI is speaking
-          if (this._ttsQueue.isSpeaking() || currentTurnState === TurnState.AI_SPEAKING) {
+          const isAiSpeaking = this._ttsQueue.isSpeaking() || 
+            currentTurnState === TurnState.AI_SPEAKING || 
+            currentTurnState === TurnState.INTRO_SPEAKING || 
+            currentTurnState === TurnState.ASKING_QUESTION || 
+            currentTurnState === TurnState.FOLLOW_UP_OR_NEXT_QUESTION ||
+            currentTurnState === TurnState.FOLLOW_UP_PENDING;
+
+          if (isAiSpeaking) {
+             if (result.text && result.text.trim()) {
+               candidateSpokeDuringPlayback = true;
+               const earlyIntent = classifyCandidateUtterance(result.text);
+               if (earlyIntent.intent === CandidateUtteranceIntent.REPEAT_QUESTION) {
+                 repeatRequestedDuringPlayback = true;
+               }
+             }
              if (currentAnswerBuffer.length > 0) {
                  if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] AI_SPEAKING: Cleared residual STT buffer to prevent echo bleed.`);
                  currentAnswerBuffer = [];
@@ -799,14 +970,22 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
           }
 
           // 2. Processing Lock: Do not accept new audio into an answer undergoing evaluation
-          if (isFinalizingTurn || currentTurnState === TurnState.CANDIDATE_PROCESSING) {
+          if (isFinalizingTurn || 
+              currentTurnState === TurnState.PROCESSING_ANSWER || 
+              currentTurnState === TurnState.CANDIDATE_PROCESSING) {
              if (result.isEndpoint) {
                  if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] duplicate_final_ignored`);
              }
              continue;
           }
 
-          // 3. Turn State Protection: Candidate only speaks during ASKING_QUESTION or ASKING_FOLLOW_UP
+          // 3. Listening State Guard: Candidate only speaks when listening state is ready
+          if (currentTurnState !== TurnState.WAITING_FOR_CANDIDATE && 
+              currentTurnState !== TurnState.CANDIDATE_LISTENING) {
+             continue;
+          }
+
+          // 4. Session Phase Protection
           if (session.phase !== InterviewPhase.ASKING_QUESTION && session.phase !== InterviewPhase.ASKING_FOLLOW_UP) {
              continue;
           }
@@ -818,7 +997,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
           // Realtime Interim partial broadcast
           if (result.isInterim && result.text) {
-             // Reset silence timer on interim speech
+             // Reset silence and no-response timers on interim speech
              if (silenceTimer) {
                clearTimeout(silenceTimer);
                silenceTimer = null;
@@ -839,7 +1018,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
           }
 
           // Accumulate confirmed final phrases
-          if (result.text) {
+          if (result.text && result.text.trim()) {
              if (silenceTimer) {
                clearTimeout(silenceTimer);
                silenceTimer = null;
@@ -854,7 +1033,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                  if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] CANDIDATE_SPEAKING: turn_started (turnId: ${activeTurnId})`);
              }
              if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Student transcript chunk: "${result.text}"`);
-             currentAnswerBuffer.push(result.text);
+             currentAnswerBuffer.push(result.text.trim());
 
              // Broadcast updated confirmed partial transcript
              await this._audioTransport.publishDataMessage({
@@ -879,15 +1058,16 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                continue;
              }
 
-             // Debounce pause before finalizing the turn
-             const silenceWindowMs = env.INTERVIEW_SILENCE_WINDOW_MS || 2000;
+             // Debounce pause before finalizing the turn (default 2500ms)
+             const silenceWindowMs = env.INTERVIEW_SILENCE_WINDOW_MS || 2500;
              if (silenceTimer) {
                clearTimeout(silenceTimer);
              }
 
              const capturedTurnId = activeTurnId;
              silenceTimer = setTimeout(async () => {
-               if (!isFinalizingTurn && currentAnswerBuffer.length > 0 && currentTurnState === TurnState.CANDIDATE_LISTENING) {
+               if (!isFinalizingTurn && currentAnswerBuffer.length > 0 && 
+                   (currentTurnState === TurnState.WAITING_FOR_CANDIDATE || currentTurnState === TurnState.CANDIDATE_LISTENING)) {
                  if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Silence window of ${silenceWindowMs}ms elapsed. Finalizing turn ${capturedTurnId}`);
                  await processCandidateTurn(capturedTurnId);
                }
@@ -896,11 +1076,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         } catch (err) {
           if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] [TURN_EXECUTION_FAILURE] Error during turn execution for session ${sessionId}:`, err);
           isFinalizingTurn = false;
-          currentTurnState = TurnState.CANDIDATE_LISTENING;
+          currentTurnState = TurnState.WAITING_FOR_CANDIDATE;
           try {
             await this._audioTransport.publishDataMessage({
               type: 'AI_STATE_CHANGED',
-              state: 'LISTENING',
+              state: TurnState.WAITING_FOR_CANDIDATE,
               turnId: activeTurnId
             });
           } catch {}
@@ -913,7 +1093,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
       try {
         await this._audioTransport.publishDataMessage({
           type: 'AI_STATE_CHANGED',
-          state: 'LISTENING'
+          state: TurnState.WAITING_FOR_CANDIDATE
         });
       } catch {}
       await this.stopWorker();
@@ -924,6 +1104,11 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
     this.resolveSessionCompletion();
     if (this._isStopped) return;
     this._isStopped = true;
+    while (this._cleanupFns.length > 0) {
+      try {
+        this._cleanupFns.shift()!();
+      } catch {}
+    }
     try {
       if (this._audioTransport.disconnect) {
         await this._audioTransport.disconnect();

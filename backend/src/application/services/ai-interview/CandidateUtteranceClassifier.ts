@@ -25,7 +25,7 @@ export function classifyCandidateUtterance(text: string): CandidateUtteranceClas
 
   // 3. Repeat Question Patterns (short phrases <= 9 words)
   if (words.length <= 9) {
-    const isRepeat = /^(can you (repeat|say that again|say the question again)( the question| that)?|could you (repeat|say that again|say the question again)( the question| that)?|please repeat( the question| that)?|repeat( the question| that)?( please)?|what was the question( again)?|say that again( please)?|one more time please|can i hear the question again|repeat please)$/i.test(cleanWithoutPunct);
+    const isRepeat = /^(can you (please )?(repeat|say that again|say the question again)( the question| that)?|could you (please )?(repeat|say that again|say the question again)( the question| that)?|please (can you |could you )?repeat( the question| that)?|repeat( the question| that)?( please)?|what was the question( again)?|say that again( please)?|one more time please|can i hear the question again|repeat please)$/i.test(cleanWithoutPunct);
     if (isRepeat) return { intent: CandidateUtteranceIntent.REPEAT_QUESTION };
   }
 

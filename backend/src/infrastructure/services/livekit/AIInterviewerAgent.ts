@@ -78,6 +78,20 @@ export class AIInterviewerAgent implements IAudioTransport {
       }
     });
 
+    this.room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
+      try {
+        const text = new TextDecoder().decode(payload);
+        const data = JSON.parse(text);
+        if (data.type === 'CANDIDATE_AUDIO_READY') {
+          Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Received CANDIDATE_AUDIO_READY from candidate ${participant?.identity || 'unknown'}`);
+          this._isClientReady = true;
+          while (this._clientReadyResolvers.length > 0) {
+            this._clientReadyResolvers.shift()!();
+          }
+        }
+      } catch {}
+    });
+
     let humanFound = false;
     this.room.remoteParticipants.forEach((p) => {
       if (p.identity !== 'tavus-avatar-agent') {
@@ -89,6 +103,24 @@ export class AIInterviewerAgent implements IAudioTransport {
       Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (already in room)`);
       onParticipantConnected();
     }
+  }
+
+  private _isClientReady = false;
+  private _clientReadyResolvers: Array<() => void> = [];
+
+  async waitForClientReady(timeoutMs: number = 2500): Promise<boolean> {
+    if (this._isClientReady) return true;
+    return new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Client ready wait elapsed after ${timeoutMs}ms stabilization.`);
+        resolve(this._isClientReady);
+      }, timeoutMs);
+
+      this._clientReadyResolvers.push(() => {
+        clearTimeout(timer);
+        resolve(true);
+      });
+    });
   }
 
   private pcmRemainder: Int16Array | null = null;

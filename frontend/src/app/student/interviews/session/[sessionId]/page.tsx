@@ -97,10 +97,14 @@ function AIInterviewRoomContent({
 
   useEffect(() => {
     if (!room) return;
-    // Eagerly try to unlock audio immediately on mount.
-    // This succeeds when we're still within the browser's gesture trust window.
-    room.startAudio().catch(() => {
-      // Autoplay was blocked — the canPlayAudio / StartAudio fallback button will handle it.
+    room.startAudio().then(() => {
+      try {
+        room.localParticipant?.publishData(
+          new TextEncoder().encode(JSON.stringify({ type: 'CANDIDATE_AUDIO_READY', timestamp: Date.now() })),
+          { reliable: true }
+        );
+      } catch {}
+    }).catch(() => {
       console.warn('[AI_INTERVIEW] room.startAudio() blocked by autoplay policy. Waiting for user gesture.');
     });
   }, [room]);
@@ -198,14 +202,16 @@ function AIInterviewRoomContent({
         } else if (data.type === 'AI_STATE_CHANGED') {
           const state = data.state as AIConversationState;
           setConversationState(state);
-          if (state === 'AI_SPEAKING') {
+          if (state === 'AI_SPEAKING' || (state as string) === 'INTRO_SPEAKING' || (state as string) === 'ASKING_QUESTION') {
             setUiState('ai_ready');
             room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
           } else if (state === 'LISTENING' || state === 'CANDIDATE_LISTENING' || state === 'WAITING_FOR_CANDIDATE') {
             setUiState('in_progress');
             room.localParticipant?.setMicrophoneEnabled(true).catch(() => {});
-          } else if (state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING') {
+          } else if (state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING' || (state as string) === 'PROCESSING_ANSWER') {
             setInterimText('');
+            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
+          } else if ((state as string) === 'FOLLOW_UP_OR_NEXT_QUESTION' || state === 'FOLLOW_UP_PENDING') {
             room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
           } else if (state === 'COMPLETED') {
             isCompletedRef.current = true;
@@ -390,7 +396,17 @@ function AIInterviewRoomContent({
           <span className="text-xs font-bold text-slate-200">AI audio paused by browser</span>
           <button
             id="ai-audio-enable-btn"
-            onClick={startAudio}
+            onClick={async () => {
+              try {
+                await startAudio();
+                room?.localParticipant?.publishData(
+                  new TextEncoder().encode(JSON.stringify({ type: 'CANDIDATE_AUDIO_READY', timestamp: Date.now() })),
+                  { reliable: true }
+                );
+              } catch (e) {
+                console.error('[AI_INTERVIEW] Failed to start audio:', e);
+              }
+            }}
             className="ml-2 px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold rounded-xl transition-colors shadow-lg shadow-rose-600/25 cursor-pointer"
           >
             Enable Audio

@@ -5,5 +5,6 @@ export interface IAudioTransport {
   getIncomingAudioStream(): AsyncIterable<Int16Array>;
   publishDataMessage(payload: Record<string, unknown>): Promise<void>;
   clearIncomingBuffer?(): void;
+  waitForClientReady?(timeoutMs?: number): Promise<boolean>;
   disconnect?(): Promise<void>;
 }
