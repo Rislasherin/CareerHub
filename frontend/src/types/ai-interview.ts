@@ -12,8 +12,14 @@ export type InterviewUIState =
 export type AIConversationState = 
   | 'AI_SPEAKING' 
   | 'LISTENING' 
+  | 'CANDIDATE_LISTENING'
   | 'PROCESSING' 
-  | 'READY';
+  | 'CANDIDATE_PROCESSING'
+  | 'WAITING_FOR_CANDIDATE'
+  | 'FOLLOW_UP_PENDING'
+  | 'COMPLETED'
+  | 'READY'
+  | 'ERROR';
 
 export type TranscriptSpeaker = 'AI' | 'STUDENT';
 

@@ -47,10 +47,22 @@ export interface IInterviewAIOrchestrationInput {
   abortSignal?: AbortSignal;
 }
 
+export enum AnswerRelevanceClassification {
+  RELEVANT_SUFFICIENT = 'RELEVANT_SUFFICIENT',
+  RELEVANT_INCOMPLETE = 'RELEVANT_INCOMPLETE',
+  INCORRECT_OR_MISCONCEPTION = 'INCORRECT_OR_MISCONCEPTION',
+  PARTIALLY_RELEVANT = 'PARTIALLY_RELEVANT',
+  IRRELEVANT_OR_UNRELATED = 'IRRELEVANT_OR_UNRELATED',
+  UNCLEAR_OR_TOO_SHORT = 'UNCLEAR_OR_TOO_SHORT',
+  NO_RESPONSE = 'NO_RESPONSE'
+}
+
 export enum AIOrchestrationAction {
   ASK_FOLLOW_UP = 'ASK_FOLLOW_UP',
   ASK_NEXT_QUESTION = 'ASK_NEXT_QUESTION',
-  COMPLETE_INTERVIEW = 'COMPLETE_INTERVIEW'
+  COMPLETE_INTERVIEW = 'COMPLETE_INTERVIEW',
+  REDIRECT = 'REDIRECT',
+  PROMPT_NO_RESPONSE = 'PROMPT_NO_RESPONSE'
 }
 
 export enum CandidateAnswerQuality {
@@ -69,6 +81,9 @@ export enum AdaptiveInterviewDifficulty {
 export interface IInterviewAIOrchestrationResult {
   action: AIOrchestrationAction;
   answerQuality?: CandidateAnswerQuality;
+  relevance?: AnswerRelevanceClassification;
+  acknowledgement?: string;
+  spokenResponse?: string;
   adaptiveDifficulty?: AdaptiveInterviewDifficulty;
   evaluation?: IAnswerEvaluationResult | null;
   evaluationPromise?: Promise<IAnswerEvaluationResult | null>;

@@ -212,6 +212,14 @@ export class AIInterviewerAgent implements IAudioTransport {
     }
   }
 
+  clearIncomingBuffer(): void {
+    const droppedCount = this.incomingAudioQueue.length;
+    this.incomingAudioQueue = [];
+    if (droppedCount > 0) {
+      Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Cleared ${droppedCount} residual incoming audio frames from queue.`);
+    }
+  }
+
   async publishDataMessage(payload: Record<string, unknown>): Promise<void> {
     try {
       if (this.room && this.room.localParticipant) {

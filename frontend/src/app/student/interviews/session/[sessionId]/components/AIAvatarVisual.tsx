@@ -12,12 +12,24 @@ interface IAIAvatarVisualProps {
 
 export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state }) => {
 
+  const isListening = state === 'LISTENING' || state === 'CANDIDATE_LISTENING' || state === 'WAITING_FOR_CANDIDATE';
+  const isSpeaking = state === 'AI_SPEAKING';
+  const isProcessing = state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING';
+  const isFollowUp = state === 'FOLLOW_UP_PENDING';
+
   const getStatusLabel = () => {
     switch (state) {
       case 'AI_SPEAKING': return 'AI is speaking...';
-      case 'LISTENING': return 'Listening to you...';
-      case 'PROCESSING': return 'Evaluating answer...';
+      case 'LISTENING':
+      case 'CANDIDATE_LISTENING': return 'Listening to you...';
+      case 'WAITING_FOR_CANDIDATE': return 'Waiting for your answer...';
+      case 'PROCESSING':
+      case 'CANDIDATE_PROCESSING': return 'Evaluating your response...';
+      case 'FOLLOW_UP_PENDING': return 'Preparing follow-up question...';
+      case 'COMPLETED': return 'Interview completed';
       case 'READY': return 'Your turn to speak';
+      case 'ERROR': return 'Connection issue';
+      default: return 'Live Interview Active';
     }
   };
 
@@ -25,32 +37,41 @@ export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state }) => {
     <div className="relative aspect-video w-full rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950/40 border border-slate-800 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
       {/* Background Animated Soundwave / Glow */}
       <div className="relative flex items-center justify-center">
-        {state === 'AI_SPEAKING' && (
+        {isSpeaking && (
           <motion.div
             animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.7, 0.3] }}
             transition={{ duration: 1.6, repeat: Infinity }}
             className="absolute w-40 h-40 rounded-full bg-indigo-500/25 blur-2xl"
           />
         )}
-        {state === 'LISTENING' && (
+        {isListening && (
           <motion.div
             animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.6, 0.2] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="absolute w-40 h-40 rounded-full bg-rose-500/25 blur-2xl"
           />
         )}
+        {isProcessing && (
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+            className="absolute w-40 h-40 rounded-full bg-amber-500/20 blur-2xl"
+          />
+        )}
 
         {/* AI Center Sphere */}
         <div className={`w-24 h-24 rounded-3xl flex items-center justify-center shadow-inner border transition-all duration-500 ${
-          state === 'AI_SPEAKING'
+          isSpeaking
             ? 'bg-indigo-600/30 border-indigo-400/50 text-indigo-300 ring-8 ring-indigo-500/10'
-            : state === 'LISTENING'
+            : isListening
             ? 'bg-rose-600/30 border-rose-400/50 text-rose-300 ring-8 ring-rose-500/10'
+            : isProcessing || isFollowUp
+            ? 'bg-amber-600/20 border-amber-400/40 text-amber-300 ring-8 ring-amber-500/10'
             : 'bg-slate-800/60 border-slate-700 text-slate-400'
         }`}>
-          {state === 'AI_SPEAKING' ? (
+          {isSpeaking ? (
             <Volume2 size={44} className="animate-pulse" />
-          ) : state === 'LISTENING' ? (
+          ) : isListening ? (
             <Mic size={44} className="animate-pulse" />
           ) : (
             <Bot size={44} />

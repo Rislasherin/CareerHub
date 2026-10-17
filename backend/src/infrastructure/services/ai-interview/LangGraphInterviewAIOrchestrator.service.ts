@@ -8,11 +8,13 @@ import {
 	IQuestionGenerator,
 	AIOrchestrationAction,
 	CandidateAnswerQuality,
+	AnswerRelevanceClassification,
 	AdaptiveInterviewDifficulty,
 	IAnswerEvaluationResult,
 	IGeneratedQuestionResult,
 } from "@application/interfaces/ai-interview/IAIInterviewOrchestrator";
-import { assessCandidateAnswerQuality, computeAdaptiveDifficulty } from "../../../shared/utils/answerQuality.util";
+import { computeAdaptiveDifficulty } from "../../../shared/utils/answerQuality.util";
+import { assessAnswerRelevance } from "../../../shared/utils/answerRelevance.util";
 import { AnswerQuality } from "@domain/enums/AnswerQuality.enum";
 import { InterviewType } from "@domain/enums/InterviewType.enum";
 import { InterviewDifficulty } from "@domain/enums/InterviewDifficulty.enum";
@@ -23,6 +25,9 @@ export interface InterviewGraphState {
 	input: IInterviewAIOrchestrationInput;
 	action?: AIOrchestrationAction;
 	answerQuality?: CandidateAnswerQuality;
+	relevance?: AnswerRelevanceClassification;
+	acknowledgement?: string | null;
+	spokenResponse?: string;
 	adaptiveDifficulty?: AdaptiveInterviewDifficulty;
 	nextTopic?: string;
 	nextCategory?: InterviewType;
@@ -44,7 +49,18 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 		const decideAction = (state: InterviewGraphState) => {
 			const t_start = performance.now();
 			const { input } = state;
-			const answerQuality = assessCandidateAnswerQuality(input.currentQuestion?.text || "", input.candidateAnswer || "");
+			
+			// Assess Answer Relevance, Completeness, and Competency
+			const relevanceAssessment = assessAnswerRelevance(
+				input.currentQuestion?.text || "",
+				input.candidateAnswer || "",
+				input.currentTopic || "General"
+			);
+
+			const answerQuality = relevanceAssessment.quality;
+			const relevance = relevanceAssessment.classification;
+			const acknowledgement = relevanceAssessment.acknowledgement ?? null;
+			const spokenResponse = relevanceAssessment.spokenResponse;
 
 			// Adaptive difficulty calculation with bounded hysteresis
 			const history = [...(input.recentAnswerQualities || []), answerQuality];
@@ -56,31 +72,53 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 				return { 
 					action: AIOrchestrationAction.COMPLETE_INTERVIEW, 
 					answerQuality,
+					relevance,
+					acknowledgement,
+					spokenResponse,
 					adaptiveDifficulty,
 					nextTopic: "Time Expired", 
 					nextCategory: input.interviewType || InterviewType.TECHNICAL 
 				};
 			}
 
+			// Bounded follow-ups policy: strictly prevent infinite probing loops
+			const maxFollowUps = 1;
 
-
-			// Smart answer understanding action decision:
 			let action = AIOrchestrationAction.ASK_NEXT_QUESTION;
-			if (answerQuality === CandidateAnswerQuality.STRONG) {
-				action = AIOrchestrationAction.ASK_NEXT_QUESTION;
-			} else if (answerQuality === CandidateAnswerQuality.PARTIAL || answerQuality === CandidateAnswerQuality.WEAK || answerQuality === CandidateAnswerQuality.UNCLEAR) {
-				// Bounded follow-up: only ask follow-up if within follow-up limit (< 1)
-				if (input.followUpCount < 1) {
+
+			if (relevance === AnswerRelevanceClassification.IRRELEVANT_OR_UNRELATED) {
+				// Irrelevant/unrelated speech -> Do not advance question index! Politely redirect.
+				action = AIOrchestrationAction.REDIRECT;
+			} else if (relevance === AnswerRelevanceClassification.INCORRECT_OR_MISCONCEPTION) {
+				// Incorrect or containing a misconception -> Probe reasoning if within limit; never acknowledge as correct
+				if (input.followUpCount < maxFollowUps) {
 					action = AIOrchestrationAction.ASK_FOLLOW_UP;
 				} else {
 					action = AIOrchestrationAction.ASK_NEXT_QUESTION;
 				}
+			} else if (
+				relevance === AnswerRelevanceClassification.RELEVANT_INCOMPLETE || 
+				relevance === AnswerRelevanceClassification.PARTIALLY_RELEVANT ||
+				relevance === AnswerRelevanceClassification.UNCLEAR_OR_TOO_SHORT
+			) {
+				// Incomplete or shallow -> Probing follow-up if within limit
+				if (input.followUpCount < maxFollowUps) {
+					action = AIOrchestrationAction.ASK_FOLLOW_UP;
+				} else {
+					action = AIOrchestrationAction.ASK_NEXT_QUESTION;
+				}
+			} else {
+				// RELEVANT_SUFFICIENT -> Move to next question with targeted acknowledgement
+				action = AIOrchestrationAction.ASK_NEXT_QUESTION;
 			}
 
 			let nextTopic = "General";
 			let nextCategory = input.interviewType || InterviewType.TECHNICAL;
 
-			if (action === AIOrchestrationAction.ASK_FOLLOW_UP) {
+			if (action === AIOrchestrationAction.REDIRECT) {
+				nextTopic = input.currentTopic || "General";
+				nextCategory = input.interviewType || InterviewType.TECHNICAL;
+			} else if (action === AIOrchestrationAction.ASK_FOLLOW_UP) {
 				nextTopic = input.currentTopic && input.currentTopic !== "None" && input.currentTopic !== "Introductions"
 					? input.currentTopic 
 					: "General";
@@ -115,13 +153,15 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 				}
 			}
 
-			Metrics.recordLatency('langgraph_node_decide_action', performance.now() - t_start, 'local', { action, nextTopic, nextCategory, answerQuality });
-			return { action, answerQuality, adaptiveDifficulty, nextTopic, nextCategory };
+			Metrics.recordLatency('langgraph_node_decide_action', performance.now() - t_start, 'local', { action, nextTopic, nextCategory, answerQuality, relevance });
+			return { action, answerQuality, relevance, acknowledgement, spokenResponse, adaptiveDifficulty, nextTopic, nextCategory };
 		};
 
 		const generateFollowUp = async (state: InterviewGraphState) => {
 			const t_start = performance.now();
 			const { input } = state;
+			const isMisconception = state.relevance === AnswerRelevanceClassification.INCORRECT_OR_MISCONCEPTION;
+
 			const nextQuestion = await this.questionGenerator.generateFollowUp({
 				interviewContext: input.interviewContext,
 				lastQuestion: input.currentQuestion.text,
@@ -130,7 +170,12 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 				interviewType: state.nextCategory || input.interviewType,
 				difficulty: input.difficulty,
 				adaptiveDifficulty: state.adaptiveDifficulty || AdaptiveInterviewDifficulty.STANDARD,
-				customInstructions: input.customInstructions,
+				customInstructions: [
+					...(input.customInstructions || []),
+					isMisconception 
+						? "The candidate expressed a misconception or technical inaccuracy. Ask a focused probing question to test their reasoning without acknowledging the answer as correct."
+						: "The candidate gave an incomplete answer. Ask a focused follow-up probing the missing technical aspect."
+				],
 				prohibitedTopics: input.prohibitedTopics,
 				mentionedTechnologies: input.mentionedTechnologies,
 				onSentenceGenerated: input.onSentenceGenerated,
@@ -161,7 +206,10 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 		};
 
 		const routeGeneration = (state: InterviewGraphState) => {
-			if (state.action === AIOrchestrationAction.COMPLETE_INTERVIEW) {
+			if (
+				state.action === AIOrchestrationAction.COMPLETE_INTERVIEW || 
+				state.action === AIOrchestrationAction.REDIRECT
+			) {
 				return END;
 			}
 			return state.action === AIOrchestrationAction.ASK_FOLLOW_UP ? "generate_follow_up" : "generate_next_question";
@@ -172,6 +220,9 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 				input: { value: (left, right) => right || left },
 				action: { value: (left, right) => right || left },
 				answerQuality: { value: (left, right) => right || left },
+				relevance: { value: (left, right) => right || left },
+				acknowledgement: { value: (left, right) => right || left },
+				spokenResponse: { value: (left, right) => right || left },
 				adaptiveDifficulty: { value: (left, right) => right || left },
 				nextTopic: { value: (left, right) => right || left },
 				nextCategory: { value: (left, right) => right || left },
@@ -228,6 +279,7 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 				return {
 					action: AIOrchestrationAction.ASK_NEXT_QUESTION,
 					answerQuality: CandidateAnswerQuality.PARTIAL,
+					relevance: AnswerRelevanceClassification.RELEVANT_INCOMPLETE,
 					adaptiveDifficulty: AdaptiveInterviewDifficulty.STANDARD,
 					nextTopic: "General",
 					nextCategory: input.interviewType || InterviewType.TECHNICAL,
@@ -245,6 +297,9 @@ export class LangGraphInterviewAIOrchestrator implements IInterviewAIOrchestrato
 		return {
 			action: resultState.action || AIOrchestrationAction.ASK_NEXT_QUESTION,
 			answerQuality: resultState.answerQuality,
+			relevance: resultState.relevance,
+			acknowledgement: resultState.acknowledgement ?? undefined,
+			spokenResponse: resultState.spokenResponse,
 			adaptiveDifficulty: resultState.adaptiveDifficulty || AdaptiveInterviewDifficulty.STANDARD,
 			nextQuestion: resultState.nextQuestion,
 			nextTopic: resultState.nextTopic,

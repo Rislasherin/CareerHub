@@ -65,18 +65,6 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
         return { success: false };
       }
 
-      // 3. Domain Logic: Claim the answer atomically in DB to lock the turn
-      const claimed = await this._repository.recordAnswerAtomically(input.sessionId, input.questionId, input.answer);
-      if (!claimed) {
-        if (this._logger) {
-          this._logger.info(LogCategory.SYSTEM_INFO, `[ProcessStudentAnswerUseCase] Answer already recorded for question ${input.questionId} or session invalid state. Ignoring concurrent duplicate.`);
-        }
-        return { success: false };
-      }
-
-      // Update the in-memory session domain object for subsequent logic
-      session.recordAnswer(input.questionId, input.answer);
-
     const elapsedMs = session.startedAt ? Date.now() - session.startedAt.getTime() : 0;
     const durationMs = session.getDurationMinutes() * 60 * 1000;
     const timeRemainingMs = Math.max(0, durationMs - elapsedMs);
@@ -127,37 +115,66 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
         timeRemainingMs,
         abortSignal: input.abortSignal
       });
-    } finally {
-      // 3.5 Background Evaluation via Dedicated RabbitMQ Queue Isolation
-      // Publish immediately after recording the answer to guarantee evaluation isn't lost if realtime orchestration aborts/throws
-      // NOTE: Deferred to run AFTER realtime Question LLM finishes to prevent Ollama resource contention
-      if (this._messageBroker) {
-        this._messageBroker.publish('ai_interview_evaluations', {
-          type: 'EVALUATE_ANSWER',
-          sessionId: session.id,
-          questionId: input.questionId,
-          questionText: currentQuestion.text,
-          candidateAnswer: input.answer,
-          interviewContext,
-          interviewType: currentQuestion.category || config?.primaryType || InterviewType.TECHNICAL,
-          difficulty: config?.difficulty,
-          enqueuedAt: Date.now()
-        }).catch(err => {
-          if (this._logger) {
-            this._logger.error(LogCategory.SYSTEM_ERROR, "[ProcessStudentAnswerUseCase] Failed to publish evaluation job to RabbitMQ:", err);
-          }
-        });
+    } catch (err) {
+      if (this._logger) {
+        this._logger.error(LogCategory.SYSTEM_ERROR, `[ProcessStudentAnswerUseCase] Error during orchestrator.processAnswer:`, err);
       }
+      throw err;
     }
 
     if (input.abortSignal?.aborted) {
-       if (this._logger) {
-         this._logger.info(LogCategory.SYSTEM_INFO, "[ProcessStudentAnswerUseCase] Processing aborted due to timeout.");
-       }
-       return { success: false };
+      if (this._logger) {
+        this._logger.info(LogCategory.SYSTEM_INFO, "[ProcessStudentAnswerUseCase] Processing aborted due to timeout.");
+      }
+      return { success: false };
     }
 
-    // 5. Domain Logic: Move to next question immediately
+    // If answer is irrelevant or unrelated, do NOT mark question as answered or advance
+    if (aiResult.action === AIOrchestrationAction.REDIRECT) {
+      if (this._logger) {
+        this._logger.info(LogCategory.SYSTEM_INFO, `[ProcessStudentAnswerUseCase] Answer classified as IRRELEVANT/UNRELATED. Redirecting without recording answer or incrementing question.`);
+      }
+      return {
+        success: true,
+        action: AIOrchestrationAction.REDIRECT,
+        spokenResponse: aiResult.spokenResponse,
+        acknowledgement: aiResult.acknowledgement,
+        relevance: aiResult.relevance
+      };
+    }
+
+    // 3. Domain Logic: Claim the answer atomically in DB to lock the turn
+    const claimed = await this._repository.recordAnswerAtomically(input.sessionId, input.questionId, input.answer);
+    if (!claimed) {
+      if (this._logger) {
+        this._logger.info(LogCategory.SYSTEM_INFO, `[ProcessStudentAnswerUseCase] Answer already recorded for question ${input.questionId} or session invalid state. Ignoring concurrent duplicate.`);
+      }
+      return { success: false };
+    }
+
+    // Update the in-memory session domain object for subsequent logic
+    session.recordAnswer(input.questionId, input.answer);
+
+    // 3.5 Background Evaluation via Dedicated RabbitMQ Queue Isolation
+    if (this._messageBroker) {
+      this._messageBroker.publish('ai_interview_evaluations', {
+        type: 'EVALUATE_ANSWER',
+        sessionId: session.id,
+        questionId: input.questionId,
+        questionText: currentQuestion.text,
+        candidateAnswer: input.answer,
+        interviewContext,
+        interviewType: currentQuestion.category || config?.primaryType || InterviewType.TECHNICAL,
+        difficulty: config?.difficulty,
+        enqueuedAt: Date.now()
+      }).catch(err => {
+        if (this._logger) {
+          this._logger.error(LogCategory.SYSTEM_ERROR, "[ProcessStudentAnswerUseCase] Failed to publish evaluation job to RabbitMQ:", err);
+        }
+      });
+    }
+
+    // 5. Domain Logic: Move to next question or follow-up
     session.startEvaluation(); // Temporarily enter evaluation phase to satisfy state machine
     
     if (
@@ -205,7 +222,11 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
     }
 
     return {
-      success: true
+      success: true,
+      action: aiResult.action,
+      acknowledgement: aiResult.acknowledgement,
+      spokenResponse: aiResult.spokenResponse,
+      relevance: aiResult.relevance
     };
     
     } finally {

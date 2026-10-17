@@ -82,6 +82,7 @@ function AIInterviewRoomContent({
   const [currentQuestionText, setCurrentQuestionText] = useState<string>('Connecting to AI interviewer...');
   const [transcriptList, setTranscriptList] = useState<ITranscriptMessage[]>([]);
   const [interimText, setInterimText] = useState<string>('');
+  const [conversationState, setConversationState] = useState<AIConversationState>('READY');
   const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
 
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
@@ -195,13 +196,18 @@ function AIInterviewRoomContent({
             });
           }
         } else if (data.type === 'AI_STATE_CHANGED') {
-          if (data.state === 'AI_SPEAKING') {
+          const state = data.state as AIConversationState;
+          setConversationState(state);
+          if (state === 'AI_SPEAKING') {
             setUiState('ai_ready');
-          } else if (data.state === 'LISTENING') {
+            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
+          } else if (state === 'LISTENING' || state === 'CANDIDATE_LISTENING' || state === 'WAITING_FOR_CANDIDATE') {
             setUiState('in_progress');
-          } else if (data.state === 'PROCESSING') {
+            room.localParticipant?.setMicrophoneEnabled(true).catch(() => {});
+          } else if (state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING') {
             setInterimText('');
-          } else if (data.state === 'COMPLETED') {
+            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
+          } else if (state === 'COMPLETED') {
             isCompletedRef.current = true;
             setUiState('completed');
             setTimeLeft(0);
@@ -325,11 +331,12 @@ function AIInterviewRoomContent({
     return () => clearInterval(interval);
   }, [uiState, startedAt, durationMinutes]);
 
-  const conversationState: AIConversationState = useMemo(() => {
+  const effectiveConversationState: AIConversationState = useMemo(() => {
+    if (conversationState !== 'READY') return conversationState;
     if (uiState === 'ai_ready') return 'AI_SPEAKING';
     if (uiState === 'in_progress') return 'LISTENING';
     return 'READY';
-  }, [uiState]);
+  }, [conversationState, uiState]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -442,7 +449,7 @@ function AIInterviewRoomContent({
             {/* AI INTERVIEWER */}
             <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl flex flex-col items-center justify-center">
               <InterviewAvatarRenderer />
-              <AIAvatarVisual state={conversationState} />
+              <AIAvatarVisual state={effectiveConversationState} />
               
               {/* Overlay Label */}
               <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 z-20">
@@ -478,7 +485,7 @@ function AIInterviewRoomContent({
 
         {/* Right Stage: Live Voice Transcript */}
         <div className="lg:col-span-4 min-h-0 h-full">
-          <LiveTranscript messages={transcriptList} isAiSpeaking={conversationState === 'AI_SPEAKING'} interimText={interimText} />
+          <LiveTranscript messages={transcriptList} isAiSpeaking={effectiveConversationState === 'AI_SPEAKING'} interimText={interimText} />
         </div>
       </main>
 
