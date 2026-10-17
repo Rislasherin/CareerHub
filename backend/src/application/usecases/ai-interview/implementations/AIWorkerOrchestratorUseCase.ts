@@ -180,9 +180,9 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
               // On reconnect, if the current question has not been answered yet, replay it so candidate hears it!
               if (!activeQuestion.candidateAnswer) {
                 if (this._audioTransport.waitForClientReady) {
-                  await this._audioTransport.waitForClientReady(2000);
+                  await this._audioTransport.waitForClientReady(6000);
                 } else {
-                  await new Promise(r => setTimeout(r, 1000));
+                  await new Promise(r => setTimeout(r, 1200));
                 }
                 const replayPrompt = `Welcome back. Let's continue with our question: ${activeQuestion.text}`;
                 await this._audioTransport.publishDataMessage({
@@ -277,52 +277,51 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
 
       // Allow candidate audio track negotiation stabilization
       if (this._audioTransport.waitForClientReady) {
-        await this._audioTransport.waitForClientReady(2500);
+        const isClientReady = await this._audioTransport.waitForClientReady(8000);
+        if (!isClientReady) {
+          if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] Candidate audio readiness not confirmed within 8000ms. Dispatching prompt...`);
+          await this._audioTransport.publishDataMessage({
+            type: 'AUDIO_READINESS_REQUIRED',
+            message: 'Please click Enable Audio if audio does not start automatically.'
+          });
+          // Wait additional grace period for user to click Enable Audio
+          await this._audioTransport.waitForClientReady(4000);
+        }
       } else {
         await new Promise(r => setTimeout(r, 1200));
       }
 
-      // 3. Construct professional opening greeting
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [11] Greeting generation started`);
-      const openingGreeting = `Hello ${candidateName}, welcome to your ${jobTitle} interview. I'm your AI interviewer today. Let's get started. ${activeQuestion.text}`;
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [12] Greeting generation completed: "${openingGreeting}"`);
-
-      // Publish initial state and question to student browser immediately
-      await this._audioTransport.publishDataMessage({
-        type: 'QUESTION_UPDATED',
-        text: activeQuestion.text,
-        questionId: activeQuestion.id,
-        sequenceNumber: 1,
-        timestamp: Date.now()
-      });
+      // 3. Phase 1: Opening Greeting (INTRO_SPEAKING)
+      const openingGreeting = `Hello ${candidateName}, welcome to your ${jobTitle} interview. I'm your AI interviewer today.`;
+      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [11] Intro greeting generation started: "${openingGreeting}"`);
+      
       await this._audioTransport.publishDataMessage({
         type: 'AI_STATE_CHANGED',
         state: TurnState.INTRO_SPEAKING,
         timestamp: Date.now()
       });
 
-      // Intro audio generation and playout with safe retry
-      let playoutSuccess = false;
+      let introPlayoutSuccess = false;
       const maxRetries = 2;
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [13] TTS generation started (attempt ${attempt})`);
+          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [13] Intro TTS generation started (attempt ${attempt})`);
           const audioStream = this._ttsService.generateAudioStream(openingGreeting);
-          let hasChunks = false;
+          let chunkCount = 0;
           
           for await (const chunk of audioStream) {
-            if (!hasChunks) {
-              if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [14] TTS first audio/chunk received`);
-              if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [15] Audio publication started`);
-              hasChunks = true;
-            }
+            chunkCount++;
             await this._audioTransport.publishAudioChunk(chunk);
           }
 
-          if (hasChunks && this._audioTransport.waitForPlayout) {
+          if (chunkCount === 0) {
+            throw new Error('TTS service returned 0 audio chunks for intro greeting');
+          }
+
+          if (this._audioTransport.waitForPlayout) {
             await this._audioTransport.waitForPlayout();
           }
-          playoutSuccess = true;
+          introPlayoutSuccess = true;
           break;
         } catch (playErr) {
           if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] TTS intro attempt ${attempt} failed:`, playErr);
@@ -332,7 +331,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         }
       }
 
-      if (!playoutSuccess) {
+      if (!introPlayoutSuccess) {
         if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Intro TTS audio playout failed.`);
         await this._audioTransport.publishDataMessage({
           type: 'AI_STATE_CHANGED',
@@ -341,9 +340,6 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         });
         return false;
       }
-      
-      await new Promise(r => setTimeout(r, 600));
-      this._audioTransport.clearIncomingBuffer?.();
 
       // Persist introPlayed in session configuration metadata
       if (session.configuration) {
@@ -354,12 +350,69 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         await this._repository.update(session.id, session);
       }
 
+      await new Promise(r => setTimeout(r, 500));
+
+      // 4. Phase 2: First Question (ASKING_QUESTION)
+      await this._audioTransport.publishDataMessage({
+        type: 'QUESTION_UPDATED',
+        text: activeQuestion.text,
+        questionId: activeQuestion.id,
+        sequenceNumber: 1,
+        timestamp: Date.now()
+      });
+      await this._audioTransport.publishDataMessage({
+        type: 'AI_STATE_CHANGED',
+        state: TurnState.ASKING_QUESTION,
+        timestamp: Date.now()
+      });
+
+      const questionPrompt = `Let's get started. ${activeQuestion.text}`;
+      let qPlayoutSuccess = false;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] First question TTS generation started (attempt ${attempt})`);
+          const audioStream = this._ttsService.generateAudioStream(questionPrompt);
+          let chunkCount = 0;
+          for await (const chunk of audioStream) {
+            chunkCount++;
+            await this._audioTransport.publishAudioChunk(chunk);
+          }
+          if (chunkCount === 0) {
+            throw new Error('TTS service returned 0 audio chunks for first question');
+          }
+          if (this._audioTransport.waitForPlayout) {
+            await this._audioTransport.waitForPlayout();
+          }
+          qPlayoutSuccess = true;
+          break;
+        } catch (qErr) {
+          if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] First question TTS attempt ${attempt} failed:`, qErr);
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+      }
+
+      if (!qPlayoutSuccess) {
+        if (this._logger) this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] First question TTS audio playout failed.`);
+        await this._audioTransport.publishDataMessage({
+          type: 'AI_STATE_CHANGED',
+          state: TurnState.ERROR,
+          error: 'Question audio playback failed'
+        });
+        return false;
+      }
+
+      await new Promise(r => setTimeout(r, env.INTERVIEW_MIN_LISTENING_TIME_MS || 1200));
+      this._audioTransport.clearIncomingBuffer?.();
+
       await this._repository.transitionSessionState(
         sessionId,
         [InterviewPhase.INTRO],
         InterviewPhase.ASKING_QUESTION
       );
 
+      // 5. Phase 3: Transition to Candidate Listening (WAITING_FOR_CANDIDATE)
       if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [17] Transition to WAITING_FOR_CANDIDATE`);
       await this._audioTransport.publishDataMessage({
         type: 'AI_STATE_CHANGED',

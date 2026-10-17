@@ -7,6 +7,7 @@ import { Logger, LogCategory } from '../../logger/logger';
 export class AIInterviewerAgent implements IAudioTransport {
   private room: Room;
   private audioSource: AudioSource;
+  private localAudioTrack?: LocalAudioTrack;
   
   // Queue to buffer incoming audio chunks for the STT stream
   private incomingAudioQueue: Int16Array[] = [];
@@ -24,13 +25,31 @@ export class AIInterviewerAgent implements IAudioTransport {
       throw new Error(errMsg);
     }
 
-    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [6] LiveKit room join started`);
-    await this.room.connect(url, token);
-    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [7] LiveKit room joined`);
-    
-    const track = LocalAudioTrack.createAudioTrack('ai-voice', this.audioSource);
-    await this.room.localParticipant?.publishTrack(track, { name: 'ai-voice', source: TrackSource.SOURCE_MICROPHONE } as unknown as TrackPublishOptions);
-    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [7b] Audio track 'ai-voice' published to LiveKit room. LocalParticipant identity: ${this.room.localParticipant?.identity}`);
+    // Register event listeners BEFORE connecting to guarantee no early events are missed
+    this.room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
+      try {
+        const text = new TextDecoder().decode(payload);
+        const data = JSON.parse(text);
+        if (data.type === 'CANDIDATE_AUDIO_READY') {
+          Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Received CANDIDATE_AUDIO_READY from candidate ${participant?.identity || 'unknown'}`);
+          this._isClientReady = true;
+          while (this._clientReadyResolvers.length > 0) {
+            this._clientReadyResolvers.shift()!();
+          }
+        }
+      } catch (err) {
+        Logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] Error parsing data packet:`, err);
+      }
+    });
+
+    this.room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
+      if (participant.identity !== 'tavus-avatar-agent') {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (via event)`);
+        onParticipantConnected();
+      } else {
+        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Tavus participant connected, waiting for human...`);
+      }
+    });
 
     // Listen for student audio tracks
     this.room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub: RemoteTrackPublication, _participant: RemoteParticipant) => {
@@ -69,28 +88,14 @@ export class AIInterviewerAgent implements IAudioTransport {
       }
     });
 
-    this.room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
-      if (participant.identity !== 'tavus-avatar-agent') {
-        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Participant connected/detected (via event)`);
-        onParticipantConnected();
-      } else {
-        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [8] Tavus participant connected, waiting for human...`);
-      }
-    });
-
-    this.room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant?: RemoteParticipant) => {
-      try {
-        const text = new TextDecoder().decode(payload);
-        const data = JSON.parse(text);
-        if (data.type === 'CANDIDATE_AUDIO_READY') {
-          Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Received CANDIDATE_AUDIO_READY from candidate ${participant?.identity || 'unknown'}`);
-          this._isClientReady = true;
-          while (this._clientReadyResolvers.length > 0) {
-            this._clientReadyResolvers.shift()!();
-          }
-        }
-      } catch {}
-    });
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [6] LiveKit room join started`);
+    await this.room.connect(url, token);
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [7] LiveKit room joined`);
+    
+    const track = LocalAudioTrack.createAudioTrack('ai-voice', this.audioSource);
+    this.localAudioTrack = track;
+    await this.room.localParticipant?.publishTrack(track, { name: 'ai-voice', source: TrackSource.SOURCE_MICROPHONE } as unknown as TrackPublishOptions);
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [7b] Audio track 'ai-voice' published to LiveKit room. LocalParticipant identity: ${this.room.localParticipant?.identity}`);
 
     let humanFound = false;
     this.room.remoteParticipants.forEach((p) => {
@@ -108,11 +113,12 @@ export class AIInterviewerAgent implements IAudioTransport {
   private _isClientReady = false;
   private _clientReadyResolvers: Array<() => void> = [];
 
-  async waitForClientReady(timeoutMs: number = 2500): Promise<boolean> {
+  async waitForClientReady(timeoutMs: number = 8000): Promise<boolean> {
     if (this._isClientReady) return true;
+    Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Waiting up to ${timeoutMs}ms for candidate audio readiness handshake...`);
     return new Promise<boolean>((resolve) => {
       const timer = setTimeout(() => {
-        Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Client ready wait elapsed after ${timeoutMs}ms stabilization.`);
+        Logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] Client ready wait elapsed after ${timeoutMs}ms (ready: ${this._isClientReady}).`);
         resolve(this._isClientReady);
       }, timeoutMs);
 
@@ -271,6 +277,10 @@ export class AIInterviewerAgent implements IAudioTransport {
         await this.streamWriter.close().catch(() => {});
         Logger.info(LogCategory.SYSTEM_INFO, `[Tavus] audio output closed`);
         this.streamWriter = undefined;
+      }
+
+      if (this.localAudioTrack) {
+        this.localAudioTrack = undefined;
       }
 
       if (this.room) {

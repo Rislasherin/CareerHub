@@ -88,26 +88,34 @@ function AIInterviewRoomContent({
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
   const latestQuestionSeqRef = useRef<number>(0);
 
-  // ── Audio Autoplay Fix ────────────────────────────────────────────────────────
-  // The browser's autoplay policy may suspend the AudioContext when the LiveKit
-  // room mounts. We must call room.startAudio() as soon as possible (while still
-  // within the 'user gesture trust' window from the 'Join Interview' click).
-  // If that window has already closed, useStartAudio provides a fallback button.
+  // ── Audio Autoplay & Readiness Handshake ──────────────────────────────────────
   const { canPlayAudio, startAudio } = useAudioPlayback(room);
+
+  const sendAudioReadyPacket = useCallback(() => {
+    if (!room || room.state !== 'connected') {
+      return;
+    }
+    try {
+      room.localParticipant?.publishData(
+        new TextEncoder().encode(JSON.stringify({ type: 'CANDIDATE_AUDIO_READY', timestamp: Date.now() })),
+        { reliable: true }
+      );
+      console.log('[AI_INTERVIEW] Dispatched CANDIDATE_AUDIO_READY to backend');
+    } catch (err) {
+      console.warn('[AI_INTERVIEW] Could not publish CANDIDATE_AUDIO_READY:', err);
+    }
+  }, [room]);
 
   useEffect(() => {
     if (!room) return;
     room.startAudio().then(() => {
-      try {
-        room.localParticipant?.publishData(
-          new TextEncoder().encode(JSON.stringify({ type: 'CANDIDATE_AUDIO_READY', timestamp: Date.now() })),
-          { reliable: true }
-        );
-      } catch {}
+      if (room.canPlaybackAudio) {
+        sendAudioReadyPacket();
+      }
     }).catch(() => {
       console.warn('[AI_INTERVIEW] room.startAudio() blocked by autoplay policy. Waiting for user gesture.');
     });
-  }, [room]);
+  }, [room, sendAudioReadyPacket]);
 
   // LiveKit AI participant presence check
   const aiParticipant = participants.find(
@@ -127,6 +135,15 @@ function AIInterviewRoomContent({
   useEffect(() => {
     if (!room) return;
 
+    const handleConnected = () => {
+      console.log('[AI_INTERVIEW] Room connected. canPlaybackAudio =', room.canPlaybackAudio);
+      room.startAudio().then(() => {
+        if (room.canPlaybackAudio) {
+          sendAudioReadyPacket();
+        }
+      }).catch(() => {});
+    };
+
     const handleReconnecting = () => {
       console.log('[AI_INTERVIEW] Room reconnecting...');
       setIsReconnecting(true);
@@ -135,6 +152,9 @@ function AIInterviewRoomContent({
     const handleReconnected = () => {
       console.log('[AI_INTERVIEW] Room reconnected successfully.');
       setIsReconnecting(false);
+      if (room.canPlaybackAudio) {
+        sendAudioReadyPacket();
+      }
     };
 
     const handleDisconnected = () => {
@@ -146,8 +166,7 @@ function AIInterviewRoomContent({
         return;
       }
 
-      setUiState('completed'); // Or set a new error state, but 'completed' with an alert is easiest
-      // We could use an alert or a specific UI state for disconnection. Let's just alert for now.
+      setUiState('completed');
       alert("Connection to the interview server was permanently lost. Please refresh or contact support.");
       window.location.href = '/student/interviews';
     };
@@ -226,18 +245,20 @@ function AIInterviewRoomContent({
             setUiState('completed');
             setTimeLeft(0);
           }
+        } else if (data.type === 'AUDIO_READINESS_REQUIRED') {
+          console.log('[AI_INTERVIEW] Server requested audio readiness confirmation');
+          if (room.canPlaybackAudio) {
+            sendAudioReadyPacket();
+          }
         }
       } catch (err) {
         console.error('[AI_INTERVIEW] Data received error:', err);
       }
     };
 
-    room.on(RoomEvent.DataReceived, handleDataReceived);
-    room.on(RoomEvent.Reconnecting, handleReconnecting);
-    room.on(RoomEvent.Reconnected, handleReconnected);
-    room.on(RoomEvent.Disconnected, handleDisconnected);
+    const attachedAudioElements = new Map<string, HTMLAudioElement>();
 
-    // Diagnostic: log every remote track subscription to confirm AI audio arrives
+    // Explicitly attach and play remote audio tracks
     const handleTrackSubscribed = (track: any, publication: any, participant: any) => {
       console.log('[AI_INTERVIEW] TrackSubscribed:', {
         participantIdentity: participant?.identity,
@@ -247,24 +268,75 @@ function AIInterviewRoomContent({
         trackSid: track?.sid,
         canPlaybackAudio: room.canPlaybackAudio,
       });
-    };
-    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
 
-    // Diagnostic: log when audio playback status changes
+      if (track.kind === Track.Kind.Audio) {
+        try {
+          const audioEl = track.attach();
+          audioEl.id = `remote-audio-${track.sid}`;
+          audioEl.style.display = 'none';
+          document.body.appendChild(audioEl);
+          attachedAudioElements.set(track.sid, audioEl);
+
+          audioEl.play().then(() => {
+            console.log('[AI_INTERVIEW] Remote audio track playing directly in browser:', track.sid);
+            sendAudioReadyPacket();
+          }).catch((playErr: unknown) => {
+            console.warn('[AI_INTERVIEW] Remote audio track play() deferred for user gesture:', playErr);
+          });
+        } catch (attachErr) {
+          console.error('[AI_INTERVIEW] Failed to attach remote audio track:', attachErr);
+        }
+      }
+    };
+
+    const handleTrackUnsubscribed = (track: any) => {
+      if (track.kind === Track.Kind.Audio) {
+        const audioEl = attachedAudioElements.get(track.sid);
+        if (audioEl) {
+          track.detach(audioEl);
+          audioEl.remove();
+          attachedAudioElements.delete(track.sid);
+        }
+      }
+    };
+
+    // Diagnostic and handshake triggers on audio playback status changes
     const handleAudioPlaybackChanged = () => {
       console.log('[AI_INTERVIEW] AudioPlaybackStatusChanged: canPlaybackAudio =', room.canPlaybackAudio);
+      if (room.canPlaybackAudio) {
+        sendAudioReadyPacket();
+      }
     };
+
+    room.on(RoomEvent.Connected, handleConnected);
+    room.on(RoomEvent.DataReceived, handleDataReceived);
+    room.on(RoomEvent.Reconnecting, handleReconnecting);
+    room.on(RoomEvent.Reconnected, handleReconnected);
+    room.on(RoomEvent.Disconnected, handleDisconnected);
+    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+    room.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
     room.on(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackChanged);
 
+    if (room.state === 'connected' && room.canPlaybackAudio) {
+      sendAudioReadyPacket();
+    }
+
     return () => {
+      room.off(RoomEvent.Connected, handleConnected);
       room.off(RoomEvent.DataReceived, handleDataReceived);
       room.off(RoomEvent.Reconnecting, handleReconnecting);
       room.off(RoomEvent.Reconnected, handleReconnected);
       room.off(RoomEvent.Disconnected, handleDisconnected);
       room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+      room.off(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
       room.off(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackChanged);
+
+      attachedAudioElements.forEach((el, sid) => {
+        el.remove();
+      });
+      attachedAudioElements.clear();
     };
-  }, [room]);
+  }, [room, sendAudioReadyPacket]);
 
   // Sync backend session status as fallback polling
   useEffect(() => {
@@ -399,10 +471,7 @@ function AIInterviewRoomContent({
             onClick={async () => {
               try {
                 await startAudio();
-                room?.localParticipant?.publishData(
-                  new TextEncoder().encode(JSON.stringify({ type: 'CANDIDATE_AUDIO_READY', timestamp: Date.now() })),
-                  { reliable: true }
-                );
+                sendAudioReadyPacket();
               } catch (e) {
                 console.error('[AI_INTERVIEW] Failed to start audio:', e);
               }
