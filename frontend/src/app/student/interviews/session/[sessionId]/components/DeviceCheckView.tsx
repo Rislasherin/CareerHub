@@ -34,7 +34,18 @@ export const DeviceCheckView: React.FC<IDeviceCheckViewProps> = ({
     onCancel();
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    try {
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtxClass) {
+        const tempCtx = new AudioCtxClass();
+        await tempCtx.resume();
+        await tempCtx.close().catch(() => {});
+        console.log('[AI_INTERVIEW] AudioContext successfully pre-unlocked via Join button gesture');
+      }
+    } catch (e) {
+      console.warn('[AI_INTERVIEW] Pre-unlocking AudioContext on join click:', e);
+    }
     const stream = transferStream() || status.stream;
     onProceed(stream);
   };

@@ -108,13 +108,38 @@ function AIInterviewRoomContent({
 
   useEffect(() => {
     if (!room) return;
+
+    const unlockOnGesture = () => {
+      if (!room.canPlaybackAudio) {
+        room.startAudio().then(() => {
+          if (room.canPlaybackAudio) {
+            console.log('[AI_INTERVIEW] AudioContext successfully resumed via user interaction.');
+            sendAudioReadyPacket();
+          }
+        }).catch((err) => {
+          console.warn('[AI_INTERVIEW] room.startAudio() on gesture deferred:', err);
+        });
+      }
+    };
+
+    window.addEventListener('click', unlockOnGesture);
+    window.addEventListener('keydown', unlockOnGesture);
+    window.addEventListener('touchstart', unlockOnGesture);
+
     room.startAudio().then(() => {
       if (room.canPlaybackAudio) {
+        console.log('[AI_INTERVIEW] AudioContext active on mount.');
         sendAudioReadyPacket();
       }
     }).catch(() => {
-      console.warn('[AI_INTERVIEW] room.startAudio() blocked by autoplay policy. Waiting for user gesture.');
+      console.warn('[AI_INTERVIEW] room.startAudio() on mount blocked by autoplay policy. Waiting for user gesture.');
     });
+
+    return () => {
+      window.removeEventListener('click', unlockOnGesture);
+      window.removeEventListener('keydown', unlockOnGesture);
+      window.removeEventListener('touchstart', unlockOnGesture);
+    };
   }, [room, sendAudioReadyPacket]);
 
   // LiveKit AI participant presence check
@@ -221,18 +246,13 @@ function AIInterviewRoomContent({
         } else if (data.type === 'AI_STATE_CHANGED') {
           const state = data.state as AIConversationState;
           setConversationState(state);
-          if (state === 'AI_SPEAKING' || (state as string) === 'INTRO_SPEAKING' || (state as string) === 'ASKING_QUESTION') {
+          if (state === 'AI_SPEAKING' || state === 'INTRO_SPEAKING' || state === 'ASKING_QUESTION') {
             setUiState('ai_ready');
-            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
           } else if (state === 'LISTENING' || state === 'CANDIDATE_LISTENING' || state === 'WAITING_FOR_CANDIDATE') {
             setUiState('in_progress');
-            room.localParticipant?.setMicrophoneEnabled(true).catch(() => {});
-          } else if (state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING' || (state as string) === 'PROCESSING_ANSWER') {
+          } else if (state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING' || state === 'PROCESSING_ANSWER') {
             setInterimText('');
-            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
-          } else if ((state as string) === 'FOLLOW_UP_OR_NEXT_QUESTION' || state === 'FOLLOW_UP_PENDING') {
-            room.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
-          } else if (state === 'COMPLETED') {
+          } else if (state === 'COMPLETED' || state === 'INTERVIEW_COMPLETED') {
             isCompletedRef.current = true;
             setUiState('completed');
             setTimeLeft(0);
@@ -271,18 +291,35 @@ function AIInterviewRoomContent({
 
       if (track.kind === Track.Kind.Audio) {
         try {
-          const audioEl = track.attach();
-          audioEl.id = `remote-audio-${track.sid}`;
-          audioEl.style.display = 'none';
-          document.body.appendChild(audioEl);
-          attachedAudioElements.set(track.sid, audioEl);
+          let audioEl = attachedAudioElements.get(track.sid);
+          if (!audioEl) {
+            const createdEl = track.attach();
+            if (createdEl instanceof HTMLAudioElement) {
+              audioEl = createdEl;
+              audioEl.id = `remote-audio-${track.sid}`;
+              // Use active offscreen position instead of display: none so the browser does not throttle media clock
+              audioEl.style.position = 'fixed';
+              audioEl.style.top = '-9999px';
+              audioEl.style.left = '-9999px';
+              audioEl.style.width = '1px';
+              audioEl.style.height = '1px';
+              audioEl.style.opacity = '0.01';
+              audioEl.style.pointerEvents = 'none';
+              audioEl.muted = false;
+              audioEl.volume = 1.0;
+              document.body.appendChild(audioEl);
+              attachedAudioElements.set(track.sid, audioEl);
+            }
+          }
 
-          audioEl.play().then(() => {
-            console.log('[AI_INTERVIEW] Remote audio track playing directly in browser:', track.sid);
-            sendAudioReadyPacket();
-          }).catch((playErr: unknown) => {
-            console.warn('[AI_INTERVIEW] Remote audio track play() deferred for user gesture:', playErr);
-          });
+          if (audioEl) {
+            audioEl.play().then(() => {
+              console.log('[AI_INTERVIEW] Remote audio track playing directly in browser:', track.sid);
+              sendAudioReadyPacket();
+            }).catch((playErr: unknown) => {
+              console.warn('[AI_INTERVIEW] Remote audio track play() deferred for user gesture:', playErr);
+            });
+          }
         } catch (attachErr) {
           console.error('[AI_INTERVIEW] Failed to attach remote audio track:', attachErr);
         }
@@ -316,6 +353,16 @@ function AIInterviewRoomContent({
     room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
     room.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
     room.on(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackChanged);
+
+    // Attach any tracks that were subscribed before listeners were registered
+    room.remoteParticipants.forEach((p) => {
+      p.trackPublications.forEach((pub) => {
+        if (pub.isSubscribed && pub.track && pub.track.kind === Track.Kind.Audio) {
+          console.log('[AI_INTERVIEW] Attaching existing remote audio track:', pub.track.sid);
+          handleTrackSubscribed(pub.track, pub, p);
+        }
+      });
+    });
 
     if (room.state === 'connected' && room.canPlaybackAudio) {
       sendAudioReadyPacket();
@@ -463,7 +510,7 @@ function AIInterviewRoomContent({
       {/* The user clicking this button calls room.startAudio() which resumes      */}
       {/* the suspended AudioContext and allows RoomAudioRenderer to play tracks. */}
       {!canPlayAudio && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900/95 border border-rose-500/50 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-2xl shadow-rose-900/30 animate-pulse">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10001] flex items-center gap-3 bg-slate-900/95 border border-rose-500/50 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-2xl shadow-rose-900/30 animate-pulse">
           <span className="w-2 h-2 rounded-full bg-rose-500" />
           <span className="text-xs font-bold text-slate-200">AI audio paused by browser</span>
           <button
@@ -570,7 +617,15 @@ function AIInterviewRoomContent({
 
         {/* Right Stage: Live Voice Transcript */}
         <div className="lg:col-span-4 min-h-0 h-full">
-          <LiveTranscript messages={transcriptList} isAiSpeaking={effectiveConversationState === 'AI_SPEAKING'} interimText={interimText} />
+          <LiveTranscript 
+            messages={transcriptList} 
+            isAiSpeaking={
+              effectiveConversationState === 'AI_SPEAKING' || 
+              effectiveConversationState === 'INTRO_SPEAKING' || 
+              effectiveConversationState === 'ASKING_QUESTION'
+            } 
+            interimText={interimText} 
+          />
         </div>
       </main>
 
@@ -641,7 +696,7 @@ function AIInterviewRoomContent({
           LiveKitRoom audio={true} controls only LOCAL mic publication and does
           NOT auto-play remote tracks. Without this, AI voice is silently dropped
           even though it arrives at the browser via the LiveKit SFU. */}
-      <RoomAudioRenderer />
+      <RoomAudioRenderer volume={1.0} muted={false} />
     </div>
   );
 }

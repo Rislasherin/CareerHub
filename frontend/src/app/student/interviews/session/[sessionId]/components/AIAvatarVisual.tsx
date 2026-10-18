@@ -12,22 +12,41 @@ interface IAIAvatarVisualProps {
 
 export const AIAvatarVisual: React.FC<IAIAvatarVisualProps> = ({ state }) => {
 
-  const isListening = state === 'LISTENING' || state === 'CANDIDATE_LISTENING' || state === 'WAITING_FOR_CANDIDATE';
-  const isSpeaking = state === 'AI_SPEAKING';
-  const isProcessing = state === 'PROCESSING' || state === 'CANDIDATE_PROCESSING';
-  const isFollowUp = state === 'FOLLOW_UP_PENDING';
+  const isSpeaking = 
+    state === 'AI_SPEAKING' || 
+    state === 'INTRO_SPEAKING' || 
+    state === 'ASKING_QUESTION';
+
+  const isListening = 
+    state === 'LISTENING' || 
+    state === 'CANDIDATE_LISTENING' || 
+    state === 'WAITING_FOR_CANDIDATE';
+
+  const isProcessing = 
+    state === 'PROCESSING' || 
+    state === 'CANDIDATE_PROCESSING' || 
+    state === 'PROCESSING_ANSWER';
+
+  const isFollowUp = 
+    state === 'FOLLOW_UP_PENDING' || 
+    state === 'FOLLOW_UP_OR_NEXT_QUESTION';
 
   const getStatusLabel = () => {
     switch (state) {
+      case 'INTRO_SPEAKING': return 'AI interviewer introduction...';
+      case 'ASKING_QUESTION': return 'AI is asking question...';
       case 'AI_SPEAKING': return 'AI is speaking...';
       case 'LISTENING':
       case 'CANDIDATE_LISTENING': return 'Listening to you...';
-      case 'WAITING_FOR_CANDIDATE': return 'Waiting for your answer...';
+      case 'WAITING_FOR_CANDIDATE': return 'Your turn to speak...';
       case 'PROCESSING':
-      case 'CANDIDATE_PROCESSING': return 'Evaluating your response...';
-      case 'FOLLOW_UP_PENDING': return 'Preparing follow-up question...';
-      case 'COMPLETED': return 'Interview completed';
-      case 'READY': return 'Your turn to speak';
+      case 'CANDIDATE_PROCESSING':
+      case 'PROCESSING_ANSWER': return 'Evaluating your response...';
+      case 'FOLLOW_UP_PENDING':
+      case 'FOLLOW_UP_OR_NEXT_QUESTION': return 'Preparing next question...';
+      case 'COMPLETED':
+      case 'INTERVIEW_COMPLETED': return 'Interview completed';
+      case 'READY': return 'Ready to begin';
       case 'ERROR': return 'Connection issue';
       default: return 'Live Interview Active';
     }

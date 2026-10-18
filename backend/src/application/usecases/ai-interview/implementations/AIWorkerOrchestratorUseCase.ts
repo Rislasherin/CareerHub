@@ -322,6 +322,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             await this._audioTransport.waitForPlayout();
           }
           introPlayoutSuccess = true;
+          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] AUDIO_PIPELINE: Intro greeting TTS chunks=${chunkCount} playout confirmed.`);
           break;
         } catch (playErr) {
           if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] TTS intro attempt ${attempt} failed:`, playErr);
@@ -384,6 +385,7 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             await this._audioTransport.waitForPlayout();
           }
           qPlayoutSuccess = true;
+          if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] AUDIO_PIPELINE: First question TTS chunks=${chunkCount} playout confirmed.`);
           break;
         } catch (qErr) {
           if (this._logger) this._logger.warn(LogCategory.SYSTEM_INFO, `[AI_WORKER] First question TTS attempt ${attempt} failed:`, qErr);
