@@ -220,11 +220,6 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
                 }
               }
           }
-          await this._audioTransport.publishDataMessage({
-              type: 'AI_STATE_CHANGED',
-              state: TurnState.WAITING_FOR_CANDIDATE,
-              timestamp: Date.now()
-          });
       } else {
           // 1. Run the existing INTRO flow
           const introSuccess = await this.runIntroPhase(sessionId);
@@ -430,15 +425,8 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
         InterviewPhase.ASKING_QUESTION
       );
 
-      // 5. Phase 3: Transition to Candidate Listening (WAITING_FOR_CANDIDATE)
-      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [17] Transition to WAITING_FOR_CANDIDATE`);
-      await this._audioTransport.publishDataMessage({
-        type: 'AI_STATE_CHANGED',
-        state: TurnState.WAITING_FOR_CANDIDATE,
-        turnId: `${activeQuestion.id}_turn_1`,
-        questionId: activeQuestion.id
-      });
-
+      // 5. Question playout complete: Session is in ASKING_QUESTION. Listening turns will be initialized in startListening.
+      if (this._logger) this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] [17] First question audio playout confirmed and phase transitioned to ASKING_QUESTION. Proceeding to candidate listening turn setup.`);
       return true;
     } catch (err: any) {
       const errorMsg = err?.message || String(err);
@@ -710,9 +698,6 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
          }
       }, 1000);
       this._cleanupFns.push(() => clearInterval(timeoutInterval));
-
-      // Start the initial listening turn timers
-      resetNoResponseTimer();
 
       const processCandidateTurn = async (turnIdToProcess: string, finalizationReason: string = "SILENCE_WINDOW_CONFIRMED") => {
         const turn = turnsHistory.get(turnIdToProcess);
@@ -1056,6 +1041,20 @@ export class AIWorkerOrchestratorUseCase implements IAIWorkerOrchestratorUseCase
             }
         }
       };
+
+      // Initialize candidate listening turn for the active question
+      const activeQuestion = session.questions[session.questions.length - 1];
+      if (activeQuestion) {
+        if (this._logger) {
+          this._logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Initializing candidate listening turn for question ${activeQuestion.id}`);
+        }
+        await startCandidateListeningTurn(activeQuestion.id);
+      } else {
+        if (this._logger) {
+          this._logger.error(LogCategory.SYSTEM_ERROR, `[AI_WORKER] No active question found when initializing listening turns for session ${sessionId}`);
+        }
+        resetNoResponseTimer();
+      }
 
       for await (const result of sttStream) {
         try {
