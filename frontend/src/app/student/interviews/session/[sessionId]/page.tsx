@@ -206,15 +206,21 @@ function AIInterviewRoomContent({
         } else if (data.type === 'TRANSCRIPT_FINAL') {
           setInterimText('');
           if (data.text) {
-            setTranscriptList((prev) => [
-              ...prev,
-              {
-                id: `ans-${Date.now()}`,
-                speaker: 'STUDENT',
-                text: data.text,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              },
-            ]);
+            const turnId = data.turnId || `ans-${Date.now()}`;
+            setTranscriptList((prev) => {
+              if (prev.some((item) => item.id === turnId)) {
+                return prev;
+              }
+              return [
+                ...prev,
+                {
+                  id: turnId,
+                  speaker: 'STUDENT',
+                  text: data.text,
+                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                },
+              ];
+            });
           }
         } else if (data.type === 'QUESTION_UPDATED') {
           setInterimText('');
@@ -229,13 +235,16 @@ function AIInterviewRoomContent({
 
           if (data.text) {
             setCurrentQuestionText(data.text);
+            const questionItemId = data.questionId ? `q-${data.questionId}` : `q-${Date.now()}`;
             setTranscriptList((prev) => {
               const last = prev[prev.length - 1];
-              if (last && last.speaker === 'AI' && last.text === data.text) return prev;
+              if (last && last.speaker === 'AI' && (last.id === questionItemId || last.text === data.text)) {
+                return prev;
+              }
               return [
                 ...prev,
                 {
-                  id: `q-${Date.now()}`,
+                  id: questionItemId,
                   speaker: 'AI',
                   text: data.text,
                   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),

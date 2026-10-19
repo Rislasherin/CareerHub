@@ -120,6 +120,49 @@ export function assessAnswerRelevance(
       }
     }
 
+    // 2b. Cross-Domain Technical Irrelevance Check
+    const isErrorHandlingQuestion = /\b(error|errors|exception|exceptions|error handling|try[- ]catch|promise rejection)\b/i.test(cleanQuestion);
+    const isClosureQuestion = /\b(closure|closures|lexical scope|scope chain)\b/i.test(cleanQuestion);
+    const isArchitectureAnswer = /\b(microservices?|docker|kubernetes|k8s|containers?|service mesh|load balancer)\b/i.test(cleanAnswer);
+    const hasLanguageCoreAnswer = /\b(try|catch|finally|throw|exception|reject|rejection|error|unhandled|scope|function|outer|inner|variable)\b/i.test(cleanAnswer);
+
+    if ((isErrorHandlingQuestion || isClosureQuestion) && isArchitectureAnswer && !hasLanguageCoreAnswer) {
+      return {
+        classification: AnswerRelevanceClassification.IRRELEVANT_OR_UNRELATED,
+        quality: CandidateAnswerQuality.WEAK,
+        reasoning: "Answer discusses system architecture or infrastructure rather than the requested programming language concept.",
+        spokenResponse: isErrorHandlingQuestion
+          ? "Microservices relates to system architecture, but we're focusing on JavaScript error handling. Could you explain how you handle errors, exceptions, or promise rejections in JavaScript?"
+          : "That relates to system architecture, but we're focusing on closures. Could you explain how closures work in JavaScript?"
+      };
+    }
+
+    // 2c. Node.js Asynchronous Operations / Event Loop Recognition
+    const isNodeAsyncQuestion = /\b(node(\.js)?|event loop|async(hronous)?\s+operations?|non[- ]blocking)\b/i.test(cleanQuestion);
+    const mentionsEventLoop = /\b(single[- ]threaded event loop|event loop|single threaded|libuv)\b/i.test(cleanAnswer);
+
+    if (isNodeAsyncQuestion && mentionsEventLoop) {
+      const isDetailed = wordCount >= 14 || /\b(libuv|offload|thread pool|callback queue|microtask|macrotask|non[- ]blocking)\b/i.test(cleanAnswer);
+      if (isDetailed) {
+        return {
+          classification: AnswerRelevanceClassification.RELEVANT_SUFFICIENT,
+          quality: CandidateAnswerQuality.STRONG,
+          keyPoint: "single-threaded event loop",
+          acknowledgement: "Right, Node.js handles asynchronous operations using a single-threaded event loop.",
+          reasoning: "Candidate accurately explained how Node.js utilizes the single-threaded event loop for asynchronous operations."
+        };
+      } else {
+        return {
+          classification: AnswerRelevanceClassification.RELEVANT_INCOMPLETE,
+          quality: CandidateAnswerQuality.PARTIAL,
+          keyPoint: "single-threaded event loop",
+          acknowledgement: "Right, Node.js uses a single-threaded event loop.",
+          spokenResponse: "Right, Node.js uses a single-threaded event loop. Could you walk me through how the event loop coordinates with libuv or the thread pool to handle non-blocking I/O operations?",
+          reasoning: "Candidate correctly identified the single-threaded event loop, but omitted details on underlying I/O offloading mechanisms."
+        };
+      }
+    }
+
     // 3. Technical Contradiction & Misconception Detection
     for (const item of KNOWN_CONTRADICTIONS_AND_MISCONCEPTIONS) {
       const isTopicMatch = item.topic.test(cleanQuestion) || item.topic.test(cleanTopic) || item.topic.test(cleanAnswer);
@@ -145,19 +188,20 @@ export function assessAnswerRelevance(
       };
     }
 
-    // 4. Concise Factoid / Keyword Answers
-    const isDirectQuestion = /^(which|what('s|\s+is|\s+are)?\s+([a-z]+\s+)?(tool|library|framework|database|cache|orm|language|method|protocol)|what is|what are|what's|have you used|did you use|do you use|name a|name the)\b/i.test(cleanQuestion);
+    // 4. Concise Factoid / Keyword / Direct Definition Answers
+    const isDirectFactoidQuestion = /^(which|what('s|\s+is|\s+are)?\s+([a-z0-9_-]+\s+)?(tool|library|framework|database|cache|orm|language|method|protocol|concept)|what('s|\s+is|\s+are)\s+[a-z0-9_-]+|name a|name the)\b/i.test(cleanQuestion);
     const hasCoreTechKeyword = /\b(jwt|json web token|redis|mongodb|postgres|postgresql|mysql|sqlite|docker|kubernetes|node|nodejs|react|redux|zustand|express|fastify|nestjs|graphql|rest|grpc|kafka|rabbitmq|git|aws|gcp|azure|typescript|javascript|python|go|java|html|css|tailwind|vitest|jest|mocha)\b/i.test(cleanAnswer);
+    const hasTechnicalDefinition = /\b(in[- ]memory|key[- ]value|data store|cache|database|document[- ]oriented|relational|non[- ]relational|virtual dom|lexical scope|closure|event loop|single[- ]threaded|container|virtualization)\b/i.test(cleanAnswer);
 
-    if (isDirectQuestion && (hasCoreTechKeyword || wordCount >= 1)) {
+    if (isDirectFactoidQuestion && (hasCoreTechKeyword || hasTechnicalDefinition) && wordCount <= 16) {
       const matchedKeyword = cleanAnswer.match(/\b(jwt|redis|mongodb|postgres|postgresql|mysql|docker|kubernetes|node|react|express|fastify|nestjs|graphql|rest|kafka|rabbitmq|git|aws|typescript|javascript)\b/i)?.[0];
-      const keyAck = matchedKeyword ? `Right, using ${matchedKeyword.toUpperCase()}.` : "Makes sense.";
+      const keyAck = matchedKeyword ? `Right, ${matchedKeyword.toUpperCase()} is accurate.` : "Makes sense, thank you.";
       return {
         classification: AnswerRelevanceClassification.RELEVANT_SUFFICIENT,
         quality: CandidateAnswerQuality.STRONG,
-        keyPoint: matchedKeyword || "Direct identification",
+        keyPoint: matchedKeyword || "Accurate definition",
         acknowledgement: keyAck,
-        reasoning: "Candidate accurately identified the appropriate technology or tool for a direct question."
+        reasoning: "Candidate accurately identified or defined the requested technology or concept."
       };
     }
 

@@ -23,9 +23,10 @@ export function classifyCandidateUtterance(text: string): CandidateUtteranceClas
     if (isExplicitDontKnow) return { intent: CandidateUtteranceIntent.EXPLICIT_DONT_KNOW };
   }
 
-  // 3. Repeat Question Patterns (short phrases <= 9 words)
-  if (words.length <= 9) {
-    const isRepeat = /^(can you (please )?(repeat|say that again|say the question again)( the question| that)?|could you (please )?(repeat|say that again|say the question again)( the question| that)?|please (can you |could you )?repeat( the question| that)?|repeat( the question| that)?( please)?|what was the question( again)?|say that again( please)?|one more time please|can i hear the question again|repeat please)$/i.test(cleanWithoutPunct);
+  // 3. Repeat Question Patterns (phrases <= 12 words)
+  if (words.length <= 12) {
+    const isRepeat = /\b(can (you|i) (repeat|hear the question again)|could you repeat|please repeat|repeat (the question|that|this|please)|what was the question( again)?|say (that |the question )?again|say again|one more time( please)?|come again|didn't hear( that| the question)?)\b/i.test(cleanWithoutPunct) ||
+      /^(repeat please|repeat)$/i.test(cleanWithoutPunct);
     if (isRepeat) return { intent: CandidateUtteranceIntent.REPEAT_QUESTION };
   }
 

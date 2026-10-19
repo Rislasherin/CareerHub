@@ -177,6 +177,8 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
     // 5. Domain Logic: Move to next question or follow-up
     session.startEvaluation(); // Temporarily enter evaluation phase to satisfy state machine
     
+    let createdNextQuestion: InterviewQuestion | null = null;
+
     if (
       aiResult.action === AIOrchestrationAction.ASK_FOLLOW_UP || 
       aiResult.action === AIOrchestrationAction.ASK_NEXT_QUESTION
@@ -189,6 +191,7 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
           context: aiResult.nextTopic || aiResult.nextQuestion.context,
           category: aiResult.nextCategory || currentQuestion.category || InterviewType.TECHNICAL,
         });
+        createdNextQuestion = nextQ;
 
         if (aiResult.action === AIOrchestrationAction.ASK_FOLLOW_UP) {
           session.requestFollowUp(nextQ);
@@ -226,7 +229,9 @@ export class ProcessStudentAnswerUseCase implements IProcessStudentAnswerUseCase
       action: aiResult.action,
       acknowledgement: aiResult.acknowledgement,
       spokenResponse: aiResult.spokenResponse,
-      relevance: aiResult.relevance
+      relevance: aiResult.relevance,
+      nextQuestionId: createdNextQuestion?.id,
+      nextQuestionText: createdNextQuestion?.text
     };
     
     } finally {

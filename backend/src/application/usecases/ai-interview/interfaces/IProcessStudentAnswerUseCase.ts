@@ -7,6 +7,8 @@ export interface ProcessStudentAnswerOutput {
   acknowledgement?: string;
   spokenResponse?: string;
   relevance?: AnswerRelevanceClassification;
+  nextQuestionId?: string;
+  nextQuestionText?: string;
 }
 
 export interface IProcessStudentAnswerUseCase {

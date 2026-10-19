@@ -6,6 +6,13 @@ import { Metrics } from "../../observability/Metrics";
 
 export class DeepgramSTTService implements ISTTService {
   private deepgram = createClient(env.DEEPGRAM_API_KEY);
+  private _clearBufferFn?: () => void;
+
+  public clearBuffer(): void {
+    if (this._clearBufferFn) {
+      this._clearBufferFn();
+    }
+  }
 
   async *transcribeStream(audioStream: AsyncIterable<Int16Array>): AsyncIterable<ISTTResult> {
     Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] Deepgram STT configured: model=nova-2, sampleRate=24000, endpointing=${env.STT_ENDPOINTING_MS}ms`);
@@ -15,9 +22,17 @@ export class DeepgramSTTService implements ISTTService {
     const transcriptQueue: ISTTResult[] = [];
     let resolveNext: (() => void) | null = null;
     let isForceClosed = false;
+    let minAcceptedTimestamp = 0;
 
     // Buffer to hold chunks so we don't lose data while reconnecting
     let audioBuffer: Int16Array[] = [];
+
+    this._clearBufferFn = () => {
+      audioBuffer = [];
+      transcriptQueue.length = 0;
+      minAcceptedTimestamp = Date.now();
+      Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] STT internal audio buffer and transcript queue cleared.`);
+    };
 
     // Background task to consume audio stream and buffer it
     const consumeAudioStream = async () => {
@@ -140,6 +155,10 @@ export class DeepgramSTTService implements ISTTService {
 
     const attachListeners = (live: LiveClient) => {
       live.on(LiveTranscriptionEvents.Transcript, (data: unknown) => {
+        if (minAcceptedTimestamp > 0 && Date.now() < minAcceptedTimestamp + 200) {
+          Logger.info(LogCategory.SYSTEM_INFO, `[AI_WORKER] STT discarded in-flight transcript packet from before buffer reset`);
+          return;
+        }
         Logger.info("[STT_DEBUG] Deepgram transcript received", { data: JSON.stringify(data).substring(0, 200) });
         const transcriptData = data as { is_final?: boolean; speech_final?: boolean; channel?: { alternatives?: { transcript?: string }[] } };
         const isFinal = transcriptData.is_final === true;
@@ -172,6 +191,9 @@ export class DeepgramSTTService implements ISTTService {
       });
 
       live.on(LiveTranscriptionEvents.UtteranceEnd, () => {
+        if (minAcceptedTimestamp > 0 && Date.now() < minAcceptedTimestamp + 200) {
+          return;
+        }
         transcriptQueue.push({ text: "", isEndpoint: true, isInterim: false, reason: "utterance_end" });
         if (resolveNext) {
            resolveNext();

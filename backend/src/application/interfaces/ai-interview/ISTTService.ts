@@ -7,4 +7,5 @@ export interface ISTTResult {
 
 export interface ISTTService {
   transcribeStream(audioStream: AsyncIterable<Int16Array>): AsyncIterable<ISTTResult>;
+  clearBuffer?(): void;
 }
